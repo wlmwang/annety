@@ -1,3 +1,9 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #include "SafeStrerror.h"
 #include "BuildConfig.h"
@@ -104,7 +110,6 @@ StringPiece safe_strerror_r(int err, char *buf, size_t len) {
   // The other one will be elided from the translation unit since both are
   // static.
   wrap_posix_strerror_r(&strerror_r, err, buf, len);
-
   return StringPiece(buf);
 }
 
@@ -115,6 +120,14 @@ std::string safe_strerror(int err) {
   return std::string(buf);
 }
 
+namespace {
+const size_t ERROR_BUFSIZE = 64;
+thread_local char tls_error_buf[ERROR_BUFSIZE];
+} // namespace anonymous
+
+StringPiece safe_fast_strerror(int err) {
+  wrap_posix_strerror_r(&strerror_r, err, tls_error_buf, ERROR_BUFSIZE);
+  return StringPiece(tls_error_buf);
+}
+
 }  // namespace annety
-
-

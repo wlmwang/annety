@@ -1,4 +1,9 @@
-// Copyright (c) 2018 Anny Wang Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #ifndef _ANT_BUILD_CONFIG_H_
 #define _ANT_BUILD_CONFIG_H_
@@ -38,9 +43,16 @@
 #define USE_TCMALLOC 1
 #endif
 
+// Compiler detection.
+#if defined(__GNUC__)
+#define COMPILER_GCC 1
+#else
+#error Do not support your compiler in BuildConfig.h
+#endif
+
 // Compiler detection for cxx0x
 #if __cplusplus < 201103L
-#error Do not support your compiler in BuildConfig.h
+#error Your compiler do not support C++0x in BuildConfig.h
 #endif
 
 // Processor architecture detection.  For more info on what's defined, see:
@@ -118,6 +130,4 @@
 #error Please add support for your architecture in BuildConfig.h
 #endif
 
-
 #endif  // _ANT_BUILD_CONFIG_H_
-

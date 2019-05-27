@@ -1,12 +1,17 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #ifndef ANT_SAFE_STRERROR_H_
 #define ANT_SAFE_STRERROR_H_
 
-#include <stddef.h>
-#include <string>
-
 #include "StringPiece.h"
+
+#include <string>
+#include <stddef.h>
 
 namespace annety {
 
@@ -20,6 +25,9 @@ StringPiece safe_strerror_r(int err, char *buf, size_t len);
 // more robust in the case of heap corruption errors, since it doesn't need to
 // allocate a string.
 std::string safe_strerror(int err);
+
+// Use C++11 thread_local keyword to share memory in pthread
+StringPiece safe_fast_strerror(int err);
 
 }  // namespace annety
 

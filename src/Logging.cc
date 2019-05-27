@@ -1,21 +1,23 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #include <algorithm>
 #include <iostream>
 
 #include "Logging.h"
-#include "Time.h"
+#include "StlUtil.h"
 #include "SafeStrerror.h"
 #include "StringPrintf.h"
+#include "Time.h"
 
 namespace annety {
 namespace {
-// arraysize
-template <typename T, size_t N> char (&ArraySizeHelper(T (&array)[N]))[N];
-#define arraysize(array) (sizeof(ArraySizeHelper(array)))
-
 const char* const kLogSeverityNames[4] = {"INFO", "WARNING", "ERROR", "FATAL"};
-static_assert(LOG_NUM_SEVERITIES == arraysize(kLogSeverityNames),
+static_assert(LOG_NUM_SEVERITIES == annety::size(kLogSeverityNames),
 			"Incorrect number of kLogSeverityNames");
 
 const char* log_severity_name(int severity) {
@@ -36,7 +38,6 @@ void defaultFlush() {
 
 using std::placeholders::_1;
 using std::placeholders::_2;
-
 LogOutputHandlerFunction g_log_output_handler = std::bind(defaultOutput, _1, _2);
 LogFFlushHandlerFunction g_log_fflush_handler = std::bind(defaultFlush);
 
@@ -45,11 +46,10 @@ LogFFlushHandlerFunction g_log_fflush_handler = std::bind(defaultFlush);
 // 0=INFO 1=WARNING 2=ERROR 3=FATAL
 LogSeverity g_min_log_level = 0;
 
-// cache colums logging
+// For cache colums logging
 thread_local Time::Exploded t_local_exploded{};
 thread_local std::string t_format_ymdhis{};
 thread_local int64_t t_last_second{};
-thread_local char t_strerror_buf[512]{};
 }	// namespace anonymous
 
 void SetMinLogLevel(int level) {
@@ -103,8 +103,7 @@ void LogMessage::Impl::begin() {
 
 	// strerror
 	if (errno_ != 0) {
-		stream_ << safe_strerror_r(errno_, t_strerror_buf, sizeof t_strerror_buf) 
-				<< " (errno=" << errno_ << ") ";
+		stream_ << safe_fast_strerror(errno_) << " (errno=" << errno_ << ") ";
 	}
 }
 
@@ -164,7 +163,7 @@ LogMessage::~LogMessage() {
 		const LogBuffer& bf(stream().buffer());
 		g_log_output_handler(bf.begin_read(), bf.readable_bytes());
 	}
-	// IO fflush
+	// i/o fflush
 	if (severity() == LOG_FATAL) {
 		if (g_log_fflush_handler) {
 			g_log_fflush_handler();

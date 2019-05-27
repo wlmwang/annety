@@ -1,18 +1,23 @@
-// Copyright (c) 2018 Anny Wang Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #ifndef _ANT_STRING_PIECE_H_
 #define _ANT_STRING_PIECE_H_
 
+#include "BuildConfig.h"
+#include "CompilerSpecific.h"
+
 #include <iterator>
 #include <iosfwd>
 #include <string>
-
-#include "BuildConfig.h"
-#include "CompilerSpecific.h"
-// #include "logging.h"
+#include <cstring>
+#include <assert.h>
 
 namespace annety {
-
 // StringPiece ------------------------------------------------------------
 
 // Defines the types, methods, operators, and data members common to both
@@ -68,7 +73,7 @@ public:
 
 	void set(const value_type* str) {
 		ptr_ = str;
-		length_ = str ? strlen(reinterpret_cast<const char*>(str)) : 0;
+		length_ = str ? strlen(reinterpret_cast<const char*>(str)): 0;
 	}
 	void set(const value_type* data, size_type len) {
 		ptr_ = data;
@@ -80,42 +85,42 @@ public:
 	}
 
 	value_type operator[](size_type i) const {
-		// CHECK(i < length_);
+		assert(i < length_);
 		return ptr_[i];
 	}
 
 	value_type front() const {
-		// CHECK_NE(0UL, length_);
+		assert(0UL != length_);
 		return ptr_[0];
 	}
 	value_type back() const {
-		// CHECK_NE(0UL, length_);
+		assert(0UL != length_);
 		return ptr_[length_ - 1];
 	}
 
 	void remove_prefix(size_type n) {
-		// CHECK(n <= length_);
+		assert(n <= length_);
 		ptr_ += n;
 		length_ -= n;
 	}
 	void remove_suffix(size_type n) {
-		// CHECK(n <= length_);
+		assert(n <= length_);
 		length_ -= n;
 	}
 
 	constexpr bool starts_with(StringPiece x) const noexcept {
 		return ((length_ >= x.length_) && 
-			(memcmp(ptr_, x.ptr_, x.length_) == 0));
+				(memcmp(ptr_, x.ptr_, x.length_) == 0));
 	}
 
 	constexpr bool ends_with(StringPiece x) const noexcept {
 		return ((length_ >= x.length_) && 
-			(memcmp(ptr_ + (length_ - x.length_), x.ptr_, x.length_) == 0));
+				(memcmp(ptr_ + (length_ - x.length_), x.ptr_, x.length_) == 0));
 	}
 
 	// substr.
 	StringPiece substr(size_type pos, size_type n = StringPiece::npos) const {
-		// CHECK(pos < length_);
+		assert(pos < length_);
 		return StringPiece(ptr_ + pos, ptr_ + (n <= length_? n : length_));
 	}
 
@@ -130,8 +135,6 @@ public:
 		target->append(ptr_, length_);
 	}
 
-	// todo
-	
   	// find: Search for a character or substring at a given offset.
 	size_type find(const StringPiece& s, size_type pos = 0) const {
 		return as_string().find(s.ptr_, pos);

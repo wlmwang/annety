@@ -1,27 +1,44 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2018 Anny Wang Authors. All rights reserved.
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #ifndef _ANT_STRING_PRINTF_H_
 #define _ANT_STRING_PRINTF_H_
 
-#include <stdarg.h>   // va_list
-
-#include <string>
-
 #include "BuildConfig.h"
 #include "CompilerSpecific.h"
 
+#include <string>
+#include <cstdarg>   // va_list
+
 namespace annety {
+// Return a C++ string given printf-like input.
+std::string StringPrintf(_Printf_format_string_ const char* format, ...)
+    PRINTF_FORMAT(1, 2) WARN_UNUSED_RESULT;
 
-std::string StringPrintf(const char* format, ...);
+// Return a C++ string given vprintf-like input.
+std::string StringPrintV(const char* format, va_list ap)
+	PRINTF_FORMAT(1, 0) WARN_UNUSED_RESULT;
 
-std::string StringPrintV(const char* format, va_list ap);
+// Store result into a supplied string and return it.
+const std::string& SStringPrintf(std::string* dst,
+								_Printf_format_string_ const char* format,
+								...) 
+	PRINTF_FORMAT(2, 3);
 
-const std::string& SStringPrintf(std::string* dst, const char* format, ...);
+// Append result to a supplied string.
+void StringAppendF(std::string* dst,
+				  _Printf_format_string_ const char* format,
+				  ...) 
+	PRINTF_FORMAT(2, 3);
 
-void StringAppendF(std::string* dst, const char* format, ...);
-
-void StringAppendV(std::string* dst, const char* format, va_list ap);
+// Lower-level routine that takes a va_list and appends to a specified
+// string.  All other routines are just convenience wrappers around it.
+void StringAppendV(std::string* dst, const char* format, va_list ap)
+	PRINTF_FORMAT(2, 0);
 
 }  // namespace annety
 

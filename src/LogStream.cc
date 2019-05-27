@@ -1,12 +1,11 @@
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-//
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-
-#include <algorithm>
-#include <string.h>
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #include "LogStream.h"
+
+#include <algorithm>
+#include <ostream>
+#include <string.h>
 
 namespace annety {
 namespace {

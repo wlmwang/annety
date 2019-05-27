@@ -1,4 +1,5 @@
-// Copyright (c) 2018 Anny Wang Authors. All rights reserved.
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #ifndef ANT_NONCOPYABLE_H
 #define ANT_NONCOPYABLE_H

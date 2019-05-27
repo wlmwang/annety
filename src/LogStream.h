@@ -1,17 +1,19 @@
-
-
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #ifndef ANT_LOG_STREAM_H
 #define ANT_LOG_STREAM_H
 
+#include "BuildConfig.h"
+#include "CompilerSpecific.h"
+#include "ByteBuffer.h"
+
+#include <iosfwd>
 #include <cassert>
 #include <string>
 #include <limits>
 
-#include "ByteBuffer.h"
-
 namespace annety {
-
 class LogStream {
 public:
 	static const int kMaxNumericSize = 32;
@@ -24,7 +26,7 @@ public:
 		"kMaxNumericSize is large enough");
 	static_assert(kMaxNumericSize - 10 > std::numeric_limits<long long>::digits10,
 		"kMaxNumericSize is large enough");
-
+public:
 	// Ostream operators
 	LogStream& operator<<(const void*);
 	
@@ -51,7 +53,7 @@ public:
 		if (str) {
 			buffer_.append(str, strlen(str));
 		} else {
-			buffer_.append("(null)", 6);
+			buffer_.append("(*null*)", sizeof("(*null*)"));
 		}
 		return *this;
 	}

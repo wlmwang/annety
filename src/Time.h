@@ -1,5 +1,9 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2018 Anny Wang Authors. All rights reserved.
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #ifndef _ANT_TIME_H_
 #define _ANT_TIME_H_
@@ -14,7 +18,6 @@
 
 #include "BuildConfig.h"
 #include "CompilerSpecific.h"
-// #include "logging.h"
 
 namespace annety {
 
@@ -222,10 +225,10 @@ public:
 
   // Modify by some time delta.
   TimeClass& operator+=(TimeDelta delta) {
-    return static_cast<TimeClass&>(*this = (*this + delta.internal_value()));
+    return static_cast<TimeClass&>(*this = (*this + delta));
   }
   TimeClass& operator-=(TimeDelta delta) {
-    return static_cast<TimeClass&>(*this = (*this - delta.internal_value()));
+    return static_cast<TimeClass&>(*this = (*this - delta));
   }
 
   // Comparison operators
@@ -514,6 +517,4 @@ constexpr TimeDelta TimeDelta::from_product(int64_t value, int64_t positive_valu
 
 } // namespace annety
 
-
 #endif
-

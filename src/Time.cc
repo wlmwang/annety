@@ -1,21 +1,23 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #include <ostream>
 #include <cmath>
 
 #include "Time.h"
 #include "StringPrintf.h"
+#include "Logging.h"
 
 namespace annety {
-
 namespace {
 Time TimeNowIgnoreTZ() {
   struct timeval tv;
   struct timezone tz = {0, 0};  // UTC
-
-  // CHECK(::gettimeofday(&tv, &tz) == 0);
-  ::gettimeofday(&tv, &tz);
-
+  CHECK(::gettimeofday(&tv, &tz) == 0);
   // microseconds since the epoch.
   return Time() + TimeDelta::from_microseconds(
                     tv.tv_sec * Time::kMicrosecondsPerSecond + tv.tv_usec);
@@ -51,9 +53,8 @@ time_t Time::to_time_t() const {
 
 // static
 Time Time::from_timeval(struct timeval t) {
-	// DCHECK_LT(t.tv_usec, static_cast<int>(Time::kMicrosecondsPerSecond));
-	// DCHECK_GE(t.tv_usec, 0);
-
+	DCHECK_LT(t.tv_usec, static_cast<int>(Time::kMicrosecondsPerSecond));
+	DCHECK_GE(t.tv_usec, 0);
 	if (t.tv_usec == 0 && t.tv_sec == 0) {
 		return Time();
 	} else if (t.tv_usec == static_cast<suseconds_t>(kMicrosecondsPerSecond) - 1 && 
@@ -109,7 +110,7 @@ Time Time::midnight(bool is_local) const {
   }
 
   // This function must not fail.
-  // NOTREACHED();
+  NOTREACHED();
   return Time();
 }
 
@@ -142,8 +143,6 @@ std::ostream& operator<<(std::ostream& os, Time time) {
 namespace {
 // This prevents a crash on traversing the environment global and looking up
 // the 'TZ' variable in libc. See: crbug.com/390567.
-// TODO
-
 time_t time_t_from_tm(struct tm* timestruct, bool is_local) {
   return is_local ? mktime(timestruct) : timegm(timestruct);
 }
@@ -325,4 +324,3 @@ bool Time::Exploded::is_valid() const {
 }
 
 }	// namespace annety
-

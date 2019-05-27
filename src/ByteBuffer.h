@@ -1,37 +1,38 @@
-
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #ifndef ANT_BYTE_BUFFER_H
 #define ANT_BYTE_BUFFER_H
 
-#include <vector>
-#include <cassert>
-#include <string>
-#include <iosfwd>
-#include <algorithm>
-#include <string.h>
-
 #include "BuildConfig.h"
 #include "CompilerSpecific.h"
-// #include "logging.h"
-
 #include "StringPiece.h"
 
-namespace annety
-{
-/// @code
-/// +-------------------+------------------+------------------+
-/// | prependable bytes |  readable bytes  |  writable bytes  |
-/// |                   |     (CONTENT)    |                  |
-/// +-------------------+------------------+------------------+
-/// |                   |                  |                  |
-/// 0      <=      readerIndex   <=   writerIndex    <=     size
-/// @endcode
+#include <iosfwd>
+#include <ostream>
+
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <string.h>
+#include <assert.h>
+
+namespace annety {
+// @code
+// +-------------------+------------------+------------------+
+// | prependable bytes |  readable bytes  |  writable bytes  |
+// |                   |     (CONTENT)    |                  |
+// +-------------------+------------------+------------------+
+// |                   |                  |                  |
+// 0      <=      readerIndex   <=   writerIndex    <=     size
+// @endcode
 template<ssize_t LIMIT_SIZE = -1>
 class ByteBuffer {
 public:
   static const size_t kInitialSize = 1024;
 
-  static_assert(LIMIT_SIZE >= -1 && LIMIT_SIZE != 0, "illegal limit-size buffer");
+  static_assert(LIMIT_SIZE >= -1 && LIMIT_SIZE != 0, 
+                "illegal limit-size buffer");
 
   explicit ByteBuffer(size_t initialSize = kInitialSize)
     : buffer_(initialSize),readerIndex_(0),writerIndex_(0) {}
@@ -93,7 +94,8 @@ public:
   }
 
   // zero-copy.
-  // but use it carefully(about ownership), and sometimes you need call has_read()
+  // But use this carefully(about ownership). 
+  // And sometimes need call has_read() youself
   StringPiece to_string_piece() const {
     return StringPiece(begin_read(), readable_bytes());
   }
@@ -120,13 +122,12 @@ public:
   }
   bool append(const char* data, size_t len) {
     make_writable_bytes(len);
-    if (writable_bytes() < len) {
-      // logging. usually happended limit buffer
-      return false;
+    if (writable_bytes() >= len) {
+      std::copy(data, data + len, begin_write());
+      has_written(len);
+      return true;
     }
-    std::copy(data, data + len, begin_write());
-    has_written(len);
-    return true;
+    return false;
   }
 
   void shrink(size_t reserve) {
@@ -154,6 +155,10 @@ private:
   void make_writable_bytes(size_t len) {
     if (writable_bytes() < len) {
       if (LIMIT_SIZE != -1) {
+        // std::cout << "Not enough space to write"
+        //           << "limit size:" << LIMIT_SIZE
+        //           << "writable bytes:" << writable_bytes()
+        //           << "append bytes" << len;
         return;
       }
       buffer_.resize(writerIndex_+len);
@@ -187,4 +192,3 @@ std::ostream& operator<<(std::ostream& os, const ByteBuffer<LIMIT_SIZE>& bb) {
 }  // namespace annety
 
 #endif  // ANT_BYTE_BUFFER_H
-

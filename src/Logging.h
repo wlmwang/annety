@@ -1,17 +1,25 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #ifndef ANT_LOGGING_H
 #define ANT_LOGGING_H
 
+#include "BuildConfig.h"
+#include "CompilerSpecific.h"
+#include "ScopedClearLastError.h"
+#include "LogStream.h"
+#include "Time.h"
+
 #include <functional>
 #include <sstream>
-
-#include "Time.h"
-#include "LogStream.h"
-#include "ScopedClearLastError.h"
+#include <string.h>
 
 // Instructions
-// -------------------------------------------------------------------------
+// ----------------------------------------------------------------------
 //
 // Make a bunch of macros for logging. The way to log things is to stream
 // things to LOG(<a particular severity level>).  E.g.,
@@ -99,7 +107,8 @@ public:
 	// LogMessage(SourceFile file, int line);
 
 	// Used for LOG(severity)
-	LogMessage(int line, const Filename& file, LogSeverity severity, int error = 0);
+	LogMessage(int line, const Filename& file, LogSeverity severity, 
+			   int error = 0);
 
 	// Used for CHECK().  Implied severity = LOG_FATAL.
 	// LogMessage(const char* file, int line, const char* condition);
@@ -108,7 +117,8 @@ public:
 	LogMessage(int line, const Filename& file, const std::string& result);
 
 	// Used for DCHECK_EQ(), etc. Takes ownership of the given string.
-	LogMessage(int line, const Filename& file, LogSeverity severity, const std::string& result);
+	LogMessage(int line, const Filename& file, LogSeverity severity, 
+			   const std::string& result);
 
 	// Logger(SourceFile file, int line, LogLevel level, const char* func);
 	// Logger(SourceFile file, int line, bool toAbort);
@@ -118,6 +128,7 @@ public:
 	LogStream& stream() {
 		return impl_.stream_;
 	}
+
 	LogSeverity severity() {
 		return impl_.severity_;
 	}
@@ -157,27 +168,31 @@ public:
 	void operator&(annety::LogStream&) {}
 };
 
-
 // A few definitions of macros that don't generate much code. These are used
 // by LOG() and LOG_IF, etc. Since these are used all over our code, it's
 // better to have compact code for these operations.
-#define COMPACK_LOG_HANDLE(severity, ...) annety::LogMessage(__LINE__, \
-		__FILE__, annety::LOG_ ## severity, ##__VA_ARGS__)
+#define COMPACK_LOG_HANDLE(severity, ...)		\
+	annety::LogMessage(__LINE__,				\
+					   __FILE__,				\
+					   annety::LOG_ ## severity,\
+					   ##__VA_ARGS__)
 
-#define LOG_STREAM(severity, ...) COMPACK_LOG_HANDLE(severity, \
-		##__VA_ARGS__).stream()
+#define LOG_STREAM(severity, ...)	\
+	COMPACK_LOG_HANDLE(severity, ##__VA_ARGS__).stream()
 
 #define LAZY_STREAM(stream, condition) \
-	!(condition) ? (void) 0 : annety::LogMessageVoidify() & (stream)
+	!(condition) ? (void)0 : annety::LogMessageVoidify() & (stream)
 
 #define LOG_IS_ON(severity) \
 	(annety::ShouldCreateLogMessage(annety::LOG_ ## severity))
 
-#define LOG(severity, ...) LAZY_STREAM(LOG_STREAM(severity, ##__VA_ARGS__), \
-	LOG_IS_ON(severity))
+#define LOG(severity, ...)							\
+	LAZY_STREAM(LOG_STREAM(severity, ##__VA_ARGS__),\
+				LOG_IS_ON(severity))
 
-#define LOG_IF(severity, condition, ...) LAZY_STREAM(LOG_STREAM(severity, \
-	##__VA_ARGS__), LOG_IS_ON(severity) && (condition))
+#define LOG_IF(severity, condition, ...)			\
+	LAZY_STREAM(LOG_STREAM(severity, ##__VA_ARGS__),\
+				LOG_IS_ON(severity) && (condition))
 
 
 // {,D}CHECK* / DLOG*------------------------------------------------------------
@@ -196,7 +211,8 @@ extern annety::LogStream* g_swallow_stream;
 // boolean.
 class CheckOpResult {
 public:
-	// |message| must be non-null if and only if the check failed.
+	// |message| must be not-empty if and only if the check failed.
+	// *Note: Move Construct will be called in CHECK_OP() 
 	CheckOpResult(const std::string& message) : message_(message) {}
 	CheckOpResult(std::string&& message) : message_(std::move(message)) {}
 
@@ -208,6 +224,7 @@ public:
 	std::string message() {
 		return message_;
 	}
+
 private:
 	std::string message_;
 };
@@ -235,8 +252,8 @@ private:
 // - Don't cause too much binary bloat.
 #if defined(ARCH_CPU_X86_FAMILY)
 // int 3 will generate a SIGTRAP.
-#define TRAP_SEQUENCE() \
-	asm volatile( 		\
+#define TRAP_SEQUENCE()	\
+	asm volatile(		\
 		"int3; ud2; push %0;" ::"i"(static_cast<unsigned char>(__COUNTER__)))
 #else	// !(ARCH_CPU_X86_FAMILY)
 // Crash report accuracy will not be guaranteed on other architectures, but at
@@ -302,7 +319,7 @@ private:
 // Do as much work as possible out of line to reduce inline code size.
 #define CHECK(condition) \
 	LAZY_STREAM(annety::LogMessage(__LINE__, __FILE__, #condition).stream(), \
-		!ANALYZER_ASSUME_TRUE(condition))
+				!ANALYZER_ASSUME_TRUE(condition))
 
 // Helper macro for binary operators.
 // Don't use this macro directly in your code, use CHECK_EQ et al below.
@@ -322,11 +339,9 @@ private:
 
 #endif  // !(NDEBUG)
 
-
 // Build the error message string.  This is separate from the "Impl"
 // function template because it is not performance critical and so can
-// be out of line, while the "Impl" code should be inline.  Caller
-// takes ownership of the returned string.
+// be out of line, while the "Impl" code should be inline.
 template<class t1, class t2>
 std::string MakeCheckOpString(const t1& v1, const t2& v2, const char* names) {
 	std::ostringstream ss;
@@ -387,7 +402,6 @@ DEFINE_CHECK_OP_IMPL(GT, > )
 #define CHECK_GE(val1, val2) CHECK_OP(GE, >=, val1, val2)
 #define CHECK_GT(val1, val2) CHECK_OP(GT, > , val1, val2)
 
-
 // DCHECK* / DLOG*------------------------------------------------------------
 
 #if defined(NDEBUG) && !defined(DCHECK_ALWAYS_ON)
@@ -400,18 +414,17 @@ DEFINE_CHECK_OP_IMPL(GT, > )
 #if DCHECK_IS_ON()
 #define DLOG_IS_ON(severity) LOG_IS_ON(severity)
 #define DLOG_IF(severity, condition) LOG_IF(severity, condition)
-// #define DLOG_ASSERT(condition) LOG_ASSERT(condition)
 // #define DPLOG_IF(severity, condition) PLOG_IF(severity, condition)
-#else  // DCHECK_IS_ON()
+#else
 
 // If !DCHECK_IS_ON(), we want to avoid emitting any references to |condition|
 // (which may reference a variable defined only if DCHECK_IS_ON()).
 // Contrast this with DCHECK et al., which has different behavior.
 #define DLOG_IS_ON(severity) false
 #define DLOG_IF(severity, condition) EAT_STREAM_PARAMETERS
-// #define DLOG_ASSERT(condition) EAT_STREAM_PARAMETERS
 // #define DPLOG_IF(severity, condition) EAT_STREAM_PARAMETERS
 #endif  // DCHECK_IS_ON()
+
 
 #define DLOG(severity)                                          \
 	LAZY_STREAM(LOG_STREAM(severity), DLOG_IS_ON(severity))
@@ -422,7 +435,8 @@ DEFINE_CHECK_OP_IMPL(GT, > )
 // Definitions for DCHECK et al.
 #if DCHECK_IS_ON()
 const LogSeverity LOG_DCHECK = LOG_FATAL;
-#else  // DCHECK_IS_ON()
+#else
+
 // There may be users of LOG_DCHECK that are enabled independently
 // of DCHECK_IS_ON(), so default to FATAL logging for those.
 const LogSeverity LOG_DCHECK = LOG_FATAL;
@@ -518,7 +532,7 @@ void LogErrorNotReached(int line, const LogMessage::Filename& file);
 		: EAT_STREAM_PARAMETERS
 #else
 #define NOTREACHED() DCHECK(false)
-#endif
+#endif	// DCHECK_IS_ON()
 
 
 }	// namespace annety

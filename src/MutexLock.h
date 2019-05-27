@@ -1,26 +1,32 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
+// Modify: Anny Wang
+// Date: May 8 2019
 
-
-#ifndef ANT_LOCK_H_
-#define ANT_LOCK_H_
-
-#include <pthread.h>
+#ifndef ANT_MUTEX_LOCK_H_
+#define ANT_MUTEX_LOCK_H_
 
 #include "BuildConfig.h"
-#include "Logging.h"
+#include "CompilerSpecific.h"
 
-#define DCHECK_IS_ON() 0
+// For test ---------------------------------------------------------------
+#undef NDEBUG
+#define NDEBUG
+//-------------------------------------------------------------------------
+#include "Logging.h"
 
 #if DCHECK_IS_ON()
 #include "Thread.h"
 #endif
 
-namespace annety {
+#include <pthread.h>
 
+namespace annety {
 class ConditionVariable;
 
 namespace internal {
-
 // This class implements the underlying platform-specific spin-lock mechanism
 // used for the Lock class.  Most users should not use LockImpl directly, but
 // should instead use Lock.
@@ -38,7 +44,7 @@ public:
 
 	// Release the lock.  This must only be called by the lock's holder: after
 	// a successful call to Try, or a call to Lock.
-	inline void unlock();
+	void unlock();
 
 	// Return the native underlying lock.
 	pthread_mutex_t* native_handle() {
@@ -49,7 +55,7 @@ private:
 	pthread_mutex_t native_handle_;
 };
 
-}  // namespace internal
+}	// namespace internal
 
 // A convenient wrapper for an OS specific critical section.  The only real
 // intelligence in this class is in debug mode for the support for the
@@ -81,6 +87,7 @@ public:
 
 	// Null implementation if not debug.
 	void assert_acquired() const {}
+
 #else
 	MutexLock();
 	~MutexLock();
@@ -106,8 +113,8 @@ public:
 	}
 
 	void assert_acquired() const;
-#endif  // DCHECK_IS_ON()
 
+#endif  // DCHECK_IS_ON()
 	// Both Windows and POSIX implementations of ConditionVariable need to be
 	// able to see our lock and tweak our debugging counters, as they release and
 	// acquire locks inside of their condition variable APIs.
@@ -125,9 +132,8 @@ private:
 
 	// All private data is implicitly protected by lock_.
 	// Be VERY careful to only access members under that lock.
-	//
-	//
-	// wutil::PlatformThreadRef owning_thread_ref_;
+	PlatformThreadRef owning_thread_ref_;
+
 #endif  // DCHECK_IS_ON()
 
 	// Platform specific underlying lock implementation.
@@ -176,5 +182,4 @@ private:
 
 }  // namespace annety
 
-#endif  // ANT_LOCK_H_
-
+#endif  // ANT_MUTEX_LOCK_H_

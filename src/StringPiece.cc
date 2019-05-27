@@ -1,8 +1,13 @@
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-
-#include <ostream>
+// Modify: Anny Wang
+// Date: May 8 2019
 
 #include "StringPiece.h"
+
+#include <ostream>
 
 namespace annety {
 // For testing only
@@ -11,5 +16,3 @@ std::ostream& operator<<(std::ostream& os, const StringPiece& piece) {
 }
 
 }	// namespace annety
-
-
