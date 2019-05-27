@@ -16,8 +16,8 @@
 #include <sys/time.h>
 
 namespace annety {
-ConditionVariable::ConditionVariable(MutexLock* user_lock)
-    : user_mutex_(user_lock->lock_.native_handle())
+ConditionVariable::ConditionVariable(MutexLock& user_lock)
+    : user_mutex_(user_lock.lock_.native_handle())
 #if DCHECK_IS_ON()
     , user_lock_(user_lock)
 #endif
@@ -61,14 +61,14 @@ ConditionVariable::~ConditionVariable() {
 
 void ConditionVariable::wait() {
 #if DCHECK_IS_ON()
-  user_lock_->check_held_and_unmark();
+  user_lock_.check_held_and_unmark();
 #endif
 
   int rv = pthread_cond_wait(&condition_, user_mutex_);
   DCHECK_EQ(0, rv);
 
 #if DCHECK_IS_ON()
-  user_lock_->check_unheld_and_mark();
+  user_lock_.check_unheld_and_mark();
 #endif
 }
 
@@ -80,7 +80,7 @@ void ConditionVariable::timed_wait(const TimeDelta& max_time) {
                           Time::kNanosecondsPerMicrosecond;
 
 #if DCHECK_IS_ON()
-  user_lock_->check_held_and_unmark();
+  user_lock_.check_held_and_unmark();
 #endif
 
 #if defined(OS_MACOSX)
@@ -109,7 +109,7 @@ void ConditionVariable::timed_wait(const TimeDelta& max_time) {
   DCHECK(rv == 0 || rv == ETIMEDOUT);
   
 #if DCHECK_IS_ON()
-  user_lock_->check_unheld_and_mark();
+  user_lock_.check_unheld_and_mark();
 #endif
 }
 

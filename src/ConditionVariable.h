@@ -26,7 +26,7 @@ class TimeDelta;
 class ConditionVariable {
 public:
   // Construct a cv for use with ONLY one user lock.
-  explicit ConditionVariable(MutexLock* user_lock);
+  explicit ConditionVariable(MutexLock& user_lock);
 
   ~ConditionVariable();
 
@@ -48,7 +48,7 @@ private:
   pthread_mutex_t* user_mutex_;
 
 #if DCHECK_IS_ON()
-  MutexLock* const user_lock_;  // Needed to adjust shadow lock state on wait.
+  MutexLock& user_lock_;  // Needed to adjust shadow lock state on wait.
 #endif
 };
 
