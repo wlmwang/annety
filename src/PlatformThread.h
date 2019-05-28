@@ -16,9 +16,7 @@
 #include <string>
 #include <stddef.h>
 
-#if defined(OS_MACOSX)
-#include <mach/mach_types.h>
-#elif defined(OS_POSIX)
+#if defined(OS_POSIX)
 #include <pthread.h>
 #include <unistd.h>
 #endif

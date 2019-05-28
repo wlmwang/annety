@@ -71,15 +71,15 @@ void Thread::start_routine() {
 	
 	try {
 		func_();
-	} catch (const Exception& ex) {
-		LOG(FATAL) << "thread name:" << name_ 
-				   << "exception:" << ex.what() 
-				   << "backtrace:" << ex.backtrace();
-	} catch (const std::exception& ex) {
-		LOG(FATAL) << "thread name:" << name_ 
-				   << "exception:" << ex.what();
+	} catch (const Exception& e) {
+		LOG(FATAL) << "Thread:" << name_ 
+				   << "Exception:" << e.what() 
+				   << "Backtrace:" << e.backtrace();
+	} catch (const std::exception& e) {
+		LOG(FATAL) << "Thread:" << name_ 
+				   << "Exception:" << e.what();
 	} catch (...) {
-		LOG(ERROR) << "thread name:" << name_;
+		LOG(ERROR) << "Thread:" << name_;
 		throw;
 	}
 }

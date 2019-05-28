@@ -2,7 +2,7 @@
 # simple makefile for test
 ###############################
 
-CC		:= g++
+CC		:= g++ -g
 CCFLAGS	:= -Wall -std=c++11 -rdynamic
 ARFLAGS	:= -Wl,-dn #-Wl,-Bstatic
 LDFLAGS	:= -Wl,-dy #-Wl,-Bdynamic

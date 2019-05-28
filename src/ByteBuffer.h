@@ -9,7 +9,7 @@
 #include "StringPiece.h"
 
 #include <iosfwd>
-#include <ostream>
+#include <iostream>
 
 #include <algorithm>
 #include <vector>
@@ -32,10 +32,12 @@ public:
   static const size_t kInitialSize = 1024;
 
   static_assert(LIMIT_SIZE >= -1 && LIMIT_SIZE != 0, 
-                "illegal limit-size buffer");
-
+                "illegal LIMIT SIZE buffer");
+  
   explicit ByteBuffer(size_t initialSize = kInitialSize)
-    : buffer_(initialSize),readerIndex_(0),writerIndex_(0) {}
+    : buffer_(LIMIT_SIZE>0? LIMIT_SIZE: initialSize),
+      readerIndex_(0),
+      writerIndex_(0) {}
 
   void swap(ByteBuffer& rhs) {
     buffer_.swap(rhs.buffer_);
@@ -153,16 +155,22 @@ private:
   }
   
   void make_writable_bytes(size_t len) {
-    if (writable_bytes() < len) {
-      if (LIMIT_SIZE != -1) {
-        // std::cout << "Not enough space to write"
-        //           << "limit size:" << LIMIT_SIZE
-        //           << "writable bytes:" << writable_bytes()
-        //           << "append bytes" << len;
+    size_t real_writeable_bytes = writable_bytes();
+    if (LIMIT_SIZE != -1) {
+      size_t real_size = std::min(static_cast<size_t>(LIMIT_SIZE), size());
+      real_writeable_bytes = real_size - writerIndex_;
+    }
+
+    if (real_writeable_bytes < len) {
+      if (LIMIT_SIZE != -1 && LIMIT_SIZE - writerIndex_ < len) {
+        // std::stderr << "Not enough space to write"
+        //             << "limit size:" << LIMIT_SIZE
+        //             << "writable bytes:" << writable_bytes()
+        //             << "append bytes" << len;
         return;
       }
       buffer_.resize(writerIndex_+len);
-    } else {
+    } else if (begin_read() != data()) {
       // move readable data to the front, make space inside buffer
       size_t readable = readable_bytes();
       std::copy(begin_read(), begin_write(), data());

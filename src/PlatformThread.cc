@@ -8,10 +8,6 @@
 #include "PlatformThread.h"
 #include "Logging.h"
 
-#if defined(OS_LINUX)
-#include <sys/syscall.h>
-#endif
-
 #include <errno.h>
 #include <pthread.h>
 #include <sched.h>
@@ -20,13 +16,15 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-#include <sys/prctl.h>
 #include <sys/resource.h>
 
-#include <string>
+#if defined(OS_LINUX)
+#include <sys/syscall.h>
+#include <sys/prctl.h>
+#endif
+
 #include <memory>
-#include <iostream>
+#include <string>
 
 namespace annety {
 namespace {
@@ -67,23 +65,24 @@ bool create_thread(bool joinable,
   std::unique_ptr<ThreadParams> params(
     new ThreadParams(std::move(func))
   );
-
+  
   pthread_t handle;
   int err = pthread_create(&handle, &attributes, thread_func, params.get());
-  if (err != 0) {
+  bool success = !err;
+  if (success) {
+    // ThreadParams should be deleted on the created thread after used.
+    IGNORE_UNUSED_RESULT(params.release());
+  } else {
     // Value of |handle| is undefined if pthread_create fails.
     handle = 0;
     errno = err;
     PLOG(ERROR) << "pthread_create";
-  } else {
-    // ThreadParams should be deleted on the created thread after used.
-    DCHECK(handle > 0);
-    IGNORE_UNUSED_RESULT(params.release());
   }
   *thread_handle = PlatformThreadHandle(handle);
 
   pthread_attr_destroy(&attributes);
-  return !err;
+
+  return success;  
 }
 
 }  // namespace anonymous
@@ -157,6 +156,18 @@ void PlatformThread::detach(PlatformThreadHandle thread_handle) {
   CHECK_EQ(0, pthread_detach(thread_handle.platform_handle()));
 }
 
+#if defined(OS_MACOSX)
+// static
+void PlatformThread::set_name(const std::string& name) {
+  // Mac OS X does not expose the length limit of the name, so
+  // hardcode it.
+  const int kMaxNameLength = 63;
+  std::string shortened_name = name.substr(0, kMaxNameLength);
+  // pthread_setname() fails (harmlessly) in the sandbox, ignore when it does.
+  // See http://crbug.com/47058
+  pthread_setname_np(shortened_name.c_str());
+}
+#else
 // static
 void PlatformThread::set_name(const std::string& name) {
 if (PlatformThread::current_id() == getpid() || name.empty()) {
@@ -174,5 +185,7 @@ if (PlatformThread::current_id() == getpid() || name.empty()) {
   if (err < 0 && errno != EPERM)
     DPLOG(ERROR) << "prctl(PR_SET_NAME)";
 }
+
+#endif
 
 }  // namespace annety

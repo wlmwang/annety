@@ -4,15 +4,15 @@
 #include <string>
 
 #include "StringPrintf.h"
-// #include "StringPiece.h"
-// #include "SafeStrerror.h"
-// #include "ByteBuffer.h"
-// #include "LogStream.h"
-// #include "StlUtil.h"
-// #include "Time.h"
+#include "StringPiece.h"
+#include "SafeStrerror.h"
+#include "ByteBuffer.h"
+#include "LogStream.h"
+#include "StlUtil.h"
+#include "Time.h"
 #include "Logging.h"
 #include "MutexLock.h"
-// #include "PlatformThread.h"
+#include "PlatformThread.h"
 #include "Thread.h"
 #include "Exception.h"
 
@@ -36,9 +36,9 @@ int main(int argc, char* argv[]) {
 	cout << "linux os" << endl;
 #endif
 
-// #if defined(NDEBUG)
-// 	std::cout << "NDEBUG SET:" << NDEBUG << std::endl;
-// #endif
+#if defined(NDEBUG)
+	std::cout << "NDEBUG SET:" << NDEBUG << std::endl;
+#endif
 	
 	cout << __cplusplus << endl;
 
@@ -57,8 +57,8 @@ int main(int argc, char* argv[]) {
 	// // ByteBuffer
 	// ByteBuffer<10> bb;
 
-	// bb.append("asdf");
-	// bb.append("xxxx");
+	// bb.append("123456");
+	// bb.append("xx");
 	// bb.append("yy");
 
 	// cout << bb << endl;
@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
 		// 	PLOG(INFO) << 1234.5123 << "xxx";
 		// }
 		test();
-	}, "annety-");
+	}, "annety");
 	tt.start();
 	tt.join();
 

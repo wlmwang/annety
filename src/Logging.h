@@ -17,7 +17,7 @@
 #include <functional>
 #include <sstream>
 #include <string.h>
-#include <error.h>
+#include <errno.h>
 
 // Instructions
 // ----------------------------------------------------------------------
