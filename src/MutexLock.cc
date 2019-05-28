@@ -6,6 +6,7 @@
 // Date: May 8 2019
 
 #include "MutexLock.h"
+#include "SafeStrerror.h"
 
 namespace annety {
 namespace internal {
@@ -26,8 +27,10 @@ std::string system_error_code_to_string(int error_code) {
 #if DCHECK_IS_ON()
 	return safe_strerror(error_code) + ". " +
 		additional_hint_for_system_error_code(error_code);
-#else   // DCHECK_IS_ON()
-  return std::string();
+
+#else
+	return std::string();
+
 #endif  // DCHECK_IS_ON()
 }
 
@@ -73,7 +76,6 @@ void LockImpl::unlock() {
 
 }  // namespace internal
 
-
 #if DCHECK_IS_ON()
 MutexLock::MutexLock() : lock_() {}
 
@@ -82,20 +84,19 @@ MutexLock::~MutexLock() {
 }
 
 void MutexLock::assert_acquired() const {
-	DCHECK(owning_thread_ref_ == PlatformThread::CurrentRef());
+	DCHECK(owning_thread_ref_ == PlatformThread::current_ref());
 }
 
 void MutexLock::check_held_and_unmark() {
-	DCHECK(owning_thread_ref_ == PlatformThread::CurrentRef());
+	DCHECK(owning_thread_ref_ == PlatformThread::current_ref());
 	owning_thread_ref_ = PlatformThreadRef();
 }
 
 void MutexLock::check_unheld_and_mark() {
 	DCHECK(owning_thread_ref_.is_null());
-	owning_thread_ref_ = PlatformThread::CurrentRef();
+	owning_thread_ref_ = PlatformThread::current_ref();
 }
 #endif  // DCHECK_IS_ON()
-
 
 }	// namespace annety
 

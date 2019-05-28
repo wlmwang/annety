@@ -10,11 +10,24 @@
 // #include "LogStream.h"
 // #include "StlUtil.h"
 // #include "Time.h"
-// #include "Logging.h"
+#include "Logging.h"
 #include "MutexLock.h"
+// #include "PlatformThread.h"
+#include "Thread.h"
+#include "Exception.h"
 
 using namespace annety;
 using namespace std;
+
+void test22() {
+	throw Exception("this is a exception!!"); 
+}
+void test11() {
+	test22();
+}
+void test() {
+	test11();
+}
 
 int main(int argc, char* argv[]) {
 #if defined(OS_MACOSX)
@@ -89,4 +102,32 @@ int main(int argc, char* argv[]) {
 	// DCHECK_EQ(1, 1);
 	// DCHECK_LE(1, 2);
 	// // NOTREACHED();	// debug abort/release ERROR
+
+	// PlatformThreadHandle handle;
+	// PlatformThread::create([]() {
+	// 	for (int i = 0; i < 1000; i++) {
+	// 		PLOG(INFO) << 1234.5123 << "xxx";
+			
+	// 		// sleep(3);
+	// 	}
+	// }, &handle);
+	// PlatformThread::join(handle);
+
+	// Thread
+	Thread tt([]() {
+		// for (int i = 0; i < 1000000; i++) {
+		// 	PLOG(INFO) << 1234.5123 << "xxx";
+		// }
+		test();
+	}, "annety-");
+	tt.start();
+	tt.join();
+
+	// // Exception
+	// try {
+	// 	test();
+	// } catch (const Exception& ex) {
+	// 	fprintf(stderr, "reason: %s\n", ex.what());
+	// 	fprintf(stderr, "stack trace: %s\n", ex.backtrace());
+	// }
 }

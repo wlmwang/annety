@@ -8,10 +8,10 @@
 #include <algorithm>
 #include <iostream>
 
-#include "Logging.h"
-#include "StlUtil.h"
 #include "SafeStrerror.h"
 #include "StringPrintf.h"
+#include "Logging.h"
+#include "StlUtil.h"
 #include "Time.h"
 
 namespace annety {
@@ -85,7 +85,7 @@ void LogMessage::Impl::begin() {
 	TimeDelta td = time_ - Time();
 	if (td.in_seconds() != t_last_second) {
 		time_.to_local_explode(&t_local_exploded);
-		SStringPrintf(&t_format_ymdhis, "%04d-%02d-%02d %02d:%02d:%02d",
+		sstring_printf(&t_format_ymdhis, "%04d-%02d-%02d %02d:%02d:%02d",
 						t_local_exploded.year,
 						t_local_exploded.month,
 						t_local_exploded.day_of_month,
@@ -94,7 +94,7 @@ void LogMessage::Impl::begin() {
 						t_local_exploded.second);
 		t_last_second = td.in_seconds();
 	}
-	stream_ << StringPrintf("%s.%06d GMT ", t_format_ymdhis.c_str(), 
+	stream_ << string_printf("%s.%06d ", t_format_ymdhis.c_str(), 
 				static_cast<int>(td.internal_value() % Time::kMicrosecondsPerSecond));
 	// tid string
 
@@ -103,7 +103,7 @@ void LogMessage::Impl::begin() {
 
 	// strerror
 	if (errno_ != 0) {
-		stream_ << safe_fast_strerror(errno_) << " (errno=" << errno_ << ") ";
+		stream_ << fast_safe_strerror(errno_) << " (errno=" << errno_ << ") ";
 	}
 }
 

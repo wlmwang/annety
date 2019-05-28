@@ -16,28 +16,28 @@
 
 namespace annety {
 // Return a C++ string given printf-like input.
-std::string StringPrintf(_Printf_format_string_ const char* format, ...)
+std::string string_printf(_Printf_format_string_ const char* format, ...)
     PRINTF_FORMAT(1, 2) WARN_UNUSED_RESULT;
 
 // Return a C++ string given vprintf-like input.
-std::string StringPrintV(const char* format, va_list ap)
+std::string string_printv(const char* format, va_list ap)
 	PRINTF_FORMAT(1, 0) WARN_UNUSED_RESULT;
 
 // Store result into a supplied string and return it.
-const std::string& SStringPrintf(std::string* dst,
+const std::string& sstring_printf(std::string* dst,
 								_Printf_format_string_ const char* format,
 								...) 
 	PRINTF_FORMAT(2, 3);
 
 // Append result to a supplied string.
-void StringAppendF(std::string* dst,
+const std::string& string_appendf(std::string* dst,
 				  _Printf_format_string_ const char* format,
 				  ...) 
 	PRINTF_FORMAT(2, 3);
 
 // Lower-level routine that takes a va_list and appends to a specified
 // string.  All other routines are just convenience wrappers around it.
-void StringAppendV(std::string* dst, const char* format, va_list ap)
+void string_appendv(std::string* dst, const char* format, va_list ap)
 	PRINTF_FORMAT(2, 0);
 
 }  // namespace annety

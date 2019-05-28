@@ -9,6 +9,7 @@
 #define ANT_CONDITION_VARIABLE_H_
 
 #include "BuildConfig.h"
+#include "CompilerSpecific.h"
 #include "MutexLock.h"
 #include "Logging.h"
 

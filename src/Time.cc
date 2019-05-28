@@ -129,7 +129,7 @@ std::ostream& operator<<(std::ostream& os, TimeDelta delta) {
 std::ostream& operator<<(std::ostream& os, Time time) {
   Time::Exploded exploded;
   time.to_utc_explode(&exploded);
-  return os << StringPrintf("%04d-%02d-%02d %02d:%02d:%02d.%06d UTC",
+  return os << string_printf("%04d-%02d-%02d %02d:%02d:%02d.%06d UTC",
                             exploded.year,
                             exploded.month,
                             exploded.day_of_month,

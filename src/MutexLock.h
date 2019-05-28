@@ -10,15 +10,10 @@
 
 #include "BuildConfig.h"
 #include "CompilerSpecific.h"
-
-// For test ---------------------------------------------------------------
-#undef NDEBUG
-#define NDEBUG
-//-------------------------------------------------------------------------
 #include "Logging.h"
 
 #if DCHECK_IS_ON()
-#include "Thread.h"
+#include "PlatformThread.h"
 #endif
 
 #include <pthread.h>

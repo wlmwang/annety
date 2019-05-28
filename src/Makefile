@@ -3,7 +3,7 @@
 ###############################
 
 CC		:= g++
-CCFLAGS	:= -Wall -std=c++11
+CCFLAGS	:= -Wall -std=c++11 -rdynamic
 ARFLAGS	:= -Wl,-dn #-Wl,-Bstatic
 LDFLAGS	:= -Wl,-dy #-Wl,-Bdynamic
 
@@ -21,7 +21,7 @@ INCFLAGS	:= ${DIR_INC} -I${DIR_SRC}
 # 源文件
 CC_SRC		:= main.cc StringPiece.cc StringPrintf.cc SafeStrerror.cc Time.cc \
 			   LogStream.cc Logging.cc MutexLock.cc ConditionVariable.cc \
-			   CountDownLatch.cc
+			   CountDownLatch.cc PlatformThread.cc Thread.cc Exception.cc 
 
 # 编译文件
 OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))

@@ -41,12 +41,11 @@
 //   std::unique_ptr<MyType> my_var = ...;
 //   if (TakeOwnership(my_var.get()) == SUCCESS)
 //     ignore_result(my_var.release());
-namespace internal {
+namespace annety {
 template<typename T>
 inline void ignore_result(const T&) {}
-
-}	// namespace internal
-#define IGNORE_UNUSED_RESULT(x) ignore_result(x)
+}	// namespace annety
+#define IGNORE_UNUSED_RESULT(x) annety::ignore_result(x)
 
 // Tell the compiler a function is using a printf-style format string.
 // |format_param| is the one-based index of the format string parameter;

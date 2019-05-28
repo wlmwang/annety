@@ -29,15 +29,13 @@ inline int vsnprintfT(char* buffer,
   return std::vsnprintf(buffer, buf_size, format, argptr);
 }
 
-// Templatized backend for StringPrintF/StringAppendF. This does not finalize
+// Templatized backend for string_printf/string_appendf. This does not finalize
 // the va_list, the caller is expected to do that.
 template <class StringType>
-static void StringAppendVT(StringType* dst,
+static void string_appendvt(StringType* dst,
                            const typename StringType::value_type* format,
                            va_list ap) {
   // First try with a small fixed size buffer.
-  // This buffer size should be kept in sync with StringUtilTest.GrowBoundary
-  // and StringUtilTest.StringPrintfBounds.
   typename StringType::value_type stack_buf[1024];
 
   va_list ap_copy;
@@ -94,39 +92,40 @@ static void StringAppendVT(StringType* dst,
 
 } // namespace anonymous
 
-std::string StringPrintf(const char* format, ...) {
+std::string string_printf(const char* format, ...) {
   va_list ap;
   va_start(ap, format);
   std::string result;
-  StringAppendV(&result, format, ap);
+  string_appendv(&result, format, ap);
   va_end(ap);
   return result;
 }
 
-std::string StringPrintV(const char* format, va_list ap) {
+std::string string_printv(const char* format, va_list ap) {
   std::string result;
-  StringAppendV(&result, format, ap);
+  string_appendv(&result, format, ap);
   return result;
 }
 
-const std::string& SStringPrintf(std::string* dst, const char* format, ...) {
+const std::string& sstring_printf(std::string* dst, const char* format, ...) {
   va_list ap;
   va_start(ap, format);
   dst->clear();
-  StringAppendV(dst, format, ap);
+  string_appendv(dst, format, ap);
   va_end(ap);
   return *dst;
 }
 
-void StringAppendF(std::string* dst, const char* format, ...) {
+const std::string& string_appendf(std::string* dst, const char* format, ...) {
   va_list ap;
   va_start(ap, format);
-  StringAppendV(dst, format, ap);
+  string_appendv(dst, format, ap);
   va_end(ap);
+  return *dst;
 }
 
-void StringAppendV(std::string* dst, const char* format, va_list ap) {
-  StringAppendVT(dst, format, ap);
+void string_appendv(std::string* dst, const char* format, va_list ap) {
+  string_appendvt(dst, format, ap);
 }
 
 }  // namespace annety

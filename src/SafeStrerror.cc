@@ -13,7 +13,6 @@
 #include <string.h>
 
 namespace annety {
-
 #if defined(__GLIBC__)
 #define USE_HISTORICAL_STRERRO_R 1
 #else
@@ -125,7 +124,7 @@ const size_t ERROR_BUFSIZE = 64;
 thread_local char tls_error_buf[ERROR_BUFSIZE];
 } // namespace anonymous
 
-StringPiece safe_fast_strerror(int err) {
+StringPiece fast_safe_strerror(int err) {
   wrap_posix_strerror_r(&strerror_r, err, tls_error_buf, ERROR_BUFSIZE);
   return StringPiece(tls_error_buf);
 }

@@ -20,7 +20,6 @@
 #include "CompilerSpecific.h"
 
 namespace annety {
-
 // TimeDelta ------------------------------------------------------------------
 
 class TimeDelta {

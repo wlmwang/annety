@@ -14,7 +14,6 @@
 #include <stddef.h>
 
 namespace annety {
-
 // Use this instead of strerror_r().
 StringPiece safe_strerror_r(int err, char *buf, size_t len);
 
@@ -26,8 +25,8 @@ StringPiece safe_strerror_r(int err, char *buf, size_t len);
 // allocate a string.
 std::string safe_strerror(int err);
 
-// Use C++11 thread_local keyword to share memory in pthread
-StringPiece safe_fast_strerror(int err);
+// Use C++11 thread_local keyword to share memory in one thread
+StringPiece fast_safe_strerror(int err);
 
 }  // namespace annety
 
