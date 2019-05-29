@@ -15,6 +15,7 @@
 #include "PlatformThread.h"
 #include "Thread.h"
 #include "Exception.h"
+#include "ThreadPool.h"
 
 using namespace annety;
 using namespace std;
@@ -113,15 +114,27 @@ int main(int argc, char* argv[]) {
 	// }, &handle);
 	// PlatformThread::join(handle);
 
-	// Thread
-	Thread tt([]() {
-		// for (int i = 0; i < 1000000; i++) {
-		// 	PLOG(INFO) << 1234.5123 << "xxx";
-		// }
-		test();
-	}, "annety");
-	tt.start();
-	tt.join();
+	// // Thread
+	// Thread tt([]() {
+	// 	// for (int i = 0; i < 1000000; i++) {
+	// 	// 	PLOG(INFO) << 1234.5123 << "xxx";
+	// 	// }
+	// 	test();
+	// }, "annety");
+	// tt.start();
+	// tt.join();
+
+	// ThreadPool
+	ThreadPool tp("annetys", 2);
+	tp.set_max_tasker_size(50);
+	tp.start();
+
+	for (int i = 0; i < 10; i++) {
+		tp.run_tasker([](){
+			std::cout << "ttt" << std::endl;
+		});
+	}
+	// tp.join_all();
 
 	// // Exception
 	// try {
