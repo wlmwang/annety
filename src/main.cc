@@ -125,16 +125,29 @@ int main(int argc, char* argv[]) {
 	// tt.join();
 
 	// ThreadPool
-	ThreadPool tp("annetys", 2);
-	tp.set_max_tasker_size(50);
+	ThreadPool tp("annetys", 0);
 	tp.start();
 
 	for (int i = 0; i < 10; i++) {
 		tp.run_tasker([](){
-			std::cout << "ttt" << std::endl;
+			// std::cout << "ttt:" << pthread_self() << std::endl;
+			LOG(INFO) << "ttt:" << pthread_self();
 		});
 	}
-	// tp.join_all();
+
+	tp.run_tasker([](){
+		LOG(INFO) << "ttt:" << pthread_self();
+	}, 10);
+	tp.join_all();
+
+	tp.start();
+	tp.run_tasker([](){
+		LOG(INFO) << "yyy:" << pthread_self();
+	}, 10);
+	tp.join_all();
+
+
+	// // tp.stop();
 
 	// // Exception
 	// try {

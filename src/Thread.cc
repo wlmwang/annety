@@ -15,8 +15,9 @@ Thread::Thread(ThreadMainFunc func, const std::string& name_prefix)
 Thread::Thread(ThreadMainFunc func, const std::string& name_prefix,
 			   const Options& options)
 	: name_prefix_(name_prefix),
-	options_(options),
-	func_(std::move(func)) {}
+	  options_(options),
+	  func_(std::move(func)),
+	  latch_(1) {}
 
 Thread::~Thread() {
 	DCHECK(has_been_started()) << "Thread was never started.";

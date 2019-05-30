@@ -14,10 +14,10 @@
 #include <memory>
 
 namespace annety {
-// You just call AddWork() to add a delegate to the list of work to be done.
-// JoinAll() will make sure that all outstanding work is processed, and wait
-// for everything to finish.  You can reuse a pool, so you can call Start()
-// again after you've called JoinAll().
+// You just call run_tasker() to add a task to the list of work to be done.
+// join_all() will make sure that all outstanding work is processed, and wait
+// for everything to finish.  You can reuse a pool, so you can call start()
+// again after you've called join_all().
 class ThreadPool {
 public:
   typedef std::function<void()> Tasker;
@@ -29,16 +29,18 @@ public:
   // have any.
   void start();
 
+  // Force stop all of the underlying threads even if the work is not finished
   void stop();
 
   // Make sure all outstanding work is finished, and wait for and destroy all
   // of the underlying threads in the pool.
-  // void join_all();
+  void join_all();
 
   // It is safe to AddWork() any time, before or after Start().
   // Delegate* should always be a valid pointer, NULL is reserved internally.
-  void run_tasker(Tasker tasker);
+  void run_tasker(Tasker tasker, int repeat_count = 1);
 
+  // tasker queue size
   size_t get_tasker_size() const;
 
   // Must be called before start().
@@ -50,7 +52,6 @@ public:
   }
 
 private:
-  Tasker pop();
   bool is_full() const;
   void thread_loop();
 

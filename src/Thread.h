@@ -89,7 +89,7 @@ private:
 	bool start_called_ = false;
 	bool started_ = false;
 	ThreadMainFunc func_;
-	CountDownLatch latch_{1};
+	CountDownLatch latch_;
 };
 
 }	// namespace annety

@@ -5,8 +5,6 @@
 #include "Logging.h"
 #include "Exception.h"
 
-#include <iostream>
-
 namespace annety {
 ThreadPool::ThreadPool(const std::string& name_prefix, int num_threads) 
 	: name_prefix_(name_prefix),
@@ -16,9 +14,8 @@ ThreadPool::ThreadPool(const std::string& name_prefix, int num_threads)
 	  full_ev_(lock_) {}
 
 ThreadPool::~ThreadPool() {
-	if (running_) {
-		stop();
-	}
+	DCHECK(threads_.empty());
+	DCHECK(taskers_.empty());
 }
 
 void ThreadPool::start() {
@@ -29,10 +26,8 @@ void ThreadPool::start() {
 	// start all tasker thread
 	threads_.reserve(num_threads_);
 	for (int i = 0; i < num_threads_; ++i) {
-		threads_.emplace_back(new Thread(
-								std::bind(&ThreadPool::thread_loop, this), 
-								name_prefix_)
-							);
+		threads_.emplace_back(new Thread(std::bind(&ThreadPool::thread_loop, this), 
+										 name_prefix_));
 		threads_[i]->start();
 	}
 	// current thread acts as a tasker thread 
@@ -43,22 +38,41 @@ void ThreadPool::start() {
 
 void ThreadPool::stop() {
 	// tell all threads to quit their tasker loop.
+	DCHECK(running_ == true) 
+		<< "stop() called with no outstanding threads.";
 	{
 		AutoLock locked(lock_);
-		DCHECK(!threads_.empty() && running_ == true) 
-			<< "stop() called with no outstanding threads.";
 		running_ = false;
 		empty_ev_.broadcast();
 	}
+
 	// join all the tasker threads.
 	for (auto& td : threads_) {
 		td->join();
 	}
+	threads_.clear();
+	taskers_.clear();
+}
+
+void ThreadPool::join_all() {
+	DCHECK(running_ == true) 
+		<< "join_all() called with no outstanding threads.";
+
+	// Tell all our threads to quit their worker loop.
+	run_tasker(nullptr, num_threads_);
+
+	// Join and destroy all the worker threads.
+	for (auto& td : threads_) {
+		td->join();
+	}
+	threads_.clear();
+	DCHECK(taskers_.empty());
+	running_ = false;
 }
 
 size_t ThreadPool::get_tasker_size() const {
-  AutoLock locked(lock_);
-  return taskers_.size();
+	AutoLock locked(lock_);
+	return taskers_.size();
 }
 
 bool ThreadPool::is_full() const {
@@ -66,38 +80,27 @@ bool ThreadPool::is_full() const {
 	return max_tasker_size_ > 0 && taskers_.size() >= max_tasker_size_;
 }
 
-void ThreadPool::run_tasker(Tasker tasker) {
+void ThreadPool::run_tasker(Tasker tasker, int repeat_count) {
+	DCHECK(running_ == true) << 
+		"run_tasker() called with no outstanding threads.";
+
 	if (threads_.empty()) {
-		tasker();
+		while (repeat_count-- > 0) {
+			if (tasker) {
+				tasker();
+			}
+		}
 	} else {
 		AutoLock locked(lock_);
-		while (is_full()) {
-			full_ev_.wait();
+		while (repeat_count-- > 0) {
+			while (is_full()) {
+				full_ev_.wait();
+			}
+			DCHECK(!is_full()) << "full the taskers.";
+			taskers_.push_back(std::move(tasker));
 		}
-		DCHECK(!is_full()) << "full the taskers.";
-
-		taskers_.push_back(std::move(tasker));
 		empty_ev_.signal();
 	}
-}
-
-ThreadPool::Tasker ThreadPool::pop() {
-	AutoLock locked(lock_);
-	while (taskers_.empty() && running_) {
-		empty_ev_.wait();
-	}
-	DCHECK(!taskers_.empty() || running_ == false) << "empty the taskers.";
-
-	Tasker task;
-	if (!taskers_.empty()) {
-		task = taskers_.front();
-		taskers_.pop_front();
-
-		if (max_tasker_size_ > 0) {
-			full_ev_.signal();
-		}
-	}
-	return task;
 }
 
 void ThreadPool::thread_loop() {
@@ -105,10 +108,33 @@ void ThreadPool::thread_loop() {
 		if (thread_init_cb_) {
 			thread_init_cb_();
 		}
-		// main loop
 		while (running_) {
-			Tasker task(pop());
-			if (task) {
+			Tasker task = nullptr;
+			{
+				// get one task. \FIFO
+				AutoLock locked(lock_);
+				while (taskers_.empty() && running_) {
+					empty_ev_.wait();
+				}
+				if (!running_) {
+					break;
+				}
+				DCHECK(!taskers_.empty()) << "empty the taskers.";
+
+				task = taskers_.front();
+				taskers_.pop_front();
+				if (max_tasker_size_ > 0) {
+					full_ev_.signal();
+				}
+			}
+			{
+				// A nullptr std::function task signals us to quit.
+				if (!task) {
+					// signal to any other threads that we're currently out of work.
+					empty_ev_.signal();
+					break;
+				}
+				// going to execute
 				task();
 			}
 		}
