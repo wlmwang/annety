@@ -77,12 +77,21 @@ size_t ThreadPool::get_tasker_size() const {
 
 bool ThreadPool::is_full() const {
 	lock_.assert_acquired();
-	return max_tasker_size_ > 0 && taskers_.size() >= max_tasker_size_;
+	return max_tasker_size_ >0 && taskers_.size() >=max_tasker_size_;
 }
 
 void ThreadPool::run_tasker(Tasker tasker, int repeat_count) {
 	DCHECK(running_ == true) << 
 		"run_tasker() called with no outstanding threads.";
+
+	auto push_back = [&, repeat_count] (Tasker& tasker) {
+		lock_.assert_acquired();
+		if (repeat_count == 1) {
+			taskers_.push_back(std::move(tasker));
+		} else {
+			taskers_.push_back(tasker);
+		}
+	};
 
 	if (threads_.empty()) {
 		while (repeat_count-- > 0) {
@@ -97,7 +106,7 @@ void ThreadPool::run_tasker(Tasker tasker, int repeat_count) {
 				full_ev_.wait();
 			}
 			DCHECK(!is_full()) << "full the taskers.";
-			taskers_.push_back(std::move(tasker));
+			push_back(tasker);
 		}
 		empty_ev_.signal();
 	}
@@ -111,7 +120,7 @@ void ThreadPool::thread_loop() {
 		while (running_) {
 			Tasker task = nullptr;
 			{
-				// get one task. \FIFO
+				// Get one task. /FIFO/
 				AutoLock locked(lock_);
 				while (taskers_.empty() && running_) {
 					empty_ev_.wait();
@@ -130,7 +139,8 @@ void ThreadPool::thread_loop() {
 			{
 				// A nullptr std::function task signals us to quit.
 				if (!task) {
-					// signal to any other threads that we're currently out of work.
+					// Signal to any other threads that we're currently 
+					// out of work.
 					empty_ev_.signal();
 					break;
 				}

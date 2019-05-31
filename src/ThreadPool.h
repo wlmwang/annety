@@ -40,7 +40,7 @@ public:
   // Delegate* should always be a valid pointer, NULL is reserved internally.
   void run_tasker(Tasker tasker, int repeat_count = 1);
 
-  // tasker queue size
+  // Taskers queue size
   size_t get_tasker_size() const;
 
   // Must be called before start().
