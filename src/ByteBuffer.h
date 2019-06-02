@@ -53,6 +53,8 @@ public:
   size_t writable_bytes() const {
     if (LIMIT_SIZE != -1) {
       assert(LIMIT_SIZE >= writerIndex_);
+      // todo
+      assert(size() >= writerIndex_);
       return LIMIT_SIZE - writerIndex_;
     }
     assert(size() >= writerIndex_);
@@ -123,7 +125,7 @@ public:
     return append(static_cast<const char*>(data), len);
   }
   bool append(const char* data, size_t len) {
-    make_writable_bytes(len);
+    ensure_writable_bytes(len);
     if (writable_bytes() >= len) {
       std::copy(data, data + len, begin_write());
       has_written(len);
@@ -137,6 +139,10 @@ public:
     if (reserve) {
       buffer_.reserve(reserve);
     }
+  }
+
+  void ensure_writable_bytes(size_t len) {
+    make_writable_bytes(len);
   }
 
 private:

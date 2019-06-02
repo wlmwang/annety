@@ -9,10 +9,20 @@
 #include "Exception.h"
 
 namespace annety {
-Thread::Thread(ThreadMainFunc func, const std::string& name_prefix)
+Thread::Thread(const ThreadMainFunc& func, const std::string& name_prefix)
+	: Thread(func, name_prefix, Options()) {}
+
+Thread::Thread(ThreadMainFunc&& func, const std::string& name_prefix)
 	: Thread(std::move(func), name_prefix, Options()) {}
 
-Thread::Thread(ThreadMainFunc func, const std::string& name_prefix,
+Thread::Thread(const ThreadMainFunc& func, const std::string& name_prefix,
+			   const Options& options)
+	: name_prefix_(name_prefix),
+	  options_(options),
+	  func_(func),
+	  latch_(1) {}
+
+Thread::Thread(ThreadMainFunc&& func, const std::string& name_prefix,
 			   const Options& options)
 	: name_prefix_(name_prefix),
 	  options_(options),

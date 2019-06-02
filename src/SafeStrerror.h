@@ -17,6 +17,9 @@ namespace annety {
 // Use this instead of strerror_r().
 StringPiece safe_strerror_r(int err, char *buf, size_t len);
 
+// Use C++11 thread_local keyword to share memory in one thread
+StringPiece fast_safe_strerror(int err);
+
 // Calls safe_strerror_r with a buffer of suitable size and returns the result
 // in a C++ string.
 //
@@ -24,9 +27,6 @@ StringPiece safe_strerror_r(int err, char *buf, size_t len);
 // more robust in the case of heap corruption errors, since it doesn't need to
 // allocate a string.
 std::string safe_strerror(int err);
-
-// Use C++11 thread_local keyword to share memory in one thread
-StringPiece fast_safe_strerror(int err);
 
 }  // namespace annety
 

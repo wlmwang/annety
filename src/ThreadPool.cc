@@ -6,12 +6,12 @@
 #include "Exception.h"
 
 namespace annety {
-ThreadPool::ThreadPool(const std::string& name_prefix, int num_threads) 
+ThreadPool::ThreadPool(int num_threads, const std::string& name_prefix) 
 	: name_prefix_(name_prefix),
 	  num_threads_(num_threads),
 	  lock_(),
-	  empty_ev_(lock_),
-	  full_ev_(lock_) {}
+	  empty_cv_(lock_),
+	  full_cv_(lock_) {}
 
 ThreadPool::~ThreadPool() {
 	DCHECK(threads_.empty());
@@ -43,7 +43,7 @@ void ThreadPool::stop() {
 	{
 		AutoLock locked(lock_);
 		running_ = false;
-		empty_ev_.broadcast();
+		empty_cv_.broadcast();
 	}
 
 	// join all the tasker threads.
@@ -80,18 +80,9 @@ bool ThreadPool::is_full() const {
 	return max_tasker_size_ >0 && taskers_.size() >=max_tasker_size_;
 }
 
-void ThreadPool::run_tasker(Tasker tasker, int repeat_count) {
+void ThreadPool::run_tasker(const Tasker& tasker, int repeat_count) {
 	DCHECK(running_ == true) << 
 		"run_tasker() called with no outstanding threads.";
-
-	auto push_back = [&, repeat_count] (Tasker& tasker) {
-		lock_.assert_acquired();
-		if (repeat_count == 1) {
-			taskers_.push_back(std::move(tasker));
-		} else {
-			taskers_.push_back(tasker);
-		}
-	};
 
 	if (threads_.empty()) {
 		while (repeat_count-- > 0) {
@@ -103,12 +94,13 @@ void ThreadPool::run_tasker(Tasker tasker, int repeat_count) {
 		AutoLock locked(lock_);
 		while (repeat_count-- > 0) {
 			while (is_full()) {
-				full_ev_.wait();
+				full_cv_.wait();
 			}
 			DCHECK(!is_full()) << "full the taskers.";
-			push_back(tasker);
+			// copy to vector
+			taskers_.push_back(tasker);
 		}
-		empty_ev_.signal();
+		empty_cv_.signal();
 	}
 }
 
@@ -123,7 +115,7 @@ void ThreadPool::thread_loop() {
 				// Get one task. /FIFO/
 				AutoLock locked(lock_);
 				while (taskers_.empty() && running_) {
-					empty_ev_.wait();
+					empty_cv_.wait();
 				}
 				if (!running_) {
 					break;
@@ -133,7 +125,7 @@ void ThreadPool::thread_loop() {
 				task = taskers_.front();
 				taskers_.pop_front();
 				if (max_tasker_size_ > 0) {
-					full_ev_.signal();
+					full_cv_.signal();
 				}
 			}
 			{
@@ -141,7 +133,7 @@ void ThreadPool::thread_loop() {
 				if (!task) {
 					// Signal to any other threads that we're currently 
 					// out of work.
-					empty_ev_.signal();
+					empty_cv_.signal();
 					break;
 				}
 				// going to execute

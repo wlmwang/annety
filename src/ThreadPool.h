@@ -22,7 +22,7 @@ class ThreadPool {
 public:
   typedef std::function<void()> Tasker;
 
-  explicit ThreadPool(const std::string& name_prefix, int num_threads = 0);
+  explicit ThreadPool(int num_threads, const std::string& name_prefix);
   ~ThreadPool();
 
   // Start up all of the underlying threads, and start processing work if we
@@ -36,9 +36,8 @@ public:
   // of the underlying threads in the pool.
   void join_all();
 
-  // It is safe to AddWork() any time, before or after Start().
-  // Delegate* should always be a valid pointer, NULL is reserved internally.
-  void run_tasker(Tasker tasker, int repeat_count = 1);
+  // It is safe to run_tasker() any time, before or after start().
+  void run_tasker(const Tasker& tasker, int repeat_count = 1);
 
   // Taskers queue size
   size_t get_tasker_size() const;
@@ -63,8 +62,8 @@ private:
   Tasker thread_init_cb_{};
 
   mutable MutexLock lock_;
-  ConditionVariable empty_ev_;
-  ConditionVariable full_ev_;
+  ConditionVariable empty_cv_;
+  ConditionVariable full_cv_;
   
   std::deque<Tasker> taskers_;
   std::vector<std::unique_ptr<Thread>> threads_;

@@ -33,8 +33,10 @@ public:
 		bool joinable = true;
 	};
 
-	explicit Thread(ThreadMainFunc func, const std::string& name_prefix);
-  	Thread(ThreadMainFunc func, const std::string& name_prefix, const Options& options);
+	explicit Thread(const ThreadMainFunc& func, const std::string& name_prefix);
+	explicit Thread(ThreadMainFunc&& func, const std::string& name_prefix);
+  	Thread(const ThreadMainFunc& func, const std::string& name_prefix, const Options& options);
+  	Thread(ThreadMainFunc&& func, const std::string& name_prefix, const Options& options);
 
 	~Thread();
 

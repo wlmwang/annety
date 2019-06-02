@@ -16,6 +16,7 @@
 #include "Thread.h"
 #include "Exception.h"
 #include "ThreadPool.h"
+#include "BlockingQueue.h"
 
 using namespace annety;
 using namespace std;
@@ -124,30 +125,65 @@ int main(int argc, char* argv[]) {
 	// tt.start();
 	// tt.join();
 
-	// ThreadPool
-	ThreadPool tp("annetys", 0);
-	tp.start();
+	// // ThreadPool
+	// ThreadPool tp("annetys", 5);
+	// tp.start();
 
-	for (int i = 0; i < 10; i++) {
-		tp.run_tasker([](){
-			// std::cout << "ttt:" << pthread_self() << std::endl;
-			LOG(INFO) << "ttt:" << pthread_self();
-		});
-	}
+	// for (int i = 0; i < 10; i++) {
+	// 	tp.run_tasker([](){
+	// 		// std::cout << "ttt:" << pthread_self() << std::endl;
+	// 		LOG(INFO) << "ttt:" << pthread_self();
+	// 	});
+	// }
 
-	tp.run_tasker([](){
-		LOG(INFO) << "ttt:" << pthread_self();
-	}, 10);
-	tp.join_all();
+	// tp.run_tasker([](){
+	// 	LOG(INFO) << "ttt:" << pthread_self();
+	// }, 10);
+	// tp.join_all();
 
-	tp.start();
-	tp.run_tasker([](){
-		LOG(INFO) << "yyy:" << pthread_self();
-	}, 10);
-	tp.join_all();
+	// tp.start();
+	// tp.run_tasker([](){
+	// 	LOG(INFO) << "yyy:" << pthread_self();
+	// }, 10);
+	// tp.join_all();
+	// // // tp.stop();
 
 
-	// // tp.stop();
+	// // BlockingQueue
+	// // BlockingQueue<int> bq;
+	// BlockingQueue<int, BoundedBlockingTrait<int>> bq(2);
+	// Thread producer([&bq]() {
+	// 	for (int i = 0; i < 10; i++) {
+	// 		bq.push(i);
+	// 		LOG(INFO) << "producer:" << i << "|" << pthread_self();
+	// 	}
+	// }, "annety-producer");
+	// producer.start();
+
+	// sleep(1);	// test for BoundedBlockingTrait
+	// // one thread consumer
+	// Thread consumer([&bq]() {
+	// 	while(true) {
+	// 		LOG(INFO) << "consumer:" << bq.pop() << "|" << pthread_self();
+	// 	}
+	// }, "annety-consumer");
+	// consumer.start();
+
+	// producer.join();
+	// consumer.join();
+
+	// thread pool consumer
+	// ThreadPool consumers(16, "annety-consumers");
+	// consumers.start();
+	// consumers.run_tasker([&bq](){
+	// 	while(true) {
+	// 		LOG(INFO) << "consumer:" << bq.pop() << "|" << pthread_self();
+	// 	}
+	// });
+
+	// producer.join();
+	// consumers.join_all();
+
 
 	// // Exception
 	// try {
