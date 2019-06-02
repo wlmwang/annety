@@ -3,20 +3,22 @@
 #include <iostream>
 #include <string>
 
-#include "StringPrintf.h"
-#include "StringPiece.h"
-#include "SafeStrerror.h"
-#include "ByteBuffer.h"
-#include "LogStream.h"
-#include "StlUtil.h"
-#include "Time.h"
-#include "Logging.h"
-#include "MutexLock.h"
-#include "PlatformThread.h"
-#include "Thread.h"
+// #include "StringPrintf.h"
+// #include "StringPiece.h"
+// #include "SafeStrerror.h"
+// #include "ByteBuffer.h"
+// #include "LogStream.h"
+// #include "StlUtil.h"
+// #include "Time.h"
+// #include "Logging.h"
+// #include "MutexLock.h"
+// #include "PlatformThread.h"
+// #include "Thread.h"
 #include "Exception.h"
-#include "ThreadPool.h"
-#include "BlockingQueue.h"
+// #include "ThreadPool.h"
+// #include "BlockingQueue.h"
+#include "File.h"
+
 
 using namespace annety;
 using namespace std;
@@ -184,6 +186,13 @@ int main(int argc, char* argv[]) {
 	// producer.join();
 	// consumers.join_all();
 
+	// // File
+	// File f("ggg.log", File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
+	// cout << "write:"<< f.write(0, "ggg", strlen("ggg")) << endl;
+
+	// char buf[1024];
+	// std::cout << "read:"<< f.read(0, buf, sizeof(buf)) << std::endl;
+	// std::cout << buf << std::endl;
 
 	// // Exception
 	// try {

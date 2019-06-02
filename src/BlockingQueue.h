@@ -178,24 +178,28 @@ private:
 // {,Un}Boundedblocking queue
 template<typename T, typename Traits = UnBoundedBlockingTrait<T>>
 class BlockingQueue {
-public:
+private:
   struct Data : public Traits {
     Data() : Traits() {}
     explicit Data(size_t max_size) : Traits(max_size) {}
   };
 
+public:
+  typedef T element_type;
+  typedef Traits traits_type;
+
   BlockingQueue() : data_() {}
   explicit BlockingQueue(size_t max_size) : data_(max_size) {}
 
-  void push(const T& x) {
+  void push(const element_type& x) {
     data_.push(x);
   }
 
-  void push(T&& x) {
+  void push(element_type&& x) {
     data_.push(std::move(x));
   }
 
-  T pop() {
+  element_type pop() {
     return data_.pop();
   }
 
