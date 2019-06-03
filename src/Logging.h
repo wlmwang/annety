@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
-// Date: May 8 2019
+// Refactoring: Anny Wang
+// Date: May 08 2019
 
 #ifndef ANT_LOGGING_H
 #define ANT_LOGGING_H
@@ -168,6 +168,8 @@ private:
 
 private:
 	Impl impl_;
+
+	DISALLOW_COPY_AND_ASSIGN(LogMessage);
 };
 
 // This class is used to explicitly ignore values in the conditional

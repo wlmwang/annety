@@ -1,11 +1,9 @@
-// Modify: Anny Wang
-// Date: May 8 2019
+// Refactoring: Anny Wang
+// Date: May 08 2019
 
 #ifndef ANT_LOG_STREAM_H
 #define ANT_LOG_STREAM_H
 
-#include "BuildConfig.h"
-#include "CompilerSpecific.h"
 #include "ByteBuffer.h"
 
 #include <iosfwd>
@@ -15,7 +13,6 @@
 
 namespace annety {
 class LogStream {
-public:
 	static const int kMaxNumericSize = 32;
 	
 	static_assert(kMaxNumericSize - 10 > std::numeric_limits<double>::digits10,
@@ -103,5 +100,3 @@ std::ostream& operator<<(std::ostream& os, const LogStream& ls);
 }	// namespace annety
 
 #endif	// ANT_LOG_STREAM_H
-
-

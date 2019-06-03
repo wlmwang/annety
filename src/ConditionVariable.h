@@ -9,8 +9,8 @@
 #define ANT_CONDITION_VARIABLE_H_
 
 #include "CompilerSpecific.h"
-#include "Logging.h"
 #include "MutexLock.h"
+#include "Logging.h"
 
 #include <pthread.h>
 

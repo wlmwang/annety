@@ -14,7 +14,7 @@
 // Don't wrap close calls in HANDLE_EINTR. Use IGNORE_EINTR if the return
 // value of close is significant. See http://crbug.com/269623.
 
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: Jun 02 2019
 
 #ifndef ANT_EINTR_WRAPPER_H_
@@ -27,35 +27,35 @@
 
 #if defined(NDEBUG)
 #define HANDLE_EINTR(x) ({ \
-  decltype(x) eintr_wrapper_result; \
-  do { \
-    eintr_wrapper_result = (x); \
-  } while (eintr_wrapper_result == -1 && errno == EINTR); \
-  eintr_wrapper_result; \
+	decltype(x) eintr_wrapper_result; \
+	do { \
+		eintr_wrapper_result = (x); \
+	} while (eintr_wrapper_result == -1 && errno == EINTR); \
+	eintr_wrapper_result; \
 })
 
 #else
 #define HANDLE_EINTR(x) ({ \
-  int eintr_wrapper_counter = 0; \
-  decltype(x) eintr_wrapper_result; \
-  do { \
-    eintr_wrapper_result = (x); \
-  } while (eintr_wrapper_result == -1 && errno == EINTR && \
-           eintr_wrapper_counter++ < 100); \
-  eintr_wrapper_result; \
+	int eintr_wrapper_counter = 0; \
+	decltype(x) eintr_wrapper_result; \
+	do { \
+		eintr_wrapper_result = (x); \
+	} while (eintr_wrapper_result == -1 && errno == EINTR && \
+			 eintr_wrapper_counter++ < 100); \
+	eintr_wrapper_result; \
 })
 
 #endif  // NDEBUG
 
 #define IGNORE_EINTR(x) ({ \
-  decltype(x) eintr_wrapper_result; \
-  do { \
-    eintr_wrapper_result = (x); \
-    if (eintr_wrapper_result == -1 && errno == EINTR) { \
-      eintr_wrapper_result = 0; \
-    } \
-  } while (0); \
-  eintr_wrapper_result; \
+	decltype(x) eintr_wrapper_result; \
+	do { \
+		eintr_wrapper_result = (x); \
+		if (eintr_wrapper_result == -1 && errno == EINTR) { \
+			eintr_wrapper_result = 0; \
+		} \
+	} while (0); \
+	eintr_wrapper_result; \
 })
 
 #else  // !OS_POSIX

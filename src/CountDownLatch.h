@@ -1,13 +1,12 @@
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: May 28 2019
 
 #ifndef ANT_COUNT_DOWN_LATCH_H
 #define ANT_COUNT_DOWN_LATCH_H
 
-#include "BuildConfig.h"
 #include "CompilerSpecific.h"
-#include "MutexLock.h"
 #include "ConditionVariable.h"
+#include "MutexLock.h"
 
 namespace annety {
 class TimeDelta;

@@ -22,7 +22,7 @@ INCFLAGS	:= ${DIR_INC} -I${DIR_SRC}
 CC_SRC		:= main.cc StringPiece.cc StringPrintf.cc SafeStrerror.cc Time.cc \
 			   LogStream.cc Logging.cc MutexLock.cc ConditionVariable.cc \
 			   CountDownLatch.cc PlatformThread.cc Thread.cc Exception.cc \
-			   ThreadPool.cc File.cc
+			   ThreadPool.cc File.cc AtExit.cc
 
 # 编译文件
 OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))

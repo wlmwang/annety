@@ -8,9 +8,6 @@
 #ifndef _ANT_SCOPED_CLEAR_LAST_ERROR_H_
 #define _ANT_SCOPED_CLEAR_LAST_ERROR_H_
 
-#include "BuildConfig.h"
-#include "CompilerSpecific.h"
-
 #include <errno.h>
 
 namespace annety {
@@ -24,7 +21,7 @@ public:
 	}
 
 private:
-  const int last_errno_;
+	const int last_errno_;
 };
 
 }	// namespace annety

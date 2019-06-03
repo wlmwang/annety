@@ -3,22 +3,22 @@
 #include <iostream>
 #include <string>
 
-// #include "StringPrintf.h"
-// #include "StringPiece.h"
-// #include "SafeStrerror.h"
-// #include "ByteBuffer.h"
-// #include "LogStream.h"
-// #include "StlUtil.h"
-// #include "Time.h"
-// #include "Logging.h"
-// #include "MutexLock.h"
-// #include "PlatformThread.h"
-// #include "Thread.h"
+#include "StringPrintf.h"
+#include "StringPiece.h"
+#include "SafeStrerror.h"
+#include "ByteBuffer.h"
+#include "LogStream.h"
+#include "StlUtil.h"
+#include "Time.h"
+#include "Logging.h"
+#include "MutexLock.h"
+#include "PlatformThread.h"
+#include "Thread.h"
 #include "Exception.h"
-// #include "ThreadPool.h"
-// #include "BlockingQueue.h"
+#include "ThreadPool.h"
+#include "BlockingQueue.h"
 #include "File.h"
-
+#include "AtExit.h"
 
 using namespace annety;
 using namespace std;
@@ -33,6 +33,10 @@ void test() {
 	test11();
 }
 
+void func(void* ptr) {
+	std::cout << "**" << ptr << std::endl;
+}
+
 int main(int argc, char* argv[]) {
 #if defined(OS_MACOSX)
 	cout << "mac osx" << endl;
@@ -45,9 +49,17 @@ int main(int argc, char* argv[]) {
 #endif
 	
 	cout << __cplusplus << endl;
+    
+    // // AtExitManager
+    // {
+    //     int a = 15, b = 20;
+    //     AtExitManager exit_manager;
+    //     exit_manager.RegisterCallback(std::bind(&func, &a));
+    //     exit_manager.RegisterCallback(std::bind(&func, &b));
+    // }
 
 	// // StringPrintf
-	// string sp = StringPrintf("ddd %3.1f", 4555.33);
+	// string sp = string_printf("ddd %3.1f", 4555.33);
 	// cout << sp << endl;
 
 	// // StringPiece
@@ -56,7 +68,7 @@ int main(int argc, char* argv[]) {
 
 	// // SafeStrerror
 	// std::cout << safe_strerror(10) << std::endl;
-	// std::cout << safe_fast_strerror(11) << std::endl;
+	// std::cout << fast_safe_strerror(11) << std::endl;
 
 	// // ByteBuffer
 	// ByteBuffer<10> bb;
@@ -80,11 +92,11 @@ int main(int argc, char* argv[]) {
 
 	// // LogStream
 	// LogStream stream;
-	// stream << -12345.345 << "|" << StringPrintf("ddd %3d", 4555) << true;
+	// stream << -12345.345 << "|" << string_printf("ddd %3d", 4555) << true;
 
 	// cout << stream << endl;
 
-	// // for time
+	// // Time
 	// Time t = Time::now();
 	// cout << t << endl;
 
@@ -98,15 +110,16 @@ int main(int argc, char* argv[]) {
 	// cout << sizeof arr << "|" << sizeof(arr)/sizeof(void*) << endl;	// 3*8=24
 	// cout << annety::size(arr) << endl;
 
-	// // for logging
-	// LOG(INFO, 10) << 1234.5123 << "xxx";
+	// // Logging
+	// LOG(INFO) << 1234.5123 << "xxx";
 
 	// CHECK_EQ(1, 1);
 
 	// DCHECK_EQ(1, 1);
 	// DCHECK_LE(1, 2);
-	// // NOTREACHED();	// debug abort/release ERROR
+	// // // NOTREACHED();	// debug abort/release ERROR
 
+	// // PlatformThreadHandle
 	// PlatformThreadHandle handle;
 	// PlatformThread::create([]() {
 	// 	for (int i = 0; i < 1000; i++) {

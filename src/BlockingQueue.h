@@ -11,6 +11,17 @@
 
 #include <deque>
 
+// Use like:
+//	// UnBoundedBlocking
+// 	BlockingQueue<int> unbound;
+//	unbound.push(1);
+//	int rt = unbound.pop();
+//
+//	// BoundedBlocking
+// 	BlockingQueue<int, BoundedBlockingTrait<int>> bounded(10);
+//	bounded.push(2);
+//	int rt = bounded.pop();
+
 namespace annety {
 // UnBoundedBlockingTrait
 template<typename T>
