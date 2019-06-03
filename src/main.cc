@@ -5,6 +5,7 @@
 
 #include "StringPrintf.h"
 #include "StringPiece.h"
+#include "SafeSprintf.h"
 #include "SafeStrerror.h"
 #include "ByteBuffer.h"
 #include "LogStream.h"
@@ -64,6 +65,10 @@ int main(int argc, char* argv[]) {
 	// std::cout << s << ":" << s1 << '\n' 
 	// 		<< s.rfind("s") << "|" << s.substr(2) << std::endl;
 
+	// // SafeSprintf
+	// char buf[1024];
+	// cout << strings::safe_sprintf(buf, "float %3d", 4555) << endl;
+	// cout << buf << endl;
 
 	// // StringPrintf
 	// string sf = string_printf("float %3.1f", 4555.33);
@@ -102,14 +107,14 @@ int main(int argc, char* argv[]) {
 	
 	// cout << lb << "::" << lb1 << endl;
 
-	// LogStream
-	LogStream stream;
-	stream << -12345.345 << "|" << string_printf("double %3d", 555) << true;
+	// // LogStream
+	// LogStream stream;
+	// stream << -12345.345 << "|" << string_printf("double %3d", 555) << true;
 
-	LogStream stream1 = stream;
-	stream.reset();
+	// LogStream stream1 = stream;
+	// stream.reset();
 
-	cout << stream << "::" << stream1 << endl;
+	// cout << stream << "::" << stream1 << endl;
 
 	// // Time
 	// Time t = Time::now();
