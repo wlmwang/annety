@@ -35,7 +35,7 @@ public:
 	explicit ByteBuffer(size_t initialSize = kInitialSize)
 				: buffer_(LIMIT_SIZE>0? LIMIT_SIZE: initialSize) {}
 
-	// implicit copy-ctor, move-ctor, dtor and assignment
+	// copy-ctor, move-ctor, dtor and assignment
 	ByteBuffer(const ByteBuffer&) = default;
 	ByteBuffer(ByteBuffer&&) = default;
 	ByteBuffer& operator=(const ByteBuffer&) = default;

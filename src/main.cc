@@ -52,19 +52,22 @@ int main(int argc, char* argv[]) {
     
     // // AtExitManager
     // {
-    //     int a = 15, b = 20;
+    //     int a = 15;
     //     AtExitManager exit_manager;
     //     exit_manager.RegisterCallback(std::bind(&func, &a));
-    //     exit_manager.RegisterCallback(std::bind(&func, &b));
+    //     exit_manager.RegisterCallback(std::bind(&func, nullptr));
     // }
 
-	// // StringPrintf
-	// string sp = string_printf("ddd %3.1f", 4555.33);
-	// cout << sp << endl;
-
 	// // StringPiece
-	// StringPiece s("asdfghsjkl");
-	// std::cout << s << "|" << s.rfind("s") << "|" << s.substr(2) << std::endl;
+	// StringPiece s("abcdcba");
+	// StringPiece s1 = s;
+	// std::cout << s << ":" << s1 << '\n' 
+	// 		<< s.rfind("s") << "|" << s.substr(2) << std::endl;
+
+
+	// // StringPrintf
+	// string sf = string_printf("float %3.1f", 4555.33);
+	// cout << sf << endl;
 
 	// // SafeStrerror
 	// std::cout << safe_strerror(10) << std::endl;
@@ -74,27 +77,39 @@ int main(int argc, char* argv[]) {
 	// ByteBuffer<10> bb;
 
 	// bb.append("123456");
-	// bb.append("xx");
-	// bb.append("yy");
+	// bb.append("ab");
+	// bb.append("cd");
+
+	// ByteBuffer<10> bb1 = bb;
 
 	// cout << bb << endl;
 	// cout << bb.taken_as_string() << endl;	// taken
+	// cout << bb << "::" << bb1 << endl;
 
-	// bb.append("tt");
-	// bb.append("asdf");
+	// bb.append("78");
+	// bb.append("ef");
 
-	// cout << "append success:" << bb.append("asdff") << bb.append("T") << endl;
+	// cout << "append success:" << bb.append("hijklm") << endl;
+	// cout << "append success:" << bb.append("n") << endl;
 	// cout << bb << endl;
 
+	// // LogBuffer
 	// LogBuffer lb;
-	// lb.append("as这个是汉子？222");
-	// cout << lb << endl;
+	// lb.append("这个是中文，本质上是utf-8");
+	
+	// LogBuffer lb1 = lb;
+	// lb.reset();
+	
+	// cout << lb << "::" << lb1 << endl;
 
-	// // LogStream
-	// LogStream stream;
-	// stream << -12345.345 << "|" << string_printf("ddd %3d", 4555) << true;
+	// LogStream
+	LogStream stream;
+	stream << -12345.345 << "|" << string_printf("double %3d", 555) << true;
 
-	// cout << stream << endl;
+	LogStream stream1 = stream;
+	stream.reset();
+
+	cout << stream << "::" << stream1 << endl;
 
 	// // Time
 	// Time t = Time::now();

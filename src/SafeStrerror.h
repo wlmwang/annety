@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
-// Date: May 8 2019
+// Refactoring: Anny Wang
+// Date: May 08 2019
 
 #ifndef ANT_SAFE_STRERROR_H_
 #define ANT_SAFE_STRERROR_H_
@@ -31,4 +31,3 @@ std::string safe_strerror(int err);
 }  // namespace annety
 
 #endif  // ANT_SAFE_STRERROR_H_
-

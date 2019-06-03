@@ -24,6 +24,15 @@ class LogStream {
 	static_assert(kMaxNumericSize - 10 > std::numeric_limits<long long>::digits10,
 		"kMaxNumericSize is large enough");
 public:
+	LogStream() {}
+	
+	// copy-ctor, move-ctor, dtor and assignment
+	LogStream(const LogStream&) = default;
+	LogStream(LogStream&&) = default;
+	LogStream& operator=(const LogStream&) = default;
+	LogStream& operator=(LogStream&&) = default;
+	~LogStream() = default;
+
 	// Ostream operators
 	LogStream& operator<<(const void*);
 	

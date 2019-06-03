@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
-// Date: May 8 2019
+// Refactoring: Anny Wang
+// Date: May 08 2019
 
 #ifndef _ANT_STRING_PIECE_H_
 #define _ANT_STRING_PIECE_H_
@@ -48,6 +48,13 @@ public:
     	length_ = static_cast<size_t>(std::distance(begin, end));
     	ptr_ = length_ > 0 ? &*begin : nullptr;
   	}
+
+	// copy-ctor, move-ctor, dtor and assignment
+	StringPiece(const StringPiece&) = default;
+	StringPiece(StringPiece&&) = default;
+	StringPiece& operator=(const StringPiece&) = default;
+	StringPiece& operator=(StringPiece&&) = default;
+	~StringPiece() = default;
 
   	constexpr const value_type* data() const { return ptr_; }
   	constexpr size_type size() const { return length_; }
@@ -203,10 +210,11 @@ public:
 		return !(*this == x);
 	}
 
-#define STRINGPIECE_BINARY_PREDICATE(op, auxcmp)	\
-	bool operator op(const StringPiece& x) const {	\
-		int r = memcmp(ptr_, x.ptr_, length_ < x.length_ ? length_ : x.length_);	\
-		return ((r auxcmp 0) || ((r == 0) && (length_ op x.length_)));	\
+#define STRINGPIECE_BINARY_PREDICATE(op, auxcmp) \
+	bool operator op(const StringPiece& x) const { \
+		int r = memcmp(ptr_, x.ptr_, \
+					   length_ < x.length_ ? length_ : x.length_); \
+		return ((r auxcmp 0) || ((r == 0) && (length_ op x.length_))); \
 	}
 	STRINGPIECE_BINARY_PREDICATE(<,  <)
 	STRINGPIECE_BINARY_PREDICATE(<=, <)
@@ -235,12 +243,11 @@ std::ostream& operator<<(std::ostream& os, const StringPiece& piece);
   return result;
 
 struct StringPieceHash {
-  std::size_t operator()(const StringPiece& sp) const {
-    HASH_STRING_PIECE(StringPiece, sp);
-  }
+	std::size_t operator()(const StringPiece& sp) const {
+		HASH_STRING_PIECE(StringPiece, sp);
+	}
 };
 
 }  // namespace annety
 
 #endif
-

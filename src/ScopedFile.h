@@ -20,13 +20,11 @@
 
 namespace annety {
 namespace internal {
-#if defined(OS_POSIX)
 struct ScopedFDCloseTraits {
 public:
 	static int invalid_value() {
 		return -1;
 	}
-
 	static void free(int fd) {
 		// It's important to crash here.
 		// There are security implications to not closing a file descriptor
@@ -49,7 +47,6 @@ public:
 		PCHECK(0 == ret);
 	}
 };
-#endif
 
 // Functor for |ScopedFILE| (below).
 struct ScopedFILECloser {
