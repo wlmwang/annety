@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
-// Date: May 8 2019
+// Refactoring: Anny Wang
+// Date: May 08 2019
 
-#ifndef _ANT_BUILD_CONFIG_H_
-#define _ANT_BUILD_CONFIG_H_
+#ifndef ANT_BUILD_CONFIG_H_
+#define ANT_BUILD_CONFIG_H_
 
 // A set of macros to use for platform detection.
 #if defined(__APPLE__)
@@ -130,4 +130,4 @@
 #error Please add support for your architecture in BuildConfig.h
 #endif
 
-#endif  // _ANT_BUILD_CONFIG_H_
+#endif  // ANT_BUILD_CONFIG_H_

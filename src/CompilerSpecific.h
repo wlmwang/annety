@@ -2,21 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
-// Date: May 8 2019
+// Refactoring: Anny Wang
+// Date: May 08 2019
 
-#ifndef _ANT_COMPILER_SPECIFIC_H_
-#define _ANT_COMPILER_SPECIFIC_H_
+#ifndef ANT_COMPILER_SPECIFIC_H_
+#define ANT_COMPILER_SPECIFIC_H_
 
 #include "BuildConfig.h"
 
 // Annotate a variable indicating it's ok if the variable is not used.
-// e.g.:
+// e.g:
 // 		int x = 1; ALLOW_UNUSED_LOCAL(x);
 #define ALLOW_UNUSED_LOCAL(x) (void)x
 
 // Annotate a typedef or function indicating it's ok if it's not used.
-// e.g.:
+// e.g:
 // 		typedef Foo Bar ALLOW_UNUSED_TYPE;
 #if defined(COMPILER_GCC) || defined(__clang__)
 #define ALLOW_UNUSED_TYPE __attribute__((unused))
@@ -25,7 +25,7 @@
 #endif
 
 // Annotate a function indicating the caller must examine the return value.
-// e.g.:
+// e.g:
 //   int foo() WARN_UNUSED_RESULT;
 #undef WARN_UNUSED_RESULT
 #if defined(COMPILER_GCC) || defined(__clang__)
@@ -37,7 +37,7 @@
 // Used to explicitly mark the return value of a function as unused. If you are
 // really sure you don't want to do anything with the return value of a function
 // that has been marked WARN_UNUSED_RESULT, wrap it with this. 
-// e.g.:
+// e.g:
 //   std::unique_ptr<MyType> my_var = ...;
 //   if (TakeOwnership(my_var.get()) == SUCCESS)
 //     ignore_result(my_var.release());
@@ -56,7 +56,7 @@ inline void ignore_result(const T&) {}
 
 #if defined(COMPILER_GCC) || defined(__clang__)
 #define PRINTF_FORMAT(format_param, dots_param) \
-    __attribute__((format(printf, format_param, dots_param)))
+	__attribute__((format(printf, format_param, dots_param)))
 #else
 #define PRINTF_FORMAT(format_param, dots_param)
 #endif
@@ -67,16 +67,16 @@ inline void ignore_result(const T&) {}
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
 #else
 #define UNLIKELY(x) (x)
-#endif  // defined(COMPILER_GCC)
-#endif  // !defined(UNLIKELY)
+#endif	// defined(COMPILER_GCC)
+#endif	// !defined(UNLIKELY)
 // ---
 #if !defined(LIKELY)
 #if defined(COMPILER_GCC) || defined(__clang__)
 #define LIKELY(x) __builtin_expect(!!(x), 1)
 #else
 #define LIKELY(x) (x)
-#endif  // defined(COMPILER_GCC)
-#endif  // !defined(LIKELY)
+#endif	// defined(COMPILER_GCC)
+#endif	// !defined(LIKELY)
 
 // Concatenate numbers in c/c++ macros to a token.
 #define MACROS_CONCAT(a, b) a##b
@@ -84,4 +84,23 @@ inline void ignore_result(const T&) {}
 // Convert symbol to string
 #define MACROS_STRING(a) #a
 
-#endif  // _ANT_COMPILER_SPECIFIC_H_
+// --------------------------------------------------------------------------
+// Put this in the declarations for a class to be uncopyable.
+#define DISALLOW_COPY(TypeName) TypeName(const TypeName&)=delete
+
+// Put this in the declarations for a class to be unassignable.
+#define DISALLOW_ASSIGN(TypeName) TypeName& operator=(const TypeName&)=delete
+
+// Put this in the declarations for a class to be uncopyable and unassignable.
+#define DISALLOW_COPY_AND_ASSIGN(TypeName)	\
+	DISALLOW_COPY(TypeName);				\
+	DISALLOW_ASSIGN(TypeName)
+
+// A macro to disallow all the implicit constructors, namely the
+// default constructor, copy constructor and operator= functions.
+// This is especially useful for classes containing only static methods.
+#define DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName)	\
+	TypeName() = delete;							\
+	DISALLOW_COPY_AND_ASSIGN(TypeName)
+
+#endif	// ANT_COMPILER_SPECIFIC_H_

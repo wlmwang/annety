@@ -23,9 +23,11 @@ public:
   	void await(const TimeDelta& max_time);
 
 private:
-	mutable MutexLock lock_;
-	ConditionVariable cv_;
-	int count_;
+	mutable MutexLock lock_{};
+	ConditionVariable cv_{lock_};
+	int count_{0};
+
+	DISALLOW_COPY_AND_ASSIGN(CountDownLatch);
 };
 
 }	// namespace annety

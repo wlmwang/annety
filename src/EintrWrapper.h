@@ -23,7 +23,6 @@
 #include "BuildConfig.h"
 
 #if defined(OS_POSIX)
-
 #include <errno.h>
 
 #if defined(NDEBUG)

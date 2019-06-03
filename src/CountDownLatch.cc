@@ -5,7 +5,7 @@
 
 namespace annety {
 CountDownLatch::CountDownLatch(int count) 
-	: lock_(), cv_(lock_), count_(count) {}
+	: count_(count) {}
 
 int CountDownLatch::get_count() const {
 	AutoLock l(lock_);

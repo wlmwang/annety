@@ -48,6 +48,8 @@ public:
 
 private:
 	pthread_mutex_t native_handle_;
+	
+	DISALLOW_COPY_AND_ASSIGN(LockImpl);
 };
 
 }	// namespace internal
@@ -133,6 +135,8 @@ private:
 
 	// Platform specific underlying lock implementation.
 	internal::LockImpl lock_;
+
+	DISALLOW_COPY_AND_ASSIGN(MutexLock);
 };
 
 // A helper class that acquires the given Lock while the AutoLock is in scope.
@@ -155,6 +159,8 @@ public:
 
 private:
 	MutexLock& lock_;
+
+	DISALLOW_COPY_AND_ASSIGN(AutoLock);
 };
 
 // AutoUnlock is a helper that will Release() the |lock| argument in the
@@ -173,6 +179,8 @@ public:
 
 private:
 	MutexLock& lock_;
+
+	DISALLOW_COPY_AND_ASSIGN(AutoUnlock);
 };
 
 }  // namespace annety
