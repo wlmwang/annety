@@ -1,7 +1,5 @@
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-//
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
+// Refactoring: Anny Wang
+// Date: May 28 2019
 
 #include "Exception.h"
 
@@ -10,6 +8,7 @@
 #include <stdlib.h>
 
 namespace annety {
+// g++ -g -rdynamic
 std::string backtrace_to_string(bool demangle) {
 	std::string stack;
 	const int max_frames = 200;
@@ -23,7 +22,7 @@ std::string backtrace_to_string(bool demangle) {
 			if (demangle) {
 				char* left_par = nullptr;
 				char* plus = nullptr;
-				// parsing format
+				// parse backtrace-symbols format
 				for (char* p = strings[i]; *p; ++p) {
 					if (*p == '(') {
 						left_par = p;
@@ -46,7 +45,7 @@ std::string backtrace_to_string(bool demangle) {
 					}
 				}
 			}
-			// Fallback to mangled names
+			// fallback to mangled names
 			stack.append(strings[i]);
 			stack.push_back('\n');
 		}
@@ -58,6 +57,6 @@ std::string backtrace_to_string(bool demangle) {
 
 Exception::Exception(std::string msg)
 	: message_(std::move(msg)),
-	stack_(backtrace_to_string(true)) {}
+	  stack_(backtrace_to_string(false)) {}
 
 }  // namespace annety

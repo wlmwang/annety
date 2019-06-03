@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#ifndef _ANT_STRING_PRINTF_H_
-#define _ANT_STRING_PRINTF_H_
+#ifndef ANT_STRING_PRINTF_H_
+#define ANT_STRING_PRINTF_H_
 
 #include "BuildConfig.h"
 #include "CompilerSpecific.h"
@@ -42,4 +42,4 @@ void string_appendv(std::string* dst, const char* format, va_list ap)
 
 }  // namespace annety
 
-#endif  // _ANT_STRING_PRINTF_H_
+#endif  // ANT_STRING_PRINTF_H_

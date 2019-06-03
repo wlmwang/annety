@@ -1,4 +1,4 @@
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: May 29 2019
 
 #include "ThreadPool.h"

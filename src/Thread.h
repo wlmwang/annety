@@ -1,4 +1,4 @@
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: May 28 2019
 
 #ifndef ANT_THREAD_H_

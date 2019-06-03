@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 // Refactoring: Anny Wang
-// Date: May 8 2019
+// Date: May 08 2019
 
 #include "StringPiece.h"
 

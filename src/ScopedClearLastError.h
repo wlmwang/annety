@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#ifndef _ANT_SCOPED_CLEAR_LAST_ERROR_H_
-#define _ANT_SCOPED_CLEAR_LAST_ERROR_H_
+#ifndef ANT_SCOPED_CLEAR_LAST_ERROR_H_
+#define ANT_SCOPED_CLEAR_LAST_ERROR_H_
 
 #include "ScopedGeneric.h"
 
@@ -39,4 +39,4 @@ typedef ScopedGeneric<int, internal::ScopedClearLastErrorTraits>
 
 }	// namespace annety
 
-#endif
+#endif	// ANT_SCOPED_CLEAR_LAST_ERROR_H_

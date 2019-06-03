@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#ifndef _ANT_STRING_PIECE_H_
-#define _ANT_STRING_PIECE_H_
+#ifndef ANT_STRING_PIECE_H_
+#define ANT_STRING_PIECE_H_
 
 #include "BuildConfig.h"
 #include "CompilerSpecific.h"
@@ -250,4 +250,4 @@ struct StringPieceHash {
 
 }  // namespace annety
 
-#endif
+#endif	// ANT_STRING_PIECE_H_

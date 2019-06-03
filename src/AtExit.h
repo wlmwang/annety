@@ -65,4 +65,4 @@ private:
 
 }	// namespace annety
 
-#endif
+#endif	// ANT_AT_EXIT_H

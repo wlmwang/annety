@@ -5,8 +5,8 @@
 // Modify: Anny Wang
 // Date: May 8 2019
 
-#ifndef _ANT_STL_UTIL_H_
-#define _ANT_STL_UTIL_H_
+#ifndef ANT_STL_UTIL_H_
+#define ANT_STL_UTIL_H_
 
 #include "BuildConfig.h"
 #include "Logging.h"
@@ -347,4 +347,4 @@ void EraseIf(std::unordered_multiset<Key, Hash, KeyEqual, Allocator>& container,
 
 }	// namespace annety
 
-#endif
+#endif	// ANT_STL_UTIL_H_

@@ -581,4 +581,4 @@ void LogErrorNotReached(int line, const LogMessage::Filename& file);
 
 }	// namespace annety
 
-#endif
+#endif	// ANT_LOGGING_H
