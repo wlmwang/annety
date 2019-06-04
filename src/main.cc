@@ -5,6 +5,8 @@
 
 #include "StringPrintf.h"
 #include "StringPiece.h"
+#include "StringUtil.h"
+#include "StringSplit.h"
 #include "SafeSprintf.h"
 #include "SafeStrerror.h"
 #include "ByteBuffer.h"
@@ -64,6 +66,19 @@ int main(int argc, char* argv[]) {
 	// StringPiece s1 = s;
 	// std::cout << s << ":" << s1 << '\n' 
 	// 		<< s.rfind("s") << "|" << s.substr(2) << std::endl;
+
+	// // StringUtil
+	// StringPiece ts = trim_whitespace(" 12345  ", TrimPositions::TRIM_ALL);
+	// cout << ts << "|" << ts.size() << endl;
+
+	// StringSplit
+	std::string input = "12,345;67,890";
+	std::vector<std::string> tokens = split_string(input, ",;", 
+							KEEP_WHITESPACE,
+							SPLIT_WANT_ALL);
+	for (auto &t : tokens) {
+		cout << t << endl;
+	}
 
 	// // SafeSprintf
 	// char buf[1024];

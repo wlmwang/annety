@@ -33,21 +33,22 @@ public:
 	static const size_type npos = -1;
 
 public:
-  	constexpr StringPiece() : ptr_(nullptr), length_(0) {}
+	constexpr StringPiece() : ptr_(nullptr), length_(0) {}
 
-  	constexpr StringPiece(const value_type* str)
-  		: ptr_(str), length_(!str ? 0 : strlen(reinterpret_cast<const char*>(str))) {}
+	constexpr StringPiece(const value_type* str)
+		: ptr_(str), 
+		  length_(!str ?0 :strlen(reinterpret_cast<const char*>(str))) {}
 
-    StringPiece(const std::string& str)
-    	: ptr_(str.data()), length_(str.size()) {}
-  	
-  	constexpr StringPiece(const value_type* offset, size_type len)
-  		: ptr_(offset), length_(len) {}
-  	
-  	StringPiece(const const_iterator& begin, const const_iterator& end) {
-    	length_ = static_cast<size_t>(std::distance(begin, end));
-    	ptr_ = length_ > 0 ? &*begin : nullptr;
-  	}
+	StringPiece(const std::string& str)
+		: ptr_(str.data()), length_(str.size()) {}
+
+	constexpr StringPiece(const value_type* offset, size_type len)
+		: ptr_(offset), length_(len) {}
+
+	StringPiece(const const_iterator& begin, const const_iterator& end) {
+		length_ = static_cast<size_t>(std::distance(begin, end));
+		ptr_ = length_ > 0 ? &*begin : nullptr;
+	}
 
 	// copy-ctor, move-ctor, dtor and assignment
 	StringPiece(const StringPiece&) = default;
@@ -56,10 +57,10 @@ public:
 	StringPiece& operator=(StringPiece&&) = default;
 	~StringPiece() = default;
 
-  	constexpr const value_type* data() const { return ptr_; }
-  	constexpr size_type size() const { return length_; }
-  	constexpr size_type length() const { return length_; }
-  	bool empty() const { return length_ == 0; }
+	constexpr const value_type* data() const { return ptr_; }
+	constexpr size_type size() const { return length_; }
+	constexpr size_type length() const { return length_; }
+	bool empty() const { return length_ == 0; }
 
 	const_iterator begin() const { return ptr_; }
 	const_iterator end() const { return ptr_ + length_; }
@@ -128,7 +129,8 @@ public:
 	// substr.
 	StringPiece substr(size_type pos, size_type n = StringPiece::npos) const {
 		assert(pos < length_);
-		return StringPiece(ptr_ + pos, ptr_ + (n <= length_? n : length_));
+		// contain end charactor
+		return StringPiece(ptr_ + pos, ptr_ + (n <= length_? n : length_) + 1);
 	}
 
 	std::string as_string() const {
