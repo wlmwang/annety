@@ -68,8 +68,13 @@ int main(int argc, char* argv[]) {
 	// 		<< s.rfind("s") << "|" << s.substr(2) << std::endl;
 
 	// // StringUtil
-	// StringPiece ts = trim_whitespace(" 12345  ", TrimPositions::TRIM_ALL);
-	// cout << ts << "|" << ts.size() << endl;
+	StringPiece ts = trim_whitespace(" 12345  ", TrimPositions::TRIM_ALL);
+	cout << ts << "|" << ts.size() << endl;
+
+	string ss = "abcd";
+	cout << write_into(&ss, 2) << endl;
+
+	cout << equals_case_insensitive("ABcD", "AbcD") << endl;
 
 	// // StringSplit
 	// std::string input = "12,345;67,890";

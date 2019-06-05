@@ -25,30 +25,238 @@
 
 namespace annety {
 const char kWhitespaceASCII[] = {
-  0x09,    // CHARACTER TABULATION
-  0x0A,    // LINE FEED (LF)
-  0x0B,    // LINE TABULATION
-  0x0C,    // FORM FEED (FF)
-  0x0D,    // CARRIAGE RETURN (CR)
-  0x20,    // SPACE
-  0
+	0x09,	// CHARACTER TABULATION
+	0x0A,	// LINE FEED (LF)
+	0x0B,	// LINE TABULATION
+	0x0C,	// FORM FEED (FF)
+	0x0D,	// CARRIAGE RETURN (CR)
+	0x20,	// SPACE
+	0
 };
 
+// Misc----------------------------------------------------
+
+// The following code is compatible with the OpenBSD lcpy interface.  See:
+//   http://www.gratisoft.us/todd/papers/strlcpy.html
+//   ftp://ftp.openbsd.org/pub/OpenBSD/src/lib/libc/string/{wcs,str}lcpy.c
+
 namespace {
-// Overloaded function to append one string onto the end of another. Having a
-// separate overload for |source| as both string and StringPiece allows for more
-// efficient usage from functions templated to work with either type (avoiding a
-// redundant call to the StringPiece constructor in both cases).
-inline void append_to_string(std::string* target, const std::string& source) {
-	target->append(source);
-}
-inline void append_to_string(std::string* target, const StringPiece& source) {
-	source.append_to_string(target);
+template <typename CHAR>
+size_t lcpyT(CHAR* dst, const CHAR* src, size_t dst_size) {
+	for (size_t i = 0; i < dst_size; ++i) {
+		// We hit and copied the terminating NULL.
+		if ((dst[i] = src[i]) == 0) {
+			return i;
+		}
+	}
+
+	// We were left off at dst_size.  We over copied 1 byte.  Null terminate.
+	if (dst_size != 0) {
+		dst[dst_size - 1] = 0;
+	}
+
+	// Count the rest of the |src|, and return it's length in characters.
+	while (src[dst_size]) {
+		++dst_size;
+	}
+	return dst_size;
 }
 
-}  // anonymous namespace
+}	// namespace anonymous
 
-// Trim -----------------------------------------------------------
+size_t strlcpy(char* dst, const char* src, size_t dst_size) {
+	return lcpyT<char>(dst, src, dst_size);
+}
+
+namespace {
+std::string to_lower_T(StringPiece str) {
+	std::string ret;
+	ret.reserve(str.size());
+	for (size_t i = 0; i < str.size(); i++) {
+		ret.push_back(to_lower(str[i]));
+	}
+	return ret;
+}
+
+std::string to_upper_T(StringPiece str) {
+	std::string ret;
+	ret.reserve(str.size());
+	for (size_t i = 0; i < str.size(); i++) {
+		ret.push_back(to_upper(str[i]));
+	}
+	return ret;
+}
+
+}	// namespace anonymous
+
+std::string to_lower(StringPiece str) {
+	return to_lower_T(str);
+}
+
+std::string to_upper(StringPiece str) {
+	return to_upper_T(str);
+}
+
+// Compare----------------------------------------------------
+
+namespace {
+int compare_case_insensitive_T(StringPiece a,
+                               StringPiece b)
+{
+	// Find the first characters that aren't equal and compare them.  If the end
+	// of one of the strings is found before a nonequal character, the lengths
+	// of the strings are compared.
+	size_t i = 0;
+	while (i < a.length() && i < b.length()) {
+		typename std::string::value_type lower_a = to_lower(a[i]);
+		typename std::string::value_type lower_b = to_lower(b[i]);
+		if (lower_a < lower_b) {
+			return -1;
+		}
+		if (lower_a > lower_b) {
+			return 1;
+		}	
+		i++;
+	}
+
+	// End of one string hit before finding a different character. Expect the
+	// common case to be "strings equal" at this point so check that first.
+	if (a.length() == b.length()) {
+		return 0;
+	}
+	if (a.length() < b.length()) {
+		return -1;
+	}	
+	return 1;
+}
+
+}	// namespace anonymous
+
+int compare_case_insensitive(StringPiece a, StringPiece b) {
+	return compare_case_insensitive_T(a, b);
+}
+
+bool equals_case_insensitive(StringPiece a, StringPiece b) {
+	if (a.length() != b.length()) {
+		return false;
+	}
+	return compare_case_insensitive_T(a, b) == 0;
+}
+
+bool contains_only_chars(StringPiece input, StringPiece characters) {
+	return input.find_first_not_of(characters) == StringPiece::npos;
+}
+
+// Implementation note: Normally this function will be called with a hardcoded
+// constant for the lowercase_ascii parameter. Constructing a StringPiece from
+// a C constant requires running strlen, so the result will be two passes
+// through the buffers, one to file the length of lowercase_ascii, and one to
+// compare each letter.
+//
+// This function could have taken a const char* to avoid this and only do one
+// pass through the string. But the strlen is faster than the case-insensitive
+// compares and lets us early-exit in the case that the strings are different
+// lengths (will often be the case for non-matches). So whether one approach or
+// the other will be faster depends on the case.
+//
+// The hardcoded strings are typically very short so it doesn't matter, and the
+// string piece gives additional flexibility for the caller (doesn't have to be
+// null terminated) so we choose the StringPiece route.
+namespace {
+inline bool lower_case_equals_T(StringPiece str,
+								StringPiece lowercase_ascii)
+{
+	if (str.size() != lowercase_ascii.size()) {
+		return false;
+	}
+	for (size_t i = 0; i < str.size(); i++) {
+		if (to_lower(str[i]) != lowercase_ascii[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+}	// namespace anonymous
+
+bool lower_case_equals(StringPiece str, StringPiece lowercase_ascii) {
+	return lower_case_equals_T(str, lowercase_ascii);
+}
+
+namespace {
+bool starts_with_T(StringPiece str,
+				   StringPiece search_for,
+				   CompareCase case_sensitivity)
+{
+	if (search_for.size() > str.size()) {
+		return false;
+	}
+
+	StringPiece source = str.substr(0, search_for.size());
+
+	switch (case_sensitivity) {
+		case CompareCase::SENSITIVE:
+			return source == search_for;
+
+		case CompareCase::INSENSITIVE_ASCII:
+			return std::equal(
+					search_for.begin(), search_for.end(),
+					source.begin(),
+					CaseInsensitiveCompare<typename std::string::value_type>());
+
+		default:
+			NOTREACHED();
+			return false;
+	}
+}
+
+}	// namespace anonymous
+
+bool starts_with(StringPiece str,
+				 StringPiece search_for,
+				 CompareCase case_sensitivity)
+{
+	return starts_with_T(str, search_for, case_sensitivity);
+}
+
+namespace {
+bool ends_with_T(StringPiece str,
+				 StringPiece search_for,
+				 CompareCase case_sensitivity)
+{
+	if (search_for.size() > str.size()) {
+		return false;
+	}
+
+	StringPiece source = str.substr(str.size() - search_for.size(),
+									search_for.size());
+
+	switch (case_sensitivity) {
+		case CompareCase::SENSITIVE:
+			return source == search_for;
+
+		case CompareCase::INSENSITIVE_ASCII:
+			return std::equal(
+					source.begin(), source.end(),
+					search_for.begin(),
+					CaseInsensitiveCompare<typename std::string::value_type>());
+
+		default:
+			NOTREACHED();
+			return false;
+	}
+}
+
+}	// namespace anonymous
+
+bool ends_with(StringPiece str,
+			   StringPiece search_for,
+			   CompareCase case_sensitivity)
+{
+	return ends_with_T(str, search_for, case_sensitivity);
+}
+
+// Trim----------------------------------------------------
 namespace {
 TrimPositions trim_string_T(const std::string& input,
 							StringPiece trim_chars,
@@ -127,9 +335,35 @@ StringPiece trim_whitespace(StringPiece input, TrimPositions positions) {
 	return trim_string_piece_T(input, StringPiece(kWhitespaceASCII), positions);
 }
 
-// Join ------------------------------------------------------
+namespace {
+inline typename std::string::value_type* write_into_T(std::string* str,
+													  size_t length_with_null) {
+	DCHECK_GT(length_with_null, 1u);
+	str->reserve(length_with_null);
+	str->resize(length_with_null - 1);
+	return &((*str)[0]);
+}
+
+}	// namespace anonymous
+
+char* write_into(std::string* str, size_t length_with_null) {
+	return write_into_T(str, length_with_null);
+}
+
+// Join----------------------------------------------------
 
 namespace {
+// Overloaded function to append one string onto the end of another. Having a
+// separate overload for |source| as both string and StringPiece allows for more
+// efficient usage from functions templated to work with either type (avoiding a
+// redundant call to the StringPiece constructor in both cases).
+inline void append_to_string(std::string* target, const std::string& source) {
+	target->append(source);
+}
+inline void append_to_string(std::string* target, const StringPiece& source) {
+	source.append_to_string(target);
+}
+
 // Generic version for all JoinString overloads. |list_type| must be a sequence
 // (std::vector or std::initializer_list) of strings/StringPieces (std::string,
 // StringPiece).
@@ -186,7 +420,7 @@ std::string join_string(std::initializer_list<StringPiece> parts,
 	return join_string_T(parts, separator);
 }
 
-// Replace ------------------------------------------------------------
+// Replace----------------------------------------------------
 
 namespace {
 // A Matcher for DoReplaceMatchesAfterOffset() that matches substrings.

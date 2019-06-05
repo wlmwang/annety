@@ -20,8 +20,164 @@
 #include "CompilerSpecific.h"
 #include "StringPiece.h"
 
-
 namespace annety {
+
+// Misc----------------------------------------------------
+
+// Chromium code style is to not use malloc'd strings; this is only for use
+// for interaction with APIs that require it.
+inline char* strdup(const char* str) {
+	return ::strdup(str);
+}
+
+inline int vsnprintf(char* buffer, size_t size,
+					 const char* format, va_list arguments) {
+	return ::vsnprintf(buffer, size, format, arguments);
+}
+
+inline int vswprintf(wchar_t* buffer, size_t size,
+					 const wchar_t* format, va_list arguments) {
+	return ::vswprintf(buffer, size, format, arguments);
+}
+
+// Some of these implementations need to be inlined.
+
+// We separate the declaration from the implementation of this inline
+// function just so the PRINTF_FORMAT works.
+inline int snprintf(char* buffer,
+					size_t size,
+					_Printf_format_string_ const char* format,
+					...) PRINTF_FORMAT(3, 4);
+inline int snprintf(char* buffer,
+					size_t size,
+					_Printf_format_string_ const char* format,
+					...)
+{
+	va_list arguments;
+	va_start(arguments, format);
+	int result = vsnprintf(buffer, size, format, arguments);
+	va_end(arguments);
+	return result;
+}
+
+// BSD-style safe and consistent string copy functions.
+// Copies |src| to |dst|, where |dst_size| is the total allocated size of |dst|.
+// Copies at most |dst_size|-1 characters, and always NULL terminates |dst|, as
+// long as |dst_size| is not 0.  Returns the length of |src| in characters.
+// If the return value is >= dst_size, then the output was truncated.
+// NOTE: All sizes are in number of characters, NOT in bytes.
+size_t strlcpy(char* dst, const char* src, size_t dst_size);
+
+// ASCII-specific tolower.  The standard library's tolower is locale sensitive,
+// so we don't want to use it here.
+inline char to_lower(char c) {
+	return (c >= 'A' && c <= 'Z') ? (c + ('a' - 'A')) : c;
+}
+
+// ASCII-specific toupper.  The standard library's toupper is locale sensitive,
+// so we don't want to use it here.
+inline char to_upper(char c) {
+  return (c >= 'a' && c <= 'z') ? (c + ('A' - 'a')) : c;
+}
+
+// Converts the given string to it's ASCII-lowercase equivalent.
+std::string to_lower(StringPiece str);
+
+// Converts the given string to it's ASCII-uppercase equivalent.
+std::string to_upper(StringPiece str);
+
+// Compare----------------------------------------------------
+
+// Functor for case-insensitive ASCII comparisons for STL algorithms like
+// std::search.
+//
+// Note that a full Unicode version of this functor is not possible to write
+// because case mappings might change the number of characters, depend on
+// context (combining accents), and require handling UTF-16. If you need
+// proper Unicode support, use wutil::i18n::ToLower/FoldCase and then just
+// use a normal operator== on the result.
+template<typename Char> struct CaseInsensitiveCompare {
+public:
+	bool operator()(Char x, Char y) const {
+		return to_lower(x) == to_lower(y);
+	}
+};
+
+// Like strcasecmp for case-insensitive ASCII characters only. Returns:
+//   -1  (a < b)
+//    0  (a == b)
+//    1  (a > b)
+// (unlike strcasecmp which can return values greater or less than 1/-1). For
+// full Unicode support, use wutil::i18n::ToLower or wutil::i18h::FoldCase
+// and then just call the normal string operators on the result.
+int compare_case_insensitive(StringPiece a, StringPiece b);
+
+// Equality for ASCII case-insensitive comparisons. For full Unicode support,
+// use wutil::i18n::ToLower or wutil::i18h::FoldCase and then compare with either
+// == or !=.
+bool equals_case_insensitive(StringPiece a, StringPiece b);
+
+
+// Returns true if |input| is empty or contains only characters found in
+// |characters|.
+bool contains_only_chars(StringPiece input, StringPiece characters);
+
+// Compare the lower-case form of the given string against the given
+// previously-lower-cased ASCII string (typically a constant).
+bool lower_case_equals(StringPiece str,
+					   StringPiece lowecase_ascii);
+
+// Indicates case sensitivity of comparisons. Only ASCII case insensitivity
+// is supported. Full Unicode case-insensitive conversions would need to go in
+// wUtil/i18n so it can use ICU.
+//
+// If you need to do Unicode-aware case-insensitive StartsWith/EndsWith, it's
+// best to call wutil::i18n::ToLower() or wutil::i18n::FoldCase() (see
+// wUtil/i18n/case_conversion.h for usage advice) on the arguments, and then use
+// the results to a case-sensitive comparison.
+enum class CompareCase {
+	SENSITIVE,
+	INSENSITIVE_ASCII,
+};
+
+bool starts_with(StringPiece str,
+				 StringPiece search_for,
+				 CompareCase case_sensitivity);
+
+bool ends_with(StringPiece str,
+			   StringPiece search_for,
+			   CompareCase case_sensitivity);
+
+// Determines the type of ASCII character, independent of locale (the C
+// library versions will change based on locale).
+template <typename Char>
+inline bool is_ascii_whitespace(Char c) {
+	return c == ' ' || c == '\r' || c == '\n' || c == '\t';
+}
+template <typename Char>
+inline bool is_ascii_alpha(Char c) {
+	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+template <typename Char>
+inline bool is_ascii_upper(Char c) {
+	return c >= 'A' && c <= 'Z';
+}
+template <typename Char>
+inline bool is_ascii_lower(Char c) {
+	return c >= 'a' && c <= 'z';
+}
+template <typename Char>
+inline bool is_ascii_digit(Char c) {
+	return c >= '0' && c <= '9';
+}
+
+template <typename Char>
+inline bool is_hex_digit(Char c) {
+	return (c >= '0' && c <= '9') ||
+		   (c >= 'A' && c <= 'F') ||
+		   (c >= 'a' && c <= 'f');
+}
+
 // Contains the set of characters representing whitespace in the corresponding
 // encoding. Null-terminated. The ASCII versions are the whitespaces as defined
 // by HTML5, and don't include control characters.
@@ -54,7 +210,29 @@ TrimPositions trim_whitespace(const std::string& input,
 StringPiece trim_whitespace(StringPiece input,
 							TrimPositions positions);
 
-// Join------------------------------------------------------
+// Reserves enough memory in |str| to accommodate |length_with_null| characters,
+// sets the size of |str| to |length_with_null - 1| characters, and returns a
+// pointer to the underlying contiguous array of characters.  This is typically
+// used when calling a function that writes results into a character array, but
+// the caller wants the data to be managed by a string-like object.  It is
+// convenient in that is can be used inline in the call, and fast in that it
+// avoids copying the results of the call from a char* into a string.
+//
+// |length_with_null| must be at least 2, since otherwise the underlying string
+// would have size 0, and trying to access &((*str)[0]) in that case can result
+// in a number of problems.
+//
+// Internally, this takes linear time because the resize() call 0-fills the
+// underlying array for potentially all
+// (|length_with_null - 1| * sizeof(string_type::value_type)) bytes.  Ideally we
+// could avoid this aspect of the resize() call, as we expect the caller to
+// immediately write over this memory, but there is no other way to set the size
+// of the string, and not doing that will mean people who access |str| rather
+// than str.c_str() will get back a string of whatever size |str| had on entry
+// to this function (probably 0).
+char* write_into(std::string* str, size_t length_with_null);
+
+// Join----------------------------------------------------
 
 // Does the opposite of SplitString()/SplitStringPiece(). Joins a vector or list
 // of strings into a single string, inserting |separator| (which may be empty)
@@ -79,7 +257,7 @@ std::string join_string(const std::vector<StringPiece>& parts,
 std::string join_string(std::initializer_list<StringPiece> parts,
 						StringPiece separator);
 
-// Remove/Replace ----------------------------------------------------
+// Replace----------------------------------------------------
 
 // Removes characters in |remove_chars| from anywhere in |input|.  Returns true
 // if any characters were removed.  |remove_chars| must be null-terminated.
