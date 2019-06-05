@@ -24,7 +24,7 @@
 #include <iostream>
 
 namespace annety {
-const char kWhitespaceASCII[] = {
+const char kWhitespace[] = {
 	0x09,	// CHARACTER TABULATION
 	0x0A,	// LINE FEED (LF)
 	0x0B,	// LINE TABULATION
@@ -198,7 +198,7 @@ bool starts_with_T(StringPiece str,
 		case CompareCase::SENSITIVE:
 			return source == search_for;
 
-		case CompareCase::INSENSITIVE_ASCII:
+		case CompareCase::INSENSITIVE:
 			return std::equal(
 					search_for.begin(), search_for.end(),
 					source.begin(),
@@ -235,7 +235,7 @@ bool ends_with_T(StringPiece str,
 		case CompareCase::SENSITIVE:
 			return source == search_for;
 
-		case CompareCase::INSENSITIVE_ASCII:
+		case CompareCase::INSENSITIVE:
 			return std::equal(
 					source.begin(), source.end(),
 					search_for.begin(),
@@ -328,11 +328,11 @@ TrimPositions trim_whitespace(const std::string& input,
 							  TrimPositions positions,
 							  std::string* output)
 {
-	return trim_string_T(input, StringPiece(kWhitespaceASCII), positions, output);
+	return trim_string_T(input, StringPiece(kWhitespace), positions, output);
 }
 
 StringPiece trim_whitespace(StringPiece input, TrimPositions positions) {
-	return trim_string_piece_T(input, StringPiece(kWhitespaceASCII), positions);
+	return trim_string_piece_T(input, StringPiece(kWhitespace), positions);
 }
 
 namespace {

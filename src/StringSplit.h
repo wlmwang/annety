@@ -58,7 +58,7 @@ std::vector<std::string> split_string(StringPiece input,
 // To iterate through all whitespace-separated tokens in an input string:
 //
 //   for (const auto& cur :
-//        SplitStringPiece(input, kWhitespaceASCII,
+//        SplitStringPiece(input, kWhitespace,
 //                               KEEP_WHITESPACE,
 //                               SPLIT_WANT_NONEMPTY)) {
 //     ...

@@ -30,7 +30,7 @@ std::string piece_to_output_type<std::string>(StringPiece piece) {
 
 // Returns the ASCII whitespace.
 StringPiece whitespace_for_type() {
-	return kWhitespaceASCII;
+	return kWhitespace;
 }
 
 // Optimize the single-character case to call find() on the string instead,

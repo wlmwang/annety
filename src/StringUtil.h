@@ -77,7 +77,7 @@ inline char to_lower(char c) {
 // ASCII-specific toupper.  The standard library's toupper is locale sensitive,
 // so we don't want to use it here.
 inline char to_upper(char c) {
-  return (c >= 'a' && c <= 'z') ? (c + ('A' - 'a')) : c;
+	return (c >= 'a' && c <= 'z') ? (c + ('A' - 'a')) : c;
 }
 
 // Converts the given string to it's ASCII-lowercase equivalent.
@@ -137,7 +137,7 @@ bool lower_case_equals(StringPiece str,
 // the results to a case-sensitive comparison.
 enum class CompareCase {
 	SENSITIVE,
-	INSENSITIVE_ASCII,
+	INSENSITIVE,
 };
 
 bool starts_with(StringPiece str,
@@ -181,7 +181,7 @@ inline bool is_hex_digit(Char c) {
 // Contains the set of characters representing whitespace in the corresponding
 // encoding. Null-terminated. The ASCII versions are the whitespaces as defined
 // by HTML5, and don't include control characters.
-extern const char kWhitespaceASCII[];
+extern const char kWhitespace[];
 
 // Trim----------------------------------------------------
 
