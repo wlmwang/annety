@@ -23,7 +23,7 @@ CC_SRC		:= main.cc StringPiece.cc StringPrintf.cc SafeStrerror.cc Time.cc \
 			   LogStream.cc Logging.cc MutexLock.cc ConditionVariable.cc \
 			   CountDownLatch.cc PlatformThread.cc Thread.cc Exception.cc \
 			   ThreadPool.cc File.cc AtExit.cc SafeSprintf.cc StringUtil.cc \
-			   StringSplit.cc FilePath.cc
+			   StringSplit.cc FilePath.cc FileEnumerator.cc
 
 # 编译文件
 OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))

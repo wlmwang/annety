@@ -13,20 +13,22 @@
 #include "Logging.h"
 #include "StringPiece.h"
 #include "StringUtil.h"
+#include "StlUtil.h"
 
 #if defined(OS_MACOSX)
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
 namespace annety {
-using StringType = std::string;
-using StringPieceType = StringPiece;
+using StringType = FilePath::StringType;
+using StringPieceType = FilePath::StringPieceType;
+
 
 const char FilePath::kSeparators[] = "/";
 const char FilePath::kCurrentDirectory[] = ".";
 const char FilePath::kParentDirectory[] = "..";
 const char FilePath::kExtensionSeparator = '.';
-const size_t FilePath::kSeparatorsLength = sizeof(kSeparators);
+const size_t FilePath::kSeparatorsLength = annety::size(kSeparators);
 
 namespace {
 const char* const kCommonDoubleExtensionSuffixes[] = { "gz", "z", "bz2", "bz" };
@@ -78,48 +80,46 @@ StringType::size_type final_extension_separator_position(const StringType& path)
 // extension (gz, bz2, Z).  For example, foo.tar.gz or foo.tar.Z would have
 // extension components of '.tar.gz' and '.tar.Z' respectively.
 StringType::size_type extension_separator_position(const StringType& path) {
-	//...
+	const StringType::size_type last_dot = final_extension_separator_position(path);
+
+	// No extension, or the extension is the whole filename.
+	if (last_dot == StringType::npos || last_dot == 0U) {
+		return last_dot;
+	}
+
+	const StringType::size_type penultimate_dot =
+			path.rfind(FilePath::kExtensionSeparator, last_dot - 1);
+	const StringType::size_type last_separator =
+			path.find_last_of(FilePath::kSeparators, last_dot - 1,
+							  FilePath::kSeparatorsLength - 1);
+
+	if (penultimate_dot == StringType::npos ||
+		(last_separator != StringType::npos &&
+		penultimate_dot < last_separator))
+	{
+		return last_dot;
+	}
+
+	for (size_t i = 0; i < annety::size(kCommonDoubleExtensions); ++i) {
+		StringType extension(path, penultimate_dot + 1);
+		if (lower_case_equals(extension, kCommonDoubleExtensions[i])) {
+			return penultimate_dot;
+		}
+	}
+
+	StringType extension(path, last_dot + 1);
+	for (size_t i = 0; i < annety::size(kCommonDoubleExtensionSuffixes); ++i) {
+		if (lower_case_equals(extension, kCommonDoubleExtensionSuffixes[i])) {
+			if ((last_dot - penultimate_dot) <= 5U &&
+				(last_dot - penultimate_dot) > 1U)
+			{
+				return penultimate_dot;
+			}
+		}
+	}
+
+	return last_dot;
 }
-
-//
-//
-// StringType::size_type extension_separator_position(const StringType& path) {
-//   const StringType::size_type last_dot = FinalExtensionSeparatorPosition(path);
-
-//   // No extension, or the extension is the whole filename.
-//   if (last_dot == StringType::npos || last_dot == 0U)
-//     return last_dot;
-
-//   const StringType::size_type penultimate_dot =
-//       path.rfind(FilePath::kExtensionSeparator, last_dot - 1);
-//   const StringType::size_type last_separator =
-//       path.find_last_of(FilePath::kSeparators, last_dot - 1,
-//                         FilePath::kSeparatorsLength - 1);
-
-//   if (penultimate_dot == StringType::npos ||
-//       (last_separator != StringType::npos &&
-//        penultimate_dot < last_separator)) {
-//     return last_dot;
-//   }
-
-//   for (size_t i = 0; i < arraysize(kCommonDoubleExtensions); ++i) {
-//     StringType extension(path, penultimate_dot + 1);
-//     if (LowerCaseEqualsASCII(extension, kCommonDoubleExtensions[i]))
-//       return penultimate_dot;
-//   }
-
-//   StringType extension(path, last_dot + 1);
-//   for (size_t i = 0; i < arraysize(kCommonDoubleExtensionSuffixes); ++i) {
-//     if (LowerCaseEqualsASCII(extension, kCommonDoubleExtensionSuffixes[i])) {
-//       if ((last_dot - penultimate_dot) <= 5U &&
-//           (last_dot - penultimate_dot) > 1U) {
-//         return penultimate_dot;
-//       }
-//     }
-//   }
-
-//   return last_dot;
-// }
 
 // Returns true if path is "", ".", or "..".
 bool is_empty_or_special_case(const StringType& path) {

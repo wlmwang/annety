@@ -20,6 +20,8 @@
 #include "Exception.h"
 #include "ThreadPool.h"
 #include "BlockingQueue.h"
+#include "FilePath.h"
+#include "FileEnumerator.h"
 #include "File.h"
 #include "AtExit.h"
 
@@ -68,13 +70,13 @@ int main(int argc, char* argv[]) {
 	// 		<< s.rfind("s") << "|" << s.substr(2) << std::endl;
 
 	// // StringUtil
-	StringPiece ts = trim_whitespace(" 12345  ", TrimPositions::TRIM_ALL);
-	cout << ts << "|" << ts.size() << endl;
+	// StringPiece ts = trim_whitespace(" 12345  ", TrimPositions::TRIM_ALL);
+	// cout << ts << "|" << ts.size() << endl;
 
-	string ss = "abcd";
-	cout << write_into(&ss, 2) << endl;
+	// string ss = "abcd";
+	// cout << write_into(&ss, 2) << endl;
 
-	cout << equals_case_insensitive("ABcD", "AbcD") << endl;
+	// cout << equals_case_insensitive("ABcD", "AbcD") << endl;
 
 	// // StringSplit
 	// std::string input = "12,345;67,890";
@@ -238,6 +240,27 @@ int main(int argc, char* argv[]) {
 
 	// producer.join();
 	// consumers.join_all();
+
+	// // FilePath
+	// FilePath fp("/usr/local/annety.log.gz");
+
+	// cout << "dirname:" << fp.dir_name() << endl;
+	// cout << "basename:" << fp.base_name() << endl;
+	// cout << "extension:" << fp.extension() << endl;
+	// cout << "final extension:" << fp.final_extension() << endl;
+
+	// cout << "components:" << endl;
+	// std::vector<std::string> components;
+	// fp.get_components(&components);
+	// for (auto cc : components) {
+	// 	cout << cc << endl;
+	// }
+
+	// // FileEnumerator
+	// FileEnumerator enums(FilePath("."), false, FileEnumerator::FILES, "*.cc");
+	// for (FilePath name = enums.next(); !name.empty(); name = enums.next()) {
+	// 	cout << name << endl;
+	// }
 
 	// // File
 	// File f("ggg.log", File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
