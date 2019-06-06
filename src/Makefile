@@ -19,11 +19,12 @@ DIR_SRC		:= ./
 INCFLAGS	:= ${DIR_INC} -I${DIR_SRC}
 
 # 源文件
-CC_SRC		:= main.cc StringPiece.cc StringPrintf.cc SafeStrerror.cc Time.cc \
-			   LogStream.cc Logging.cc MutexLock.cc ConditionVariable.cc \
-			   CountDownLatch.cc PlatformThread.cc Thread.cc Exception.cc \
-			   ThreadPool.cc File.cc AtExit.cc SafeSprintf.cc StringUtil.cc \
-			   StringSplit.cc FilePath.cc FileEnumerator.cc
+CC_SRC		:= main.cc \
+			   LogStream.cc Logging.cc Time.cc AtExit.cc Exception.cc SafeStrerror.cc  \
+			   MutexLock.cc ConditionVariable.cc CountDownLatch.cc \
+			   PlatformThread.cc Thread.cc ThreadPool.cc \
+			   StringPiece.cc StringPrintf.cc StringSplit.cc StringUtil.cc SafeSprintf.cc \
+			   File.cc FilePath.cc FileEnumerator.cc FileUtil.cc FileUtilPosix.cc
 
 # 编译文件
 OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))
