@@ -5,19 +5,24 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#include <algorithm>
-#include <iostream>
-
+#include "Logging.h"
+#include "Macros.h"			// arraysize
 #include "SafeStrerror.h"
 #include "StringPrintf.h"
-#include "Logging.h"
-#include "StlUtil.h"
 #include "Time.h"
+
+#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>	// fwrite,abort
+#include <stdlib.h>
 
 namespace annety {
 namespace {
 const char* const kLogSeverityNames[4] = {"INFO", "WARNING", "ERROR", "FATAL"};
-static_assert(LOG_NUM_SEVERITIES == annety::size(kLogSeverityNames),
+static_assert(LOG_NUM_SEVERITIES == arraysize(kLogSeverityNames),
 			"Incorrect number of kLogSeverityNames");
 
 const char* log_severity_name(int severity) {
@@ -28,12 +33,12 @@ const char* log_severity_name(int severity) {
 }
 
 void defaultOutput(const char* msg, int len) {
-  size_t n = fwrite(msg, 1, len, stdout);
-  ALLOW_UNUSED_LOCAL(n);
+	size_t n = ::fwrite(msg, 1, len, stdout);
+	ALLOW_UNUSED_LOCAL(n);
 }
 
 void defaultFlush() {
-  fflush(stdout);
+	::fflush(stdout);
 }
 
 using std::placeholders::_1;
@@ -168,7 +173,7 @@ LogMessage::~LogMessage() {
 		if (g_log_fflush_handler) {
 			g_log_fflush_handler();
 		}
-		std::abort();
+		::abort();
 	}
 }
 

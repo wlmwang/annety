@@ -23,7 +23,7 @@ CC_SRC		:= main.cc \
 			   LogStream.cc Logging.cc Time.cc AtExit.cc Exception.cc SafeStrerror.cc  \
 			   MutexLock.cc ConditionVariable.cc CountDownLatch.cc \
 			   PlatformThread.cc Thread.cc ThreadPool.cc \
-			   StringPiece.cc StringPrintf.cc StringSplit.cc StringUtil.cc SafeSprintf.cc \
+			   StringPiece.cc StringPrintf.cc StringSplit.cc StringUtil.cc \
 			   File.cc FilePath.cc FileEnumerator.cc FileUtil.cc FileUtilPosix.cc
 
 # 编译文件

@@ -6,8 +6,10 @@
 // Date: May 28 2019
 
 #include "PlatformThread.h"
+#include "CompilerSpecific.h"
 #include "Logging.h"
 
+#include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
 #include <sched.h>
@@ -15,7 +17,6 @@
 #include <stdint.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <sys/resource.h>
 
 #if defined(OS_LINUX)
@@ -23,7 +24,8 @@
 #include <sys/prctl.h>
 #endif
 
-#include <memory>
+#include <utility>	// move
+#include <memory>	// unique_ptr
 #include <string>
 
 namespace annety {
@@ -54,12 +56,12 @@ bool create_thread(bool joinable,
 	DCHECK(thread_handle);
 
 	pthread_attr_t attributes;
-	pthread_attr_init(&attributes);
+	::pthread_attr_init(&attributes);
 
 	// Pthreads are joinable by default, so only specify the detached
 	// attribute if the thread should be non-joinable.
 	if (!joinable) {
-		pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
+		::pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
 	}
 
 	std::unique_ptr<ThreadParams> params(
@@ -67,7 +69,7 @@ bool create_thread(bool joinable,
 	);
 
 	pthread_t handle;
-	int err = pthread_create(&handle, &attributes, thread_func, params.get());
+	int err = ::pthread_create(&handle, &attributes, thread_func, params.get());
 	bool success = !err;
 	if (success) {
 		// ThreadParams should be deleted on the created thread after used.
@@ -80,7 +82,7 @@ bool create_thread(bool joinable,
 	}
 	*thread_handle = PlatformThreadHandle(handle);
 
-	pthread_attr_destroy(&attributes);
+	::pthread_attr_destroy(&attributes);
 	return success;
 }
 
@@ -91,29 +93,29 @@ PlatformThreadId PlatformThread::current_id() {
 	// Pthreads doesn't have the concept of a thread ID, so we have to reach down
 	// into the kernel.
 #if defined(OS_MACOSX)
-	return pthread_mach_thread_np(pthread_self());
+	return ::pthread_mach_thread_np(::pthread_self());
 #elif defined(OS_LINUX)
-	return syscall(__NR_gettid);
+	return ::syscall(__NR_gettid);
 #elif defined(OS_SOLARIS)
-	return pthread_self();
+	return ::pthread_self();
 #elif defined(OS_POSIX)
-	return reinterpret_cast<int64_t>(pthread_self());
+	return reinterpret_cast<int64_t>(::pthread_self());
 #endif
 }
 
 // static
 PlatformThreadRef PlatformThread::current_ref() {
-	return PlatformThreadRef(pthread_self());
+	return PlatformThreadRef(::pthread_self());
 }
 
 // static
 PlatformThreadHandle PlatformThread::current_handle() {
-	return PlatformThreadHandle(pthread_self());
+	return PlatformThreadHandle(::pthread_self());
 }
 
 // static
 void PlatformThread::yield_current_thread() {
-	sched_yield();
+	::sched_yield();
 }
 
 // static
@@ -127,7 +129,7 @@ void PlatformThread::sleep(TimeDelta duration) {
 	duration -= TimeDelta::from_seconds(sleep_time.tv_sec);
 	sleep_time.tv_nsec = duration.in_microseconds() * 1000;  // nanoseconds
 
-	while (nanosleep(&sleep_time, &remaining) == -1 && errno == EINTR) {
+	while (::nanosleep(&sleep_time, &remaining) == -1 && errno == EINTR) {
 		sleep_time = remaining;
 	}
 }
@@ -164,7 +166,7 @@ void PlatformThread::set_name(const std::string& name) {
 	std::string shortened_name = name.substr(0, kMaxNameLength);
 	// pthread_setname() fails (harmlessly) in the sandbox, ignore when it does.
 	// See http://crbug.com/47058
-	pthread_setname_np(shortened_name.c_str());
+	::pthread_setname_np(shortened_name.c_str());
 }
 #else
 // static
@@ -178,7 +180,7 @@ void PlatformThread::set_name(const std::string& name) {
 	// Note that glibc also has a 'pthread_setname_np' api, but it may not be
 	// available everywhere and it's only benefit over using prctl directly is
 	// that it can set the name of threads other than the current thread.
-	int err = prctl(PR_SET_NAME, name.c_str());
+	int err = ::prctl(PR_SET_NAME, name.c_str());
 
 	// We expect EPERM failures in sandboxed processes, just ignore those.
 	if (err < 0 && errno != EPERM) {

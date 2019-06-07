@@ -2,18 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: Jun 02 2019
 
 #ifndef ANT_SCOPED_FILE_H_
 #define ANT_SCOPED_FILE_H_
 
-#include <memory>
+#include <memory>	// unique_ptr
 #include <stdio.h>	// FILE,fclose
-#include <errno.h>
-#include <unistd.h>
+#include <errno.h>	// errno
+#include <unistd.h>	// close
 
-#include "BuildConfig.h"
 #include "ScopedGeneric.h"
 #include "EintrWrapper.h"
 #include "Logging.h"

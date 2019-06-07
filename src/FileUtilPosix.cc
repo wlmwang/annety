@@ -6,17 +6,17 @@
 
 #include "FileUtil.h"
 #include "FilePath.h"
-#include "BuildConfig.h"
-#include "Logging.h"
-#include "StlUtil.h"
-#include "Time.h"
-// #include "Singleton.h"
-#include "EintrWrapper.h"
-#include "StringSplit.h"
-#include "StringUtil.h"
-#include "StringPrintf.h"
 #include "FileEnumerator.h"
 #include "ScopedFile.h"
+#include "EintrWrapper.h"
+#include "StringSplit.h"
+#include "StringPrintf.h"
+#include "StringUtil.h"
+#include "StlUtil.h"
+#include "Time.h"
+#include "BuildConfig.h"
+#include "Macros.h"
+#include "Logging.h"
 
 #if defined(OS_MACOSX)
 #include <copyfile.h>
@@ -502,7 +502,7 @@ bool read_symbolic_link(const FilePath& symlink_path, FilePath* target_path) {
 	DCHECK(target_path);
 
 	char buf[PATH_MAX];
-	ssize_t count = ::readlink(symlink_path.value().c_str(), buf, annety::size(buf));
+	ssize_t count = ::readlink(symlink_path.value().c_str(), buf, arraysize(buf));
 
 	if (count <= 0) {
 		target_path->clear();
@@ -949,7 +949,7 @@ bool verify_path_controlled_by_admin(const FilePath& path)
 	};
 
 	std::set<gid_t> allowed_group_ids;
-	for (int i = 0, ie = annety::size(kAdminGroupNames); i < ie; ++i) {
+	for (int i = 0, ie = arraysize(kAdminGroupNames); i < ie; ++i) {
 		struct group *group_record = ::getgrnam(kAdminGroupNames[i]);
 		if (!group_record) {
 			DPLOG(ERROR) << "Could not get the group ID of group \""

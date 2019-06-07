@@ -8,6 +8,10 @@
 #include "StringPrintf.h"
 #include "Exception.h"
 
+#include <string>
+#include <utility>
+#include <functional>
+
 namespace annety {
 Thread::Thread(const ThreadMainFunc& func, const std::string& name_prefix)
 	: Thread(func, name_prefix, Options()) {}

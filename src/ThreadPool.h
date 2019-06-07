@@ -14,6 +14,8 @@
 #include <deque>
 #include <memory>
 
+#include <stddef.h>
+
 namespace annety {
 	//
 // You just call run_tasker() to add a task to the list of work to be done.
@@ -36,7 +38,7 @@ public:
 
 	// Make sure all outstanding work is finished, and wait for and destroy all
 	// of the underlying threads in the pool.
-	void join_all();
+	void joinall();
 
 	// It is safe to run_tasker() any time, before or after start().
 	void run_tasker(const Tasker& tasker, int repeat_count = 1);

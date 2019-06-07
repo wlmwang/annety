@@ -8,7 +8,7 @@
 #ifndef ANT_MUTEX_LOCK_H_
 #define ANT_MUTEX_LOCK_H_
 
-#include "CompilerSpecific.h"
+#include "Macros.h"
 #include "Logging.h"
 
 #if DCHECK_IS_ON()

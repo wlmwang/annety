@@ -4,12 +4,13 @@
 #ifndef ANT_BLOCKING_QUEUE_H
 #define ANT_BLOCKING_QUEUE_H
 
+#include "Macros.h"
 #include "Logging.h"
 #include "MutexLock.h"
 #include "ConditionVariable.h"
-#include "CompilerSpecific.h"
 
 #include <deque>
+#include <utility>
 
 // Use like:
 //	// UnBoundedBlocking
@@ -31,18 +32,18 @@ public:
 	UnBoundedBlockingTrait(size_t max_size) = delete;
 
 	void push(const T& x) {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		queue_.push_back(x);
 		empty_cv_.signal();
 	}
 	void push(T&& x) {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		queue_.push_back(std::move(x));
 		empty_cv_.signal();
 	}
 
 	T pop() {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		while (empty_with_locked()) {
 			empty_cv_.wait();
 		}
@@ -54,22 +55,22 @@ public:
 	}
 
 	size_t size() const {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		return size_with_locked();
 	}
 
 	bool empty() const {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		return empty_with_locked();
 	}
 
 	bool full() const {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		return full_with_locked();
 	}
 
 	size_t capacity() const {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		return capacity_with_locked();
 	}
 
@@ -107,7 +108,7 @@ public:
 				: max_size_(max_size) {}
 
 	void push(const T& x) {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		while (full_with_locked()) {
 			full_cv_.wait();
 		}
@@ -117,7 +118,7 @@ public:
 		empty_cv_.signal();
 	}
 	void push(T&& x) {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		while (full_with_locked()) {
 			full_cv_.wait();
 		}
@@ -128,7 +129,7 @@ public:
 	}
 
 	T pop() {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		while (empty_with_locked()) {
 			empty_cv_.wait();
 		}
@@ -141,22 +142,22 @@ public:
 	}
 
 	size_t size() const {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		return size_with_locked();
 	}
 
 	bool empty() const {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		return empty_with_locked();
 	}
 
 	bool full() const {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		return full_with_locked();
 	}
 
 	size_t capacity() const {
-		AutoLock l(lock_);
+		AutoLock locked(lock_);
 		return capacity_with_locked();
 	}
 

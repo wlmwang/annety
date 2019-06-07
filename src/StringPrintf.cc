@@ -5,15 +5,16 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#include <errno.h>
-#include <stddef.h>
-#include <cstdio>   // for vsnprintf
-#include <vector>
-
 #include "StringPrintf.h"
-#include "StlUtil.h"
+#include "Macros.h"		// arraysize
 #include "Logging.h"
 #include "ScopedClearLastError.h"
+
+#include <vector>
+#include <stdarg.h>
+#include <errno.h>	// errno
+#include <stdio.h>	// vsnprintf
+#include <stddef.h>
 
 namespace annety {
 namespace {
@@ -23,12 +24,12 @@ namespace {
 // large enough to accommodate the formatted string without truncation, they
 // return the number of characters that would be in the fully-formatted string
 // (vsnprintf, and vswprintf on Windows), or -1 (vswprintf on POSIX platforms).
-inline int vsnprintfT(char* buffer,
+inline int vsnprintf_T(char* buffer,
 					  size_t buf_size,
 					  const char* format,
 					  va_list argptr)
 {
-	return std::vsnprintf(buffer, buf_size, format, argptr);
+	return ::vsnprintf(buffer, buf_size, format, argptr);
 }
 
 // Templatized backend for string_printf/string_appendf. This does not finalize
@@ -42,22 +43,22 @@ static void string_appendvt(StringType* dst,
 	typename StringType::value_type stack_buf[1024];
 
 	va_list ap_copy;
-	va_copy(ap_copy, ap);
+	::va_copy(ap_copy, ap);
 
 	// save last errno
 	ScopedClearLastError last_error;
 
-	int result = vsnprintfT(stack_buf, annety::size(stack_buf), format, ap_copy);
+	int result = vsnprintf_T(stack_buf, arraysize(stack_buf), format, ap_copy);
 	va_end(ap_copy);
 
-	if (result >= 0 && result < static_cast<int>(annety::size(stack_buf))) {
+	if (result >= 0 && result < static_cast<int>(arraysize(stack_buf))) {
 		// It fit.
 		dst->append(stack_buf, result);
 		return;
 	}
 
 	// Repeatedly increase buffer size until it fits.
-	int mem_length = annety::size(stack_buf);
+	int mem_length = arraysize(stack_buf);
 	while (true) {
 		if (result < 0) {
 			if (errno != 0 && errno != EOVERFLOW) {
@@ -72,7 +73,7 @@ static void string_appendvt(StringType* dst,
 
 		if (mem_length > 32 * 1024 * 1024) {
 			// That should be plenty, don't try anything larger.  This protects
-			// against huge allocations when using vsnprintfT implementations that
+			// against huge allocations when using vsnprintf_T implementations that
 			// return -1 for reasons other than overflow without setting errno.
 			DLOG(WARNING) << "Unable to printf the requested string due to size.";
 			return;
@@ -82,9 +83,9 @@ static void string_appendvt(StringType* dst,
 
 		// NOTE: You can only use a va_list once.  Since we're in a while loop, we
 		// need to make a new copy each time so we don't use up the original.
-		va_copy(ap_copy, ap);
-		result = vsnprintfT(&mem_buf[0], mem_length, format, ap_copy);
-		va_end(ap_copy);
+		::va_copy(ap_copy, ap);
+		result = vsnprintf_T(&mem_buf[0], mem_length, format, ap_copy);
+		::va_end(ap_copy);
 
 		if ((result >= 0) && (result < mem_length)) {
 			// It fit.
@@ -98,7 +99,7 @@ static void string_appendvt(StringType* dst,
 
 std::string string_printf(const char* format, ...) {
 	va_list ap;
-	va_start(ap, format);
+	::va_start(ap, format);
 	std::string result;
 	string_appendv(&result, format, ap);
 	va_end(ap);
@@ -113,18 +114,18 @@ std::string string_printv(const char* format, va_list ap) {
 
 const std::string& sstring_printf(std::string* dst, const char* format, ...) {
 	va_list ap;
-	va_start(ap, format);
+	::va_start(ap, format);
 	dst->clear();
 	string_appendv(dst, format, ap);
-	va_end(ap);
+	::va_end(ap);
 	return *dst;
 }
 
 const std::string& string_appendf(std::string* dst, const char* format, ...) {
 	va_list ap;
-	va_start(ap, format);
+	::va_start(ap, format);
 	string_appendv(dst, format, ap);
-	va_end(ap);
+	::va_end(ap);
 	return *dst;
 }
 

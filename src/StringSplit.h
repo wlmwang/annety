@@ -8,11 +8,10 @@
 #ifndef ANT_STRING_SPLIT_H
 #define ANT_STRING_SPLIT_H
 
-#include "CompilerSpecific.h"
 #include "StringPiece.h"
 
+#include <utility>	// std::pair
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace annety {

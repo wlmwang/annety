@@ -9,17 +9,14 @@
 #define ANT_PLATFORM_THREAD_H_
 
 #include "BuildConfig.h"
-#include "CompilerSpecific.h"
+#include "Macros.h"
 #include "Time.h"
 
 #include <functional>
 #include <string>
 #include <stddef.h>
-
-#if defined(OS_POSIX)
 #include <pthread.h>
 #include <unistd.h>
-#endif
 
 namespace annety {
 // Used for logging. Always an integer value.

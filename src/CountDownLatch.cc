@@ -2,6 +2,7 @@
 // Date: May 28 2019
 
 #include "CountDownLatch.h"
+#include "Time.h"
 
 namespace annety {
 CountDownLatch::CountDownLatch(int count) 

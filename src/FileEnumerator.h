@@ -8,7 +8,7 @@
 #ifndef ANT_FILE_ENUMERATOR_H_
 #define ANT_FILE_ENUMERATOR_H_
 
-#include "CompilerSpecific.h"
+#include "Macros.h"
 #include "FilePath.h"
 #include "Time.h"
 

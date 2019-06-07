@@ -4,8 +4,6 @@
 #ifndef ANT_THREAD_H_
 #define ANT_THREAD_H_
 
-#include "BuildConfig.h"
-#include "CompilerSpecific.h"
 #include "PlatformThread.h"
 #include "CountDownLatch.h"
 

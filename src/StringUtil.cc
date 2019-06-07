@@ -42,7 +42,7 @@ const char kWhitespace[] = {
 
 namespace {
 template <typename CHAR>
-size_t lcpyT(CHAR* dst, const CHAR* src, size_t dst_size) {
+size_t lcpy_T(CHAR* dst, const CHAR* src, size_t dst_size) {
 	for (size_t i = 0; i < dst_size; ++i) {
 		// We hit and copied the terminating NULL.
 		if ((dst[i] = src[i]) == 0) {
@@ -65,7 +65,7 @@ size_t lcpyT(CHAR* dst, const CHAR* src, size_t dst_size) {
 }	// namespace anonymous
 
 size_t strlcpy(char* dst, const char* src, size_t dst_size) {
-	return lcpyT<char>(dst, src, dst_size);
+	return lcpy_T<char>(dst, src, dst_size);
 }
 
 namespace {

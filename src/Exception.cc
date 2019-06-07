@@ -3,6 +3,7 @@
 
 #include "Exception.h"
 
+#include <utility>
 #include <cxxabi.h>     // abi::__cxa_demangle
 #include <execinfo.h>   // backtrace, backtrace_symbols
 #include <stdlib.h>
@@ -49,8 +50,8 @@ std::string backtrace_to_string(bool demangle) {
 			stack.append(strings[i]);
 			stack.push_back('\n');
 		}
-		free(demangled);
-		free(strings);
+		::free(demangled);
+		::free(strings);
 	}
 	return stack;
 }

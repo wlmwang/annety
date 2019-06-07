@@ -8,17 +8,17 @@
 #ifndef ANT_STRING_UTIL_H
 #define ANT_STRING_UTIL_H
 
+#include "CompilerSpecific.h"
+#include "StringPiece.h"
+
 #include <ctype.h>
-#include <stdarg.h>   // For va_list
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include <initializer_list>
 #include <string>
 #include <vector>
-
-#include "CompilerSpecific.h"
-#include "StringPiece.h"
 
 namespace annety {
 
@@ -35,11 +35,6 @@ inline int vsnprintf(char* buffer, size_t size,
 	return ::vsnprintf(buffer, size, format, arguments);
 }
 
-inline int vswprintf(wchar_t* buffer, size_t size,
-					 const wchar_t* format, va_list arguments) {
-	return ::vswprintf(buffer, size, format, arguments);
-}
-
 // Some of these implementations need to be inlined.
 
 // We separate the declaration from the implementation of this inline
@@ -54,9 +49,9 @@ inline int snprintf(char* buffer,
 					...)
 {
 	va_list arguments;
-	va_start(arguments, format);
+	::va_start(arguments, format);
 	int result = vsnprintf(buffer, size, format, arguments);
-	va_end(arguments);
+	::va_end(arguments);
 	return result;
 }
 

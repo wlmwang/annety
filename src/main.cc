@@ -7,7 +7,6 @@
 #include "StringPiece.h"
 #include "StringUtil.h"
 #include "StringSplit.h"
-#include "SafeSprintf.h"
 #include "SafeStrerror.h"
 #include "ByteBuffer.h"
 #include "LogStream.h"
@@ -29,7 +28,7 @@ using namespace annety;
 using namespace std;
 
 void test22() {
-	throw Exception("this is a exception!!"); 
+	throw Exception("<<<throw a exception>>>"); 
 }
 void test11() {
 	test22();
@@ -39,7 +38,7 @@ void test() {
 }
 
 void func(void* ptr) {
-	std::cout << "**" << ptr << std::endl;
+	std::cout << "AtExitManager:" << "*" << ptr << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -55,19 +54,19 @@ int main(int argc, char* argv[]) {
 	
 	cout << __cplusplus << endl;
     
-    // // AtExitManager
-    // {
-    //     int a = 15;
-    //     AtExitManager exit_manager;
-    //     exit_manager.RegisterCallback(std::bind(&func, &a));
-    //     exit_manager.RegisterCallback(std::bind(&func, nullptr));
-    // }
+ //    // AtExitManager
+ //    {
+ //        int a = 15;
+ //        AtExitManager exit_manager;
+ //        exit_manager.RegisterCallback(std::bind(&func, &a));
+ //        exit_manager.RegisterCallback(std::bind(&func, nullptr));
+ //    }
 
 	// // StringPiece
 	// StringPiece s("abcdcba");
 	// StringPiece s1 = s;
 	// std::cout << s << ":" << s1 << '\n' 
-	// 		<< s.rfind("s") << "|" << s.substr(2) << std::endl;
+	// 		<< s.rfind("s") << "|" << s.find("c") << "|" << s.substr(2) << std::endl;
 
 	// // StringUtil
 	// StringPiece ts = trim_whitespace(" 12345  ", TrimPositions::TRIM_ALL);
@@ -87,18 +86,13 @@ int main(int argc, char* argv[]) {
 	// 	cout << t << endl;
 	// }
 
-	// // SafeSprintf
-	// char buf[1024];
-	// cout << strings::safe_sprintf(buf, "float %3d", 4555) << endl;
-	// cout << buf << endl;
-
 	// // StringPrintf
-	// string sf = string_printf("float %3.1f", 4555.33);
+	// string sf = string_printf("printf(%%3.1) %3.1f", 555.33);
 	// cout << sf << endl;
 
 	// // SafeStrerror
-	// std::cout << safe_strerror(10) << std::endl;
-	// std::cout << fast_safe_strerror(11) << std::endl;
+	// std::cout << "errno(10):" << safe_strerror(10) << std::endl;
+	// std::cout << "errno(11):" << fast_safe_strerror(11) << std::endl;
 
 	// // ByteBuffer
 	// ByteBuffer<10> bb;
@@ -109,16 +103,25 @@ int main(int argc, char* argv[]) {
 
 	// ByteBuffer<10> bb1 = bb;
 
-	// cout << bb << endl;
-	// cout << bb.taken_as_string() << endl;	// taken
-	// cout << bb << "::" << bb1 << endl;
+	// cout << "take before:" << bb << endl;
+	// cout << "take all:" << bb.taken_as_string() << endl;	// taken
+	// cout << "take before:" << bb << "|" << bb1 << endl;
 
-	// bb.append("78");
-	// bb.append("ef");
+	// bb.append("01");
+	// bb.append("23");
 
-	// cout << "append success:" << bb.append("hijklm") << endl;
-	// cout << "append success:" << bb.append("n") << endl;
-	// cout << bb << endl;
+	// cout << "append success:" << bb.append("4567890") << endl;
+	// cout << "append success:" << bb.append("a") << endl;
+	// cout << "append rt:" << bb << endl;
+
+	// // LogStream
+	// LogStream stream;
+	// stream << -12345.345 << "#" << string_printf("printf(%%3d) %3d", 555) << true;
+
+	// LogStream stream1 = stream;
+	// stream.reset();
+
+	// cout << "stream:" << stream << "|" << stream1 << endl;
 
 	// // LogBuffer
 	// LogBuffer lb;
@@ -127,83 +130,74 @@ int main(int argc, char* argv[]) {
 	// LogBuffer lb1 = lb;
 	// lb.reset();
 	
-	// cout << lb << "::" << lb1 << endl;
-
-	// // LogStream
-	// LogStream stream;
-	// stream << -12345.345 << "|" << string_printf("double %3d", 555) << true;
-
-	// LogStream stream1 = stream;
-	// stream.reset();
-
-	// cout << stream << "::" << stream1 << endl;
+	// cout << "LogBuffer:" << lb << "|" << lb1 << endl;
 
 	// // Time
 	// Time t = Time::now();
-	// cout << t << endl;
+	// cout << "now(utc):" << t << endl;
 
 	// t += TimeDelta::from_hours(8);
-	// cout << t << endl;
+	// cout << "+8:" << t << endl;
 
-	// cout << t.utc_midnight() << endl;
+	// cout << "midnight:" << t.utc_midnight() << endl;
 
-	// // StlUtil
+	// // StlUtil @todo
 	// const char* arr[] = {"asdfasd", "xxx", "vvv"};
-	// cout << sizeof arr << "|" << sizeof(arr)/sizeof(void*) << endl;	// 3*8=24
-	// cout << annety::size(arr) << endl;
+	// cout << "sizeof:" << sizeof arr << "|" << sizeof(arr)/sizeof(void*) << endl;	// 3*8=24
+	// cout << "annety::size:" << size(arr) << "|" << size("12345") << endl;
 
+	// // error: no matching function for call to 'size'
+	// // const char *str = "12345";
+	// // cout << "annety::size:" << arraysize(str) << endl;
+	
 	// // Logging
 	// LOG(INFO) << 1234.5123 << "xxx";
 
 	// CHECK_EQ(1, 1);
-
 	// DCHECK_EQ(1, 1);
 	// DCHECK_LE(1, 2);
-	// // // NOTREACHED();	// debug abort/release ERROR
+	// // NOTREACHED();	// debug abort/release ERROR
 
 	// // PlatformThreadHandle
 	// PlatformThreadHandle handle;
 	// PlatformThread::create([]() {
-	// 	for (int i = 0; i < 1000; i++) {
-	// 		PLOG(INFO) << 1234.5123 << "xxx";
-			
-	// 		// sleep(3);
+	// 	for (int i = 0; i < 10; i++) {
+	// 		// errno = 10;
+	// 		PLOG(INFO) << 1234.5678 << " <<<message<<<";
 	// 	}
 	// }, &handle);
 	// PlatformThread::join(handle);
 
 	// // Thread
 	// Thread tt([]() {
-	// 	// for (int i = 0; i < 1000000; i++) {
-	// 	// 	PLOG(INFO) << 1234.5123 << "xxx";
-	// 	// }
-	// 	test();
+	// 	for (int i = 0; i < 10; i++) {
+	// 		PLOG(INFO) << 1234.5678 << " <<<message<<<";
+	// 	}
 	// }, "annety");
 	// tt.start();
 	// tt.join();
 
 	// // ThreadPool
-	// ThreadPool tp("annetys", 5);
+	// ThreadPool tp(5, "annetys");
 	// tp.start();
 
 	// for (int i = 0; i < 10; i++) {
-	// 	tp.run_tasker([](){
-	// 		// std::cout << "ttt:" << pthread_self() << std::endl;
-	// 		LOG(INFO) << "ttt:" << pthread_self();
+	// 	tp.run_tasker([]() {
+	// 		LOG(INFO) << "ThreadPool(for):" << pthread_self();
 	// 	});
 	// }
-
-	// tp.run_tasker([](){
-	// 	LOG(INFO) << "ttt:" << pthread_self();
+	// tp.run_tasker([]() {
+	// 	LOG(INFO) << "ThreadPool(batch):" << pthread_self();
 	// }, 10);
-	// tp.join_all();
+
+	// tp.joinall();
 
 	// tp.start();
 	// tp.run_tasker([](){
-	// 	LOG(INFO) << "yyy:" << pthread_self();
+	// 	LOG(INFO) << "ThreadPool(restart):" << pthread_self();
 	// }, 10);
 	// tp.join_all();
-	// // // tp.stop();
+	// // tp.stop();
 
 
 	// // BlockingQueue
@@ -227,9 +221,9 @@ int main(int argc, char* argv[]) {
 	// consumer.start();
 
 	// producer.join();
-	// consumer.join();
+	// consumer.join();	// will hold
 
-	// thread pool consumer
+	// // ThreadPool consumer
 	// ThreadPool consumers(16, "annety-consumers");
 	// consumers.start();
 	// consumers.run_tasker([&bq](){
@@ -239,11 +233,11 @@ int main(int argc, char* argv[]) {
 	// });
 
 	// producer.join();
-	// consumers.join_all();
+	// consumers.joinall();	// will hold
 
 	// // FilePath
 	// FilePath fp("/usr/local/annety.log.gz");
-
+	// cout << "full:" << fp << endl;
 	// cout << "dirname:" << fp.dir_name() << endl;
 	// cout << "basename:" << fp.base_name() << endl;
 	// cout << "extension:" << fp.extension() << endl;
@@ -253,22 +247,24 @@ int main(int argc, char* argv[]) {
 	// std::vector<std::string> components;
 	// fp.get_components(&components);
 	// for (auto cc : components) {
-	// 	cout << cc << endl;
+	// 	cout << "|" << cc << "|";
 	// }
+	// cout << endl;
 
 	// // FileEnumerator
+	// cout << "all (*.cc) file:" << endl;
 	// FileEnumerator enums(FilePath("."), false, FileEnumerator::FILES, "*.cc");
 	// for (FilePath name = enums.next(); !name.empty(); name = enums.next()) {
 	// 	cout << name << endl;
 	// }
 
 	// // File
-	// File f("ggg.log", File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
-	// cout << "write:"<< f.write(0, "ggg", strlen("ggg")) << endl;
+	// File f(FilePath("annety-text-file.log"), File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
+	// cout << "write(annety-file.log):"<< f.write(0, "test text", strlen("test text")) << endl;
 
 	// char buf[1024];
-	// std::cout << "read:"<< f.read(0, buf, sizeof(buf)) << std::endl;
-	// std::cout << buf << std::endl;
+	// std::cout << "read(annety-text-file.log) len:"<< f.read(0, buf, sizeof(buf)) << std::endl;
+	// std::cout << "read(annety-text-file.log) text:" << buf << std::endl;
 
 	// // Exception
 	// try {
@@ -277,4 +273,11 @@ int main(int argc, char* argv[]) {
 	// 	fprintf(stderr, "reason: %s\n", ex.what());
 	// 	fprintf(stderr, "stack trace: %s\n", ex.backtrace());
 	// }
+
+	// // Exception Thread
+	// Thread tt([]() {
+	// 	test();
+	// }, "annety");
+	// tt.start();
+	// tt.join();
 }

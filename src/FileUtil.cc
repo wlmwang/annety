@@ -9,13 +9,12 @@
 // Date: Jun 05 2019
 
 #include "FileUtil.h"
-#include "BuildConfig.h"
-#include "Logging.h"
 #include "FilePath.h"
 #include "FileEnumerator.h"
 #include "StringPiece.h"
-#include "StringUtil.h"
 #include "StringPrintf.h"
+#include "StringUtil.h"
+#include "Logging.h"
 
 #include <fstream>
 #include <limits>

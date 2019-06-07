@@ -8,12 +8,11 @@
 
 #include <iosfwd>
 #include <iostream>
-
 #include <algorithm>
 #include <vector>
 #include <string>
-#include <string.h>
-#include <assert.h>
+#include <assert.h>		// assert
+#include <stddef.h>
 
 namespace annety {
 // @code
@@ -23,7 +22,7 @@ namespace annety {
 // +-------------------+------------------+------------------+
 // |                   |                  |                  |
 // 0      <=      readerIndex   <=   writerIndex    <=     size
-// @endcode
+// @code
 template<ssize_t LIMIT_SIZE = -1>
 class ByteBuffer {
 public:

@@ -8,10 +8,10 @@
 #ifndef ANT_SCOPED_GENERIC_H_
 #define ANT_SCOPED_GENERIC_H_
 
-#include <algorithm>
-#include <stdlib.h>
-#include <assert.h>
+#include <algorithm>	// swap
+#include <stdlib.h>		// abort
 
+#include "Macros.h"
 #include "CompilerSpecific.h"
 
 namespace annety {
@@ -178,8 +178,7 @@ private:
 };
 
 template<class T, class Traits>
-void swap(const ScopedGeneric<T, Traits>& a, const ScopedGeneric<T, Traits>& b)
-{
+void swap(const ScopedGeneric<T, Traits>& a, const ScopedGeneric<T, Traits>& b) {
 	a.swap(b);
 }
 

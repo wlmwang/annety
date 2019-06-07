@@ -5,12 +5,13 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#include <ostream>
-#include <cmath>
-
 #include "Time.h"
 #include "StringPrintf.h"
 #include "Logging.h"
+
+#include <algorithm>
+#include <cmath>	// isnan
+#include <ostream>
 
 namespace annety {
 namespace {
@@ -145,13 +146,13 @@ namespace {
 // This prevents a crash on traversing the environment global and looking up
 // the 'TZ' variable in libc. See: crbug.com/390567.
 time_t time_t_from_tm(struct tm* timestruct, bool is_local) {
-	return is_local ? mktime(timestruct) : timegm(timestruct);
+	return is_local ? ::mktime(timestruct) : ::timegm(timestruct);
 }
 struct tm* time_t_to_tm(time_t t, struct tm* timestruct, bool is_local) {
 	if (is_local) {
-		localtime_r(&t, timestruct);
+		::localtime_r(&t, timestruct);
 	} else {
-		gmtime_r(&t, timestruct);
+		::gmtime_r(&t, timestruct);
 	}
 	return timestruct;
 }

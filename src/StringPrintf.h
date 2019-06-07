@@ -8,11 +8,10 @@
 #ifndef ANT_STRING_PRINTF_H_
 #define ANT_STRING_PRINTF_H_
 
-#include "BuildConfig.h"
 #include "CompilerSpecific.h"
 
 #include <string>
-#include <cstdarg>   // va_list
+#include <stdarg.h>   // va_list
 
 namespace annety {
 // Return a C++ string given printf-like input.

@@ -5,7 +5,9 @@
 
 #include <algorithm>
 #include <ostream>
+#include <stddef.h>
 #include <string.h>
+#include <stdio.h>	// snprintf
 
 namespace annety {
 namespace {
@@ -73,7 +75,7 @@ LogStream& LogStream::format_number<uintptr_t>(uintptr_t v) {
 template <>
 LogStream& LogStream::format_number<double>(double v) {
 	char buf[kMaxNumericSize];
-	size_t len = snprintf(buf, kMaxNumericSize, "%.12g", v);
+	size_t len = ::snprintf(buf, kMaxNumericSize, "%.12g", v);
 	buffer_.append(buf, len);
 	return *this;
 }

@@ -10,6 +10,7 @@
 
 #include <iosfwd>
 #include <limits>
+#include <algorithm>
 
 #include <unistd.h>
 #include <stdint.h>

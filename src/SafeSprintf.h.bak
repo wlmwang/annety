@@ -108,7 +108,7 @@
 #define ANT_SAFE_SPRINTF_H_
 
 #include "BuildConfig.h"
-#include "CompilerSpecific.h"
+#include "Macros.h"
 
 #include <stddef.h>
 #include <stdint.h>

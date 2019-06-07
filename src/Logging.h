@@ -8,16 +8,19 @@
 #ifndef ANT_LOGGING_H
 #define ANT_LOGGING_H
 
-#include "BuildConfig.h"
-#include "CompilerSpecific.h"
-#include "ScopedClearLastError.h"
+#include "BuildConfig.h"		// ARCH_CPU_X86_FAMILY
+#include "CompilerSpecific.h"	// UNLIKELY
+#include "Macros.h"
 #include "LogStream.h"
 #include "Time.h"
+#include "ScopedClearLastError.h"
 
-#include <functional>
 #include <sstream>
+#include <string>
+#include <functional>
+#include <utility>
 #include <string.h>
-#include <errno.h>
+#include <errno.h>	// errno
 
 // Instructions
 // ----------------------------------------------------------------------
@@ -99,18 +102,18 @@ public:
 	public:
 		template<int N>
 		Filename(const char (&path)[N]) : basename_(path), size_(N-1) {
-			const char* slash = strrchr(basename_, '/');
+			const char* slash = ::strrchr(basename_, '/');
 			if (slash) {
 				basename_ = slash + 1;
 				size_ -= basename_ - path;
 			}
 		}
 		explicit Filename(const char* path) : basename_(path) {
-			const char* slash = strrchr(path, '/');
+			const char* slash = ::strrchr(path, '/');
 			if (slash) {
 				basename_ = slash + 1;
 			}
-			size_ = strlen(basename_);
+			size_ = ::strlen(basename_);
 		}
 
 		const char* basename_;

@@ -4,9 +4,9 @@
 #ifndef ANT_COUNT_DOWN_LATCH_H
 #define ANT_COUNT_DOWN_LATCH_H
 
-#include "CompilerSpecific.h"
-#include "ConditionVariable.h"
+#include "Macros.h"
 #include "MutexLock.h"
+#include "ConditionVariable.h"
 
 namespace annety {
 class TimeDelta;

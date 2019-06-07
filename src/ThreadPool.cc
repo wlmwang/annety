@@ -5,6 +5,9 @@
 #include "Logging.h"
 #include "Exception.h"
 
+#include <string>
+#include <functional>
+
 namespace annety {
 ThreadPool::ThreadPool(int num_threads, const std::string& name_prefix) 
 	: name_prefix_(name_prefix),
@@ -54,7 +57,7 @@ void ThreadPool::stop() {
 	taskers_.clear();
 }
 
-void ThreadPool::join_all() {
+void ThreadPool::joinall() {
 	DCHECK(running_ == true) 
 		<< "join_all() called with no outstanding threads.";
 

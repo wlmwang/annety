@@ -8,10 +8,10 @@
 #include "StringPiece.h"
 #include "Logging.h"
 
-#include <limits.h>
-
 #include <algorithm>
 #include <ostream>
+#include <limits.h>
+#include <stddef.h>
 
 namespace annety {
 namespace {

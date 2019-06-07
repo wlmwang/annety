@@ -8,15 +8,13 @@
 #ifndef ANT_STRING_PIECE_H_
 #define ANT_STRING_PIECE_H_
 
-#include "BuildConfig.h"
-#include "CompilerSpecific.h"
-
 #include <iterator>
 #include <iosfwd>
 #include <string>
-#include <cstring>
+#include <algorithm>	// distance
 
-#include <assert.h>
+#include <string.h>	// strlen,memcmp
+#include <assert.h>	// assert
 #include <stddef.h>
 
 namespace annety {
@@ -190,12 +188,12 @@ public:
 
 	constexpr bool starts_with(StringPiece x) const noexcept {
 		return ((length_ >= x.length_) && 
-				(memcmp(ptr_, x.ptr_, x.length_) == 0));
+				(::memcmp(ptr_, x.ptr_, x.length_) == 0));
 	}
 
 	constexpr bool ends_with(StringPiece x) const noexcept {
 		return ((length_ >= x.length_) && 
-				(memcmp(ptr_ + (length_ - x.length_), x.ptr_, x.length_) == 0));
+				(::memcmp(ptr_ + (length_ - x.length_), x.ptr_, x.length_) == 0));
 	}
 
 	// explicit operator std::string() const {
@@ -271,7 +269,7 @@ public:
 	}
 
 	int compare(const StringPiece& x) const noexcept {
-		int r = memcmp(ptr_, x.ptr_, length_ < x.length_? length_: x.length_);
+		int r = ::memcmp(ptr_, x.ptr_, length_ < x.length_? length_: x.length_);
 		if (r == 0) {
 			if (length_ < x.length_) {
 				r = -1;
@@ -284,7 +282,7 @@ public:
 
 	bool operator==(const StringPiece& x) const {
 		return ((length_ == x.length_) &&
-			(memcmp(ptr_, x.ptr_, length_) == 0));
+			(::memcmp(ptr_, x.ptr_, length_) == 0));
 	}
 	bool operator!=(const StringPiece& x) const {
 		return !(*this == x);
@@ -292,7 +290,7 @@ public:
 
 #define STRINGPIECE_BINARY_PREDICATE(op, auxcmp) \
 	bool operator op(const StringPiece& x) const { \
-		int r = memcmp(ptr_, x.ptr_, \
+		int r = ::memcmp(ptr_, x.ptr_, \
 					   length_ < x.length_ ? length_ : x.length_); \
 		return ((r auxcmp 0) || ((r == 0) && (length_ op x.length_))); \
 	}

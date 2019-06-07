@@ -8,7 +8,7 @@
 #ifndef ANT_FILE_H_
 #define ANT_FILE_H_
 
-#include "CompilerSpecific.h"
+#include "BuildConfig.h"
 #include "FilePath.h"
 #include "ScopedFile.h"
 #include "Time.h"
@@ -18,7 +18,6 @@
 #include <sys/stat.h>
 
 namespace annety {
-	//
 // platform file
 #if defined(OS_POSIX)
 using PlatformFile = int;

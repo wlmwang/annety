@@ -4,7 +4,6 @@
 #ifndef ANT_EXCEPTION_H
 #define ANT_EXCEPTION_H
 
-#include "BuildConfig.h"
 #include "CompilerSpecific.h"
 
 #include <exception>

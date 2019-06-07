@@ -20,9 +20,6 @@
 #ifndef ANT_EINTR_WRAPPER_H_
 #define ANT_EINTR_WRAPPER_H_
 
-#include "BuildConfig.h"
-
-#if defined(OS_POSIX)
 #include <errno.h>
 
 #if defined(NDEBUG)
@@ -57,12 +54,5 @@
 	} while (0); \
 	eintr_wrapper_result; \
 })
-
-#else  // !OS_POSIX
-
-#define HANDLE_EINTR(x) (x)
-#define IGNORE_EINTR(x) (x)
-
-#endif  // !OS_POSIX
 
 #endif  // ANT_EINTR_WRAPPER_H_

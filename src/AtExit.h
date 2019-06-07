@@ -22,7 +22,7 @@
 #ifndef ANT_AT_EXIT_H
 #define ANT_AT_EXIT_H
 
-#include "CompilerSpecific.h"
+#include "Macros.h"
 #include "MutexLock.h"
 
 #include <stack>

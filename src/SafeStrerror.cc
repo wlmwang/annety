@@ -6,10 +6,9 @@
 // Date: May 08 2019
 
 #include "SafeStrerror.h"
-#include "BuildConfig.h"
 
-#include <errno.h>
-#include <stdio.h>
+#include <errno.h>	// errno,strerror_r
+#include <stdio.h>	// snprintf
 #include <string.h>
 
 namespace annety {
@@ -42,7 +41,7 @@ static void POSSIBLY_UNUSED wrap_posix_strerror_r(
 		// glibc did not use buf and returned a static string instead. Copy it
 		// into buf.
 		buf[0] = '\0';
-		strncat(buf, rc, len - 1);
+		::strncat(buf, rc, len - 1);
 	}
 	// The GNU version never fails. Unknown errors get an "unknown error" message.
 	// The result is always null terminated.
@@ -89,7 +88,7 @@ static void POSSIBLY_UNUSED wrap_posix_strerror_r(
 			strerror_error = result;
 		}
 		// snprintf truncates and always null-terminates.
-		snprintf(buf, len, "Error %d while retrieving error %d", strerror_error, err);
+		::snprintf(buf, len, "Error %d while retrieving error %d", strerror_error, err);
 	}
 	errno = old_errno;
 }
@@ -116,7 +115,7 @@ std::string safe_strerror(int err) {
 namespace {
 const size_t ERROR_BUFSIZE = 64;
 thread_local char tls_error_buf[ERROR_BUFSIZE];
-} // namespace anonymous
+}	// namespace anonymous
 
 StringPiece fast_safe_strerror(int err) {
 	wrap_posix_strerror_r(&strerror_r, err, tls_error_buf, ERROR_BUFSIZE);

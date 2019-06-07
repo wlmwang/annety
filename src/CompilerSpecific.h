@@ -42,10 +42,12 @@
 //   if (TakeOwnership(my_var.get()) == SUCCESS)
 //     ignore_result(my_var.release());
 namespace annety {
+namespace internal {
 template<typename T>
 inline void ignore_result(const T&) {}
+}	// namespace internal
 }	// namespace annety
-#define IGNORE_UNUSED_RESULT(x) annety::ignore_result(x)
+#define IGNORE_UNUSED_RESULT(x) annety::internal::ignore_result(x)
 
 // Tell the compiler a function is using a printf-style format string.
 // |format_param| is the one-based index of the format string parameter;
@@ -77,30 +79,5 @@ inline void ignore_result(const T&) {}
 #define LIKELY(x) (x)
 #endif	// defined(COMPILER_GCC)
 #endif	// !defined(LIKELY)
-
-// Concatenate numbers in c/c++ macros to a token.
-#define MACROS_CONCAT(a, b) a##b
-
-// Convert symbol to string
-#define MACROS_STRING(a) #a
-
-// --------------------------------------------------------------------------
-// Put this in the declarations for a class to be uncopyable.
-#define DISALLOW_COPY(TypeName) TypeName(const TypeName&)=delete
-
-// Put this in the declarations for a class to be unassignable.
-#define DISALLOW_ASSIGN(TypeName) TypeName& operator=(const TypeName&)=delete
-
-// Put this in the declarations for a class to be uncopyable and unassignable.
-#define DISALLOW_COPY_AND_ASSIGN(TypeName)	\
-	DISALLOW_COPY(TypeName);				\
-	DISALLOW_ASSIGN(TypeName)
-
-// A macro to disallow all the implicit constructors, namely the
-// default constructor, copy constructor and operator= functions.
-// This is especially useful for classes containing only static methods.
-#define DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName)	\
-	TypeName() = delete;							\
-	DISALLOW_COPY_AND_ASSIGN(TypeName)
 
 #endif	// ANT_COMPILER_SPECIFIC_H_
