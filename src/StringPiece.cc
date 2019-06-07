@@ -8,9 +8,9 @@
 #include "StringPiece.h"
 #include "Logging.h"
 
-#include <algorithm>
+#include <algorithm>	// find,search
 #include <ostream>
-#include <limits.h>
+#include <limits.h>		// UCHAR_MAX
 #include <stddef.h>
 
 namespace annety {

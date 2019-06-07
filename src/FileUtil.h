@@ -5,28 +5,23 @@
 // This file contains utility functions for dealing with the local
 // filesystem.
 
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: Jun 05 2019
 
 #ifndef ANT_FILE_UTIL_H_
 #define ANT_FILE_UTIL_H_
 
 #include "BuildConfig.h"
-#include "Logging.h"
 #include "StringPiece.h"
-#include "EintrWrapper.h"
 #include "File.h"
 #include "FilePath.h"
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h>		// size_t
+#include <inttypes.h>	// gid_t,uid_t,int64_t
 #include <stdio.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include <set>
 #include <string>
-#include <vector>
 
 namespace annety {
 class Time;
@@ -326,7 +321,7 @@ int read_file(const FilePath& filename, char* data, int max_size);
 // Writes the given buffer into the file, overwriting any data that was
 // previously there.  Returns the number of bytes written, or -1 on error.
 int write_file(const FilePath& filename, const char* data,
-				int size);
+			   int size);
 
 #if defined(OS_POSIX)
 // Appends |data| to |fd|. Does not close |fd| when done.  Returns true iff

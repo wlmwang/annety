@@ -5,7 +5,7 @@
 // This file contains utility functions for dealing with the local
 // filesystem.
 
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: Jun 05 2019
 
 #include "FileUtil.h"
@@ -13,12 +13,15 @@
 #include "FileEnumerator.h"
 #include "StringPiece.h"
 #include "StringPrintf.h"
-#include "StringUtil.h"
 #include "Logging.h"
 
-#include <fstream>
-#include <limits>
-#include <stdio.h>
+#include <algorithm>	// std::min
+#include <fstream>		// ifstream
+#include <limits>		// numeric_limits<size_t>
+#include <string>		// std::string,std::getline
+#include <string.h>		// memcmp
+#include <stdio.h>		// fread,feof,ferror,ftell,fileno
+#include <stddef.h>
 
 namespace annety {
 namespace {
@@ -70,7 +73,7 @@ bool contents_equal(const FilePath& filename1, const FilePath& filename2) {
 
 		if ((file1.eof() != file2.eof()) ||
 			(file1.gcount() != file2.gcount()) ||
-			(memcmp(buffer1, buffer2, static_cast<size_t>(file1.gcount()))))
+			(::memcmp(buffer1, buffer2, static_cast<size_t>(file1.gcount()))))
 		{
 			file1.close();
 			file2.close();
@@ -201,7 +204,7 @@ bool read_file_to_string(const FilePath& path, std::string* contents) {
 
 bool is_directory_empty(const FilePath& dir_path) {
 	FileEnumerator files(dir_path, false,
-						FileEnumerator::FILES | FileEnumerator::DIRECTORIES);
+						 FileEnumerator::FILES | FileEnumerator::DIRECTORIES);
 	if (files.next().empty()) {
 		return true;
 	}

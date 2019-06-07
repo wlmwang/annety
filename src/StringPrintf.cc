@@ -11,10 +11,10 @@
 #include "ScopedClearLastError.h"
 
 #include <vector>
+#include <stddef.h>
 #include <stdarg.h>
 #include <errno.h>	// errno
 #include <stdio.h>	// vsnprintf
-#include <stddef.h>
 
 namespace annety {
 namespace {

@@ -42,7 +42,7 @@ ${DIR_SRC}/%.o:${DIR_SRC}/%.cc
 	${CC} ${CCFLAGS} -c $< -o $@ 
 
 clean:
-	-rm -f ${TARGET} ${DIR_SRC}/*.o
+	-rm -f ${TARGET} ${DIR_SRC}*.o
 	-rm -rf ./bin ./log
 	
 install:

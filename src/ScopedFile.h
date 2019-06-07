@@ -8,14 +8,14 @@
 #ifndef ANT_SCOPED_FILE_H_
 #define ANT_SCOPED_FILE_H_
 
+#include "ScopedGeneric.h"
+#include "EintrWrapper.h"
+#include "Logging.h"
+
 #include <memory>	// unique_ptr
 #include <stdio.h>	// FILE,fclose
 #include <errno.h>	// errno
 #include <unistd.h>	// close
-
-#include "ScopedGeneric.h"
-#include "EintrWrapper.h"
-#include "Logging.h"
 
 namespace annety {
 namespace internal {

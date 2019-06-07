@@ -2,44 +2,35 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// @Modify: 2016/10/18
+// Refactoring: Anny Wang
+// Date: Jun 05 2019
 
 #include "FileUtil.h"
 #include "FilePath.h"
 #include "FileEnumerator.h"
 #include "ScopedFile.h"
 #include "EintrWrapper.h"
-#include "StringSplit.h"
-#include "StringPrintf.h"
 #include "StringUtil.h"
-#include "StlUtil.h"
-#include "Time.h"
+
 #include "BuildConfig.h"
 #include "Macros.h"
 #include "Logging.h"
+#include "Time.h"
 
 #if defined(OS_MACOSX)
 #include <copyfile.h>
 #include <AvailabilityMacros.h>
 #endif
 
-#include <dirent.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <libgen.h>
-#include <limits.h>
+#include <errno.h>		// errno
+#include <grp.h>		// getgrnam
+#include <fcntl.h>		// fcntl
+#include <stdio.h>		// rename,access,fopen
+#include <stdlib.h>		// realpath
 #include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
-#include <grp.h>
+#include <sys/stat.h>	// stat,S_ISLNK
+#include <sys/types.h>	// size_t
+#include <unistd.h>		// mkdir,rmdir,unlink,pipe,readlink,close
 
 namespace annety {
 namespace {
@@ -82,9 +73,9 @@ bool verify_specific_path_controlled_by_user(const FilePath& path,
 		return false;
 	}
 
-	// todo
+	// !ContainsKey(group_gids, stat_info.st_gid)
 	if ((stat_info.st_mode & S_IWGRP) &&
-		!ContainsKey(group_gids, stat_info.st_gid))
+		group_gids.find(stat_info.st_gid) == group_gids.end())
 	{
 		DLOG(ERROR) << "Path " << path.value()
 					<< " is writable by an unprivileged group.";
@@ -276,11 +267,11 @@ bool do_copy_directory(const FilePath& from_path,
 		// source file's permissions into account. On the other platforms, we just
 		// use the base::File constructor. On Chrome OS, base::File uses a different
 		// set of permissions than it does on other POSIX platforms.
-		#if defined(OS_MACOSX)
+#if defined(OS_MACOSX)
 		int mode = 0600 | (stat_at_use.st_mode & 0177);
-		#else
+#else
 		int mode = 0600;
-		#endif
+#endif
 		File outfile(::open(target_path.value().c_str(), open_flags, mode));
 		if (!outfile.is_valid()) {
 			DPLOG(ERROR) << "CopyDirectory() couldn't create file: "
@@ -385,7 +376,8 @@ bool copy_directory(const FilePath& from_path,
 
 bool copy_directory_excl(const FilePath& from_path,
 						 const FilePath& to_path,
-						 bool recursive) {
+						 bool recursive)
+{
 	return do_copy_directory(from_path, to_path, recursive, true);
 }
 

@@ -2,20 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: Jun 05 2019
 
 #ifndef ANT_FILE_ENUMERATOR_H_
 #define ANT_FILE_ENUMERATOR_H_
 
 #include "Macros.h"
-#include "FilePath.h"
 #include "Time.h"
+#include "FilePath.h"
 
-#include <sys/stat.h>
-#include <unistd.h>
+#include <sys/stat.h>		// struct stat
+#include <sys/types.h>		// size_t
 #include <stddef.h>
-#include <stdint.h>
 
 #include <vector>
 #include <stack>

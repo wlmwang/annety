@@ -12,7 +12,6 @@
 #include <limits>
 #include <algorithm>
 
-#include <unistd.h>
 #include <stdint.h>
 #include <time.h>
 #include <sys/time.h>

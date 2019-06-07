@@ -8,20 +8,10 @@
 #include "StringUtil.h"
 #include "Logging.h"
 
-#include <ctype.h>
-#include <errno.h>
-#include <math.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-#include <algorithm>
-#include <limits>
+#include <stddef.h>
+#include <algorithm>	// std::equal,std::min
 #include <vector>
-#include <iostream>
+#include <string>		// std::string,std::char_traits
 
 namespace annety {
 const char kWhitespace[] = {
@@ -462,7 +452,7 @@ bool do_replace_matches_after_offset(std::string* str,
 									 StringPiece replace_with,
 									 ReplaceType replace_type)
 {
-	using CharTraits = typename std::string::traits_type;
+	using CharTraits = typename std::string::traits_type;	// std::char_traits<CharT>
 
 	const size_t find_length = matcher.match_size();
 	if (!find_length) {

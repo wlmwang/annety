@@ -16,13 +16,11 @@
 #include <string>
 #include <stddef.h>
 #include <pthread.h>
-#include <unistd.h>
 
 namespace annety {
+// @todo mach_port_t
 // Used for logging. Always an integer value.
-#if defined(OS_MACOSX)
-typedef mach_port_t PlatformThreadId;
-#elif defined(OS_POSIX)
+#if defined(OS_POSIX)
 typedef pid_t PlatformThreadId;
 #endif
 
@@ -48,7 +46,9 @@ public:
 		return id_ == other.id_;
 	}
 
-	bool operator!=(PlatformThreadRef other) const { return id_ != other.id_; }
+	bool operator!=(PlatformThreadRef other) const {
+		return id_ != other.id_;
+	}
 
 	bool is_null() const {
 		return id_ == 0;

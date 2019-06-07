@@ -8,7 +8,7 @@
 #ifndef ANT_SCOPED_GENERIC_H_
 #define ANT_SCOPED_GENERIC_H_
 
-#include <algorithm>	// swap
+#include <algorithm>	// std::swap
 #include <stdlib.h>		// abort
 
 #include "Macros.h"

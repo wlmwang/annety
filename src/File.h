@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: Jun 05 2019
 
 #ifndef ANT_FILE_H_

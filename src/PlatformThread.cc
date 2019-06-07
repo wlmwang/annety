@@ -9,23 +9,19 @@
 #include "CompilerSpecific.h"
 #include "Logging.h"
 
-#include <unistd.h>
-#include <errno.h>
 #include <pthread.h>
-#include <sched.h>
 #include <stddef.h>
-#include <stdint.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/resource.h>
+#include <errno.h>		// errno
+#include <sched.h>		// sched_yield
+#include <time.h>		// timespec, nanosleep
 
 #if defined(OS_LINUX)
-#include <sys/syscall.h>
-#include <sys/prctl.h>
+#include <sys/syscall.h>	// syscall
+#include <sys/prctl.h>		// prctl
 #endif
 
-#include <utility>	// move
-#include <memory>	// unique_ptr
+#include <utility>	// std::move
+#include <memory>	// std::unique_ptr
 #include <string>
 
 namespace annety {
@@ -92,9 +88,7 @@ bool create_thread(bool joinable,
 PlatformThreadId PlatformThread::current_id() {
 	// Pthreads doesn't have the concept of a thread ID, so we have to reach down
 	// into the kernel.
-#if defined(OS_MACOSX)
-	return ::pthread_mach_thread_np(::pthread_self());
-#elif defined(OS_LINUX)
+#if defined(OS_LINUX)
 	return ::syscall(__NR_gettid);
 #elif defined(OS_SOLARIS)
 	return ::pthread_self();

@@ -2,19 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: Jun 04 2019
 
 #ifndef ANT_FILE_PATH_H_
 #define ANT_FILE_PATH_H_
 
-#include "CompilerSpecific.h"
+#include "CompilerSpecific.h"	// WARN_UNUSED_RESULT
 #include "StringPiece.h"
 
 #include <iosfwd>
 #include <string>
 #include <vector>
-
+#include <functional>	// std::hash
 #include <stddef.h>
 
 namespace annety {
@@ -66,11 +66,17 @@ public:
 		return path_ < that.path_;
 	}
 
-	const std::string& value() const { return path_; }
+	const std::string& value() const {
+		return path_;
+	}
 
-	bool empty() const { return path_.empty(); }
+	bool empty() const {
+		return path_.empty();
+	}
 
-	void clear() { path_.clear(); }
+	void clear() {
+		path_.clear();
+	}
 
 	// Returns true if |character| is in kSeparators.
 	static bool is_separator(char character);
@@ -252,7 +258,7 @@ struct hash<annety::FilePath> {
 	typedef std::size_t result_type;
 	
 	result_type operator()(argument_type const& f) const {
-		return hash<std::string>()(f.value());
+		return std::hash<std::string>()(f.value());
 	}
 };
 

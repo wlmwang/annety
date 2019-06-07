@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: Jun 05 2019
 
 #include "File.h"
@@ -10,13 +10,12 @@
 #include "Logging.h"
 #include "EintrWrapper.h"
 
-#include <errno.h>
-#include <fcntl.h>
-#include <stdint.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <unistd.h>		// pread,read,lseek,ftruncate
+#include <errno.h>		// errno
+#include <fcntl.h>		// fcntl
+#include <sys/stat.h>	// fstat,S_ISDIR
 #include <time.h>
-#include <sys/time.h>
+#include <sys/time.h>	// futimes,timeval
 
 namespace annety {
 // Make sure our Whence mappings match the system headers.
@@ -49,7 +48,7 @@ int call_futimes(PlatformFile file, const struct timeval times[2]) {
 #ifdef __USE_XOPEN2K8
 	// futimens should be available, but futimes might not be
 	// http://pubs.opengroup.org/onlinepubs/9699919799/
-	timespec ts_times[2];
+	struct timespec ts_times[2];
 	ts_times[0].tv_sec  = times[0].tv_sec;
 	ts_times[0].tv_nsec = times[0].tv_usec * 1000;
 	ts_times[1].tv_sec  = times[1].tv_sec;
@@ -152,7 +151,7 @@ File::File(PlatformFile platform_file, bool async)
 	  async_(async)
 {
 #if defined(OS_POSIX)
-  DCHECK_GE(platform_file, -1);
+	DCHECK_GE(platform_file, -1);
 #endif
 }
 

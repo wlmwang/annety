@@ -8,13 +8,13 @@
 #ifndef ANT_STRING_UTIL_H
 #define ANT_STRING_UTIL_H
 
-#include "CompilerSpecific.h"
+#include "CompilerSpecific.h"	// PRINTF_FORMAT
 #include "StringPiece.h"
 
-#include <ctype.h>
 #include <stdarg.h>
 #include <stddef.h>
-#include <stdint.h>
+#include <string.h>	// strdup
+#include <stdio.h>	// vsnprintf
 
 #include <initializer_list>
 #include <string>

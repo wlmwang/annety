@@ -2,22 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: Jun 04 2019
 
 #include "FilePath.h"
-
-#include <string.h>
-#include <algorithm>
-
+#include "Macros.h"
 #include "Logging.h"
 #include "StringPiece.h"
 #include "StringUtil.h"
-#include "StlUtil.h"
 
-#if defined(OS_MACOSX)
-#include <CoreFoundation/CoreFoundation.h>
-#endif
+#include <string.h>		// strcasecmp
+#include <string>
+#include <vector>
 
 namespace annety {
 using StringType = FilePath::StringType;
@@ -28,7 +24,7 @@ const char FilePath::kSeparators[] = "/";
 const char FilePath::kCurrentDirectory[] = ".";
 const char FilePath::kParentDirectory[] = "..";
 const char FilePath::kExtensionSeparator = '.';
-const size_t FilePath::kSeparatorsLength = annety::size(kSeparators);
+const size_t FilePath::kSeparatorsLength = arraysize(kSeparators);
 
 namespace {
 const char* const kCommonDoubleExtensionSuffixes[] = { "gz", "z", "bz2", "bz" };
@@ -100,16 +96,16 @@ StringType::size_type extension_separator_position(const StringType& path) {
 		return last_dot;
 	}
 
-	for (size_t i = 0; i < annety::size(kCommonDoubleExtensions); ++i) {
-		StringType extension(path, penultimate_dot + 1);
-		if (lower_case_equals(extension, kCommonDoubleExtensions[i])) {
+	for (size_t i = 0; i < arraysize(kCommonDoubleExtensions); ++i) {
+		StringType ext(path, penultimate_dot + 1);
+		if (lower_case_equals(ext, kCommonDoubleExtensions[i])) {
 			return penultimate_dot;
 		}
 	}
 
-	StringType extension(path, last_dot + 1);
-	for (size_t i = 0; i < annety::size(kCommonDoubleExtensionSuffixes); ++i) {
-		if (lower_case_equals(extension, kCommonDoubleExtensionSuffixes[i])) {
+	StringType ext(path, last_dot + 1);
+	for (size_t i = 0; i < arraysize(kCommonDoubleExtensionSuffixes); ++i) {
+		if (lower_case_equals(ext, kCommonDoubleExtensionSuffixes[i])) {
 			if ((last_dot - penultimate_dot) <= 5U &&
 				(last_dot - penultimate_dot) > 1U)
 			{
@@ -429,17 +425,17 @@ FilePath FilePath::replace_extension(StringPieceType ext) const {
 	return FilePath(str);
 }
 
-// bool FilePath::matches_extension(StringPieceType ext) const {
-// 	DCHECK(ext.empty() || ext[0] == kExtensionSeparator);
+bool FilePath::matches_extension(StringPieceType ext) const {
+	DCHECK(ext.empty() || ext[0] == kExtensionSeparator);
 
-// 	StringType current_extension = extension();
+	StringType current_extension = extension();
 
-// 	if (current_extension.length() != ext.length()) {
-// 		return false;
-// 	}
+	if (current_extension.length() != ext.length()) {
+		return false;
+	}
 
-// 	return FilePath::compare_equal_ignore_case(ext, current_extension);
-// }
+	return FilePath::compare_equal_ignore_case(ext, current_extension);
+}
 
 FilePath FilePath::append(StringPieceType component) const {
 	StringPieceType appended = component;
@@ -550,8 +546,8 @@ bool FilePath::references_parent() const {
 int FilePath::compare_ignore_case(StringPieceType string1,
 								  StringPieceType string2) {
 	// Specifically need null termianted strings for this API call.
-	int comparison = strcasecmp(string1.as_string().c_str(),
-								string2.as_string().c_str());
+	int comparison = ::strcasecmp(string1.as_string().c_str(),
+								  string2.as_string().c_str());
 	if (comparison < 0) {
 		return -1;
 	}
@@ -567,8 +563,8 @@ int FilePath::compare_ignore_case(StringPieceType string1,
 int FilePath::compare_ignore_case(StringPieceType string1,
 								  StringPieceType string2) {
 	// Specifically need null termianted strings for this API call.
-	int comparison = strcasecmp(string1.as_string().c_str(),
-					 string2.as_string().c_str());
+	int comparison = ::strcasecmp(string1.as_string().c_str(),
+					 			  string2.as_string().c_str());
 	if (comparison < 0) {
 		return -1;
 	}

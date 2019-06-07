@@ -2,31 +2,32 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Modify: Anny Wang
+// Refactoring: Anny Wang
 // Date: Jun 05 2019
 
 #include "FileEnumerator.h"
 #include "Logging.h"
 
-#include <dirent.h>
-#include <errno.h>
-#include <fnmatch.h>
-#include <stdint.h>
-#include <string.h>
+#include <dirent.h>		// DIR,dirent,opendir
+#include <errno.h>		// errno
+#include <fnmatch.h>	// fnmatch
+#include <string.h>		// memset
+#include <sys/stat.h>
+#include <utility>		// std::move
 
 namespace annety {
 namespace {
 void get_stat(const FilePath& path, bool show_links, struct stat* st) {
 	DCHECK(st);
-	const int res = show_links ? lstat(path.value().c_str(), st)
-							   : stat(path.value().c_str(), st);
+	const int res = show_links ? ::lstat(path.value().c_str(), st)
+							   : ::stat(path.value().c_str(), st);
 	if (res < 0) {
 		// Print the stat() error message unless it was ENOENT and we're following
 		// symlinks.
 		if (!(errno == ENOENT && !show_links)) {
 			DPLOG(ERROR) << "Couldn't stat" << path.value();
 		}
-		memset(st, 0, sizeof(*st));
+		::memset(st, 0, sizeof(*st));
 	}
 }
 
@@ -35,7 +36,7 @@ void get_stat(const FilePath& path, bool show_links, struct stat* st) {
 // FileEnumerator::FileInfo ----------------------------------------------------
 
 FileEnumerator::FileInfo::FileInfo() {
-	memset(&stat_, 0, sizeof(stat_));
+	::memset(&stat_, 0, sizeof(stat_));
 }
 
 FileEnumerator::FileInfo::~FileInfo() = default;
@@ -116,7 +117,7 @@ FilePath FileEnumerator::next() {
 		root_path_ = root_path_.strip_trailing_separators();
 		pending_paths_.pop();
 
-		DIR* dir = opendir(root_path_.value().c_str());
+		DIR* dir = ::opendir(root_path_.value().c_str());
 		if (!dir) {
 			continue;
 		}
@@ -125,7 +126,7 @@ FilePath FileEnumerator::next() {
 
 		current_directory_entry_ = 0;
 		struct dirent* dent;
-		while ((dent = readdir(dir))) {
+		while ((dent = ::readdir(dir))) {
 			FileInfo info;
 			info.filename_ = FilePath(dent->d_name);
 
@@ -169,7 +170,7 @@ FilePath FileEnumerator::next() {
 				directory_entries_.push_back(std::move(info));
 			}
 		}
-		closedir(dir);
+		::closedir(dir);
 
 		// MATCH_ONLY policy enumerates files in matched subfolders by "*" pattern.
 		// ALL policy enumerates files in all subfolders by origin pattern.

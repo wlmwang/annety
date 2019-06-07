@@ -8,14 +8,14 @@
 #ifndef ANT_STRING_PIECE_H_
 #define ANT_STRING_PIECE_H_
 
-#include <iterator>
+#include <iterator>		// const_iterator
 #include <iosfwd>
 #include <string>
-#include <algorithm>	// distance
+#include <algorithm>	// std::distance
 
 #include <string.h>	// strlen,memcmp
 #include <assert.h>	// assert
-#include <stddef.h>
+#include <stddef.h>	// ptrdiff_t
 
 namespace annety {
 class StringPiece;
