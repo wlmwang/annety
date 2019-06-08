@@ -40,16 +40,16 @@ public:
 
 	// Starts the thread and returns only after the thread has started and
 	// initialized (i.e. ThreadMainFunc() has been called).
-	void start();
-
-	// Joins the thread. If start_async() was used to start the thread, then this
-	// first waits for the thread to start cleanly, then it joins.
-	void join();
+	Thread& start();
 
 	// Starts the thread, but returns immediately, without waiting for the thread
 	// to have initialized first (i.e. this does not wait for ThreadMainFunc() to have
 	// been run first).
-	void start_async();
+	Thread& start_async();
+	
+	// Joins the thread. If start_async() was used to start the thread, then this
+	// first waits for the thread to start cleanly, then it joins.
+	void join();
 
 	// Returns the thread id, only valid after the thread has started. If the
 	// thread was started using Start(), then this will be valid after the call to
@@ -61,17 +61,17 @@ public:
 	// ThreadMainFunc() has run). If the thread was started with start_async(), but it
 	// hasn't been initialized yet (i.e. ThreadMainFunc() has not run), then this will
 	// return False.
-	bool has_been_started() {
+	bool has_been_started() const {
 		return started_;
 	}
 
 	// Returns True if join() has ever been called.
-	bool has_been_joined() {
+	bool has_been_joined() const {
 		return joined_;
 	}
 	
 	// Returns true if start() or start_async() has been called.
-	bool has_start_been_attempted() {
+	bool has_start_been_attempted() const {
 		return start_called_;
 	}
 

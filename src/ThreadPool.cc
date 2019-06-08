@@ -21,7 +21,7 @@ ThreadPool::~ThreadPool() {
 	DCHECK(taskers_.empty());
 }
 
-void ThreadPool::start() {
+ThreadPool& ThreadPool::start() {
 	DCHECK(threads_.empty() && running_ == false) 
 		<< "start() called with outstanding threads.";
 	running_ = true;
@@ -37,6 +37,7 @@ void ThreadPool::start() {
 	if (num_threads_ == 0 && thread_init_cb_) {
 		thread_init_cb_();
 	}
+	return *this;
 }
 
 void ThreadPool::stop() {

@@ -24,6 +24,8 @@
 #include "File.h"
 #include "FileUtil.h"
 #include "AtExit.h"
+#include "Singleton.h"
+#include "ThreadSingleton.h"
 
 using namespace annety;
 using namespace std;
@@ -55,13 +57,13 @@ int main(int argc, char* argv[]) {
 	
 	cout << __cplusplus << endl;
     
- //    // AtExitManager
- //    {
- //        int a = 15;
- //        AtExitManager exit_manager;
- //        exit_manager.RegisterCallback(std::bind(&func, &a));
- //        exit_manager.RegisterCallback(std::bind(&func, nullptr));
- //    }
+    // // AtExitManager
+    // {
+    //     int a = 15;
+    //     AtExitManager exit_manager;
+    //     AtExitManager::RegisterCallback(std::bind(&func, &a));
+    //     AtExitManager::RegisterCallback(std::bind(&func, nullptr));
+    // }
 
 	// // StringPiece
 	// StringPiece s("abcdcba");
@@ -274,6 +276,67 @@ int main(int argc, char* argv[]) {
 	// cout << "read content:" << cc << endl;
 
 	// cout << "delete file:" << delete_file(path, false) << endl;
+
+	// // Singleton
+	// class singleton_test {
+	// public:
+	// 	static singleton_test* instance() {
+	// 		return Singleton<singleton_test>::get();
+	// 	}
+		
+	// 	void foo() {
+	// 		cout << pthread_self() << "|" << "foo" << endl;
+	// 	}
+
+	// private:
+	// 	singleton_test() {
+	// 		cout << "singleton_test" << endl;
+	// 	}
+	// 	~singleton_test() {
+	// 		cout << "~singleton_test" << endl;
+	// 	}
+
+	// 	friend struct annety::DefaultSingletonTraits<singleton_test>;
+
+	// 	DISALLOW_COPY_AND_ASSIGN(singleton_test);
+	// };
+
+	// AtExitManager exit_manager;
+	// singleton_test::instance()->foo();
+	// Thread([](){
+	// 	singleton_test::instance()->foo();
+	// }, "singleton test").start().join();
+
+	// // ThreadSingleton
+	// class thread_singleton_test
+	// {
+	// public:
+	// 	thread_singleton_test() {
+	// 		cout << "thread_singleton_test" << endl;
+	// 	}
+	// 	~thread_singleton_test() {
+	// 		cout << "~thread_singleton_test" << "|" << foo_ << endl;
+	// 	}
+
+	// 	void setfoo(const string& f) {
+	// 		foo_ = f;
+	// 	}
+	// 	string getfoo() {
+	// 		cout << pthread_self() << "|" << foo_ << endl;
+	// 		return foo_;
+	// 	}
+
+	// private:
+	// 	string foo_ = "init";
+	// };
+
+	// ThreadSingleton<thread_singleton_test>::get()->setfoo("main");
+	// ThreadSingleton<thread_singleton_test>::get()->getfoo();
+	// Thread([]() {
+	// 	ThreadSingleton<thread_singleton_test>::get()->getfoo();
+	// }, "thread singleton test").start().join();
+
+	// cout << "should ~destruct before" << endl;
 
 	// // Exception
 	// try {

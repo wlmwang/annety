@@ -30,7 +30,7 @@ public:
 
 	// Start up all of the underlying threads, and start processing work if we
 	// have any.
-	void start();
+	ThreadPool& start();
 
 	// Force stop all of the underlying threads even if the work is not finished
 	void stop();

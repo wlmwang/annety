@@ -43,6 +43,8 @@ void* thread_func(void* params) {
 
 	// start enter thread function
 	thread_params->func_();
+
+	::pthread_exit(0);
 	return nullptr;
 }
 

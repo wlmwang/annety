@@ -39,11 +39,22 @@ Thread::~Thread() {
 		<< "Joinable Thread destroyed without being Join()ed.";
 }
 
-void Thread::start() {
+Thread& Thread::start() {
 	start_async();
 	// Wait for the thread to complete initialization.
 	latch_.await();
 	started_ = true;
+	return *this;
+}
+
+Thread& Thread::start_async() {
+	DCHECK(!has_start_been_attempted()) << "Tried to Start a thread multiple times.";
+	start_called_ = true;
+	bool success = options_.joinable
+		? PlatformThread::create(std::bind(&Thread::start_routine, this), &thread_)
+		: PlatformThread::create_non_joinable(std::bind(&Thread::start_routine, this));
+	CHECK(success);
+	return *this;
 }
 
 void Thread::join() {
@@ -54,15 +65,6 @@ void Thread::join() {
 	PlatformThread::join(thread_);
 	thread_ = PlatformThreadHandle();
 	joined_ = true;
-}
-
-void Thread::start_async() {
-	DCHECK(!has_start_been_attempted()) << "Tried to Start a thread multiple times.";
-	start_called_ = true;
-	bool success = options_.joinable
-		? PlatformThread::create(std::bind(&Thread::start_routine, this), &thread_)
-		: PlatformThread::create_non_joinable(std::bind(&Thread::start_routine, this));
-	CHECK(success);
 }
 
 PlatformThreadId Thread::tid() {
