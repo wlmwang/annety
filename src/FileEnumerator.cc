@@ -193,9 +193,9 @@ bool FileEnumerator::is_pattern_matched(const FilePath& path) const {
 }
 
 bool FileEnumerator::should_skip(const FilePath& path) {
-	FilePath::StringType basename = path.base_name().value();
-	return basename == "." || 
-		(basename == ".." && !(INCLUDE_DOT_DOT & file_type_));
+	FilePath::StringType base = path.basename().value();
+	return base == "." || 
+		   (base == ".." && !(INCLUDE_DOT_DOT & file_type_));
 }
 
 bool FileEnumerator::is_type_matched(bool is_dir) const {

@@ -191,22 +191,22 @@ void FilePath::get_components(std::vector<StringType>* components) const {
 	FilePath base;
 
 	// Capture path components.
-	while (current != current.dir_name()) {
-		base = current.base_name();
+	while (current != current.dirname()) {
+		base = current.basename();
 		if (!are_all_separators(base.value())) {
 			ret_val.push_back(base.value());
 		}
-		current = current.dir_name();
+		current = current.dirname();
 	}
 
 	// Capture root, if any.
-	base = current.base_name();
+	base = current.basename();
 	if (!base.value().empty() && base.value() != kCurrentDirectory) {
-		ret_val.push_back(current.base_name().value());
+		ret_val.push_back(current.basename().value());
 	}
 
 	// Capture drive letter, if any.
-	FilePath dir = current.dir_name();
+	FilePath dir = current.dirname();
 	StringType::size_type letter = find_drive_letter(dir.value());
 	if (letter != StringType::npos) {
 		ret_val.push_back(StringType(dir.value(), 0, letter + 1));
@@ -258,7 +258,7 @@ bool FilePath::append_relative_path(const FilePath& child,
 // guaranteed to not modify their input strings, and in fact are implemented
 // differently in this regard on different platforms.  Don't use them, but
 // adhere to their behavior.
-FilePath FilePath::dir_name() const {
+FilePath FilePath::dirname() const {
 	FilePath new_path(path_);
 	new_path.strip_trailing_separators_internal();
 
@@ -296,7 +296,7 @@ FilePath FilePath::dir_name() const {
 	return new_path;
 }
 
-FilePath FilePath::base_name() const {
+FilePath FilePath::basename() const {
 	FilePath new_path(path_);
 	new_path.strip_trailing_separators_internal();
 
@@ -320,7 +320,7 @@ FilePath FilePath::base_name() const {
 }
 
 StringType FilePath::extension() const {
-	FilePath base(base_name());
+	FilePath base(basename());
 
 	const StringType::size_type dot = extension_separator_position(base.path_);
 	if (dot == StringType::npos) {
@@ -331,7 +331,7 @@ StringType FilePath::extension() const {
 }
 
 StringType FilePath::final_extension() const {
-	FilePath base(base_name());
+	FilePath base(basename());
 
 	const StringType::size_type dot = final_extension_separator_position(base.path_);
 	if (dot == StringType::npos) {
@@ -372,7 +372,7 @@ FilePath FilePath::insert_before_extension(StringPieceType suffix) const {
 		return FilePath(path_);
 	}
 
-	if (is_empty_or_special_case(base_name().value())) {
+	if (is_empty_or_special_case(basename().value())) {
 		return FilePath();
 	}
 
@@ -384,7 +384,7 @@ FilePath FilePath::insert_before_extension(StringPieceType suffix) const {
 }
 
 FilePath FilePath::add_extension(StringPieceType ext) const {
-	if (is_empty_or_special_case(base_name().value())) {
+	if (is_empty_or_special_case(basename().value())) {
 		return FilePath();
 	}
 
@@ -406,7 +406,7 @@ FilePath FilePath::add_extension(StringPieceType ext) const {
 }
 
 FilePath FilePath::replace_extension(StringPieceType ext) const {
-	if (is_empty_or_special_case(base_name().value())) {
+	if (is_empty_or_special_case(basename().value())) {
 		return FilePath();
 	}
 

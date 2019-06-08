@@ -34,12 +34,30 @@ class Time;
 // function can result in I/O so it can be slow.
 FilePath make_absolute_filepath(const FilePath& input);
 
+// Sets |real_path| to |path| with symbolic links and junctions expanded.
+// On windows, make sure the path starts with a lettered drive.
+// |path| must reference a file.  Function will fail if |path| points to
+// a directory or to a nonexistent path.  On windows, this function will
+// fail if |path| is a junction or symlink that points to an empty file,
+// or if |real_path| would be longer than MAX_PATH characters.
+bool normalize_filepath(const FilePath& path, FilePath* real_path);
+
 // Returns the total number of bytes used by all the files under |root_path|.
 // If the path does not exist the function returns 0.
 //
 // This function is implemented using the FileEnumerator class so it is not
 // particularly speedy in any platform.
 int64_t compute_directory_size(const FilePath& root_path);
+
+// Sets the time of the last access and the time of the last modification.
+bool touch_file(const FilePath& path, const Time& last_accessed, const Time& last_modified);
+
+// Moves the given path, whether it's a file or a directory.
+// If a simple rename is not possible, such as in the case where the paths are
+// on different volumes, this will attempt to copy and delete. Returns
+// true for success.
+// This function fails if either path contains traversal components ('..').
+bool move_file(const FilePath& from_path, const FilePath& to_path);
 
 // Deletes the given path, whether it's a file or a directory.
 // If it's a directory, it's perfectly happy to delete all of the
@@ -55,22 +73,13 @@ int64_t compute_directory_size(const FilePath& root_path);
 //          TO "rm -rf", SO USE WITH CAUTION.
 bool delete_file(const FilePath& path, bool recursive);
 
-// Moves the given path, whether it's a file or a directory.
-// If a simple rename is not possible, such as in the case where the paths are
-// on different volumes, this will attempt to copy and delete. Returns
-// true for success.
-// This function fails if either path contains traversal components ('..').
-bool move(const FilePath& from_path, const FilePath& to_path);
-
 // Renames file |from_path| to |to_path|. Both paths must be on the same
 // volume, or the function will fail. Destination file will be created
 // if it doesn't exist. Prefer this function over Move when dealing with
 // temporary files. On Windows it preserves attributes of the target file.
 // Returns true on success, leaving *error unchanged.
 // Returns false on failure and sets *error appropriately, if it is non-NULL.
-bool replace_file(const FilePath& from_path,
-				  const FilePath& to_path,
-				  File::Error* error);
+bool replace_file(const FilePath& from_path, const FilePath& to_path, File::Error* error);
 
 // Copies a single file. Use CopyDirectory() to copy directories.
 // This function fails if either path contains traversal components ('..').
@@ -123,59 +132,11 @@ bool path_is_writable(const FilePath& path);
 // Returns true if the given path exists and is a directory, false otherwise.
 bool directory_exists(const FilePath& path);
 
-// Returns true if the contents of the two files given are equal, false
-// otherwise.  If either file can't be read, returns false.
-bool contents_equal(const FilePath& filename1,
-					const FilePath& filename2);
-
-// Returns true if the contents of the two text files given are equal, false
-// otherwise.  This routine treats "\r\n" and "\n" as equivalent.
-bool text_contents_equal(const FilePath& filename1,
-						 const FilePath& filename2);
-
-// Reads the file at |path| into |contents| and returns true on success and
-// false on error.  For security reasons, a |path| containing path traversal
-// components ('..') is treated as a read error and |contents| is set to empty.
-// In case of I/O error, |contents| holds the data that could be read from the
-// file before the error occurred.
-// |contents| may be NULL, in which case this function is useful for its side
-// effect of priming the disk cache (could be used for unit tests).
-bool read_file_to_string(const FilePath& path, std::string* contents);
-
-// Reads the file at |path| into |contents| and returns true on success and
-// false on error.  For security reasons, a |path| containing path traversal
-// components ('..') is treated as a read error and |contents| is set to empty.
-// In case of I/O error, |contents| holds the data that could be read from the
-// file before the error occurred.  When the file size exceeds |max_size|, the
-// function returns false with |contents| holding the file truncated to
-// |max_size|.
-// |contents| may be NULL, in which case this function is useful for its side
-// effect of priming the disk cache (could be used for unit tests).
-bool read_file_to_string_with_max_size(const FilePath& path,
-									   std::string* contents,
-									   size_t max_size);
-
-#if defined(OS_POSIX)
-
-// Read exactly |bytes| bytes from file descriptor |fd|, storing the result
-// in |buffer|. This function is protected against EINTR and partial reads.
-// Returns true iff |bytes| bytes have been successfully read from |fd|.
-bool read_from_fd(int fd, char* buffer, size_t bytes);
-
 // Performs the same function as CreateAndOpenTemporaryFileInDir(), but returns
 // the file-descriptor directly, rather than wrapping it into a FILE. Returns
 // -1 on failure.
 int create_and_open_fd_for_temporary_file_in_dir(const FilePath& dir,
 												 FilePath* path);
-
-// Creates a symbolic link at |symlink| pointing to |target|.  Returns
-// false on failure.
-bool create_symbolic_link(const FilePath& target,
-						  const FilePath& symlink);
-
-// Reads the given |symlink| and returns where it points to in |target|.
-// Returns false upon failure.
-bool read_symbolic_link(const FilePath& symlink, FilePath* target);
 
 // Bits and masks of the file permission.
 enum FilePermissionBits {
@@ -203,19 +164,13 @@ bool get_posix_file_permissions(const FilePath& path, int* mode);
 // the permission of a file which the symlink points to.
 bool set_posix_file_permissions(const FilePath& path, int mode);
 
-#if defined(OS_LINUX) || defined(OS_AIX)
-// Determine if files under a given |path| can be mapped and then mprotect'd
-// PROT_EXEC. This depends on the mount options used for |path|, which vary
-// among different Linux distributions and possibly local configuration. It also
-// depends on details of kernel--ChromeOS uses the noexec option for /dev/shm
-// but its kernel allows mprotect with PROT_EXEC anyway.
-bool is_path_executable(const FilePath& path);
-#endif  // OS_LINUX || OS_AIX
-
-#endif  // OS_POSIX
-
-// Returns true if the given directory is empty
-bool is_directory_empty(const FilePath& dir_path);
+// Get the home directory. This is more complicated than just getenv("HOME")
+// as it knows to fall back on getpwent() etc.
+//
+// You should not generally call this directly. Instead use DIR_HOME with the
+// path service which will use this function but cache the value.
+// Path service may also override DIR_HOME.
+FilePath get_homedir();
 
 // Get the temporary directory provided by the system.
 //
@@ -223,15 +178,7 @@ bool is_directory_empty(const FilePath& dir_path);
 // instead of this function. Those variants will ensure that the proper
 // permissions are set so that other users on the system can't edit them while
 // they're open (which can lead to security issues).
-bool get_temp_dir(FilePath* path);
-
-// Get the home directory. This is more complicated than just getenv("HOME")
-// as it knows to fall back on getpwent() etc.
-//
-// You should not generally call this directly. Instead use DIR_HOME with the
-// path service which will use this function but cache the value.
-// Path service may also override DIR_HOME.
-FilePath get_home_dir();
+bool get_tempdir(FilePath* path);
 
 // Creates a temporary file. The full path is placed in |path|, and the
 // function returns true if was successful in creating the file. The file will
@@ -276,64 +223,8 @@ bool create_directory_and_get_error(const FilePath& full_path,
 // Backward-compatible convenience method for the above.
 bool create_directory(const FilePath& full_path);
 
-// Returns the file size. Returns true on success.
-bool get_file_size(const FilePath& file_path, int64_t* file_size);
-
-// Sets |real_path| to |path| with symbolic links and junctions expanded.
-// On windows, make sure the path starts with a lettered drive.
-// |path| must reference a file.  Function will fail if |path| points to
-// a directory or to a nonexistent path.  On windows, this function will
-// fail if |path| is a junction or symlink that points to an empty file,
-// or if |real_path| would be longer than MAX_PATH characters.
-bool normalize_filepath(const FilePath& path, FilePath* real_path);
-
-// This function will return if the given file is a symlink or not.
-bool is_link(const FilePath& file_path);
-
-// Returns information about the given file path.
-bool get_file_info(const FilePath& file_path, File::Info* info);
-
-// Sets the time of the last access and the time of the last modification.
-bool touch_file(const FilePath& path,
-				const Time& last_accessed,
-				const Time& last_modified);
-
-// Wrapper for fopen-like calls. Returns non-NULL FILE* on success. The
-// underlying file descriptor (POSIX) or handle (Windows) is unconditionally
-// configured to not be propagated to child processes.
-FILE* open_file(const FilePath& filename, const char* mode);
-
-// Closes file opened by OpenFile. Returns true on success.
-bool close_file(FILE* file);
-
-// Associates a standard FILE stream with an existing File. Note that this
-// functions take ownership of the existing File.
-FILE* file_to_file(File file, const char* mode);
-
-// Truncates an open file to end at the location of the current file pointer.
-// This is a cross-platform analog to Windows' SetEndOfFile() function.
-bool truncate_file(FILE* file);
-
-// Reads at most the given number of bytes from the file into the buffer.
-// Returns the number of read bytes, or -1 on error.
-int read_file(const FilePath& filename, char* data, int max_size);
-
-// Writes the given buffer into the file, overwriting any data that was
-// previously there.  Returns the number of bytes written, or -1 on error.
-int write_file(const FilePath& filename, const char* data,
-			   int size);
-
-#if defined(OS_POSIX)
-// Appends |data| to |fd|. Does not close |fd| when done.  Returns true iff
-// |size| bytes of |data| were written to |fd|.
-bool write_file_descriptor(const int fd, const char* data, int size);
-#endif
-
-// Appends |data| to |filename|.  Returns true iff |size| bytes of |data| were
-// written to |filename|.
-bool append_to_file(const FilePath& filename,
-					const char* data,
-					int size);
+// Returns true if the given directory is empty
+bool is_directory_empty(const FilePath& dir_path);
 
 // Gets the current working directory for the process.
 bool get_current_directory(FilePath* path);
@@ -341,29 +232,109 @@ bool get_current_directory(FilePath* path);
 // Sets the current working directory for the process.
 bool set_current_directory(const FilePath& path);
 
-// Attempts to find a number that can be appended to the |path| to make it
-// unique. If |path| does not exist, 0 is returned.  If it fails to find such
-// a number, -1 is returned. If |suffix| is not empty, also checks the
-// existence of it with the given suffix.
-int get_unique_path_number(const FilePath& path,
-						   const FilePath::StringType& suffix);
+// Creates a symbolic link at |symlink| pointing to |target|.  Returns
+// false on failure.
+bool create_symbolic_link(const FilePath& target,
+						  const FilePath& symlink);
+
+// Reads the given |symlink| and returns where it points to in |target|.
+// Returns false upon failure.
+bool read_symbolic_link(const FilePath& symlink, FilePath* target);
+
+// This function will return if the given file is a symlink or not.
+bool is_link(const FilePath& file_path);
+
+// Returns the file size. Returns true on success.
+bool get_file_size(const FilePath& file_path, int64_t* file_size);
+
+// Returns information about the given file path.
+bool get_file_info(const FilePath& file_path, File::Info* info);
+
+// Associates a standard FILE stream with an existing File. Note that this
+// functions take ownership of the existing File.
+FILE* file_to_FILE(File file, const char* mode);
+
+// Wrapper for fopen-like calls. Returns non-NULL FILE* on success. The
+// underlying file descriptor (POSIX) or handle (Windows) is unconditionally
+// configured to not be propagated to child processes.
+FILE* open_FILE(const FilePath& filename, const char* mode);
+
+// Closes file opened by OpenFile. Returns true on success.
+bool close_FILE(FILE* file);
+
+// Truncates an open file to end at the location of the current file pointer.
+// This is a cross-platform analog to Windows' SetEndOfFile() function.
+bool truncate_FILE(FILE* file);
+
+// Returns true if the contents of the two files given are equal, false
+// otherwise.  If either file can't be read, returns false.
+bool contents_equal(const FilePath& filename1,
+					const FilePath& filename2);
+
+// Returns true if the contents of the two text files given are equal, false
+// otherwise.  This routine treats "\r\n" and "\n" as equivalent.
+bool text_contents_equal(const FilePath& filename1,
+						 const FilePath& filename2);
+
+
+// Reads the file at |path| into |contents| and returns true on success and
+// false on error.  For security reasons, a |path| containing path traversal
+// components ('..') is treated as a read error and |contents| is set to empty.
+// In case of I/O error, |contents| holds the data that could be read from the
+// file before the error occurred.  When the file size exceeds |max_size|, the
+// function returns false with |contents| holding the file truncated to
+// |max_size|.
+// |contents| may be NULL, in which case this function is useful for its side
+// effect of priming the disk cache (could be used for unit tests).
+bool read_file_to_string_with_max_size(const FilePath& path,
+									   std::string* contents,
+									   size_t max_size);
+
+// Reads the file at |path| into |contents| and returns true on success and
+// false on error.  For security reasons, a |path| containing path traversal
+// components ('..') is treated as a read error and |contents| is set to empty.
+// In case of I/O error, |contents| holds the data that could be read from the
+// file before the error occurred.
+// |contents| may be NULL, in which case this function is useful for its side
+// effect of priming the disk cache (could be used for unit tests).
+bool read_file_to_string(const FilePath& path, std::string* contents);
+
+// Read exactly |bytes| bytes from file descriptor |fd|, storing the result
+// in |buffer|. This function is protected against EINTR and partial reads.
+// Returns true iff |bytes| bytes have been successfully read from |fd|.
+bool read_from_fd(int fd, char* buffer, size_t bytes);
+
+// Reads at most the given number of bytes from the file into the buffer.
+// Returns the number of read bytes, or -1 on error.
+int read_file(const FilePath& filename, char* data, int max_size);
+
+// Writes the given buffer into the file, overwriting any data that was
+// previously there.  Returns the number of bytes written, or -1 on error.
+int write_file(const FilePath& filename, const char* data, int size);
+
+// Appends |data| to |fd|. Does not close |fd| when done.  Returns true iff
+// |size| bytes of |data| were written to |fd|.
+bool write_to_fd(const int fd, const char* data, int size);
+
+// Appends |data| to |filename|.  Returns true iff |size| bytes of |data| were
+// written to |filename|.
+bool append_to_file(const FilePath& filename, const char* data, int size);
 
 // Sets the given |fd| to non-blocking mode.
 // Returns true if it was able to set it in the non-blocking mode, otherwise
 // false.
 bool set_non_blocking(int fd);
 
-#if defined(OS_POSIX)
+// Sets the given |fd| to close-on-exec mode.
+// Returns true if it was able to set it in the close-on-exec mode, otherwise
+// false.
+bool set_close_on_exec(int fd);
+
 // Creates a non-blocking, close-on-exec pipe.
 // This creates a non-blocking pipe that is not intended to be shared with any
 // child process. This will be done atomically if the operating system supports
 // it. Returns true if it was able to create the pipe, otherwise false.
 bool create_local_non_blocking_pipe(int fds[2]);
-
-// Sets the given |fd| to close-on-exec mode.
-// Returns true if it was able to set it in the close-on-exec mode, otherwise
-// false.
-bool set_close_on_exec(int fd);
 
 // Test that |path| can only be changed by a given user and members of
 // a given set of groups.
@@ -380,31 +351,17 @@ bool verify_path_controlled_by_user(const FilePath& base,
 									const FilePath& path,
 									uid_t owner_uid,
 									const std::set<gid_t>& group_gids);
-#endif  // defined(OS_POSIX)
 
-#if defined(OS_MACOSX)
-// Is |path| writable only by a user with administrator privileges?
-// This function uses Mac OS conventions.  The super user is assumed to have
-// uid 0, and the administrator group is assumed to be named "admin".
-// Testing that |path|, and every parent directory including the root of
-// the filesystem, are owned by the superuser, controlled by the group
-// "admin", are not writable by all users, and contain no symbolic links.
-// Will return false if |path| does not exist.
-bool verify_path_controlled_by_admin(const FilePath& path);
-#endif  // defined(OS_MACOSX)
+// Attempts to find a number that can be appended to the |path| to make it
+// unique. If |path| does not exist, 0 is returned.  If it fails to find such
+// a number, -1 is returned. If |suffix| is not empty, also checks the
+// existence of it with the given suffix.
+int get_unique_path_number(const FilePath& path,
+						   const FilePath::StringType& suffix);
 
 // Returns the maximum length of path component on the volume containing
 // the directory |path|, in the number of FilePath::CharType, or -1 on failure.
 int get_maximum_path_component_length(const FilePath& path);
-
-#if defined(OS_POSIX)
-// Get a temporary directory for shared memory files. The directory may depend
-// on whether the destination is intended for executable files, which in turn
-// depends on how /dev/shmem was mounted. As a result, you must supply whether
-// you intend to create executable shmem segments so this function can find
-// an appropriate location.
-bool get_shmem_temp_dir(bool executable, FilePath* path);
-#endif
 
 // Internal --------------------------------------------------------------------
 

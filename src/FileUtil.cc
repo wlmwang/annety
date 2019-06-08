@@ -17,6 +17,7 @@
 
 #include <algorithm>	// std::min
 #include <fstream>		// ifstream
+#include <fcntl.h>		// fcntl,O_NONBLOCK
 #include <limits>		// numeric_limits<size_t>
 #include <string>		// std::string,std::getline
 #include <string.h>		// memcmp
@@ -34,6 +35,15 @@ static const int kMaxUniqueFiles = 100;
 
 }	// namespace anonymous
 
+bool is_directory_empty(const FilePath& dir_path) {
+	FileEnumerator files(dir_path, false,
+						 FileEnumerator::FILES | FileEnumerator::DIRECTORIES);
+	if (files.next().empty()) {
+		return true;
+	}
+	return false;
+}
+
 int64_t compute_directory_size(const FilePath& root_path) {
 	int64_t running_size = 0;
 	FileEnumerator file_iter(root_path, true, FileEnumerator::FILES);
@@ -43,11 +53,70 @@ int64_t compute_directory_size(const FilePath& root_path) {
 	return running_size;
 }
 
-bool move(const FilePath& from_path, const FilePath& to_path) {
-	if (from_path.references_parent() || to_path.references_parent()) {
+bool create_directory(const FilePath& full_path) {
+	return create_directory_and_get_error(full_path, nullptr);
+}
+
+FILE* file_to_FILE(File file, const char* mode) {
+	FILE* stream = ::fdopen(file.get_platform_file(), mode);
+	if (stream) {
+		file.take_platform_file();
+	}
+	return stream;
+}
+
+FILE* open_FILE(const FilePath& filename, const char* mode) {
+	// 'e' is unconditionally added below, so be sure there is not one already
+	// present before a comma in |mode|.
+	DCHECK(::strchr(mode, 'e') == nullptr ||
+		  (::strchr(mode, ',') != nullptr && ::strchr(mode, 'e') > ::strchr(mode, ',')));
+  
+	FILE* result = nullptr;
+#if defined(OS_MACOSX)
+	// macOS does not provide a mode character to set O_CLOEXEC; see
+	// https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man3/fopen.3.html.
+	const char* the_mode = mode;
+#else
+	std::string mode_with_e(append_mode_character(mode, 'e'));
+	const char* the_mode = mode_with_e.c_str();
+#endif
+
+	do {
+		result = ::fopen(filename.value().c_str(), the_mode);
+	} while (!result && errno == EINTR);
+
+#if defined(OS_MACOSX)
+	// Mark the descriptor as close-on-exec.
+	if (result) {
+		set_close_on_exec(::fileno(result));
+	}
+#endif
+
+	return result;
+}
+
+bool close_FILE(FILE* file) {
+	if (file == nullptr) {
+		return true;
+	}
+	return ::fclose(file) == 0;
+}
+
+bool truncate_FILE(FILE* file) {
+	if (file == nullptr) {
 		return false;
 	}
-	return internal::move_unsafe(from_path, to_path);
+
+	long current_offset = ::ftell(file);
+	if (current_offset == -1) {
+		return false;
+	}
+
+	int fd = ::fileno(file);
+	if (::ftruncate(fd, current_offset) != 0) {
+		return false;
+	}
+	return true;
 }
 
 bool contents_equal(const FilePath& filename1, const FilePath& filename2) {
@@ -139,10 +208,11 @@ bool read_file_to_string_with_max_size(const FilePath& path,
 		contents->clear();
 	}
 	if (path.references_parent()) {
+		DLOG(ERROR) << "Unable to read reference parent file " << path.value();
 		return false;
 	}
 	
-	FILE* file = open_file(path, "rb");
+	FILE* file = open_FILE(path, "rb");
 	if (!file) {
 		return false;
 	}
@@ -189,7 +259,7 @@ bool read_file_to_string_with_max_size(const FilePath& path,
 	}
 
 	read_status = read_status && !::ferror(file);
-	close_file(file);
+	close_FILE(file);
 	if (contents) {
 		contents->swap(local_contents);
 		contents->resize(bytes_read_so_far);
@@ -202,68 +272,115 @@ bool read_file_to_string(const FilePath& path, std::string* contents) {
 				std::numeric_limits<size_t>::max());
 }
 
-bool is_directory_empty(const FilePath& dir_path) {
-	FileEnumerator files(dir_path, false,
-						 FileEnumerator::FILES | FileEnumerator::DIRECTORIES);
-	if (files.next().empty()) {
-		return true;
+bool read_from_fd(int fd, char* buffer, size_t bytes) {
+	size_t total_read = 0;
+	while (total_read < bytes) {
+		ssize_t bytes_read =
+			HANDLE_EINTR(::read(fd, buffer + total_read, bytes - total_read));
+		if (bytes_read <= 0) {
+			break;
+		}
+		total_read += bytes_read;
 	}
-	return false;
+	return total_read == bytes;
 }
 
-FILE* create_and_open_temporary_file(FilePath* path) {
-	FilePath directory;
-	if (!get_temp_dir(&directory)) {
-		return nullptr;
+int read_file(const FilePath& filename, char* data, int max_size) {
+	int fd = HANDLE_EINTR(::open(filename.value().c_str(), O_RDONLY));
+	if (fd < 0) {
+		DPLOG(ERROR) << "Unable to open file " << filename.value();
+		return -1;
 	}
-	return create_and_open_temporary_file_in_dir(directory, path);
+
+	ssize_t bytes_read = HANDLE_EINTR(::read(fd, data, max_size));
+	if (IGNORE_EINTR(::close(fd)) < 0) {
+		DPLOG(ERROR) << "Error while closing file " << filename.value();
+		return -1;
+	}
+	return bytes_read;
 }
 
-bool create_directory(const FilePath& full_path) {
-	return create_directory_and_get_error(full_path, nullptr);
-}
-
-bool get_file_size(const FilePath& file_path, int64_t* file_size) {
-	File::Info info;
-	if (!get_file_info(file_path, &info)) {
-		return false;
+bool write_to_fd(const int fd, const char* data, int size) {
+	// Allow for partial writes.
+	ssize_t bytes_written_total = 0;
+	for (ssize_t bytes_written_partial = 0; bytes_written_total < size;
+		bytes_written_total += bytes_written_partial)
+	{
+		bytes_written_partial =
+			HANDLE_EINTR(::write(fd, data + bytes_written_total,
+					size - bytes_written_total));
+		if (bytes_written_partial < 0) {
+			return false;
+		}
 	}
-	*file_size = info.size;
+
 	return true;
 }
 
-bool touch_file(const FilePath& path,
-				const Time& last_accessed,
-				const Time& last_modified)
-{
-	int flags = File::FLAG_OPEN;
-
-	File file(path, flags);
-	if (!file.is_valid()) {
-		return false;
+int write_file(const FilePath& filename, const char* data, int size) {
+	int fd = HANDLE_EINTR(::creat(filename.value().c_str(), 0666));
+	if (fd < 0) {
+		DPLOG(ERROR) << "Unable to creat file " << filename.value();
+		return -1;
 	}
-	return file.set_times(last_accessed, last_modified);
+
+	int bytes_written = write_to_fd(fd, data, size) ? size : -1;
+	if (IGNORE_EINTR(::close(fd)) < 0) {
+		DPLOG(ERROR) << "Error while closing file " << filename.value();
+		return -1;
+	}
+	return bytes_written;
 }
 
-bool close_file(FILE* file) {
-	if (file == nullptr) {
+bool append_to_file(const FilePath& filename, const char* data, int size) {
+	bool ret = true;
+	int fd = HANDLE_EINTR(::open(filename.value().c_str(), O_WRONLY | O_APPEND));
+	if (fd < 0) {
+		DPLOG(ERROR) << "Unable to open file " << filename.value();
+		return false;
+	}
+
+	// This call will either write all of the data or return false.
+	if (!write_to_fd(fd, data, size)) {
+		DLOG(ERROR) << "Error while writing to file " << filename.value();
+		ret = false;
+	}
+
+	if (IGNORE_EINTR(::close(fd)) < 0) {
+		DPLOG(ERROR) << "Error while closing file " << filename.value();
+		return false;
+	}
+
+	return ret;
+}
+
+bool set_non_blocking(int fd) {
+	const int flags = ::fcntl(fd, F_GETFL);
+	if (flags == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file F_GETFL " << fd;
+		return false;
+	}
+	if (flags & O_NONBLOCK) {
 		return true;
 	}
-	return ::fclose(file) == 0;
+	if (HANDLE_EINTR(::fcntl(fd, F_SETFL, flags | O_NONBLOCK)) == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file O_NONBLOCK";
+		return false;
+	}
+	return true;
 }
 
-bool truncate_file(FILE* file) {
-	if (file == nullptr) {
+bool set_close_on_exec(int fd) {
+	const int flags = ::fcntl(fd, F_GETFD);
+	if (flags == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file F_GETFD " << fd;
 		return false;
 	}
-
-	long current_offset = ::ftell(file);
-	if (current_offset == -1) {
-		return false;
+	if (flags & FD_CLOEXEC) {
+		return true;
 	}
-
-	int fd = ::fileno(file);
-	if (::ftruncate(fd, current_offset) != 0) {
+	if (HANDLE_EINTR(::fcntl(fd, F_SETFD, flags | FD_CLOEXEC)) == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file FD_CLOEXEC " << fd;
 		return false;
 	}
 	return true;

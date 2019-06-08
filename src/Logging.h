@@ -97,6 +97,7 @@ bool ShouldCreateLogMessage(int severity);
 
 class LogMessage {
 public:
+	// todo
 	// compile time calculation of basename of source file
 	class Filename {
 	public:

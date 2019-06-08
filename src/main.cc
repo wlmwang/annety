@@ -22,6 +22,7 @@
 #include "FilePath.h"
 #include "FileEnumerator.h"
 #include "File.h"
+#include "FileUtil.h"
 #include "AtExit.h"
 
 using namespace annety;
@@ -238,8 +239,8 @@ int main(int argc, char* argv[]) {
 	// // FilePath
 	// FilePath fp("/usr/local/annety.log.gz");
 	// cout << "full:" << fp << endl;
-	// cout << "dirname:" << fp.dir_name() << endl;
-	// cout << "basename:" << fp.base_name() << endl;
+	// cout << "dirname:" << fp.dirname() << endl;
+	// cout << "basename:" << fp.basename() << endl;
 	// cout << "extension:" << fp.extension() << endl;
 	// cout << "final extension:" << fp.final_extension() << endl;
 
@@ -259,12 +260,20 @@ int main(int argc, char* argv[]) {
 	// }
 
 	// // File
-	// File f(FilePath("annety-text-file.log"), File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
+	// FilePath path("annety-text-file.log");
+	// File f(path, File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
 	// cout << "write(annety-file.log):"<< f.write(0, "test text", strlen("test text")) << endl;
 
 	// char buf[1024];
-	// std::cout << "read(annety-text-file.log) len:"<< f.read(0, buf, sizeof(buf)) << std::endl;
-	// std::cout << "read(annety-text-file.log) text:" << buf << std::endl;
+	// std::cout << "read len:"<< f.read(0, buf, sizeof(buf)) << std::endl;
+	// std::cout << "read content:" << buf << std::endl;
+
+	// // FileUtil
+	// std::string cc;
+	// cout << "read status:" << read_file_to_string(path, &cc) << endl;
+	// cout << "read content:" << cc << endl;
+
+	// cout << "delete file:" << delete_file(path, false) << endl;
 
 	// // Exception
 	// try {

@@ -115,31 +115,31 @@ public:
 	// kCurrentDirectory.  If this object already refers to the root directory,
 	// returns a FilePath identifying the root directory. Please note that this
 	// doesn't resolve directory navigation, e.g. the result for "../a" is "..".
-	FilePath dir_name() const WARN_UNUSED_RESULT;
+	FilePath dirname() const WARN_UNUSED_RESULT;
 
 	// Returns a FilePath corresponding to the last path component of this
 	// object, either a file or a directory.  If this object already refers to
 	// the root directory, returns a FilePath identifying the root directory;
 	// this is the only situation in which BaseName will return an absolute path.
-	FilePath base_name() const WARN_UNUSED_RESULT;
+	FilePath basename() const WARN_UNUSED_RESULT;
 
 	// Returns ".jpg" for path "C:\pics\jojo.jpg", or an empty string if
-	// the file has no extension.  If non-empty, Extension() will always start
+	// the file has no extension.  If non-empty, extension() will always start
 	// with precisely one ".".  The following code should always work regardless
 	// of the value of path.  For common double-extensions like .tar.gz and
 	// .user.js, this method returns the combined extension.  For a single
-	// component, use FinalExtension().
-	// new_path = path.RemoveExtension().value().append(path.Extension());
+	// component, use final_extension().
+	// new_path = path.remove_extension().value().append(path.extension());
 	// ASSERT(new_path == path.value());
 	// NOTE: this is different from the original file_util implementation which
 	// returned the extension without a leading "." ("jpg" instead of ".jpg")
 	std::string extension() const WARN_UNUSED_RESULT;
 
-	// Returns the path's file extension, as in Extension(), but will
+	// Returns the path's file extension, as in extension(), but will
 	// never return a double extension.
 	//
 	// TODO(davidben): Check all our extension-sensitive code to see if
-	// we can rename this to Extension() and the other to something like
+	// we can rename this to extension() and the other to something like
 	// LongExtension(), defaulting to short extensions and leaving the
 	// long "extensions" to logic like base::GetUniquePathNumber().
 	std::string final_extension() const WARN_UNUSED_RESULT;
