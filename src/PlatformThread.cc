@@ -9,6 +9,7 @@
 #include "CompilerSpecific.h"
 #include "Logging.h"
 
+#include <unistd.h>		// getpid
 #include <pthread.h>
 #include <stddef.h>
 #include <errno.h>		// errno
@@ -167,7 +168,7 @@ void PlatformThread::set_name(const std::string& name) {
 #else
 // static
 void PlatformThread::set_name(const std::string& name) {
-	if (PlatformThread::current_id() == getpid() || name.empty()) {
+	if (PlatformThread::current_id() == ::getpid() || name.empty()) {
 		return;
 	}
 

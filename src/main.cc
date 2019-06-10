@@ -25,7 +25,8 @@
 #include "FileUtil.h"
 #include "AtExit.h"
 #include "Singleton.h"
-#include "ThreadSingleton.h"
+#include "ThreadLocal.h"
+#include "ThreadLocalSingleton.h"
 
 using namespace annety;
 using namespace std;
@@ -154,7 +155,7 @@ int main(int argc, char* argv[]) {
 	// // cout << "annety::size:" << arraysize(str) << endl;
 	
 	// // Logging
-	// LOG(INFO) << 1234.5123 << "xxx";
+	// LOG(INFO) << 1234.5123 << "xxx" << std::endl;
 
 	// CHECK_EQ(1, 1);
 	// DCHECK_EQ(1, 1);
@@ -307,15 +308,16 @@ int main(int argc, char* argv[]) {
 	// 	singleton_test::instance()->foo();
 	// }, "singleton test").start().join();
 
-	// // ThreadSingleton
-	// class thread_singleton_test
+	
+	// // ThreadLocal/ThreadLocalSingleton
+	// class thread_local_test
 	// {
 	// public:
-	// 	thread_singleton_test() {
-	// 		cout << "thread_singleton_test" << endl;
+	// 	thread_local_test() {
+	// 		cout << pthread_self() << "|" << "thread_local_test" << endl;
 	// 	}
-	// 	~thread_singleton_test() {
-	// 		cout << "~thread_singleton_test" << "|" << foo_ << endl;
+	// 	~thread_local_test() {
+	// 		cout << pthread_self() << "|" << "~thread_local_test" << "|" << foo_ << endl;
 	// 	}
 
 	// 	void setfoo(const string& f) {
@@ -327,16 +329,36 @@ int main(int argc, char* argv[]) {
 	// 	}
 
 	// private:
-	// 	string foo_ = "init";
+	// 	string foo_ = "nochage";
 	// };
 
-	// ThreadSingleton<thread_singleton_test>::get()->setfoo("main");
-	// ThreadSingleton<thread_singleton_test>::get()->getfoo();
-	// Thread([]() {
-	// 	ThreadSingleton<thread_singleton_test>::get()->getfoo();
-	// }, "thread singleton test").start().join();
+	// // ThreadLocal
+	// ThreadLocal<thread_local_test> tls;
+	// tls.get()->setfoo("main");
+	// tls.get()->getfoo();
+	// Thread([&tls]() {
+	// 	tls.get()->getfoo();	// nochage
+		
+	// 	{
+	// 		ThreadLocal<thread_local_test> tls;
+	// 		tls.get()->setfoo("pthread1");
+	// 		tls.get()->getfoo();
+	// 	}
+		
+	// 	tls.get()->getfoo();	// nochage
 
-	// cout << "should ~destruct before" << endl;
+	// }, "thread local").start().join();
+	// cout << "thread local ~destruct before" << endl;
+	
+	// tls.get()->getfoo();	// main
+
+	// // ThreadLocalSingleton
+	// ThreadLocalSingleton<thread_local_test>::get()->setfoo("main");
+	// ThreadLocalSingleton<thread_local_test>::get()->getfoo();	// main
+	// Thread([]() {
+	// 	ThreadLocalSingleton<thread_local_test>::get()->getfoo();// nochage
+	// }, "thread local singleton").start().join();
+	// cout << "thread local singleton ~destruct before" << endl;
 
 	// // Exception
 	// try {

@@ -155,7 +155,7 @@ private:
 	static Type* instance_;
 	static pthread_once_t once_;
 
-	DISALLOW_COPY_AND_ASSIGN(Singleton);
+	DISALLOW_IMPLICIT_CONSTRUCTORS(Singleton);
 };
 
 template<typename Type, typename Traits>

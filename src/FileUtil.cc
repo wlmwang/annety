@@ -33,6 +33,19 @@ namespace {
 // Also used by code that cleans up said files.
 static const int kMaxUniqueFiles = 100;
 
+#if !defined(OS_MACOSX)
+// Appends |mode_char| to |mode| before the optional character set encoding; see
+// https://www.gnu.org/software/libc/manual/html_node/Opening-Streams.html for
+// details.
+std::string append_mode_character(StringPiece mode, char mode_char) {
+	std::string result(mode.as_string());
+	size_t comma_pos = result.find(',');
+	result.insert(comma_pos == std::string::npos ? result.length() : comma_pos, 1,
+				  mode_char);
+	return result;
+}
+#endif
+
 }	// namespace anonymous
 
 bool is_directory_empty(const FilePath& dir_path) {

@@ -123,22 +123,14 @@ public:
 
 	// LogMessage(SourceFile file, int line);
 
-	// Used for LOG(severity)
-	LogMessage(int line, const Filename& file, LogSeverity severity, 
-			   int error = 0);
+	// Used for LOG(sev)
+	LogMessage(int line, const Filename& file, LogSeverity sev, int error = 0);
 
-	// Used for CHECK().  Implied severity = LOG_FATAL.
-	// LogMessage(const char* file, int line, const char* condition);
+	// Used for CHECK {,_EQ}
+	LogMessage(int line, const Filename& file, const std::string& msg);
 
-	// Used for CHECK_EQ()
-	LogMessage(int line, const Filename& file, const std::string& result);
-
-	// Used for DCHECK_EQ(), etc. Takes ownership of the given string.
-	LogMessage(int line, const Filename& file, LogSeverity severity, 
-			   const std::string& result);
-
-	// Logger(SourceFile file, int line, LogLevel level, const char* func);
-	// Logger(SourceFile file, int line, bool toAbort);
+	// Used for CHECK {,_EQ}
+	LogMessage(int line, const Filename& file, LogSeverity sev, const std::string& msg);
 
 	~LogMessage();
 
@@ -153,15 +145,15 @@ public:
 private:
 	class Impl {
 	public:
-		Impl(int line, const Filename& file, LogSeverity severity, int error = 0);
-		Impl(int line, const Filename& file, LogSeverity severity, const std::string& message);
+		Impl(int line, const Filename& file, LogSeverity sev, int error = 0);
+		Impl(int line, const Filename& file, LogSeverity sev, const std::string& msg);
 		
 		void begin();
 		void endl();
 
 	public:
-		Time time_ {Time::now()};
-		LogStream stream_ {};
+		Time time_{Time::now()};
+		LogStream stream_{};
 
 		int line_;
 		Filename file_;

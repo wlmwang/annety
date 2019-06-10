@@ -74,15 +74,15 @@ void SetLogFFlushHandler(const LogFFlushHandlerFunction& handler) {
 	g_log_fflush_handler = handler;
 }
 
-LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity severity, int error)
-	: line_(line), file_(file), severity_(severity), errno_(error) {
+LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity sev, int err)
+	: line_(line), file_(file), severity_(sev), errno_(err) {
 	begin();
 }
 
-LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity severity, const std::string& message) 
-	: line_(line), file_(file), severity_(severity) {
+LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity sev, const std::string& msg) 
+	: line_(line), file_(file), severity_(sev) {
 	begin();
-	stream_ << "Check failed: " << message;
+	stream_ << "Check failed: " << msg;
 }
 
 void LogMessage::Impl::begin() {
@@ -113,52 +113,19 @@ void LogMessage::Impl::begin() {
 }
 
 void LogMessage::Impl::endl() {
-	stream_ << " - " << StringPiece(file_.basename_, file_.size_) << ':' << line_ << '\n';
+	stream_ << " - " 
+			<< StringPiece(file_.basename_, file_.size_) << ':' << line_ 
+			<< '\n';
 }
 
-// LogMessage::LogMessage(SourceFile file, int line)
-// 	: impl_(INFO, 0, file, line) {}
+LogMessage::LogMessage(int line, const Filename& file, const std::string& msg)
+	: LogMessage(line, file, LOG_FATAL, msg) {}
 
-// Logger::Logger(SourceFile file, int line, LogLevel level, const char* func)
-//   : impl_(level, 0, file, line)
-// {
-//   impl_.stream_ << func << ' ';
-// }
+LogMessage::LogMessage(int line, const Filename& file, LogSeverity sev, const std::string& msg) 
+	: impl_(line, file, sev, msg) {}
 
-LogMessage::LogMessage(int line, const Filename& file, LogSeverity severity, 
-	int error) : impl_(line, file, severity, error) {}
-
-LogMessage::LogMessage(int line, const Filename& file, const std::string& result)
-	: impl_(line, file, LOG_FATAL, result) {}
-
-LogMessage::LogMessage(int line, const Filename& file, LogSeverity severity, 
-	const std::string& result) : impl_(line, file, severity, result) {}
-
-// LogMessage::LogMessage(const char* file, int line, const char* condition)
-//     : severity_(LOG_FATAL), file_(file), line_(line) {
-//   Init(file, line);
-//   stream_ << "Check failed: " << condition << ". ";
-// }
-
-// LogMessage::LogMessage(const char* file, int line, std::string* result)
-//     : severity_(LOG_FATAL), file_(file), line_(line) {
-//   Init(file, line);
-//   stream_ << "Check failed: " << *result;
-//   delete result;
-// }
-
-// LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-//                        std::string* result)
-//     : severity_(severity), file_(file), line_(line) {
-//   Init(file, line);
-//   stream_ << "Check failed: " << *result;
-//   delete result;
-// }
-
-// Logger::Logger(SourceFile file, int line, bool toAbort)
-//   : impl_(toAbort?FATAL:ERROR, errno, file, line)
-// {
-// }
+LogMessage::LogMessage(int line, const Filename& file, LogSeverity sev, int err) 
+	: impl_(line, file, sev, err) {}
 
 LogMessage::~LogMessage() {
 	impl_.endl();

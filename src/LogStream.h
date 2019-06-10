@@ -23,6 +23,14 @@ class LogStream {
 		"kMaxNumericSize is large enough");
 	static_assert(kMaxNumericSize - 10 > std::numeric_limits<long long>::digits10,
 		"kMaxNumericSize is large enough");
+
+	// for the function signature of std::endl
+	// STL:
+	// template<class CharT, class Traits>
+	// std::basic_ostream<CharT, Traits>& endl(std::basic_ostream<CharT, Traits>& os);
+	typedef std::basic_ostream<char, std::char_traits<char>> CharOStream;
+	typedef CharOStream& (*StdEndLine) (CharOStream&);
+
 public:
 	LogStream() {}
 	
@@ -80,6 +88,11 @@ public:
 
 	LogStream& operator<<(const LogBuffer& v) {
 		return operator<<(v.to_string_piece());
+	}
+
+	LogStream& operator<<(const StdEndLine&) {
+		buffer_.append("\n", 1);
+		return *this;
 	}
 
 	// append to buffer

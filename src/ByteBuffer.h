@@ -190,7 +190,7 @@ private:
 	}
 
 private:
-	std::vector<char> buffer_{kInitialSize};
+	std::vector<char> buffer_;
 	size_t readerIndex_{0};
 	size_t writerIndex_{0};
 };

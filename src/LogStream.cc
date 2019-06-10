@@ -57,7 +57,7 @@ size_t convert<uintptr_t>(char buf[], uintptr_t value) {
 
 template<typename T>
 LogStream& LogStream::format_number(T v) {
-	char buf[kMaxNumericSize];
+	char buf[kMaxNumericSize+1];
 	size_t len = convert(buf, v);
 	buffer_.append(buf, len);
 	return *this;
@@ -65,17 +65,17 @@ LogStream& LogStream::format_number(T v) {
 
 template <>
 LogStream& LogStream::format_number<uintptr_t>(uintptr_t v) {
-	char buf[kMaxNumericSize] {'0', 'x'};
-	size_t len = convert(buf + 2, v);
-	buffer_.append(buf, len);
+	char buf[kMaxNumericSize+3] {'0', 'x'};
+	size_t len = convert(buf+2, v);
+	buffer_.append(buf, len+2);
 	return *this;
 }
 
 // todo. replace this with Grisu3 by Florian Loitsch.
 template <>
 LogStream& LogStream::format_number<double>(double v) {
-	char buf[kMaxNumericSize];
-	size_t len = ::snprintf(buf, kMaxNumericSize, "%.12g", v);
+	char buf[kMaxNumericSize+1];
+	size_t len = ::snprintf(buf, kMaxNumericSize+1, "%.12g", v);
 	buffer_.append(buf, len);
 	return *this;
 }
