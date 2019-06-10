@@ -83,14 +83,15 @@ const LogSeverity LOG_DFATAL = LOG_ERROR;
 const LogSeverity LOG_DFATAL = LOG_FATAL;
 #endif
 
-using LogOutputHandlerFunction = std::function<void(const char* msg, int len)>;
-using LogFFlushHandlerFunction = std::function<void()>;
+// Do not use std::functional<>
+using LogOutputHandlerFunction = void(*)(const char* msg, int len);
+using LogFFlushHandlerFunction = void(*)();
+
+LogOutputHandlerFunction SetLogOutputHandler(LogOutputHandlerFunction handler);
+LogFFlushHandlerFunction SetLogFFlushHandler(LogFFlushHandlerFunction handler);
 
 void SetMinLogLevel(int level);
 int GetMinLogLevel();
-
-void SetLogOutputHandler(const LogOutputHandlerFunction& handler);
-void SetLogFFlushHandler(const LogFFlushHandlerFunction& handler);
 
 // Used by LOG_IS_ON to lazy-evaluate stream arguments.
 bool ShouldCreateLogMessage(int severity);
@@ -121,16 +122,17 @@ public:
 		size_t size_;
 	};
 
-	// LogMessage(SourceFile file, int line);
+	// Used for {,D}LOG
+	LogMessage(int line, const Filename& file, LogSeverity sev);
 
-	// Used for LOG(sev)
-	LogMessage(int line, const Filename& file, LogSeverity sev, int error = 0);
+	// Used for {,D,P,DP}LOG
+	LogMessage(int line, const Filename& file, LogSeverity sev, int err);
 
-	// Used for CHECK {,_EQ}
-	LogMessage(int line, const Filename& file, const std::string& msg);
-
-	// Used for CHECK {,_EQ}
+	// Used for {,D}CHECK
 	LogMessage(int line, const Filename& file, LogSeverity sev, const std::string& msg);
+
+	// Used for {,D,P,DP}CHECK
+	LogMessage(int line, const Filename& file, LogSeverity sev, const std::string& msg, int err);
 
 	~LogMessage();
 
@@ -145,8 +147,9 @@ public:
 private:
 	class Impl {
 	public:
-		Impl(int line, const Filename& file, LogSeverity sev, int error = 0);
-		Impl(int line, const Filename& file, LogSeverity sev, const std::string& msg);
+		Impl(int line, const Filename& file, LogSeverity sev, int err = 0);
+		Impl(int line, const Filename& file, LogSeverity sev, const std::string& msg, 
+			int err = 0);
 		
 		void begin();
 		void endl();
@@ -158,6 +161,7 @@ private:
 		int line_;
 		Filename file_;
 		LogSeverity severity_;
+
 		int errno_;
 		ScopedClearLastError last_error_;
 	};
@@ -197,8 +201,8 @@ public:
 #define LOG_STREAM(severity, ...)	\
 	COMPACK_LOG_HANDLE(severity, ##__VA_ARGS__).stream()
 
-#define PLOG_STREAM(severity)	\
-	COMPACK_LOG_HANDLE(severity, GET_LAST_ERRNO()).stream()
+#define PLOG_STREAM(severity, ...)	\
+	COMPACK_LOG_HANDLE(severity, ##__VA_ARGS__).stream()
 
 #define LAZY_STREAM(stream, condition) \
 	!(condition) ? (void)0 : annety::LogMessageVoidify() & (stream)
@@ -215,12 +219,12 @@ public:
 
 #define PLOG(severity) \
 	LAZY_STREAM( \
-		PLOG_STREAM(severity), LOG_IS_ON(severity) \
+		PLOG_STREAM(severity, GET_LAST_ERRNO()), LOG_IS_ON(severity) \
 	)
 
 #define PLOG_IF(severity, condition) \
 	LAZY_STREAM( \
-		PLOG_STREAM(severity), LOG_IS_ON(severity) && (condition) \
+		PLOG_STREAM(severity, GET_LAST_ERRNO()), LOG_IS_ON(severity) && (condition) \
 	)
 
 // {,D}CHECK* / DLOG*------------------------------------------------------------
@@ -344,22 +348,21 @@ private:
 // why the condition failed. In official builds, preserve only the error code
 // message so that it is available in crash reports. The stringified
 // condition and any additional stream parameters are dropped.
-#define PCHECK(condition)                                  \
-  LAZY_STREAM(PLOG_STREAM(FATAL), UNLIKELY(!(condition))); \
-  EAT_STREAM_PARAMETERS
+#define PCHECK(condition)										\
+	LAZY_STREAM(PLOG_STREAM(FATAL), UNLIKELY(!(condition)));	\
+		EAT_STREAM_PARAMETERS
 
 #define CHECK_OP(name, op, val1, val2) CHECK((val1) op (val2))
 
 #else  // !(NDEBUG)
 
 // Do as much work as possible out of line to reduce inline code size.
-#define CHECK(condition) \
-	LAZY_STREAM(annety::LogMessage(__LINE__, __FILE__, #condition).stream(), \
-				!ANALYZER_ASSUME_TRUE(condition))
-
-#define PCHECK(condition)                                           \
-  LAZY_STREAM(PLOG_STREAM(FATAL), !ANALYZER_ASSUME_TRUE(condition)) \
-      << "Check failed: " #condition ". "
+#define CHECK(condition)						\
+	LAZY_STREAM(LOG_STREAM(FATAL, #condition), 	\
+		!ANALYZER_ASSUME_TRUE(condition))
+#define PCHECK(condition)											\
+	LAZY_STREAM(PLOG_STREAM(FATAL, #condition, GET_LAST_ERRNO()),	\
+		!ANALYZER_ASSUME_TRUE(condition))
 
 // Helper macro for binary operators.
 // Don't use this macro directly in your code, use CHECK_EQ et al below.
@@ -367,14 +370,14 @@ private:
 // macro is used in an 'if' clause such as:
 // if (a == 1)
 //   CHECK_EQ(2, a);
-#define CHECK_OP(name, op, val1, val2)					\
-	switch (0) case 0: default:							\
-		if (annety::CheckOpResult true_if_passed =		\
-			annety::Check##name##Impl((val1), (val2),	\
-				#val1 " " #op " " #val2))				\
-		;												\
-		else											\
-			annety::LogMessage(__LINE__, __FILE__,		\
+#define CHECK_OP(name, op, val1, val2)									\
+	switch (0) case 0: default:											\
+		if (annety::CheckOpResult true_if_passed =						\
+			annety::Check##name##Impl((val1), (val2),					\
+				#val1 " " #op " " #val2))								\
+		;																\
+		else															\
+			annety::LogMessage(__LINE__, __FILE__, annety::LOG_FATAL,	\
 				true_if_passed.message()).stream()
 
 #endif  // !(NDEBUG)
@@ -469,7 +472,8 @@ DEFINE_CHECK_OP_IMPL(GT, > )
 #define DLOG(severity)                                          \
 	LAZY_STREAM(LOG_STREAM(severity), DLOG_IS_ON(severity))
 #define DPLOG(severity)                                         \
-	LAZY_STREAM(PLOG_STREAM(severity), DLOG_IS_ON(severity))
+	LAZY_STREAM(PLOG_STREAM(severity, GET_LAST_ERRNO()), 		\
+		DLOG_IS_ON(severity))
 
 
 // Definitions for DCHECK et al.
@@ -491,12 +495,19 @@ const LogSeverity LOG_DCHECK = LOG_FATAL;
 // DCHECK_IS_ON() is true. When DCHECK_IS_ON() is false, the macros use
 // EAT_STREAM_PARAMETERS to avoid expressions that would create temporaries.
 #if DCHECK_IS_ON()
-#define DCHECK(condition)                                           \
-	LAZY_STREAM(LOG_STREAM(DCHECK), !ANALYZER_ASSUME_TRUE(condition)) \
-		<< "Check failed: " #condition ". "
-#define DPCHECK(condition)                                           \
-	LAZY_STREAM(PLOG_STREAM(DCHECK), !ANALYZER_ASSUME_TRUE(condition)) \
-		<< "Check failed: " #condition ". "
+#define CHECK(condition)						\
+	LAZY_STREAM(LOG_STREAM(FATAL, #condition), 	\
+		!ANALYZER_ASSUME_TRUE(condition))
+#define PCHECK(condition)											\
+	LAZY_STREAM(PLOG_STREAM(FATAL, #condition, GET_LAST_ERRNO()),	\
+		!ANALYZER_ASSUME_TRUE(condition))
+
+#define DCHECK(condition)						\
+	LAZY_STREAM(LOG_STREAM(DCHECK, #condition), \
+		!ANALYZER_ASSUME_TRUE(condition))
+#define DPCHECK(condition)											\
+	LAZY_STREAM(PLOG_STREAM(DCHECK, #condition, GET_LAST_ERRNO()),	\
+		!ANALYZER_ASSUME_TRUE(condition))
 #else  // DCHECK_IS_ON()
 
 #define DCHECK(condition) EAT_STREAM_PARAMETERS << !(condition)

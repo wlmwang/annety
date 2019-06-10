@@ -41,10 +41,10 @@ void defaultFlush() {
 	::fflush(stdout);
 }
 
-using std::placeholders::_1;
-using std::placeholders::_2;
-LogOutputHandlerFunction g_log_output_handler = std::bind(defaultOutput, _1, _2);
-LogFFlushHandlerFunction g_log_fflush_handler = std::bind(defaultFlush);
+// using std::placeholders::_1;
+// using std::placeholders::_2;
+LogOutputHandlerFunction g_log_output_handler = &defaultOutput;
+LogFFlushHandlerFunction g_log_fflush_handler = &defaultFlush;
 
 // Any log at or above this level will be displayed. Anything below this level 
 // will be silently ignored.
@@ -52,9 +52,9 @@ LogFFlushHandlerFunction g_log_fflush_handler = std::bind(defaultFlush);
 LogSeverity g_min_log_level = 0;
 
 // For cache colums logging
-thread_local Time::Exploded t_local_exploded{};
-thread_local std::string t_format_ymdhis{};
-thread_local int64_t t_last_second{};
+thread_local Time::Exploded tls_local_exploded{};
+thread_local std::string tls_format_ymdhis{};
+thread_local int64_t tls_last_second{};
 }	// namespace anonymous
 
 void SetMinLogLevel(int level) {
@@ -67,49 +67,60 @@ bool ShouldCreateLogMessage(int severity) {
 	return severity >= g_min_log_level;
 }
 
-void SetLogOutputHandler(const LogOutputHandlerFunction& handler) {
+LogOutputHandlerFunction SetLogOutputHandler(LogOutputHandlerFunction handler) {
+	LogOutputHandlerFunction rt_handler = g_log_output_handler;
 	g_log_output_handler = handler;
+	return rt_handler;
 }
-void SetLogFFlushHandler(const LogFFlushHandlerFunction& handler) {
+LogFFlushHandlerFunction SetLogFFlushHandler(LogFFlushHandlerFunction handler) {
+	LogFFlushHandlerFunction rt_handler = g_log_fflush_handler;
 	g_log_fflush_handler = handler;
+	return rt_handler;
 }
 
 LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity sev, int err)
-	: line_(line), file_(file), severity_(sev), errno_(err) {
+	: line_(line), file_(file), severity_(sev), errno_(err)
+{
 	begin();
+	
+	// strerror
+	if (errno_ != 0) {
+		stream_ << fast_safe_strerror(errno_) << " (errno=" << errno_ << ") ";
+	}
 }
 
-LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity sev, const std::string& msg) 
-	: line_(line), file_(file), severity_(sev) {
+LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity sev, const std::string& msg, int err) 
+	: line_(line), file_(file), severity_(sev), errno_(err)
+{
 	begin();
-	stream_ << "Check failed: " << msg;
+	stream_ << "Check failed: " << msg << ".";
+	
+	// strerror
+	if (errno_ != 0) {
+		stream_ << fast_safe_strerror(errno_) << " (errno=" << errno_ << ") ";
+	}
 }
 
 void LogMessage::Impl::begin() {
 	// time exploded string
 	TimeDelta td = time_ - Time();
-	if (td.in_seconds() != t_last_second) {
-		time_.to_local_explode(&t_local_exploded);
-		sstring_printf(&t_format_ymdhis, "%04d-%02d-%02d %02d:%02d:%02d",
-						t_local_exploded.year,
-						t_local_exploded.month,
-						t_local_exploded.day_of_month,
-						t_local_exploded.hour,
-						t_local_exploded.minute,
-						t_local_exploded.second);
-		t_last_second = td.in_seconds();
+	if (td.in_seconds() != tls_last_second) {
+		time_.to_local_explode(&tls_local_exploded);
+		sstring_printf(&tls_format_ymdhis, "%04d-%02d-%02d %02d:%02d:%02d",
+						tls_local_exploded.year,
+						tls_local_exploded.month,
+						tls_local_exploded.day_of_month,
+						tls_local_exploded.hour,
+						tls_local_exploded.minute,
+						tls_local_exploded.second);
+		tls_last_second = td.in_seconds();
 	}
-	stream_ << string_printf("%s.%06d ", t_format_ymdhis.c_str(), 
+	stream_ << string_printf("%s.%06d ", tls_format_ymdhis.c_str(), 
 				static_cast<int>(td.internal_value() % Time::kMicrosecondsPerSecond));
 	// tid string
 
 	// severity string
 	stream_ << log_severity_name(severity_) << " ";
-
-	// strerror
-	if (errno_ != 0) {
-		stream_ << fast_safe_strerror(errno_) << " (errno=" << errno_ << ") ";
-	}
 }
 
 void LogMessage::Impl::endl() {
@@ -118,14 +129,21 @@ void LogMessage::Impl::endl() {
 			<< '\n';
 }
 
-LogMessage::LogMessage(int line, const Filename& file, const std::string& msg)
-	: LogMessage(line, file, LOG_FATAL, msg) {}
+// {,D}LOG
+LogMessage::LogMessage(int line, const Filename& file, LogSeverity sev)
+	: LogMessage(line, file, sev, 0) {}
 
-LogMessage::LogMessage(int line, const Filename& file, LogSeverity sev, const std::string& msg) 
-	: impl_(line, file, sev, msg) {}
-
+// {,D,P,DP}LOG
 LogMessage::LogMessage(int line, const Filename& file, LogSeverity sev, int err) 
 	: impl_(line, file, sev, err) {}
+
+// {,D}CHECK
+LogMessage::LogMessage(int line, const Filename& file, LogSeverity sev, const std::string& msg)
+	: LogMessage(line, file, sev, msg, 0) {}
+
+// {,D,P,DP}CHECK
+LogMessage::LogMessage(int line, const Filename& file, LogSeverity sev, const std::string& msg, int err) 
+	: impl_(line, file, sev, msg, err) {}
 
 LogMessage::~LogMessage() {
 	impl_.endl();

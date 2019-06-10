@@ -38,14 +38,10 @@ private:
 		// 1. A thread(getspecific thread) exit will run on_thread_exit()
 		// 2. A thread(main thread) exit will run on_thread_exit()
 		static void on_thread_exit(void* ptr) {
-			DCHECK(ptr);
 #	if defined(OS_LINUX)
 			// TODO(MacOS): Now, tls_instance_ == 0 ???
 			DCHECK(tls_instance_ == ptr);
 #	endif
-			// TODO: g_log_output_handler was deleted ???
-			// LOG(INFO) << ptr;
-
 			// call (Type)ptr ~destruct
 			ThreadLocal<Type>::local_dtor(ptr);
 			tls_instance_ = nullptr;
