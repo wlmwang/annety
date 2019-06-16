@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
 	// // cout << "annety::size:" << arraysize(str) << endl;
 	
 	// // Logging
-	// LOG(INFO) << 1234.5123 << "xxx" << std::endl;
+	// LOG(INFO) << 1234.5123 << " xxx";
 
 	// CHECK_EQ(1, 1);
 	// DCHECK_EQ(1, 1);

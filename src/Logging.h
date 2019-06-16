@@ -341,16 +341,16 @@ private:
 // This is not calling BreakDebugger since this is called frequently, and
 // calling an out-of-line function instead of a noreturn inline macro prevents
 // compiler optimizations.
-#define CHECK(condition) \
+#define CHECK(condition)	\
 	UNLIKELY(!(condition)) ? IMMEDIATE_CRASH() : EAT_STREAM_PARAMETERS
 
 // PCHECK includes the system error code, which is useful for determining
 // why the condition failed. In official builds, preserve only the error code
 // message so that it is available in crash reports. The stringified
 // condition and any additional stream parameters are dropped.
-#define PCHECK(condition)										\
-	LAZY_STREAM(PLOG_STREAM(FATAL), UNLIKELY(!(condition)));	\
-		EAT_STREAM_PARAMETERS
+#define PCHECK(condition)											\
+	LAZY_STREAM(PLOG_STREAM(FATAL, #condition, GET_LAST_ERRNO()), 	\
+		UNLIKELY(!(condition))); EAT_STREAM_PARAMETERS
 
 #define CHECK_OP(name, op, val1, val2) CHECK((val1) op (val2))
 
@@ -358,7 +358,7 @@ private:
 
 // Do as much work as possible out of line to reduce inline code size.
 #define CHECK(condition)						\
-	LAZY_STREAM(LOG_STREAM(FATAL, #condition), 	\
+	LAZY_STREAM(LOG_STREAM(FATAL, #condition),	\
 		!ANALYZER_ASSUME_TRUE(condition))
 #define PCHECK(condition)											\
 	LAZY_STREAM(PLOG_STREAM(FATAL, #condition, GET_LAST_ERRNO()),	\
@@ -389,7 +389,7 @@ template<class t1, class t2>
 std::string MakeCheckOpString(const t1& v1, const t2& v2, const char* names) {
 	std::ostringstream ss;
 	ss << names << " (";
-	ss << v1 << " vs. " << v2;
+	ss << v1 << " vs " << v2;
 	ss << ")";
 	return ss.str();	// string move
 }
