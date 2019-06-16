@@ -4,7 +4,7 @@
 #ifndef ANT_THREAD_H_
 #define ANT_THREAD_H_
 
-#include "PlatformThread.h"
+#include "ThreadForward.h"
 #include "CountDownLatch.h"
 
 #include <string>
@@ -52,10 +52,13 @@ public:
 	void join();
 
 	// Returns the thread id, only valid after the thread has started. If the
-	// thread was started using Start(), then this will be valid after the call to
-	// Start(). If start_async() was used to start the thread, then this must not
-	// be called before HasBeenStarted() returns True.
-	PlatformThreadId tid();
+	// thread was started using start(), then this will be valid after the call to
+	// start(). If start_async() was used to start the thread, then this must not
+	// be called before has_been_started() returns True.
+	ThreadId tid();
+
+	// pthread_self
+	ThreadRef ref();
 
 	// Returns True if the thread has been started and initialized (i.e. if
 	// ThreadMainFunc() has run). If the thread was started with start_async(), but it
@@ -82,9 +85,9 @@ private:
 	const std::string name_prefix_;
 	std::string name_;
 	const Options options_;
-	PlatformThreadHandle thread_;  // PlatformThread handle, reset after Join.
-	PlatformThreadId tid_ = kInvalidThreadId;  // The backing thread's id.
-	bool joined_ = false;                      // True if Join has been called.
+	ThreadRef ref_;	// PlatformThread handle, reset after Join.
+	ThreadId tid_ = kInvalidThreadId;	// The backing thread's id.
+	bool joined_ = false;	// True if Join has been called.
 	// Set to true when the platform-thread creation has started.
 	bool start_called_ = false;
 	bool started_ = false;

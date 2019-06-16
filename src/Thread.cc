@@ -2,9 +2,8 @@
 // Date: May 28 2019
 
 #include "Thread.h"
-#include "Logging.h"
 #include "PlatformThread.h"
-#include "CountDownLatch.h"
+#include "Logging.h"
 #include "StringPrintf.h"
 #include "Exception.h"
 
@@ -51,7 +50,7 @@ Thread& Thread::start_async() {
 	DCHECK(!has_start_been_attempted()) << "Tried to Start a thread multiple times.";
 	start_called_ = true;
 	bool success = options_.joinable
-		? PlatformThread::create(std::bind(&Thread::start_routine, this), &thread_)
+		? PlatformThread::create(std::bind(&Thread::start_routine, this), &ref_)
 		: PlatformThread::create_non_joinable(std::bind(&Thread::start_routine, this));
 	CHECK(success);
 	return *this;
@@ -62,14 +61,19 @@ void Thread::join() {
 	DCHECK(has_start_been_attempted()) << "Tried to Join a never-started thread.";
 	DCHECK(!has_been_joined()) << "Tried to Join a thread multiple times.";
 
-	PlatformThread::join(thread_);
-	thread_ = PlatformThreadHandle();
+	PlatformThread::join(ref_);
+	ref_ = ThreadRef();	// clear ref
 	joined_ = true;
 }
 
-PlatformThreadId Thread::tid() {
+ThreadId Thread::tid() {
 	DCHECK(has_been_started());
 	return tid_;
+}
+
+ThreadRef Thread::ref() {
+	DCHECK(has_been_started());
+	return ref_;
 }
 
 void Thread::start_routine() {

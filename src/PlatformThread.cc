@@ -10,11 +10,11 @@
 #include "Logging.h"
 
 #include <unistd.h>		// getpid
-#include <pthread.h>
-#include <stddef.h>
 #include <errno.h>		// errno
 #include <sched.h>		// sched_yield
 #include <time.h>		// timespec, nanosleep
+#include <pthread.h>
+#include <stddef.h>
 
 #if defined(OS_LINUX)
 #include <sys/syscall.h>	// syscall
@@ -28,8 +28,10 @@
 namespace annety {
 namespace {
 struct ThreadParams {
+public:
 	PlatformThread::ThreadMainFunc func_;
 
+public:
 	ThreadParams(PlatformThread::ThreadMainFunc func) 
 				: func_(std::move(func)) {}
 };
@@ -51,8 +53,8 @@ void* thread_func(void* params) {
 
 bool create_thread(bool joinable,
 				   PlatformThread::ThreadMainFunc func,
-				   PlatformThreadHandle* thread_handle) {
-	DCHECK(thread_handle);
+				   ThreadRef* thread_ref) {
+	DCHECK(thread_ref);
 
 	pthread_attr_t attributes;
 	::pthread_attr_init(&attributes);
@@ -67,19 +69,19 @@ bool create_thread(bool joinable,
 		new ThreadParams(std::move(func))
 	);
 
-	pthread_t handle;
-	int err = ::pthread_create(&handle, &attributes, thread_func, params.get());
+	pthread_t ref;
+	int err = ::pthread_create(&ref, &attributes, thread_func, params.get());
 	bool success = !err;
 	if (success) {
 		// ThreadParams should be deleted on the created thread after used.
 		IGNORE_UNUSED_RESULT(params.release());
 	} else {
-		// Value of |handle| is undefined if pthread_create fails.
-		handle = 0;
+		// Value of |ref| is undefined if pthread_create fails.
+		ref = 0;
 		errno = err;
 		PLOG(ERROR) << "pthread_create";
 	}
-	*thread_handle = PlatformThreadHandle(handle);
+	*thread_ref = ThreadRef(ref);
 
 	::pthread_attr_destroy(&attributes);
 	return success;
@@ -88,10 +90,12 @@ bool create_thread(bool joinable,
 }  // namespace anonymous
 
 // static
-PlatformThreadId PlatformThread::current_id() {
+ThreadId PlatformThread::current_id() {
 	// Pthreads doesn't have the concept of a thread ID, so we have to reach down
 	// into the kernel.
-#if defined(OS_LINUX)
+#if defined(OS_MACOSX)
+	return pthread_mach_thread_np(::pthread_self());
+#elif defined(OS_LINUX)
 	return ::syscall(__NR_gettid);
 #elif defined(OS_SOLARIS)
 	return ::pthread_self();
@@ -101,13 +105,8 @@ PlatformThreadId PlatformThread::current_id() {
 }
 
 // static
-PlatformThreadRef PlatformThread::current_ref() {
-	return PlatformThreadRef(::pthread_self());
-}
-
-// static
-PlatformThreadHandle PlatformThread::current_handle() {
-	return PlatformThreadHandle(::pthread_self());
+ThreadRef PlatformThread::current_ref() {
+	return ThreadRef(::pthread_self());
 }
 
 // static
@@ -132,26 +131,24 @@ void PlatformThread::sleep(TimeDelta duration) {
 }
 
 // static
-bool PlatformThread::create(ThreadMainFunc func,
-							PlatformThreadHandle* thread_handle) {
-	return create_thread(true, std::move(func), thread_handle);
+bool PlatformThread::create(ThreadMainFunc func, ThreadRef* thread_ref) {
+	return create_thread(true, std::move(func), thread_ref);
 }
 
 // static
 bool PlatformThread::create_non_joinable(ThreadMainFunc func) {
-	PlatformThreadHandle unuse_handle;
-	bool result = create_thread(false, std::move(func), &unuse_handle);
-	return result;
+	ThreadRef unuse_ref;
+	return create_thread(false, std::move(func), &unuse_ref);
 }
 
 // static
-void PlatformThread::join(PlatformThreadHandle thread_handle) {
-	CHECK_EQ(0, pthread_join(thread_handle.platform_handle(), nullptr));
+void PlatformThread::join(ThreadRef thread_ref) {
+	CHECK_EQ(0, pthread_join(thread_ref.ref(), nullptr));
 }
 
 // static
-void PlatformThread::detach(PlatformThreadHandle thread_handle) {
-	CHECK_EQ(0, pthread_detach(thread_handle.platform_handle()));
+void PlatformThread::detach(ThreadRef thread_ref) {
+	CHECK_EQ(0, pthread_detach(thread_ref.ref()));
 }
 
 #if defined(OS_MACOSX)

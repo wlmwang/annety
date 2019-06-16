@@ -12,7 +12,7 @@
 #include "Logging.h"
 
 #if DCHECK_IS_ON()
-#include "PlatformThread.h"
+#include "ThreadForward.h"
 #endif
 
 #include <pthread.h>
@@ -128,7 +128,7 @@ private:
 
 	// All private data is implicitly protected by lock_.
 	// Be VERY careful to only access members under that lock.
-	PlatformThreadRef owning_thread_ref_;
+	ThreadRef owning_thread_ref_;
 
 #endif  // DCHECK_IS_ON()
 

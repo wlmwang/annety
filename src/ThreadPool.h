@@ -4,9 +4,9 @@
 #ifndef ANT_THREAD_POOL_H_
 #define ANT_THREAD_POOL_H_
 
+#include "Thread.h"
 #include "MutexLock.h"
 #include "ConditionVariable.h"
-#include "Thread.h"
 
 #include <functional>
 #include <string>

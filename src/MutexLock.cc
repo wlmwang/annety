@@ -8,6 +8,10 @@
 #include "MutexLock.h"
 #include "SafeStrerror.h"
 
+#if DCHECK_IS_ON()
+#include "PlatformThread.h"
+#endif
+
 #include <string>
 
 namespace annety {
@@ -91,7 +95,7 @@ void MutexLock::assert_acquired() const {
 
 void MutexLock::check_held_and_unmark() {
 	DCHECK(owning_thread_ref_ == PlatformThread::current_ref());
-	owning_thread_ref_ = PlatformThreadRef();
+	owning_thread_ref_ = ThreadRef();	// clear ref
 }
 
 void MutexLock::check_unheld_and_mark() {
