@@ -8,6 +8,8 @@
 #include "AtExit.h"
 #include "Logging.h"
 
+#include <utility>
+
 namespace annety {
 // Keep a stack of registered AtExitManagers.  We always operate on the most
 // recent, and we should never have more than one outside of testing (for a
@@ -31,15 +33,15 @@ AtExitManager::~AtExitManager() {
 	}
 	DCHECK_EQ(this, g_top_manager);
 
-	ProcessCallbacksNow();
+	process_callbacks();
 	g_top_manager = next_manager_;
 }
 
 // static
-void AtExitManager::RegisterCallback(AtExitCallbackType func) {
+void AtExitManager::register_callback(AtExitFunc func) {
 	DCHECK(func);
 	if (!g_top_manager) {
-		NOTREACHED() << "Tried to RegisterCallback without an AtExitManager";
+		NOTREACHED() << "Tried to register_callback without an AtExitManager";
 		return;
 	}
 
@@ -48,13 +50,13 @@ void AtExitManager::RegisterCallback(AtExitCallbackType func) {
 }
 
 // static
-void AtExitManager::ProcessCallbacksNow() {
+void AtExitManager::process_callbacks() {
 	if (!g_top_manager) {
-		NOTREACHED() << "Tried to ProcessCallbacksNow without an AtExitManager";
+		NOTREACHED() << "Tried to process_callbacks without an AtExitManager";
 		return;
 	}
 
-	std::stack<AtExitCallbackType> tasks;
+	std::stack<AtExitFunc> tasks;
 	{
 		AutoLock locked(g_top_manager->lock_);
 		tasks.swap(g_top_manager->stack_);

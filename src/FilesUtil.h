@@ -26,6 +26,7 @@
 namespace annety {
 class Time;
 
+namespace files {
 //-----------------------------------------------------------------------------
 // Functions that involve filesystem access or modification:
 
@@ -374,6 +375,7 @@ bool move_unsafe(const FilePath& from_path,
 
 }  // namespace internal
 
+}	// namespace files
 }	// namespace annety
 
 #endif	// ANT_FILE_UTIL_H_

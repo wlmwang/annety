@@ -8,9 +8,6 @@
 // that should be masked) to go unnoticed, there is a limit after which the
 // caller will nonetheless see an EINTR in Debug builds.
 //
-// On Windows and Fuchsia, this wrapper macro does nothing because there are no
-// signals.
-//
 // Don't wrap close calls in HANDLE_EINTR. Use IGNORE_EINTR if the return
 // value of close is significant. See http://crbug.com/269623.
 

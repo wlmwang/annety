@@ -7,7 +7,6 @@
 #include "ByteBuffer.h"
 
 #include <iosfwd>
-#include <cassert>
 #include <string>
 #include <limits>
 

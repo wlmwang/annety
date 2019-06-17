@@ -19,7 +19,6 @@ namespace annety {
 using StringType = FilePath::StringType;
 using StringPieceType = FilePath::StringPieceType;
 
-
 const char FilePath::kSeparators[] = "/";
 const char FilePath::kCurrentDirectory[] = ".";
 const char FilePath::kParentDirectory[] = "..";

@@ -6,7 +6,6 @@
 // Date: May 08 2019
 
 #include "ConditionVariable.h"
-#include "BuildConfig.h"
 #include "MutexLock.h"
 #include "Logging.h"
 #include "Time.h"

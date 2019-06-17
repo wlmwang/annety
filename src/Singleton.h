@@ -132,7 +132,7 @@ private:
 
 		instance_ = Traits::create();
 		if (Traits::kRegisterAtExit) {
-			AtExitManager::RegisterCallback(std::bind(&Singleton::on_exit, instance_));
+			AtExitManager::register_callback(std::bind(&Singleton::on_exit, instance_));
 		}
 	}
 

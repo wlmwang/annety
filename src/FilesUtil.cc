@@ -8,7 +8,7 @@
 // Refactoring: Anny Wang
 // Date: Jun 05 2019
 
-#include "FileUtil.h"
+#include "FilesUtil.h"
 #include "FilePath.h"
 #include "FileEnumerator.h"
 #include "StringPiece.h"
@@ -25,6 +25,7 @@
 #include <stddef.h>
 
 namespace annety {
+namespace files {
 namespace {
 // The maximum number of 'uniquified' files we will try to create.
 // This is used when the filename we're trying to download is already in use,
@@ -421,4 +422,5 @@ int get_unique_path_number(const FilePath& path,
 	return -1;
 }
 
+}	// namespace files
 }	// namespace annety

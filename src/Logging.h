@@ -8,8 +8,7 @@
 #ifndef ANT_LOGGING_H
 #define ANT_LOGGING_H
 
-#include "BuildConfig.h"		// ARCH_CPU_X86_FAMILY
-#include "CompilerSpecific.h"	// UNLIKELY
+#include "CompilerSpecific.h"
 #include "Macros.h"
 #include "LogStream.h"
 #include "Time.h"

@@ -5,14 +5,13 @@
 // Refactoring: Anny Wang
 // Date: Jun 05 2019
 
-#include "FileUtil.h"
+#include "FilesUtil.h"
 #include "FilePath.h"
 #include "FileEnumerator.h"
 #include "ScopedFile.h"
 #include "EintrWrapper.h"
 #include "StringUtil.h"
 
-#include "BuildConfig.h"
 #include "Macros.h"
 #include "Logging.h"
 #include "Time.h"
@@ -34,7 +33,7 @@
 #include <stddef.h>
 
 namespace annety {
-
+namespace files {
 namespace {
 const char kTempFileNamePattern[] = "annety.temp.XXXXXX";
 
@@ -863,5 +862,6 @@ bool move_unsafe(const FilePath& from_path, const FilePath& to_path) {
 
 }	// namespace internal
 
+}	// namespace files
 }	// namespace annety
 

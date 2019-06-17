@@ -7,8 +7,8 @@
 // happen at a really bad time and under the loader lock. This facility is
 // mostly used by Singleton.
 //
-// The usage is simple. Early in the main() or WinMain() scope create an
-// AtExitManager object on the stack:
+// The usage is simple. Early in the main() scope create an AtExitManager 
+// object on the stack:
 // int main(...) {
 //    AtExitManager exit_manager;
 //    exit_manager.RegisterCallback(std::bind(&func));
@@ -31,7 +31,7 @@
 namespace annety {
 class AtExitManager {
 public:
-	using AtExitCallbackType = std::function<void()>;
+	using AtExitFunc = std::function<void()>;
 
 	AtExitManager();
 
@@ -40,11 +40,11 @@ public:
 	~AtExitManager();
 
 	// Registers the specified function to be called at exit.
-	static void RegisterCallback(AtExitCallbackType func);
+	static void register_callback(AtExitFunc func);
 
-	// Calls the functions registered with RegisterCallback in LIFO order. It
+	// Calls the functions registered with register_callback in LIFO order. It
 	// is possible to register new callbacks after calling this function.
-	static void ProcessCallbacksNow();
+	static void process_callbacks();
 
 protected:
 	// This constructor will allow this instance of AtExitManager to be created
@@ -57,7 +57,8 @@ protected:
 
 private:
 	MutexLock lock_;
-	std::stack<AtExitCallbackType> stack_;
+	std::stack<AtExitFunc> stack_;
+	
 	AtExitManager* next_manager_;  // Stack of managers to allow shadowing.
 
 	DISALLOW_COPY_AND_ASSIGN(AtExitManager);

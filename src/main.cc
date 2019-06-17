@@ -10,7 +10,6 @@
 #include "SafeStrerror.h"
 #include "ByteBuffer.h"
 #include "LogStream.h"
-#include "StlUtil.h"
 #include "Time.h"
 #include "Logging.h"
 #include "MutexLock.h"
@@ -22,7 +21,7 @@
 #include "FilePath.h"
 #include "FileEnumerator.h"
 #include "File.h"
-#include "FileUtil.h"
+#include "FilesUtil.h"
 #include "AtExit.h"
 #include "Singleton.h"
 #include "ThreadLocal.h"
@@ -145,15 +144,6 @@ int main(int argc, char* argv[]) {
 
 	// cout << "midnight:" << t.utc_midnight() << endl;
 
-	// // StlUtil @todo
-	// const char* arr[] = {"asdfasd", "xxx", "vvv"};
-	// cout << "sizeof:" << sizeof arr << "|" << sizeof(arr)/sizeof(void*) << endl;	// 3*8=24
-	// cout << "annety::size:" << size(arr) << "|" << size("12345") << endl;
-
-	// // error: no matching function for call to 'size'
-	// // const char *str = "12345";
-	// // cout << "annety::size:" << arraysize(str) << endl;
-	
 	// // Logging
 	// LOG(INFO) << 1234.5123 << " xxx";
 
@@ -271,12 +261,14 @@ int main(int argc, char* argv[]) {
 	// std::cout << "read len:"<< f.read(0, buf, sizeof(buf)) << std::endl;
 	// std::cout << "read content:" << buf << std::endl;
 
-	// // FileUtil
-	// std::string cc;
-	// cout << "read status:" << read_file_to_string(path, &cc) << endl;
-	// cout << "read content:" << cc << endl;
+	// FilesUtil
+	FilePath path1("annety-text-file.log");
+	std::string cc;
+	cout << "write status:" << files::write_file(path1, "1234567890", sizeof("1234567890")) << endl;
+	cout << "read status:" << files::read_file_to_string(path1, &cc) << endl;
+	cout << "read content:" << cc << endl;
 
-	// cout << "delete file:" << delete_file(path, false) << endl;
+	cout << "delete file:" << files::delete_file(path1, false) << endl;
 
 	// // Singleton
 	// class singleton_test {
