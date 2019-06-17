@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 17 2019
 
-#ifndef _ANT_EVENT_FD_H_
-#define _ANT_EVENT_FD_H_
+#ifndef ANT_EVENT_FD_H_
+#define ANT_EVENT_FD_H_
 
 #include "Macros.h"
 

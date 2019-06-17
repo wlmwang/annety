@@ -86,7 +86,7 @@ void LockImpl::unlock() {
 MutexLock::MutexLock() : lock_() {}
 
 MutexLock::~MutexLock() {
-	DCHECK(owning_thread_ref_.is_null());
+	DCHECK(owning_thread_ref_.empty());
 }
 
 void MutexLock::assert_acquired() const {
@@ -99,7 +99,7 @@ void MutexLock::check_held_and_unmark() {
 }
 
 void MutexLock::check_unheld_and_mark() {
-	DCHECK(owning_thread_ref_.is_null());
+	DCHECK(owning_thread_ref_.empty());
 	owning_thread_ref_ = PlatformThread::current_ref();
 }
 #endif  // DCHECK_IS_ON()

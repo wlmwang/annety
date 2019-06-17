@@ -29,7 +29,7 @@ ThreadPool& ThreadPool::start() {
 	// start all tasker thread
 	threads_.reserve(num_threads_);
 	for (int i = 0; i < num_threads_; ++i) {
-		threads_.emplace_back(new Thread(std::bind(&ThreadPool::thread_loop, this), 
+		threads_.emplace_back(new Thread(std::bind(&ThreadPool::loop, this), 
 										 name_prefix_));
 		threads_[i]->start();
 	}
@@ -79,7 +79,7 @@ size_t ThreadPool::get_tasker_size() const {
 	return taskers_.size();
 }
 
-bool ThreadPool::is_full() const {
+bool ThreadPool::full() const {
 	lock_.assert_acquired();
 	return max_tasker_size_ >0 && taskers_.size() >=max_tasker_size_;
 }
@@ -97,10 +97,10 @@ void ThreadPool::run_tasker(const Tasker& tasker, int repeat_count) {
 	} else {
 		AutoLock locked(lock_);
 		while (repeat_count-- > 0) {
-			while (is_full()) {
+			while (full()) {
 				full_cv_.wait();
 			}
-			DCHECK(!is_full()) << "full the taskers.";
+			DCHECK(!full()) << "full the taskers.";
 			// copy to vector
 			taskers_.push_back(tasker);
 		}
@@ -108,7 +108,7 @@ void ThreadPool::run_tasker(const Tasker& tasker, int repeat_count) {
 	}
 }
 
-void ThreadPool::thread_loop() {
+void ThreadPool::loop() {
 	try {
 		if (thread_init_cb_) {
 			thread_init_cb_();

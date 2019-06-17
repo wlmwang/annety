@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 17 2019
 
-#ifndef _ANT_TIMER_FD_H_
-#define _ANT_TIMER_FD_H_
+#ifndef ANT_TIMER_FD_H_
+#define ANT_TIMER_FD_H_
 
 #include "Macros.h"
 

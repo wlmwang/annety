@@ -4,6 +4,7 @@
 #ifndef _ANT_END_POINT_H_
 #define _ANT_END_POINT_H_
 
+#include "BuildConfig.h"
 #include "StringPiece.h"
 
 #include <string>
@@ -14,10 +15,17 @@
 namespace annety {
 // wrapper of sockaddr_in[6]
 class EndPoint {
-static_assert(offsetof(sockaddr_in, sin_family) == 0, "sin_family offset 0");
-static_assert(offsetof(sockaddr_in6, sin6_family) == 0, "sin6_family offset 0");
-static_assert(offsetof(sockaddr_in, sin_port) == 2, "sin_port offset 2");
-static_assert(offsetof(sockaddr_in6, sin6_port) == 2, "sin6_port offset 2");
+#if defined(OS_MACOSX)
+	static_assert(offsetof(sockaddr_in, sin_family) == 1, "sin_family offset 0");
+	static_assert(offsetof(sockaddr_in6, sin6_family) == 1, "sin6_family offset 0");
+	static_assert(offsetof(sockaddr_in, sin_port) == 2, "sin_port offset 2");
+	static_assert(offsetof(sockaddr_in6, sin6_port) == 2, "sin6_port offset 2");
+#else
+	static_assert(offsetof(sockaddr_in, sin_family) == 0, "sin_family offset 0");
+	static_assert(offsetof(sockaddr_in6, sin6_family) == 0, "sin6_family offset 0");
+	static_assert(offsetof(sockaddr_in, sin_port) == 2, "sin_port offset 2");
+	static_assert(offsetof(sockaddr_in6, sin6_port) == 2, "sin6_port offset 2");
+#endif	// defined(OS_MACOSX)
 
 public:
 	// Constructs an endpoint with given port number.
@@ -58,10 +66,12 @@ public:
 	std::string to_ip_port() const;
 	uint16_t to_port() const;
 
+#if !defined(OS_MACOSX)
 	// resolve hostname to IP address, not changing port or sin_family
 	// return true on success.
 	// thread safe
 	static bool resolve(const StringPiece& hostname, EndPoint* result);
+#endif	// !defined(OS_MACOSX)
 
 private:
 	// must sin[6]_family offset is 0

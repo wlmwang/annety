@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 17 2019
 
-#ifndef _ANT_SOCKET_FD_H_
-#define _ANT_SOCKET_FD_H_
+#ifndef ANT_SOCKET_FD_H_
+#define ANT_SOCKET_FD_H_
 
 #include "Macros.h"
 

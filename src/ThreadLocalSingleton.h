@@ -6,6 +6,7 @@
 
 #include "Macros.h"
 #include "Logging.h"
+#include "ThreadLocal.h"
 
 #include <pthread.h>
 #include <iostream>

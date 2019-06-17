@@ -2,31 +2,17 @@
 // Date: Jun 17 2019
 
 #include "SocketFD.h"
+#include "SocketsUtil.h"
 #include "Logging.h"
-
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>  // socket
 
 namespace annety {
 SocketFD::SocketFD(bool nonblock, bool cloexec) {
-	int flags = 0;
-	if (nonblock) {
-		flags |= SOCK_NONBLOCK;
-	}
-	if (cloexec) {
-		flags |= SOCK_CLOEXEC;
-	}
-	flags |= SOCK_STREAM;
-
-	// PF_UNIX/PF_INET6/PF_INET=AF_INET
-	fd_ = ::socket(AF_INET, flags, IPPROTO_TCP);
-	PLOG_IF(ERROR, fd_ < 0) << "::socket failed";
+	fd_ = sockets::socket(AF_INET, nonblock, cloexec);
+	DCHECK(fd_ >= 0);
 }
 
 SocketFD::~SocketFD() {
-	int ret = ::close(fd_);
-	PLOG_IF(ERROR, ret < 0) << "::close failed";
+	sockets::close(fd_);
 }
 
 }	// namespace annety

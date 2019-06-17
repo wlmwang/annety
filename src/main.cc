@@ -26,6 +26,7 @@
 #include "Singleton.h"
 #include "ThreadLocal.h"
 #include "ThreadLocalSingleton.h"
+#include "EventLoop.h"
 
 using namespace annety;
 using namespace std;
@@ -368,4 +369,9 @@ int main(int argc, char* argv[]) {
 	// }, "annety");
 	// tt.start();
 	// tt.join();
+
+	// EventLoop
+	EventLoop loop;
+
 }
+

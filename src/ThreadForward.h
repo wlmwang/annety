@@ -50,7 +50,7 @@ public:
 		return id_ != other.id_;
 	}
 
-	bool is_null() const {
+	bool empty() const {
 		return id_ == 0;
 	}
 	

@@ -53,8 +53,8 @@ public:
 	}
 
 private:
-	bool is_full() const;
-	void thread_loop();
+	bool full() const;
+	void loop();
 
 private:
 	const std::string name_prefix_;

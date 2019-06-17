@@ -11,6 +11,7 @@
 #include "FilesUtil.h"
 #include "FilePath.h"
 #include "FileEnumerator.h"
+#include "EintrWrapper.h"
 #include "StringPiece.h"
 #include "StringPrintf.h"
 #include "Logging.h"

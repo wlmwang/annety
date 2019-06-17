@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 17 2019
 
-#ifndef _ANT_SOCKETS_UTIL_H_
-#define _ANT_SOCKETS_UTIL_H_
+#ifndef ANT_SOCKETS_UTIL_H_
+#define ANT_SOCKETS_UTIL_H_
 
 #include <arpa/inet.h>	// for sockaddr*
 #include <sys/socket.h>	// for SHUT_WR
@@ -43,4 +43,4 @@ ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt);
 }	// namespace sockets
 }	// namespace annety
 
-#endif	// _ANT_SOCKETS_UTIL_H_
+#endif	// ANT_SOCKETS_UTIL_H_

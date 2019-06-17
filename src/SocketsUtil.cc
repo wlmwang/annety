@@ -2,8 +2,10 @@
 // Date: Jun 17 2019
 
 #include "SocketsUtil.h"
+#include "BuildConfig.h"
 #include "ByteOrder.h"
 #include "Logging.h"
+#include "EintrWrapper.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -14,6 +16,41 @@
 
 namespace annety {
 namespace sockets {
+namespace {
+bool set_non_blocking(int fd) {
+	const int flags = ::fcntl(fd, F_GETFL);
+	if (flags == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file F_GETFL " << fd;
+		return false;
+	}
+	if (flags & O_NONBLOCK) {
+		return true;
+	}
+	if (HANDLE_EINTR(::fcntl(fd, F_SETFL, flags | O_NONBLOCK)) == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file O_NONBLOCK";
+		return false;
+	}
+	return true;
+}
+
+bool set_close_on_exec(int fd) {
+	const int flags = ::fcntl(fd, F_GETFD);
+	if (flags == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file F_GETFD " << fd;
+		return false;
+	}
+	if (flags & FD_CLOEXEC) {
+		return true;
+	}
+	if (HANDLE_EINTR(::fcntl(fd, F_SETFD, flags | FD_CLOEXEC)) == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file FD_CLOEXEC " << fd;
+		return false;
+	}
+	return true;
+}
+
+}	// namespace anonymous
+
 const struct sockaddr* sockaddr_cast(const struct sockaddr_in6* addr) {
 	return static_cast<const struct sockaddr*>(static_cast<const void*>(addr));
 }
@@ -31,25 +68,44 @@ const struct sockaddr_in6* sockaddr_in6_cast(const struct sockaddr* addr) {
 	return static_cast<const struct sockaddr_in6*>(static_cast<const void*>(addr));
 }
 
+// non-block, close-on-exec
 int socket(sa_family_t family, bool nonblock, bool cloexec) {
-	// non-block, close-on-exec
-	int flags = 0;
+	int flags = SOCK_STREAM;
+#if defined(OS_MACOSX)
+	int sockfd = ::socket(family, flags, IPPROTO_TCP);
+	if (nonblock) {
+		DCHECK(set_non_blocking(sockfd));
+	}
+	if (cloexec) {
+		DCHECK(set_close_on_exec(sockfd));
+	}
+#else
 	if (nonblock) {
 		flags |= SOCK_NONBLOCK;
 	}
 	if (cloexec) {
 		flags |= SOCK_CLOEXEC;
 	}
-	flags |= SOCK_STREAM;
-
 	int sockfd = ::socket(family, flags, IPPROTO_TCP);
+#endif
+
 	PLOG_IF(ERROR, sockfd < 0) << "::socket failed";
 
 	return sockfd;
 }
 
+// non-block, close-on-exec
 int accept(int sockfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec) {
-	// non-block, close-on-exec
+	socklen_t addrlen = static_cast<socklen_t>(sizeof *addr);
+#if defined(OS_MACOSX)
+	int connfd = ::accept(sockfd, sockaddr_cast(addr), &addrlen);
+	if (nonblock) {
+		DCHECK(set_non_blocking(sockfd));
+	}
+	if (cloexec) {
+		DCHECK(set_close_on_exec(sockfd));
+	}
+#else
 	int flags = 0;
 	if (nonblock) {
 		flags |= SOCK_NONBLOCK;
@@ -57,9 +113,9 @@ int accept(int sockfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec) {
 	if (cloexec) {
 		flags |= SOCK_CLOEXEC;
 	}
+	int connfd = ::accept4(sockfd, sockaddr_cast(addr), &addrlen, flags);	
+#endif
 
-	socklen_t addrlen = static_cast<socklen_t>(sizeof *addr);
-	int connfd = ::accept4(sockfd, sockaddr_cast(addr), &addrlen, flags);
 	PLOG_IF(ERROR, connfd < 0) << "::accept4 failed";
 
 	if (connfd < 0) {
@@ -92,6 +148,7 @@ int accept(int sockfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec) {
 				break;
 		}
 	}
+
 	return connfd;
 }
 
@@ -214,23 +271,23 @@ void close(int sockfd) {
 
 ssize_t read(int sockfd, void *buf, size_t count) {
 	ssize_t ret = ::read(sockfd, buf, count);
-	PLOG_IF(VERBOSE, ret < 0) << "::read failed";
+	PLOG_IF(INFO, ret < 0) << "::read failed";
 	return ret;
 }
 ssize_t readv(int sockfd, const struct iovec *iov, int iovcnt) {
 	ssize_t ret = ::readv(sockfd, iov, iovcnt);
-	PLOG_IF(VERBOSE, ret < 0) << "::readv failed";
+	PLOG_IF(INFO, ret < 0) << "::readv failed";
 	return ret;
 }
 
 ssize_t write(int sockfd, const void *buf, size_t count) {
 	int ret = ::write(sockfd, buf, count);
-	PLOG_IF(VERBOSE, ret < 0) << "::write failed";
+	PLOG_IF(INFO, ret < 0) << "::write failed";
 	return ret;
 }
 ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt) {
 	ssize_t ret = ::writev(sockfd, iov, iovcnt);
-	PLOG_IF(VERBOSE, ret < 0) << "::writev failed";
+	PLOG_IF(INFO, ret < 0) << "::writev failed";
 	return ret;
 }
 
