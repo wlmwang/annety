@@ -14,6 +14,7 @@
 #include <string>		// std::string,std::char_traits
 
 namespace annety {
+namespace strings {
 const char kWhitespace[] = {
 	0x09,	// CHARACTER TABULATION
 	0x0A,	// LINE FEED (LF)
@@ -646,4 +647,5 @@ void replace_substrings_after_offset(std::string* str,
 			replace_with, ReplaceType::REPLACE_ALL);
 }
 
+}	// namespace strings
 }	// namespace annety

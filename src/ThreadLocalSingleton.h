@@ -4,7 +4,6 @@
 #ifndef ANT_THREAD_LOCAL_SINGLETON_H
 #define ANT_THREAD_LOCAL_SINGLETON_H
 
-#include "BuildConfig.h"
 #include "Macros.h"
 #include "Logging.h"
 
@@ -15,6 +14,10 @@ namespace annety {
 template<typename Type>
 class ThreadLocalSingleton final {
 public:
+	static bool empty() {
+		return data_.empty();
+	}
+
 	static Type* get() {
 		return data_.get();
 	}
@@ -25,7 +28,11 @@ private:
 	public:
 		ThreadLocalData() 
 			: ThreadLocal<Type>(&ThreadLocalData::on_thread_exit) {}
-	
+		
+		bool empty() {
+			return tls_instance_ == nullptr;
+		}
+
 		Type* get() {
 			if (!tls_instance_) {
 				tls_instance_ = ThreadLocal<Type>::get();

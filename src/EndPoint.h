@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 17 2019
 
-#ifndef _ANT_ENDPOINT_H_
-#define _ANT_ENDPOINT_H_
+#ifndef _ANT_END_POINT_H_
+#define _ANT_END_POINT_H_
 
 #include "StringPiece.h"
 
@@ -73,4 +73,4 @@ private:
 
 }	// namespace annety
 
-#endif	// _ANT_ENDPOINT_H_
+#endif	// _ANT_END_POINT_H_

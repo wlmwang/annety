@@ -4,7 +4,6 @@
 #ifndef ANT_THREAD_LOCAL_H
 #define ANT_THREAD_LOCAL_H
 
-#include "BuildConfig.h"
 #include "Macros.h"
 #include "Logging.h"
 
@@ -35,6 +34,10 @@ public:
 		}
 	}
 	
+	bool empty() {
+		return ::pthread_getspecific(tls_key_) == nullptr;
+	}
+
 	Type* get() {
 		Type* ptr = static_cast<Type*>(::pthread_getspecific(tls_key_));
 		return ptr? ptr: set(new Type());

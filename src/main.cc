@@ -72,13 +72,13 @@ int main(int argc, char* argv[]) {
 	// 		<< s.rfind("s") << "|" << s.find("c") << "|" << s.substr(2) << std::endl;
 
 	// // StringUtil
-	// StringPiece ts = trim_whitespace(" 12345  ", TrimPositions::TRIM_ALL);
+	// StringPiece ts = strings::trim_whitespace(" 12345  ", strings::TrimPositions::TRIM_ALL);
 	// cout << ts << "|" << ts.size() << endl;
 
-	// string ss = "abcd";
-	// cout << write_into(&ss, 2) << endl;
+	// std::string ss = "abcd";
+	// cout << strings::write_into(&ss, 2) << endl;
 
-	// cout << equals_case_insensitive("ABcD", "AbcD") << endl;
+	// cout << strings::equals_case_insensitive("ABcD", "AbcD") << endl;
 
 	// // StringSplit
 	// std::string input = "12,345;67,890";
@@ -252,17 +252,19 @@ int main(int argc, char* argv[]) {
 	// 	cout << name << endl;
 	// }
 
-	// // File
-	// FilePath path("annety-text-file.log");
-	// File f(path, File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
-	// cout << "write(annety-file.log):"<< f.write(0, "test text", strlen("test text")) << endl;
+	// File
+	FilePath path("annety-text-file.log");
+	File f(path, File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
+	cout << "write(annety-file.log):"<< f.write(0, "test text", sizeof("test text")) << endl;
 
-	// char buf[1024];
-	// std::cout << "read len:"<< f.read(0, buf, sizeof(buf)) << std::endl;
-	// std::cout << "read content:" << buf << std::endl;
+	char buf[1024];
+	std::cout << "read len:"<< f.read(0, buf, sizeof(buf)) << std::endl;
+	std::cout << "read content:" << buf << std::endl;
 
+	cout << "delete file:" << files::delete_file(path, false) << endl;
+	
 	// FilesUtil
-	FilePath path1("annety-text-file.log");
+	FilePath path1("annety-text-file1.log");
 	std::string cc;
 	cout << "write status:" << files::write_file(path1, "1234567890", sizeof("1234567890")) << endl;
 	cout << "read status:" << files::read_file_to_string(path1, &cc) << endl;

@@ -31,7 +31,7 @@ std::string piece_to_output_type<std::string>(StringPiece piece) {
 
 // Returns the ASCII whitespace.
 StringPiece whitespace_for_type() {
-	return kWhitespace;
+	return strings::kWhitespace;
 }
 
 // Optimize the single-character case to call find() on the string instead,
@@ -80,7 +80,7 @@ static std::vector<OutputStringType> split_string_T(StringPiece str,
 		}
 
 		if (whitespace == TRIM_WHITESPACE) {
-			piece = trim_string(piece, whitespace_for_type(), TRIM_ALL);
+			piece = trim_string(piece, whitespace_for_type(), strings::TRIM_ALL);
 		}
 
 		if (result_type == SPLIT_WANT_ALL || !piece.empty()) {
@@ -140,7 +140,7 @@ void split_string_using_substr_T(StringPiece input,
 		: input.substr(begin_index, end_index - begin_index);
 
 		if (whitespace == TRIM_WHITESPACE) {
-			term = trim_string(term, whitespace_for_type(), TRIM_ALL);
+			term = strings::trim_string(term, whitespace_for_type(), strings::TRIM_ALL);
 		}
 
 		if (result_type == SPLIT_WANT_ALL || !term.empty()) {

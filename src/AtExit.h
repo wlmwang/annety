@@ -11,7 +11,7 @@
 // object on the stack:
 // int main(...) {
 //    AtExitManager exit_manager;
-//    exit_manager.RegisterCallback(std::bind(&func));
+//    exit_manager.register_callback(std::bind(&func));
 // }
 // When the exit_manager object goes out of scope, all the registered
 // callbacks and singleton destructors will be called.

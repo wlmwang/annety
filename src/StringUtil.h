@@ -21,7 +21,7 @@
 #include <vector>
 
 namespace annety {
-
+namespace strings {
 // Misc----------------------------------------------------
 
 // Chromium code style is to not use malloc'd strings; this is only for use
@@ -290,6 +290,7 @@ void replace_substrings_after_offset(std::string* str,
 									 StringPiece find_this,
 									 StringPiece replace_with);
 
+}	// namespace strings
 }	// namespace annety
 
 #endif	// ANT_STRING_UTIL_H
