@@ -7,8 +7,10 @@
 #include "Macros.h"
 #include "Time.h"
 
+#include <string>
 #include <memory>
 #include <utility>
+#include <functional>
 
 namespace annety {
 class EventLoop;
@@ -16,25 +18,26 @@ class SelectableFD;
 
 class Channel {
 public:
-	typedef std::function<void()> EventCallback;
-	typedef std::function<void(Time)> ReadEventCallback;
-
-	Channel(EventLoop* loop, SelectableFD* sfd);
-	~Channel();
+	using EventCallback = std::function<void()>;
+	using ReadEventCallback = std::function<void(Time)>;
 
 	void set_read_callback(ReadEventCallback cb) {
-		read_callback_ = std::move(cb);
+		read_cb_ = std::move(cb);
 	}
 	void set_write_callback(EventCallback cb) {
-		write_callback_ = std::move(cb);
+		write_cb_ = std::move(cb);
 	}
 	void set_close_callback(EventCallback cb) {
-		close_callback_ = std::move(cb);
+		close_cb_ = std::move(cb);
 	}
 	void set_error_callback(EventCallback cb) {
-		error_callback_ = std::move(cb);
+		error_cb_ = std::move(cb);
 	}
 
+	// internal interface---------------------------------
+	
+	Channel(EventLoop* loop, SelectableFD* sfd);
+	~Channel();
 
 	int fd() const;
 
@@ -79,29 +82,48 @@ public:
 		update();
 	}
 	
-	void handle_event(Time receiveTime);
+	// for Poller
+	int index() {
+		return index_;
+	}
+	void set_index(int idx) {
+		index_ = idx;
+	}
+
+	// for EventLoop
+	void handle_event(Time receive_tm);
+	
+	EventLoop* owner_loop() {
+		return owner_loop_;
+	}
+
+	void remove();
 
 private:
 	void update();
-  
+	static std::string events_to_string(int fd, int ev);
+
 	static const int kNoneEvent;
 	static const int kReadEvent;
 	static const int kWriteEvent;
 
 private:
-	EventLoop* owner_loop_;
-	SelectableFD* select_fd_;
+	EventLoop* owner_loop_{nullptr};
+	SelectableFD* select_fd_{nullptr};
+	
+	int	events_{0};
+	int revents_{0};
 
-	int	events_;
-	int revents_;
+	bool event_handling_{false};
+	bool added_to_loop_{false};
+	
+	int index_{-1};
+	bool log_hup_{true};
 
-	bool eventHandling_;
-	bool addedToLoop_;
-
-	ReadEventCallback read_callback_;
-	EventCallback write_callback_;
-	EventCallback close_callback_;
-	EventCallback error_callback_;
+	ReadEventCallback read_cb_;
+	EventCallback write_cb_;
+	EventCallback close_cb_;
+	EventCallback error_cb_;
 
 	DISALLOW_COPY_AND_ASSIGN(Channel);
 };

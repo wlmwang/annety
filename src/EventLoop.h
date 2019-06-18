@@ -21,7 +21,11 @@ public:
 	void loop();
 
 
+	// internal interface---------------------------------
+
 	void update_channel(Channel* ch);
+	void remove_channel(Channel* ch);
+	bool has_channel(Channel *ch);
 
 	void check_in_own_thread() const;
 	bool is_in_own_thread() const;

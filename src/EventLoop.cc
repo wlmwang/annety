@@ -48,6 +48,14 @@ void EventLoop::update_channel(Channel* ch) {
 	//
 }
 
+void EventLoop::remove_channel(Channel* ch) {
+	//
+}
+
+bool EventLoop::has_channel(Channel* ch) {
+	return false;
+}
+
 void EventLoop::check_in_own_thread() const {
 	CHECK(is_in_own_thread()) << " EventLoop was created by thread " 
 		<< owning_thread_.ref()
