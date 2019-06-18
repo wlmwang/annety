@@ -16,21 +16,22 @@ class ThreadLocalSingleton;
 template<typename Type>
 class ThreadLocal {
 public:
-	typedef void (*DeleterFuncType) (void* ptr);
+	typedef void (*DeleteCallback) (void* ptr);
 
-	ThreadLocal(const DeleterFuncType dtor = &ThreadLocal::local_dtor) {
-		DCHECK(dtor);
-		DPCHECK(::pthread_key_create(&tls_key_, local_dtor_ = dtor) == 0);
+	ThreadLocal(const DeleteCallback cb = &ThreadLocal::local_dtor) {
+		DCHECK(cb);
+		DPCHECK(::pthread_key_create(&tls_key_, local_dtor_cb_ = cb) == 0);
 	}
 	
-	virtual ~ThreadLocal() {
+	// no virtual even ThreadLocalSingleton extends this
+	~ThreadLocal() {
 		// 1. ThreadLocal<> and tls_key_ have the same lifetime
-		// 2. TODO: pthread_key_delete could not call local_dtor_() when
+		// 2. TODO: pthread_key_delete could not call local_dtor_cb_() when
 		// pthread_key_create called by one thread
 		Type* ptr = static_cast<Type*>(::pthread_getspecific(tls_key_));
 		DPCHECK(::pthread_key_delete(tls_key_) == 0);
 		if (ptr) {
-			local_dtor_(ptr);
+			local_dtor_cb_(ptr);
 		}
 	}
 	
@@ -66,7 +67,7 @@ private:
 
 private:
 	pthread_key_t tls_key_;
-	DeleterFuncType local_dtor_;
+	DeleteCallback local_dtor_cb_;
 
 	DISALLOW_COPY_AND_ASSIGN(ThreadLocal<Type>);
 };

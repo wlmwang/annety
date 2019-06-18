@@ -253,25 +253,25 @@ int main(int argc, char* argv[]) {
 	// 	cout << name << endl;
 	// }
 
-	// File
-	FilePath path("annety-text-file.log");
-	File f(path, File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
-	cout << "write(annety-file.log):"<< f.write(0, "test text", sizeof("test text")) << endl;
+	// // File
+	// FilePath path("annety-text-file.log");
+	// File f(path, File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
+	// cout << "write(annety-file.log):"<< f.write(0, "test text", sizeof("test text")) << endl;
 
-	char buf[1024];
-	std::cout << "read len:"<< f.read(0, buf, sizeof(buf)) << std::endl;
-	std::cout << "read content:" << buf << std::endl;
+	// char buf[1024];
+	// std::cout << "read len:"<< f.read(0, buf, sizeof(buf)) << std::endl;
+	// std::cout << "read content:" << buf << std::endl;
 
-	cout << "delete file:" << files::delete_file(path, false) << endl;
+	// cout << "delete file:" << files::delete_file(path, false) << endl;
 	
-	// FilesUtil
-	FilePath path1("annety-text-file1.log");
-	std::string cc;
-	cout << "write status:" << files::write_file(path1, "1234567890", sizeof("1234567890")) << endl;
-	cout << "read status:" << files::read_file_to_string(path1, &cc) << endl;
-	cout << "read content:" << cc << endl;
+	// // FilesUtil
+	// FilePath path1("annety-text-file1.log");
+	// std::string cc;
+	// cout << "write status:" << files::write_file(path1, "1234567890", sizeof("1234567890")) << endl;
+	// cout << "read status:" << files::read_file_to_string(path1, &cc) << endl;
+	// cout << "read content:" << cc << endl;
 
-	cout << "delete file:" << files::delete_file(path1, false) << endl;
+	// cout << "delete file:" << files::delete_file(path1, false) << endl;
 
 	// // Singleton
 	// class singleton_test {
@@ -372,6 +372,5 @@ int main(int argc, char* argv[]) {
 
 	// EventLoop
 	EventLoop loop;
-
 }
 

@@ -11,8 +11,6 @@ SocketFD::SocketFD(bool nonblock, bool cloexec) {
 	DCHECK(fd_ >= 0);
 }
 
-SocketFD::~SocketFD() {
-	sockets::close(fd_);
-}
+SocketFD::~SocketFD() = default;
 
 }	// namespace annety

@@ -31,7 +31,7 @@
 namespace annety {
 class AtExitManager {
 public:
-	using AtExitFunc = std::function<void()>;
+	using AtExitCallback = std::function<void()>;
 
 	AtExitManager();
 
@@ -40,7 +40,7 @@ public:
 	~AtExitManager();
 
 	// Registers the specified function to be called at exit.
-	static void register_callback(AtExitFunc func);
+	static void register_callback(AtExitCallback cb);
 
 	// Calls the functions registered with register_callback in LIFO order. It
 	// is possible to register new callbacks after calling this function.
@@ -57,7 +57,7 @@ protected:
 
 private:
 	MutexLock lock_;
-	std::stack<AtExitFunc> stack_;
+	std::stack<AtExitCallback> stack_cb_;
 	
 	AtExitManager* next_manager_;  // Stack of managers to allow shadowing.
 

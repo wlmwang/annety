@@ -128,7 +128,7 @@ private:
 
 	// All private data is implicitly protected by lock_.
 	// Be VERY careful to only access members under that lock.
-	ThreadRef owning_thread_ref_;
+	ThreadRef owning_thread_;
 
 #endif  // DCHECK_IS_ON()
 

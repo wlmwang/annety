@@ -18,7 +18,7 @@ ThreadPool::ThreadPool(int num_threads, const std::string& name_prefix)
 
 ThreadPool::~ThreadPool() {
 	DCHECK(threads_.empty());
-	DCHECK(taskers_.empty());
+	DCHECK(task_cb_.empty());
 }
 
 ThreadPool& ThreadPool::start() {
@@ -55,7 +55,7 @@ void ThreadPool::stop() {
 		td->join();
 	}
 	threads_.clear();
-	taskers_.clear();
+	task_cb_.clear();
 }
 
 void ThreadPool::joinall() {
@@ -63,35 +63,35 @@ void ThreadPool::joinall() {
 		<< "join_all() called with no outstanding threads.";
 
 	// Tell all our threads to quit their worker loop.
-	run_tasker(nullptr, num_threads_);
+	run_task(nullptr, num_threads_);
 
 	// Join and destroy all the worker threads.
 	for (auto& td : threads_) {
 		td->join();
 	}
 	threads_.clear();
-	DCHECK(taskers_.empty());
+	DCHECK(task_cb_.empty());
 	running_ = false;
 }
 
-size_t ThreadPool::get_tasker_size() const {
+size_t ThreadPool::get_task_size() const {
 	AutoLock locked(lock_);
-	return taskers_.size();
+	return task_cb_.size();
 }
 
 bool ThreadPool::full() const {
 	lock_.assert_acquired();
-	return max_tasker_size_ >0 && taskers_.size() >=max_tasker_size_;
+	return max_task_size_ > 0 && max_task_size_ <= task_cb_.size();
 }
 
-void ThreadPool::run_tasker(const Tasker& tasker, int repeat_count) {
+void ThreadPool::run_task(const TaskCallback& cb, int repeat_count) {
 	DCHECK(running_ == true) << 
-		"run_tasker() called with no outstanding threads.";
+		"run_task() called with no outstanding threads.";
 
 	if (threads_.empty()) {
 		while (repeat_count-- > 0) {
-			if (tasker) {
-				tasker();
+			if (cb) {
+				cb();
 			}
 		}
 	} else {
@@ -100,9 +100,9 @@ void ThreadPool::run_tasker(const Tasker& tasker, int repeat_count) {
 			while (full()) {
 				full_cv_.wait();
 			}
-			DCHECK(!full()) << "full the taskers.";
+			DCHECK(!full()) << "full the task_cb_.";
 			// copy to vector
-			taskers_.push_back(tasker);
+			task_cb_.push_back(cb);
 		}
 		empty_cv_.signal();
 	}
@@ -114,24 +114,26 @@ void ThreadPool::loop() {
 			thread_init_cb_();
 		}
 		while (running_) {
-			Tasker task = nullptr;
+			TaskCallback task = nullptr;
+			
+			// get one task /FIFO/
 			{
-				// Get one task. /FIFO/
 				AutoLock locked(lock_);
-				while (taskers_.empty() && running_) {
+				while (task_cb_.empty() && running_) {
 					empty_cv_.wait();
 				}
 				if (!running_) {
 					break;
 				}
-				DCHECK(!taskers_.empty()) << "empty the taskers.";
+				DCHECK(!task_cb_.empty()) << "empty the taskers.";
 
-				task = taskers_.front();
-				taskers_.pop_front();
-				if (max_tasker_size_ > 0) {
+				task = task_cb_.front();
+				task_cb_.pop_front();
+				if (max_task_size_ > 0) {
 					full_cv_.signal();
 				}
 			}
+			// run a task
 			{
 				// A nullptr std::function task signals us to quit.
 				if (!task) {
@@ -140,7 +142,6 @@ void ThreadPool::loop() {
 					empty_cv_.signal();
 					break;
 				}
-				// going to execute
 				task();
 			}
 		}

@@ -7,7 +7,11 @@
 #include "Macros.h"
 #include "ThreadForward.h"
 
+#include <memory>
+#include <utility>
+
 namespace annety {
+class Channel;
 
 class EventLoop {
 public:
@@ -16,12 +20,15 @@ public:
 	
 	void loop();
 
-	void check_in_owning_thread() const;
-	bool is_in_owning_thread() const;
+
+	void update_channel(Channel* ch);
+
+	void check_in_own_thread() const;
+	bool is_in_own_thread() const;
 
 private:
 	bool looping_;
-	ThreadRef owning_thread_ref_;
+	ThreadRef owning_thread_;
 
 	DISALLOW_COPY_AND_ASSIGN(EventLoop);
 };

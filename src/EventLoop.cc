@@ -6,33 +6,56 @@
 #include "PlatformThread.h"
 
 namespace annety {
-static thread_local EventLoop* tls_event_loop{nullptr};
+namespace {
+// one thread one loop
+void clean_tls_eventloop(void *ptr);
+ThreadLocal<EventLoop> tls_eventloop{&clean_tls_eventloop};
+
+void clean_tls_eventloop(void *ptr) {
+	LOG(INFO) << "TLS EventLoop has clean by thread " 
+		<< PlatformThread::current_ref().ref()
+		<< ", EventLoop " << ptr;
+}
+
+}	// namespace anonymous
 
 EventLoop::EventLoop() :
 	looping_(false),
-	owning_thread_ref_(PlatformThread::current_ref())
+	owning_thread_(PlatformThread::current_ref())
 {
-	LOG(INFO) << "EventLoop created " << this 
-			<< " in thread " << owning_thread_ref_.ref();
+	LOG(INFO) << "EventLoop is creating by thread " 
+		<< owning_thread_.ref() 
+		<< ", EventLoop " << this;
 	
-	CHECK(!tls_event_loop);
-	tls_event_loop = this;
+	CHECK(tls_eventloop.empty()) << " EventLoop has created by thread " 
+		<< owning_thread_.ref() 
+		<< ", Current thread " << PlatformThread::current_ref().ref();
+
+	tls_eventloop.set(this);
 }
 
 EventLoop::~EventLoop() {
-	LOG(INFO) << "~EventLoop";
+	LOG(INFO) << "~EventLoop is called by thread " 
+		<< PlatformThread::current_ref().ref()
+		<< ", EventLoop " << this;
 }
 
 void EventLoop::loop() {
 	//
 }
 
-void EventLoop::check_in_owning_thread() const {
-	CHECK(is_in_owning_thread());
+void EventLoop::update_channel(Channel* ch) {
+	//
 }
 
-bool EventLoop::is_in_owning_thread() const {
-	return owning_thread_ref_ == PlatformThread::current_ref();
+void EventLoop::check_in_own_thread() const {
+	CHECK(is_in_own_thread()) << " EventLoop was created by thread " 
+		<< owning_thread_.ref()
+		<< ", Current thread " << PlatformThread::current_ref().ref();
+}
+
+bool EventLoop::is_in_own_thread() const {
+	return owning_thread_ == PlatformThread::current_ref();
 }
 
 }	// namespace annety

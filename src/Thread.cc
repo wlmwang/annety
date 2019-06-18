@@ -12,24 +12,24 @@
 #include <functional>
 
 namespace annety {
-Thread::Thread(const ThreadMainFunc& func, const std::string& name_prefix)
-	: Thread(func, name_prefix, Options()) {}
+Thread::Thread(const ThreadMainCallback& cb, const std::string& name_prefix)
+	: Thread(cb, name_prefix, Options()) {}
 
-Thread::Thread(ThreadMainFunc&& func, const std::string& name_prefix)
-	: Thread(std::move(func), name_prefix, Options()) {}
+Thread::Thread(ThreadMainCallback&& cb, const std::string& name_prefix)
+	: Thread(std::move(cb), name_prefix, Options()) {}
 
-Thread::Thread(const ThreadMainFunc& func, const std::string& name_prefix,
+Thread::Thread(const ThreadMainCallback& cb, const std::string& name_prefix,
 			   const Options& options)
 	: name_prefix_(name_prefix),
 	  options_(options),
-	  func_(func),
+	  cb_(cb),
 	  latch_(1) {}
 
-Thread::Thread(ThreadMainFunc&& func, const std::string& name_prefix,
+Thread::Thread(ThreadMainCallback&& cb, const std::string& name_prefix,
 			   const Options& options)
 	: name_prefix_(name_prefix),
 	  options_(options),
-	  func_(std::move(func)),
+	  cb_(std::move(cb)),
 	  latch_(1) {}
 
 Thread::~Thread() {
@@ -87,7 +87,7 @@ void Thread::start_routine() {
 	latch_.count_down();
 	
 	try {
-		func_();
+		cb_();
 	} catch (const Exception& e) {
 		LOG(FATAL) << "Thread:" << name_ 
 				   << "Exception:" << e.what() 

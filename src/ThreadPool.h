@@ -22,7 +22,7 @@ namespace annety {
 // again after you've called join_all().
 class ThreadPool {
 public:
-	typedef std::function<void()> Tasker;
+	typedef std::function<void()> TaskCallback;
 
 	explicit ThreadPool(int num_threads, const std::string& name_prefix);
 	~ThreadPool();
@@ -38,17 +38,17 @@ public:
 	// of the underlying threads in the pool.
 	void joinall();
 
-	// It is safe to run_tasker() any time, before or after start().
-	void run_tasker(const Tasker& tasker, int repeat_count = 1);
+	// It is safe to run_task() any time, before or after start().
+	void run_task(const TaskCallback& cb, int repeat_count = 1);
 
 	// Taskers queue size
-	size_t get_tasker_size() const;
+	size_t get_task_size() const;
 
 	// Must be called before start().
-	void set_max_tasker_size(size_t max_tasker_size) {
-		max_tasker_size_ = max_tasker_size;
+	void set_max_task_size(size_t max_task_size) {
+		max_task_size_ = max_task_size;
 	}
-	void set_thread_init_cb(const Tasker& cb) {
+	void set_thread_init_cb(const TaskCallback& cb) {
 		thread_init_cb_ = cb;
 	}
 
@@ -59,15 +59,15 @@ private:
 private:
 	const std::string name_prefix_;
 	int num_threads_{0};
-	size_t max_tasker_size_{0};
+	size_t max_task_size_{0};
 	bool running_{false};
-	Tasker thread_init_cb_{};
+	TaskCallback thread_init_cb_{};
 
 	mutable MutexLock lock_;
 	ConditionVariable empty_cv_;
 	ConditionVariable full_cv_;
 
-	std::deque<Tasker> taskers_;
+	std::deque<TaskCallback> task_cb_;
 	std::vector<std::unique_ptr<Thread>> threads_;
 };
 

@@ -5,22 +5,17 @@
 #define ANT_SOCKET_FD_H_
 
 #include "Macros.h"
+#include "SelectableFD.h"
 
 namespace annety {
-class SocketFD {
+class SocketFD : public SelectableFD {
 public:
 	explicit SocketFD(bool nonblock = true, bool cloexec = true);
-	explicit SocketFD(int sckfd) : fd_(sckfd) {}
+	explicit SocketFD(int sckfd) : SelectableFD(sckfd) {}
 
-	~SocketFD();
-
-	int internal_fd() const {
-		return fd_;
-	}
+	virtual ~SocketFD();
 
 private:
-	int fd_;
-
 	DISALLOW_COPY_AND_ASSIGN(SocketFD);
 };
 

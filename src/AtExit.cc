@@ -38,15 +38,15 @@ AtExitManager::~AtExitManager() {
 }
 
 // static
-void AtExitManager::register_callback(AtExitFunc func) {
-	DCHECK(func);
+void AtExitManager::register_callback(AtExitCallback cb) {
+	DCHECK(cb);
 	if (!g_top_manager) {
 		NOTREACHED() << "Tried to register_callback without an AtExitManager";
 		return;
 	}
 
 	AutoLock locked(g_top_manager->lock_);
-	g_top_manager->stack_.push(std::move(func));
+	g_top_manager->stack_cb_.push(std::move(cb));
 }
 
 // static
@@ -56,15 +56,15 @@ void AtExitManager::process_callbacks() {
 		return;
 	}
 
-	std::stack<AtExitFunc> tasks;
+	std::stack<AtExitCallback> cbs;
 	{
 		AutoLock locked(g_top_manager->lock_);
-		tasks.swap(g_top_manager->stack_);
+		cbs.swap(g_top_manager->stack_cb_);
 	}
 
-	while (!tasks.empty()) {
-		auto task = tasks.top();
-		tasks.pop();
+	while (!cbs.empty()) {
+		auto task = cbs.top();
+		cbs.pop();
 		task();
 	}
 }
