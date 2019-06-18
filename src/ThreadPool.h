@@ -22,7 +22,7 @@ namespace annety {
 // again after you've called join_all().
 class ThreadPool {
 public:
-	typedef std::function<void()> TaskCallback;
+	using TaskCallback = std::function<void()>;
 
 	explicit ThreadPool(int num_threads, const std::string& name_prefix);
 	~ThreadPool();
@@ -67,7 +67,7 @@ private:
 	ConditionVariable empty_cv_;
 	ConditionVariable full_cv_;
 
-	std::deque<TaskCallback> task_cb_;
+	std::deque<TaskCallback> thread_main_cbs_;
 	std::vector<std::unique_ptr<Thread>> threads_;
 };
 

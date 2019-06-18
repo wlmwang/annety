@@ -18,7 +18,7 @@ ThreadPool::ThreadPool(int num_threads, const std::string& name_prefix)
 
 ThreadPool::~ThreadPool() {
 	DCHECK(threads_.empty());
-	DCHECK(task_cb_.empty());
+	DCHECK(thread_main_cbs_.empty());
 }
 
 ThreadPool& ThreadPool::start() {
@@ -55,7 +55,7 @@ void ThreadPool::stop() {
 		td->join();
 	}
 	threads_.clear();
-	task_cb_.clear();
+	thread_main_cbs_.clear();
 }
 
 void ThreadPool::joinall() {
@@ -70,18 +70,18 @@ void ThreadPool::joinall() {
 		td->join();
 	}
 	threads_.clear();
-	DCHECK(task_cb_.empty());
+	DCHECK(thread_main_cbs_.empty());
 	running_ = false;
 }
 
 size_t ThreadPool::get_task_size() const {
 	AutoLock locked(lock_);
-	return task_cb_.size();
+	return thread_main_cbs_.size();
 }
 
 bool ThreadPool::full() const {
 	lock_.assert_acquired();
-	return max_task_size_ > 0 && max_task_size_ <= task_cb_.size();
+	return max_task_size_ > 0 && max_task_size_ <= thread_main_cbs_.size();
 }
 
 void ThreadPool::run_task(const TaskCallback& cb, int repeat_count) {
@@ -100,9 +100,9 @@ void ThreadPool::run_task(const TaskCallback& cb, int repeat_count) {
 			while (full()) {
 				full_cv_.wait();
 			}
-			DCHECK(!full()) << "full the task_cb_.";
+			DCHECK(!full()) << "full the thread_main_cbs_.";
 			// copy to vector
-			task_cb_.push_back(cb);
+			thread_main_cbs_.push_back(cb);
 		}
 		empty_cv_.signal();
 	}
@@ -119,20 +119,21 @@ void ThreadPool::loop() {
 			// get one task /FIFO/
 			{
 				AutoLock locked(lock_);
-				while (task_cb_.empty() && running_) {
+				while (thread_main_cbs_.empty() && running_) {
 					empty_cv_.wait();
 				}
 				if (!running_) {
 					break;
 				}
-				DCHECK(!task_cb_.empty()) << "empty the taskers.";
+				DCHECK(!thread_main_cbs_.empty()) << "empty the taskers.";
 
-				task = task_cb_.front();
-				task_cb_.pop_front();
+				task = thread_main_cbs_.front();
+				thread_main_cbs_.pop_front();
 				if (max_task_size_ > 0) {
 					full_cv_.signal();
 				}
 			}
+			
 			// run a task
 			{
 				// A nullptr std::function task signals us to quit.

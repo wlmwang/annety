@@ -29,31 +29,27 @@ namespace annety {
 namespace {
 struct ThreadParams {
 public:
-	PlatformThread::ThreadMainFunc func_;
+	PlatformThread::TaskCallback thread_main_cb_;
 
 public:
-	ThreadParams(PlatformThread::ThreadMainFunc func) 
-				: func_(std::move(func)) {}
+	ThreadParams(PlatformThread::TaskCallback cb) 
+		: thread_main_cb_(std::move(cb)) {}
 };
 
 // |params| -> ThreadParams
 void* thread_func(void* params) {
 	DCHECK(params);
 
-	std::unique_ptr<ThreadParams> thread_params(
-		static_cast<ThreadParams*>(params)
-	);
+	std::unique_ptr<ThreadParams> thread_params(static_cast<ThreadParams*>(params));
 
 	// start enter thread function
-	thread_params->func_();
+	thread_params->thread_main_cb_();
 
 	::pthread_exit(0);
 	return nullptr;
 }
 
-bool create_thread(bool joinable,
-				   PlatformThread::ThreadMainFunc func,
-				   ThreadRef* thread_ref) {
+bool create_thread(bool joinable, PlatformThread::TaskCallback cb, ThreadRef* thread_ref) {
 	DCHECK(thread_ref);
 
 	pthread_attr_t attributes;
@@ -65,9 +61,7 @@ bool create_thread(bool joinable,
 		::pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
 	}
 
-	std::unique_ptr<ThreadParams> params(
-		new ThreadParams(std::move(func))
-	);
+	std::unique_ptr<ThreadParams> params(new ThreadParams(std::move(cb)));
 
 	pthread_t ref;
 	int err = ::pthread_create(&ref, &attributes, thread_func, params.get());
@@ -131,14 +125,14 @@ void PlatformThread::sleep(TimeDelta duration) {
 }
 
 // static
-bool PlatformThread::create(ThreadMainFunc func, ThreadRef* thread_ref) {
-	return create_thread(true, std::move(func), thread_ref);
+bool PlatformThread::create(TaskCallback cb, ThreadRef* thread_ref) {
+	return create_thread(true, std::move(cb), thread_ref);
 }
 
 // static
-bool PlatformThread::create_non_joinable(ThreadMainFunc func) {
+bool PlatformThread::create_non_joinable(TaskCallback cb) {
 	ThreadRef unuse_ref;
-	return create_thread(false, std::move(func), &unuse_ref);
+	return create_thread(false, std::move(cb), &unuse_ref);
 }
 
 // static

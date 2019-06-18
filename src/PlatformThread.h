@@ -21,7 +21,7 @@ namespace annety {
 // A namespace for low-level thread functions.
 class PlatformThread {
 public:
-	typedef std::function<void()> ThreadMainFunc;
+	using TaskCallback = std::function<void()>;
 
 	// Gets the current thread id, which may be useful for logging purposes.
 	static ThreadId current_id();
@@ -42,17 +42,17 @@ public:
 
 	// Creates a new thread.  Upon success,
 	// |*thread_ref| will be assigned a handle to the newly created thread,
-	// and |fuc|'s ThreadMainFunc method will be executed on the newly created
+	// and |fuc|'s TaskCallback method will be executed on the newly created
 	// thread.
 	// NOTE: When you are done with the thread handle, you must call Join to
 	// release system resources associated with the thread.  You must ensure that
 	// the Delegate object outlives the thread.
-	static bool create(ThreadMainFunc func, ThreadRef* thread_ref);
+	static bool create(TaskCallback cb, ThreadRef* thread_ref);
 
 	// create_non_joinable() does the same thing as Create() except the thread
 	// cannot be join()'d.  Therefore, it also does not output a
 	// ThreadRef.
-	static bool create_non_joinable(ThreadMainFunc func);
+	static bool create_non_joinable(TaskCallback cb);
 
 	// Joins with a thread created via the Create function.  This function blocks
 	// the caller until the designated thread exits.  This will invalidate

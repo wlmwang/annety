@@ -164,13 +164,11 @@ int main(int argc, char* argv[]) {
 	// PlatformThread::join(handle);
 
 	// // Thread
-	// Thread tt([]() {
+	// Thread([]() {
 	// 	for (int i = 0; i < 10; i++) {
-	// 		PLOG(INFO) << 1234.5678 << " <<<message<<<";
+	// 		PLOG(INFO) << 1234.5678 << " <<<message<<<" << i;
 	// 	}
-	// }, "annety");
-	// tt.start();
-	// tt.join();
+	// }, "annety").start().join();
 
 	// // ThreadPool
 	// ThreadPool tp(5, "annetys");
@@ -303,7 +301,7 @@ int main(int argc, char* argv[]) {
 	// 	singleton_test::instance()->foo();
 	// }, "singleton test").start().join();
 
-	
+
 	// // ThreadLocal/ThreadLocalSingleton
 	// class thread_local_test
 	// {

@@ -13,7 +13,7 @@
 namespace annety {
 class Thread {
 public:
-	typedef std::function<void()> ThreadMainCallback;
+	using TaskCallback = std::function<void()>;
 
 	struct Options {
 	public:
@@ -31,20 +31,20 @@ public:
 		bool joinable = true;
 	};
 
-	explicit Thread(const ThreadMainCallback& cb, const std::string& name_prefix = "");
-	explicit Thread(ThreadMainCallback&& cb, const std::string& name_prefix = "");
+	explicit Thread(const TaskCallback& cb, const std::string& name_prefix = "");
+	explicit Thread(TaskCallback&& cb, const std::string& name_prefix = "");
 	
-  	Thread(const ThreadMainCallback& cb, const std::string& name_prefix, const Options& options);
-  	Thread(ThreadMainCallback&& cb, const std::string& name_prefix, const Options& options);
+  	Thread(const TaskCallback& cb, const std::string& name_prefix, const Options& options);
+  	Thread(TaskCallback&& cb, const std::string& name_prefix, const Options& options);
 
 	~Thread();
 
 	// Starts the thread and returns only after the thread has started and
-	// initialized (i.e. ThreadMainCallback() has been called).
+	// initialized (i.e. TaskCallback() has been called).
 	Thread& start();
 
 	// Starts the thread, but returns immediately, without waiting for the thread
-	// to have initialized first (i.e. this does not wait for ThreadMainCallback() to have
+	// to have initialized first (i.e. this does not wait for TaskCallback() to have
 	// been run first).
 	Thread& start_async();
 	
@@ -62,8 +62,8 @@ public:
 	ThreadRef ref();
 
 	// Returns True if the thread has been started and initialized (i.e. if
-	// ThreadMainCallback() has run). If the thread was started with start_async(), but it
-	// hasn't been initialized yet (i.e. ThreadMainCallback() has not run), then this will
+	// TaskCallback() has run). If the thread was started with start_async(), but it
+	// hasn't been initialized yet (i.e. TaskCallback() has not run), then this will
 	// return False.
 	bool has_been_started() const {
 		return started_;
@@ -92,7 +92,8 @@ private:
 	// Set to true when the platform-thread creation has started.
 	bool start_called_ = false;
 	bool started_ = false;
-	ThreadMainCallback cb_;
+
+	TaskCallback thread_main_cb_;
 	CountDownLatch latch_;
 };
 
