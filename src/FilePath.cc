@@ -14,6 +14,7 @@
 #include <string.h>		// strcasecmp
 #include <string>
 #include <vector>
+#include <ostream>
 
 namespace annety
 {

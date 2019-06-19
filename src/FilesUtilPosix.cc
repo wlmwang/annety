@@ -10,7 +10,6 @@
 #include "FileEnumerator.h"
 #include "ScopedFile.h"
 #include "EintrWrapper.h"
-//#include "StringUtil.h"
 
 #include "Macros.h"
 #include "Logging.h"
@@ -842,8 +841,7 @@ int get_maximum_path_component_length(const FilePath& path)
 bool create_local_non_blocking_pipe(int fds[2])
 {
 #if defined(OS_LINUX)
-	return 
-		::pipe2(fds, O_CLOEXEC | O_NONBLOCK) == 0;
+	return ::pipe2(fds, O_CLOEXEC | O_NONBLOCK) == 0;
 #else
 	int raw_fds[2];
 	if (::pipe(raw_fds) != 0) {

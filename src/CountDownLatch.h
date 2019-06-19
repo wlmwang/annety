@@ -24,9 +24,10 @@ public:
   	void await(const TimeDelta& max_time);
 
 private:
-	mutable MutexLock lock_{};
+	mutable MutexLock lock_;
 	ConditionVariable cv_{lock_};
-	int count_{0};
+	
+	int count_;
 
 	DISALLOW_COPY_AND_ASSIGN(CountDownLatch);
 };

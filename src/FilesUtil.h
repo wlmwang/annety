@@ -21,6 +21,7 @@
 #include <stdio.h>
 
 #include <set>
+#include <stack>
 #include <string>
 
 namespace annety

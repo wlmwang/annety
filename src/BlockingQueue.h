@@ -18,12 +18,12 @@ namespace annety
 //	// UnBoundedBlocking
 // 	BlockingQueue<int> unbound;
 //	unbound.push(1);
-//	int rt = unbound.pop();
+//	auto rt = unbound.pop();
 //
 //	// BoundedBlocking
 // 	BlockingQueue<int, BoundedBlockingTrait<int>> bounded(10);
 //	bounded.push(2);
-//	int rt = bounded.pop();
+//	auto rt = bounded.pop();
 
 // Blocking Trait ----------------------------------------
 // UnBoundedBlockingTrait
@@ -33,6 +33,8 @@ class UnBoundedBlockingTrait
 public:
 	UnBoundedBlockingTrait() {}
 	UnBoundedBlockingTrait(size_t max_size) = delete;
+
+	~UnBoundedBlockingTrait() = default;
 
 	void push(const T& x)
 	{
@@ -107,10 +109,10 @@ private:
 	}
 
 private:
-	mutable MutexLock lock_{};
+	mutable MutexLock lock_;
 	ConditionVariable empty_cv_{lock_};
 
-	std::deque<T> queue_{};
+	std::deque<T> queue_;
 };
 
 // BoundedBlockingTrait
@@ -121,6 +123,8 @@ public:
 	BoundedBlockingTrait() = delete;
 	explicit BoundedBlockingTrait(size_t max_size) 
 				: max_size_(max_size) {}
+
+	~BoundedBlockingTrait() = default;
 
 	void push(const T& x)
 	{
@@ -206,12 +210,12 @@ private:
 	}
 
 private:
-	mutable MutexLock lock_{};
+	mutable MutexLock lock_;
 	ConditionVariable empty_cv_{lock_};
 	ConditionVariable full_cv_{lock_};
 
-	std::deque<T> queue_{};
-	size_t max_size_{0};
+	std::deque<T> queue_;
+	size_t max_size_;
 };
 
 // {,Un}Boundedblocking queue
@@ -231,6 +235,8 @@ public:
 
 	BlockingQueue() : data_() {}
 	explicit BlockingQueue(size_t max_size) : data_(max_size) {}
+
+	~BlockingQueue() = default;
 
 	void push(const element_type& x)
 	{

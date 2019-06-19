@@ -8,8 +8,8 @@
 #ifndef ANT_LOGGING_H
 #define ANT_LOGGING_H
 
-#include "CompilerSpecific.h"
 #include "Macros.h"
+#include "CompilerSpecific.h"
 #include "LogStream.h"
 #include "Time.h"
 #include "ScopedClearLastError.h"
@@ -155,6 +155,8 @@ private:
 		Impl(int line, const Filename& file, LogSeverity sev, const std::string& msg, 
 			int err = 0);
 		
+		~Impl() = default;
+
 		void begin();
 		void endl();
 

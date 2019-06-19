@@ -85,7 +85,7 @@ uint32_t EndPoint::ip_net_endian() const
 	return addr_.sin_addr.s_addr;
 }
 
-#if !defined(OS_MACOSX)
+#if defined(OS_LINUX)
 static thread_local char tls_resolve_buffer[64 * 1024];
 bool EndPoint::resolve(const StringPiece& hostname, EndPoint* out)
 {
@@ -110,6 +110,6 @@ bool EndPoint::resolve(const StringPiece& hostname, EndPoint* out)
 	}
 	return false;
 }
-#endif	// !defined(OS_MACOSX)
+#endif	// defined(OS_LINUX)
 
 }	// namespace annety

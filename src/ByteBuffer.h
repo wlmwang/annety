@@ -7,7 +7,7 @@
 #include "StringPiece.h"
 
 #include <iosfwd>
-#include <iostream>
+#include <ostream>
 #include <algorithm>
 #include <vector>
 #include <string>

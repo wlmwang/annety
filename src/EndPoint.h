@@ -75,12 +75,12 @@ public:
 	std::string to_ip_port() const;
 	uint16_t to_port() const;
 
-#if !defined(OS_MACOSX)
+#if defined(OS_LINUX)
 	// resolve hostname to IP address, not changing port or sin_family
 	// return true on success.
 	// thread safe
 	static bool resolve(const StringPiece& hostname, EndPoint* result);
-#endif	// !defined(OS_MACOSX)
+#endif	// defined(OS_LINUX)
 
 private:
 	// must sin[6]_family offset is 0

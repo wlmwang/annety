@@ -39,10 +39,12 @@ const ThreadId kInvalidThreadId{0};
 class ThreadRef
 {
 public:
-	typedef pthread_t RefType;
+	using RefType = pthread_t;
 
 	constexpr ThreadRef() : id_(0) {}
 	explicit constexpr ThreadRef(RefType id) : id_(id) {}
+
+	~ThreadRef() = default;
 
 	bool operator==(ThreadRef other) const
 	{
