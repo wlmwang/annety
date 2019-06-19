@@ -69,12 +69,13 @@
 namespace annety
 {
 typedef int LogSeverity;
-const LogSeverity LOG_VERBOSE = -1;  // This is level 1 verbosity
-const LogSeverity LOG_INFO = 0;
-const LogSeverity LOG_WARNING = 1;
-const LogSeverity LOG_ERROR = 2;
-const LogSeverity LOG_FATAL = 3;
-const LogSeverity LOG_NUM_SEVERITIES = 4;
+const LogSeverity LOG_VERBOSE = -1;
+const LogSeverity LOG_TRACE = 0;
+const LogSeverity LOG_INFO = 1;
+const LogSeverity LOG_WARNING = 2;
+const LogSeverity LOG_ERROR = 3;
+const LogSeverity LOG_FATAL = 4;
+const LogSeverity LOG_NUM_SEVERITIES = 5;
 
 // LOG_DFATAL is LOG_FATAL in debug mode, ERROR in normal mode
 #if defined(NDEBUG)
@@ -133,10 +134,12 @@ public:
 	LogMessage(int line, const Filename& file, LogSeverity sev, int err);
 
 	// Used for {,D}CHECK
-	LogMessage(int line, const Filename& file, LogSeverity sev, const std::string& msg);
+	LogMessage(int line, const Filename& file, LogSeverity sev, 
+			const std::string& msg);
 
 	// Used for {,D,P,DP}CHECK
-	LogMessage(int line, const Filename& file, LogSeverity sev, const std::string& msg, int err);
+	LogMessage(int line, const Filename& file, LogSeverity sev, 
+			const std::string& msg, int err);
 
 	~LogMessage();
 

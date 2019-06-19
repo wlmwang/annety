@@ -15,7 +15,7 @@ public:
 	explicit SocketFD(bool nonblock = true, bool cloexec = true);
 	explicit SocketFD(int sckfd) : SelectableFD(sckfd) {}
 
-	virtual ~SocketFD();
+	virtual ~SocketFD() override;
 
 private:
 	DISALLOW_COPY_AND_ASSIGN(SocketFD);

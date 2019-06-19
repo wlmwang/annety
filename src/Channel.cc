@@ -26,6 +26,7 @@ Channel::~Channel()
 	DCHECK(!event_handling_);
 	DCHECK(!added_to_loop_);
 	if (owner_loop_->is_in_own_thread()) {
+		// must has removed
 		DCHECK(!owner_loop_->has_channel(this));
 	}
 }
@@ -39,45 +40,44 @@ void Channel::handle_event(Time receive_tm)
 {
 	event_handling_ = true;
 
-	LOG(INFO) << events_to_string(fd(), revents_);
+	LOG(TRACE) << revents_to_string();
 	
-	if (revents_ & (POLLERR | POLLNVAL)) {
-		LOG_IF(WARNING, revents_ & POLLNVAL) << "fd = " << fd() 
-			<< " Channel::handle_event() POLLNVAL";
-		//...
-		if (error_cb_) {
-			error_cb_();
-		}
-	}
-
+	// hup event
 	if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
-		LOG_IF(WARNING, log_hup_) << "fd = " << fd() 
+		LOG_IF(WARNING, logging_hup_) << "fd = " << fd() 
 			<< " Channel::handle_event() POLLHUP";
-		//...
 		if (close_cb_) {
 			close_cb_();
 		}
 	}
-
+	// error
+	if (revents_ & (POLLERR | POLLNVAL)) {
+		LOG_IF(WARNING, revents_ & POLLNVAL) << "fd = " << fd() 
+			<< " Channel::handle_event() POLLNVAL";
+		if (error_cb_) {
+			error_cb_();
+		}
+	}
+	// readable
 	if (revents_ & (POLLIN | POLLPRI | POLLHUP)) {
 		if (read_cb_) {
 			read_cb_(receive_tm);
 		}
 	}
-
+	// writeable
 	if (revents_ & POLLOUT) {
 		if (write_cb_) {
 			write_cb_();
 		}
 	}
-
 	event_handling_ = false;
 }
 
 void Channel::remove()
 {
+	// must has disable_all_event
 	DCHECK(is_none_event());
-
+	
 	added_to_loop_ = false;
 	owner_loop_->remove_channel(this);
 }
@@ -88,12 +88,21 @@ void Channel::update()
 	owner_loop_->update_channel(this);
 }
 
+std::string Channel::revents_to_string() const
+{
+	return events_to_string(fd(), revents_);
+}
+
+std::string Channel::events_to_string() const
+{
+	return events_to_string(fd(), events_);
+}
+
 std::string Channel::events_to_string(int fd, int ev)
 {
 	std::ostringstream oss;
-	
+
 	oss << fd << ": ";
-	
 	if (ev & POLLIN) {
 		oss << "IN ";
 	}

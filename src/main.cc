@@ -151,7 +151,8 @@ int main(int argc, char* argv[])
 	// cout << "midnight:" << t.utc_midnight() << endl;
 
 	// // Logging
-	// LOG(INFO) << 1234.5123 << " xxx";
+	// LOG(TRACE) << 1234.5123 << " xxx";
+	// LOG(INFO) << "vvv";
 
 	// CHECK_EQ(1, 1);
 	// DCHECK_EQ(1, 1);
@@ -375,5 +376,6 @@ int main(int argc, char* argv[])
 
 	// EventLoop
 	EventLoop loop;
+	loop.loop();
 }
 

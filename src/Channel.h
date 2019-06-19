@@ -52,18 +52,9 @@ public:
 	void set_revents(int revt) { revents_ = revt;}
 	int revents() const { return revents_;}
 
-	bool is_none_event() const
-	{
-		return events_ == kNoneEvent;
-	}
-	bool is_write_event() const
-	{
-		return events_ & kWriteEvent;
-	}
-	bool is_read_event() const
-	{
-		return events_ & kReadEvent;
-	}
+	bool is_none_event() const { return events_ == kNoneEvent;}
+	bool is_write_event() const { return events_ & kWriteEvent;}
+	bool is_read_event() const { return events_ & kReadEvent;}
 	
 	void disable_all_event()
 	{
@@ -97,11 +88,11 @@ public:
 
 	// for EventLoop
 	void handle_event(Time receive_tm);
+	EventLoop* owner_loop() { return owner_loop_;}
 	
-	EventLoop* owner_loop()
-	{
-		return owner_loop_;
-	}
+	// for debug
+	std::string revents_to_string() const;
+	std::string events_to_string() const;
 
 	void remove();
 
@@ -120,11 +111,12 @@ private:
 	int	events_{0};
 	int revents_{0};
 
+	bool logging_hup_{true};
 	bool event_handling_{false};
 	bool added_to_loop_{false};
-	
+
+	// update() event type
 	int index_{-1};
-	bool log_hup_{true};
 
 	ReadEventCallback read_cb_;
 	EventCallback write_cb_;

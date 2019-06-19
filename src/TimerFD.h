@@ -5,22 +5,18 @@
 #define ANT_TIMER_FD_H_
 
 #include "Macros.h"
+#include "SelectableFD.h"
 
 namespace annety
 {
-class TimerFD
+class TimerFD : public SelectableFD
 {
 public:
 	explicit TimerFD(bool nonblock = true, bool cloexec = true);
-	explicit TimerFD(int tmrfd) : fd_(tmrfd) {}
+	explicit TimerFD(int sckfd) : SelectableFD(sckfd) {}
 
-	~TimerFD();
-
-	int internal_fd() const
-	{
-		return fd_;
-	}
-
+	virtual ~SocketFD() override;
+	
 private:
 	int fd_;
 

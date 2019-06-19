@@ -23,7 +23,7 @@ namespace annety
 {
 namespace
 {
-const char* const kLogSeverityNames[4] = {"INFO", "WARNING", "ERROR", "FATAL"};
+const char* const kLogSeverityNames[5] = {"TRACE", "INFO", "WARNING", "ERROR", "FATAL"};
 static_assert(LOG_NUM_SEVERITIES == arraysize(kLogSeverityNames),
 			"Incorrect number of kLogSeverityNames");
 
@@ -53,7 +53,7 @@ LogFFlushHandlerFunction g_log_fflush_handler = &defaultFlush;
 
 // Any log at or above this level will be displayed. Anything below this level 
 // will be silently ignored.
-// 0=INFO 1=WARNING 2=ERROR 3=FATAL
+// 0=TRACE 1=INFO 2=WARNING 3=ERROR 4=FATAL
 LogSeverity g_min_log_level = 0;
 
 // For cache colums logging
