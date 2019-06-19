@@ -25,8 +25,9 @@ Channel::~Channel()
 {
 	DCHECK(!event_handling_);
 	DCHECK(!added_to_loop_);
-	if (owner_loop_->is_in_own_thread()) {
-		// must has removed
+
+	if (owner_loop_->check_in_own_thread(false)) {
+		// channel must has removed
 		DCHECK(!owner_loop_->has_channel(this));
 	}
 }
@@ -38,44 +39,42 @@ int Channel::fd() const
 
 void Channel::handle_event(Time receive_tm)
 {
+	owner_loop_->check_in_own_thread(true);
+	
 	event_handling_ = true;
-
-	LOG(TRACE) << revents_to_string();
+	LOG(TRACE) << "handling event " << revents_to_string();
 	
 	// hup event
 	if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
 		LOG_IF(WARNING, logging_hup_) << "fd = " << fd() 
 			<< " Channel::handle_event() POLLHUP";
-		if (close_cb_) {
-			close_cb_();
-		}
+		
+		if (close_cb_) close_cb_();
 	}
 	// error
 	if (revents_ & (POLLERR | POLLNVAL)) {
 		LOG_IF(WARNING, revents_ & POLLNVAL) << "fd = " << fd() 
 			<< " Channel::handle_event() POLLNVAL";
-		if (error_cb_) {
-			error_cb_();
-		}
+		
+		if (error_cb_) error_cb_();
 	}
 	// readable
 	if (revents_ & (POLLIN | POLLPRI | POLLHUP)) {
-		if (read_cb_) {
-			read_cb_(receive_tm);
-		}
+		if (read_cb_) read_cb_(receive_tm);
 	}
 	// writeable
 	if (revents_ & POLLOUT) {
-		if (write_cb_) {
-			write_cb_();
-		}
+		if (write_cb_) write_cb_();
 	}
+
 	event_handling_ = false;
 }
 
 void Channel::remove()
 {
-	// must has disable_all_event
+	owner_loop_->check_in_own_thread(true);
+
+	// channel must has disable_all_event
 	DCHECK(is_none_event());
 	
 	added_to_loop_ = false;
@@ -84,6 +83,8 @@ void Channel::remove()
 
 void Channel::update()
 {
+	owner_loop_->check_in_own_thread(true);
+
 	added_to_loop_ = true;
 	owner_loop_->update_channel(this);
 }

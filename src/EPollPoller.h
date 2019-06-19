@@ -28,8 +28,9 @@ private:
 	using EventList = std::vector<struct epoll_event>;
 
 	static const int kInitEventListSize = 16;
-	static const char* operation_to_string(int op);
 
+	static const char* operation_to_string(int op);
+	
 	void fill_active_channels(int numEvents, ChannelList* activeChannels) const;
 	void update(int operation, Channel* channel);
 

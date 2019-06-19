@@ -31,18 +31,16 @@ public:
 	void remove_channel(Channel* channel);
 	bool has_channel(Channel *channel);
 
-	void check_in_own_thread() const;
-	bool is_in_own_thread() const;
+	bool check_in_own_thread(bool fatal) const;
 
 private:
 	using ChannelList = std::vector<Channel*>;
 
 	bool quit_{false};
 	bool looping_{false};
-	bool event_handling_;
+	bool event_handling_{false};
 
 	ThreadRef owning_thread_;
-
 	std::unique_ptr<Poller> poller_;
 	
 	// scratch variables

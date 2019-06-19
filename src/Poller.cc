@@ -14,6 +14,7 @@ Poller::~Poller() = default;
 bool Poller::has_channel(Channel* channel) const
 {
 	check_in_own_thread();
+	
 	ChannelMap::const_iterator it = channels_.find(channel->fd());
 	return it != channels_.end() && it->second == channel;
 }
