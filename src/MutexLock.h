@@ -17,14 +17,17 @@
 
 #include <pthread.h>
 
-namespace annety {
+namespace annety
+{
 class ConditionVariable;
 
-namespace internal {
+namespace internal
+{
 // This class implements the underlying platform-specific spin-lock mechanism
 // used for the Lock class.  Most users should not use LockImpl directly, but
 // should instead use Lock.
-class LockImpl {
+class LockImpl
+{
 public:
 	LockImpl();
 	~LockImpl();
@@ -41,9 +44,7 @@ public:
 	void unlock();
 
 	// Return the native underlying lock.
-	pthread_mutex_t* native_handle() {
-		return &native_handle_;
-	}
+	pthread_mutex_t* native_handle() { return &native_handle_;}
 
 private:
 	pthread_mutex_t native_handle_;
@@ -56,7 +57,8 @@ private:
 // A convenient wrapper for an OS specific critical section.  The only real
 // intelligence in this class is in debug mode for the support for the
 // AssertAcquired() method.
-class MutexLock {
+class MutexLock
+{
 public:
 #if !DCHECK_IS_ON()
 	// Optimized wrapper implementation
@@ -66,20 +68,14 @@ public:
 	// TODO(lukasza): https://crbug.com/831825: Add EXCLUSIVE_LOCK_FUNCTION
 	// annotation to Acquire method and similar annotations to Release, Try and
 	// AssertAcquired methods (here and in the #else branch).
-	void lock() {
-		lock_.lock();
-	}
-	void unlock() {
-		lock_.unlock();
-	}
+	void lock() { lock_.lock();}
+	void unlock() { lock_.unlock();}
 
 	// If the lock is not held, take it and return true. If the lock is already
 	// held by another thread, immediately return false. This must not be called
 	// by a thread already holding the lock (what happens is undefined and an
 	// assertion may fail).
-	bool try_lock() {
-		return lock_.try_lock();
-	}
+	bool try_lock() { return lock_.try_lock();}
 
 	// Null implementation if not debug.
 	void assert_acquired() const {}
@@ -91,16 +87,19 @@ public:
 	// NOTE: We do not permit recursive locks and will commonly fire a DCHECK() if
 	// a thread attempts to acquire the lock a second time (while already holding
 	// it).
-	void lock() {
+	void lock()
+	{
 		lock_.lock();
 		check_unheld_and_mark();
 	}
-	void unlock() {
+	void unlock()
+	{
 		check_held_and_unmark();
 		lock_.unlock();
 	}
 
-	bool try_lock() {
+	bool try_lock()
+	{
 		bool rv = lock_.try_lock();
 		if (rv) {
 	  		check_unheld_and_mark();
@@ -139,19 +138,23 @@ private:
 };
 
 // A helper class that acquires the given Lock while the AutoLock is in scope.
-class AutoLock {
+class AutoLock
+{
 public:
 	struct AlreadyAcquired {};
 
-	explicit AutoLock(MutexLock& lock) : lock_(lock) {
+	explicit AutoLock(MutexLock& lock) : lock_(lock)
+	{
 		lock_.lock();
 	}
 
-	AutoLock(MutexLock& lock, const AlreadyAcquired&) : lock_(lock) {
+	AutoLock(MutexLock& lock, const AlreadyAcquired&) : lock_(lock)
+	{
 		lock_.assert_acquired();
 	}
 
-	~AutoLock() {
+	~AutoLock()
+	{
 		lock_.assert_acquired();
 		lock_.unlock();
 	}
@@ -164,15 +167,18 @@ private:
 
 // AutoUnlock is a helper that will Release() the |lock| argument in the
 // constructor, and re-Acquire() it in the destructor.
-class AutoUnlock {
+class AutoUnlock
+{
 public:
-	explicit AutoUnlock(MutexLock& lock) : lock_(lock) {
+	explicit AutoUnlock(MutexLock& lock) : lock_(lock)
+	{
 		// We require our caller to have the lock.
 		lock_.assert_acquired();
 		lock_.unlock();
 	}
 
-	~AutoUnlock() {
+	~AutoUnlock()
+	{
 		lock_.lock();
 	}
 

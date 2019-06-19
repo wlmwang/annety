@@ -13,7 +13,8 @@
 #include <string>
 #include <stdarg.h>   // va_list
 
-namespace annety {
+namespace annety
+{
 // Return a C++ string given printf-like input.
 std::string string_printf(_Printf_format_string_ const char* format, ...)
     PRINTF_FORMAT(1, 2) WARN_UNUSED_RESULT;

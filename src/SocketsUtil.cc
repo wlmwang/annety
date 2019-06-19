@@ -14,10 +14,14 @@
 #include <sys/uio.h>	// struct iovec,readv
 #include <unistd.h>		// close
 
-namespace annety {
-namespace sockets {
-namespace {
-bool set_non_blocking(int fd) {
+namespace annety
+{
+namespace sockets
+{
+namespace
+{
+bool set_non_blocking(int fd) 
+{
 	const int flags = ::fcntl(fd, F_GETFL);
 	if (flags == -1) {
 		DPLOG(ERROR) << "Unable to fcntl file F_GETFL " << fd;
@@ -33,7 +37,8 @@ bool set_non_blocking(int fd) {
 	return true;
 }
 
-bool set_close_on_exec(int fd) {
+bool set_close_on_exec(int fd) 
+{
 	const int flags = ::fcntl(fd, F_GETFD);
 	if (flags == -1) {
 		DPLOG(ERROR) << "Unable to fcntl file F_GETFD " << fd;
@@ -51,25 +56,31 @@ bool set_close_on_exec(int fd) {
 
 }	// namespace anonymous
 
-const struct sockaddr* sockaddr_cast(const struct sockaddr_in6* addr) {
+const struct sockaddr* sockaddr_cast(const struct sockaddr_in6* addr) 
+{
 	return static_cast<const struct sockaddr*>(static_cast<const void*>(addr));
 }
-struct sockaddr* sockaddr_cast(struct sockaddr_in6* addr) {
+struct sockaddr* sockaddr_cast(struct sockaddr_in6* addr) 
+{
 	return static_cast<struct sockaddr*>(static_cast<void*>(addr));
 }
-const struct sockaddr* sockaddr_cast(const struct sockaddr_in* addr) {
+const struct sockaddr* sockaddr_cast(const struct sockaddr_in* addr) 
+{
 	return static_cast<const struct sockaddr*>(static_cast<const void*>(addr));
 }
 
-const struct sockaddr_in* sockaddr_in_cast(const struct sockaddr* addr) {
+const struct sockaddr_in* sockaddr_in_cast(const struct sockaddr* addr) 
+{
 	return static_cast<const struct sockaddr_in*>(static_cast<const void*>(addr));
 }
-const struct sockaddr_in6* sockaddr_in6_cast(const struct sockaddr* addr) {
+const struct sockaddr_in6* sockaddr_in6_cast(const struct sockaddr* addr) 
+{
 	return static_cast<const struct sockaddr_in6*>(static_cast<const void*>(addr));
 }
 
 // non-block, close-on-exec
-int socket(sa_family_t family, bool nonblock, bool cloexec) {
+int socket(sa_family_t family, bool nonblock, bool cloexec) 
+{
 	int flags = SOCK_STREAM;
 #if defined(OS_MACOSX)
 	int sockfd = ::socket(family, flags, IPPROTO_TCP);
@@ -95,7 +106,8 @@ int socket(sa_family_t family, bool nonblock, bool cloexec) {
 }
 
 // non-block, close-on-exec
-int accept(int sockfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec) {
+int accept(int sockfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec)
+{
 	socklen_t addrlen = static_cast<socklen_t>(sizeof *addr);
 #if defined(OS_MACOSX)
 	int connfd = ::accept(sockfd, sockaddr_cast(addr), &addrlen);
@@ -152,28 +164,33 @@ int accept(int sockfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec) {
 	return connfd;
 }
 
-void bind(int sockfd, const struct sockaddr* addr) {
+void bind(int sockfd, const struct sockaddr* addr)
+{
 	int ret = ::bind(sockfd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in6)));
 	PCHECK(ret >= 0);
 }
 
-void listen(int sockfd) {
+void listen(int sockfd)
+{
 	int ret = ::listen(sockfd, SOMAXCONN);	// #define SOMAXCONN 128
 	PCHECK(ret >= 0);
 }
 
-int connect(int sockfd, const struct sockaddr* addr) {
+int connect(int sockfd, const struct sockaddr* addr)
+{
 	int ret = ::connect(sockfd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in6)));
 	PLOG_IF(ERROR, ret < 0) << "::connect failed";
 	return ret;
 }
 
-void shutdown(int sockfd, int how) {
+void shutdown(int sockfd, int how)
+{
 	int ret = ::shutdown(sockfd, how);
 	PLOG_IF(ERROR, ret < 0) << "::shutdown failed";
 }
 
-struct sockaddr_in6 get_local_addr(int sockfd) {
+struct sockaddr_in6 get_local_addr(int sockfd)
+{
 	struct sockaddr_in6 localaddr;
 	::memset(&localaddr, 0, sizeof localaddr);
 	
@@ -184,7 +201,8 @@ struct sockaddr_in6 get_local_addr(int sockfd) {
 	return localaddr;
 }
 
-struct sockaddr_in6 get_peer_addr(int sockfd) {
+struct sockaddr_in6 get_peer_addr(int sockfd)
+{
 	struct sockaddr_in6 peeraddr;
 	::memset(&peeraddr, 0, sizeof peeraddr);
 
@@ -195,7 +213,8 @@ struct sockaddr_in6 get_peer_addr(int sockfd) {
 	return peeraddr;
 }
 
-int get_socket_error(int sockfd) {
+int get_socket_error(int sockfd)
+{
 	int optval;
 	socklen_t optlen = static_cast<socklen_t>(sizeof optval);
 	if (::getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0) {
@@ -204,7 +223,8 @@ int get_socket_error(int sockfd) {
 	return optval;
 }
 
-bool is_self_connect(int sockfd) {
+bool is_self_connect(int sockfd)
+{
 	struct sockaddr_in6 localaddr = get_local_addr(sockfd);
 	struct sockaddr_in6 peeraddr = get_peer_addr(sockfd);
 	
@@ -221,7 +241,8 @@ bool is_self_connect(int sockfd) {
 	return false;
 }
 
-void to_ip_port(char* buf, size_t size, const struct sockaddr* addr) {
+void to_ip_port(char* buf, size_t size, const struct sockaddr* addr)
+{
 	to_ip(buf, size, addr);
 
 	const struct sockaddr_in* addr4 = sockaddr_in_cast(addr);
@@ -233,7 +254,8 @@ void to_ip_port(char* buf, size_t size, const struct sockaddr* addr) {
 	::snprintf(buf+end, size-end, ":%u", port);
 }
 
-void to_ip(char* buf, size_t size, const struct sockaddr* addr) {
+void to_ip(char* buf, size_t size, const struct sockaddr* addr)
+{
 	if (addr->sa_family == AF_INET) {
 		DCHECK(size >= INET_ADDRSTRLEN);
 
@@ -247,7 +269,8 @@ void to_ip(char* buf, size_t size, const struct sockaddr* addr) {
 	}
 }
 
-void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* addr) {
+void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* addr)
+{
 	addr->sin_family = AF_INET;
 	addr->sin_port = host_to_net16(port);
 
@@ -256,7 +279,8 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* addr) {
 }
 
 // 将 "ip6 + port" 地址转换 struct sockaddr_in6
-void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* addr) {
+void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* addr)
+{
 	addr->sin6_family = AF_INET6;
 	addr->sin6_port = host_to_net16(port);
 
@@ -264,28 +288,33 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* addr) {
 	PLOG_IF(ERROR, ret < 0) << "::inet_pton failed";
 }
 
-void close(int sockfd) {
+void close(int sockfd)
+{
 	int ret = ::close(sockfd);
 	PLOG_IF(ERROR, ret < 0) << "::close failed";
 }
 
-ssize_t read(int sockfd, void *buf, size_t count) {
+ssize_t read(int sockfd, void *buf, size_t count)
+{
 	ssize_t ret = ::read(sockfd, buf, count);
 	PLOG_IF(INFO, ret < 0) << "::read failed";
 	return ret;
 }
-ssize_t readv(int sockfd, const struct iovec *iov, int iovcnt) {
+ssize_t readv(int sockfd, const struct iovec *iov, int iovcnt)
+{
 	ssize_t ret = ::readv(sockfd, iov, iovcnt);
 	PLOG_IF(INFO, ret < 0) << "::readv failed";
 	return ret;
 }
 
-ssize_t write(int sockfd, const void *buf, size_t count) {
+ssize_t write(int sockfd, const void *buf, size_t count)
+{
 	int ret = ::write(sockfd, buf, count);
 	PLOG_IF(INFO, ret < 0) << "::write failed";
 	return ret;
 }
-ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt) {
+ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt)
+{
 	ssize_t ret = ::writev(sockfd, iov, iovcnt);
 	PLOG_IF(INFO, ret < 0) << "::writev failed";
 	return ret;

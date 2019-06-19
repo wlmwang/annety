@@ -13,7 +13,8 @@
 #include <string>
 #include <stddef.h>
 
-namespace annety {
+namespace annety
+{
 // Use this instead of strerror_r().
 StringPiece safe_strerror_r(int err, char *buf, size_t len);
 

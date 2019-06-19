@@ -17,14 +17,17 @@
 #include <errno.h>	// errno
 #include <unistd.h>	// close
 
-namespace annety {
-namespace internal {
-struct ScopedFDCloseTraits {
+namespace annety
+{
+namespace internal
+{
+struct ScopedFDCloseTraits
+{
 public:
-	static int invalid_value() {
-		return -1;
-	}
-	static void free(int fd) {
+	static int invalid_value() { return -1;}
+
+	static void free(int fd)
+	{
 		// It's important to crash here.
 		// There are security implications to not closing a file descriptor
 		// properly. As file descriptors are "capabilities", keeping them open
@@ -48,9 +51,11 @@ public:
 };
 
 // Functor for |ScopedFILE| (below).
-struct ScopedFILECloser {
+struct ScopedFILECloser
+{
 public:
-	inline void operator()(FILE* x) const {
+	inline void operator()(FILE* x) const
+	{
 		if (x) {
 			::fclose(x);
 		}

@@ -15,12 +15,14 @@
 #include <memory>
 #include <stddef.h>
 
-namespace annety {
+namespace annety
+{
 // You just call run_tasker() to add a task to the list of work to be done.
 // joinall() will make sure that all outstanding work is processed, and wait
 // for everything to finish.  You can reuse a pool, so you can call start()
 // again after you've called join_all().
-class ThreadPool {
+class ThreadPool
+{
 public:
 	using TaskCallback = std::function<void()>;
 
@@ -45,10 +47,12 @@ public:
 	size_t get_task_size() const;
 
 	// Must be called before start().
-	void set_max_task_size(size_t max_task_size) {
+	void set_max_task_size(size_t max_task_size)
+	{
 		max_task_size_ = max_task_size;
 	}
-	void set_thread_init_cb(const TaskCallback& cb) {
+	void set_thread_init_cb(const TaskCallback& cb)
+	{
 		thread_init_cb_ = cb;
 	}
 

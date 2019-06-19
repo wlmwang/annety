@@ -6,17 +6,17 @@
 
 #include "Macros.h"
 
-namespace annety {
-class SelectableFD {
+namespace annety
+{
+class SelectableFD
+{
 public:
 	explicit SelectableFD(int sckfd) : fd_(sckfd) {}
 	
 	SelectableFD() = default;
 	virtual ~SelectableFD();
 	
-	int internal_fd() const {
-		return fd_;
-	}
+	int internal_fd() const { return fd_;}
 
 protected:
 	int fd_{-1};

@@ -12,24 +12,21 @@
 
 #include <errno.h>
 
-namespace annety {
-namespace internal {
-class ScopedClearLastErrorTraits {
+namespace annety
+{
+namespace internal
+{
+class ScopedClearLastErrorTraits
+{
 public:
-	ScopedClearLastErrorTraits() {
-		errno = 0;
-	}
+	ScopedClearLastErrorTraits() { errno = 0;}
 
-	static int invalid_value() {
-		return -1;
-	}
+	static int invalid_value() { return -1;}
 
-	void free(int) {
-		errno = last_errno_;
-	}
+	void free(int) { errno = last_errno_;}
 
 private:
-	const int last_errno_ {errno};
+	const int last_errno_{errno};
 };
 
 }	// namespace internal

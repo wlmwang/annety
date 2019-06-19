@@ -11,7 +11,8 @@
 #include <stdio.h>	// snprintf
 #include <string.h>
 
-namespace annety {
+namespace annety
+{
 #if defined(__GLIBC__)
 #define USE_HISTORICAL_STRERRO_R 1
 #else
@@ -93,7 +94,8 @@ static void POSSIBLY_UNUSED wrap_posix_strerror_r(
 	errno = old_errno;
 }
 
-StringPiece safe_strerror_r(int err, char *buf, size_t len) {
+StringPiece safe_strerror_r(int err, char *buf, size_t len)
+{
 	if (buf == nullptr || len <= 0) {
 		return StringPiece();
 	}
@@ -105,19 +107,22 @@ StringPiece safe_strerror_r(int err, char *buf, size_t len) {
 	return StringPiece(buf);
 }
 
-std::string safe_strerror(int err) {
+std::string safe_strerror(int err)
+{
 	const int buffer_size = 256;
 	char buf[buffer_size];
 	safe_strerror_r(err, buf, sizeof(buf));
 	return std::string(buf);
 }
 
-namespace {
+namespace
+{
 const size_t ERROR_BUFSIZE = 64;
 thread_local char tls_error_buf[ERROR_BUFSIZE];
 }	// namespace anonymous
 
-StringPiece fast_safe_strerror(int err) {
+StringPiece fast_safe_strerror(int err)
+{
 	wrap_posix_strerror_r(&strerror_r, err, tls_error_buf, ERROR_BUFSIZE);
 	return StringPiece(tls_error_buf);
 }

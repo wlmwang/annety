@@ -6,15 +6,18 @@
 
 #include "Macros.h"
 
-namespace annety {
-class TimerFD {
+namespace annety
+{
+class TimerFD
+{
 public:
 	explicit TimerFD(bool nonblock = true, bool cloexec = true);
 	explicit TimerFD(int tmrfd) : fd_(tmrfd) {}
 
 	~TimerFD();
 
-	int internal_fd() const {
+	int internal_fd() const
+	{
 		return fd_;
 	}
 

@@ -16,10 +16,12 @@
 #include <time.h>
 #include <sys/time.h>
 
-namespace annety {
+namespace annety
+{
 // TimeDelta ------------------------------------------------------------------
 
-class TimeDelta {
+class TimeDelta
+{
 public:
 	constexpr TimeDelta() : delta_(0) {}
 
@@ -37,17 +39,15 @@ public:
 	static constexpr TimeDelta max();
 	static constexpr TimeDelta min();
 
-	constexpr int64_t internal_value() const {
-		return delta_;
-	}
+	constexpr int64_t internal_value() const { return delta_;}
 
-	constexpr bool is_null() const {
-		return delta_ == 0;
-	}
-	constexpr bool is_max() const {
+	constexpr bool is_null() const { return delta_ == 0;}
+	constexpr bool is_max() const
+	{
 		return delta_ == std::numeric_limits<int64_t>::max();
 	}
-	constexpr bool is_min() const {
+	constexpr bool is_min() const
+	{
 		return delta_ == std::numeric_limits<int64_t>::min();
 	}
 
@@ -63,65 +63,82 @@ public:
 	constexpr double in_microseconds_f() const;
 
 	// Computations with other deltas.
-	TimeDelta operator+(TimeDelta other) const {
+	TimeDelta operator+(TimeDelta other) const
+	{
 		return TimeDelta(delta_ + other.delta_);
 	}
-	TimeDelta operator-(TimeDelta other) const {
+	TimeDelta operator-(TimeDelta other) const
+	{
 		return TimeDelta(delta_ - other.delta_);
 	}
-	TimeDelta& operator+=(TimeDelta other) {
+	TimeDelta& operator+=(TimeDelta other)
+	{
 		return *this = (*this + other);
 	}
-	TimeDelta& operator-=(TimeDelta other) {
+	TimeDelta& operator-=(TimeDelta other)
+	{
 		return *this = (*this - other);
 	}
 
-	constexpr TimeDelta operator-() const {
+	constexpr TimeDelta operator-() const
+	{
 		return TimeDelta(-delta_);
 	}
 
 	// Computations with numeric types.
 	template <typename T>
-	TimeDelta operator*(T a) const {
+	TimeDelta operator*(T a) const
+	{
 		return TimeDelta(delta_ * a);
 	}
 	template <typename T>
-	TimeDelta operator/(T a) const {
+	TimeDelta operator/(T a) const
+	{
 		return TimeDelta(delta_ / a);
 	}
 	template <typename T>
-	TimeDelta& operator*=(T a) {
+	TimeDelta& operator*=(T a)
+	{
 		return *this = (*this * a);
 	}
 	template <typename T>
-	TimeDelta& operator/=(T a) {
+	TimeDelta& operator/=(T a)
+	{
 		return *this = (*this / a);
 	}
 
-	constexpr TimeDelta operator/(TimeDelta a) const {
+	constexpr TimeDelta operator/(TimeDelta a) const
+	{
 		return TimeDelta(delta_ / a.delta_);
 	}
-	constexpr TimeDelta operator%(TimeDelta a) const {
+	constexpr TimeDelta operator%(TimeDelta a) const
+	{
 		return TimeDelta(delta_ % a.delta_);
 	}
 
 	// Comparison operators.
-	constexpr bool operator==(TimeDelta other) const {
+	constexpr bool operator==(TimeDelta other) const
+	{
 		return delta_ == other.delta_;
 	}
-	constexpr bool operator!=(TimeDelta other) const {
+	constexpr bool operator!=(TimeDelta other) const
+	{
 		return delta_ != other.delta_;
 	}
-	constexpr bool operator<(TimeDelta other) const {
+	constexpr bool operator<(TimeDelta other) const
+	{
 		return delta_ < other.delta_;
 	}
-	constexpr bool operator<=(TimeDelta other) const {
+	constexpr bool operator<=(TimeDelta other) const
+	{
 		return delta_ <= other.delta_;
 	}
-	constexpr bool operator>(TimeDelta other) const {
+	constexpr bool operator>(TimeDelta other) const
+	{
 		return delta_ > other.delta_;
 	}
-	constexpr bool operator>=(TimeDelta other) const {
+	constexpr bool operator>=(TimeDelta other) const
+	{
 		return delta_ >= other.delta_;
 	}
 
@@ -148,20 +165,23 @@ private:
 };
 
 template <typename T>
-TimeDelta operator*(T a, TimeDelta td) {
+TimeDelta operator*(T a, TimeDelta td)
+{
 	return td * a;
 }
 
 // for logging use only.
 std::ostream& operator<<(std::ostream& os, TimeDelta delta);
 
-namespace internal {
+namespace internal
+{
 
 // TimeBase --------------------------------------------------------------------
 
 // a microsecond timebase
 template<class TimeClass>
-class TimeBase {
+class TimeBase
+{
 public:
 	static constexpr int64_t kHoursPerDay = 24;
 	static constexpr int64_t kMillisecondsPerSecond = 1000;
@@ -179,70 +199,82 @@ public:
 								kNanosecondsPerMicrosecond * kMicrosecondsPerSecond;
 
 	// for serializing only.
-	constexpr int64_t internal_value() const {
-		return us_;
-	}
+	constexpr int64_t internal_value() const { return us_;}
 
-	constexpr bool is_null() const {
-		return us_ == 0;
-	}
-	constexpr bool is_max() const {
+	constexpr bool is_null() const { return us_ == 0;}
+	constexpr bool is_max() const
+	{
 		return us_ == std::numeric_limits<int64_t>::max();
 	}
-	constexpr bool is_min() const {
+	constexpr bool is_min() const
+	{
 		return us_ == std::numeric_limits<int64_t>::min();
 	}
 
-	static TimeClass max() {
+	static TimeClass max()
+	{
 		return TimeClass(std::numeric_limits<int64_t>::max());
 	}
-	static TimeClass min() {
+	static TimeClass min()
+	{
 		return TimeClass(std::numeric_limits<int64_t>::min());
 	}
 
-	TimeClass& operator=(TimeClass other) {
+	TimeClass& operator=(TimeClass other)
+	{
 		us_ = other.us_;
 		return *(static_cast<TimeClass*>(this));
 	}
 
 	// Compute the difference between two times.
-	TimeDelta operator-(TimeClass other) const {
+	TimeDelta operator-(TimeClass other) const
+	{
 		return TimeDelta::from_microseconds(us_ - other.us_);
 	}
 
 	// Return a new time modified by some delta.
-	TimeClass operator+(TimeDelta delta) const {
+	TimeClass operator+(TimeDelta delta) const
+	{
 		return TimeClass(us_ + delta.internal_value());
 	}
-	TimeClass operator-(TimeDelta delta) const {
+	TimeClass operator-(TimeDelta delta) const
+	{
 		return TimeClass(us_ - delta.internal_value());
 	}
 
 	// Modify by some time delta.
-	TimeClass& operator+=(TimeDelta delta) {
+	TimeClass& operator+=(TimeDelta delta)
+	{
 		return static_cast<TimeClass&>(*this = (*this + delta));
 	}
-	TimeClass& operator-=(TimeDelta delta) {
+	TimeClass& operator-=(TimeDelta delta)
+	{
 		return static_cast<TimeClass&>(*this = (*this - delta));
 	}
 
 	// Comparison operators
-	bool operator==(TimeClass other) const {
+	bool operator==(TimeClass other) const
+	{
 		return us_ == other.us_;
 	}
-	bool operator!=(TimeClass other) const {
+	bool operator!=(TimeClass other) const
+	{
 		return us_ != other.us_;
 	}
-	bool operator<(TimeClass other) const {
+	bool operator<(TimeClass other) const
+	{
 		return us_ < other.us_;
 	}
-	bool operator<=(TimeClass other) const {
+	bool operator<=(TimeClass other) const
+	{
 		return us_ <= other.us_;
 	}
-	bool operator>(TimeClass other) const {
+	bool operator>(TimeClass other) const
+	{
 		return us_ > other.us_;
 	}
-	bool operator>=(TimeClass other) const {
+	bool operator>=(TimeClass other) const
+	{
 		return us_ >= other.us_;
 	}
 
@@ -257,7 +289,8 @@ protected:
 
 // operator delta + Time
 template<class TimeClass>
-inline TimeClass operator+(TimeDelta delta, TimeClass t) {
+inline TimeClass operator+(TimeDelta delta, TimeClass t)
+{
 	return t + delta;
 }
 
@@ -265,7 +298,8 @@ inline TimeClass operator+(TimeDelta delta, TimeClass t) {
 
 // Represents a wall clock time in UTC. Values are not guaranteed to be
 // monotonically non-decreasing and are subject to large amounts of skew.
-class Time : public internal::TimeBase<Time> {
+class Time : public internal::TimeBase<Time>
+{
 public:
 // kExplodedMinYear and kExplodedMaxYear define the platform-specific limits
 // for values passed to FromUTCExploded() and FromLocalExploded().
@@ -283,7 +317,8 @@ public:
 	// like the Win32 SYSTEMTIME structure or the Unix "struct tm" with a few
 	// additions and changes to prevent errors.
 	// POD struct
-	struct Exploded {
+	struct Exploded
+	{
 		int year;			// Four digit year "2007"
 		int month;			// 1-based month (values 1 = January, etc.)
 		int day_of_week;	// 0-based day of week (0 = Sunday, etc.)
@@ -323,30 +358,30 @@ public:
 	// Converts an exploded structure representing either the local time or UTC
 	// into a Time class. Returns false on a failure when, for example, a day of
 	// month is set to 31 on a 28-30 day month. Returns Time(0) on overflow.
-	static bool from_utc_exploded(const Exploded& exploded, Time* time) {
+	static bool from_utc_exploded(const Exploded& exploded, Time* time)
+	{
 		return from_exploded(false, exploded, time);
 	}
-	static bool from_local_exploded(const Exploded& exploded, Time* time) {
+	static bool from_local_exploded(const Exploded& exploded, Time* time)
+	{
 		return from_exploded(true, exploded, time);
 	}
 
 	// Fills the given exploded structure with either the local time or UTC from
 	// this time structure (containing UTC).
-	Exploded* to_utc_explode(Exploded* exploded) const {
+	Exploded* to_utc_explode(Exploded* exploded) const
+	{
 		return to_explode(false, exploded);
 	}
-	Exploded* to_local_explode(Exploded* exploded) const {
+	Exploded* to_local_explode(Exploded* exploded) const
+	{
 		return to_explode(true, exploded);
 	}
 
 	// The following two functions round down the time to the nearest day in
 	// either UTC or local time. It will represent midnight on that day.
-	Time utc_midnight() const {
-		return midnight(false);
-	}
-	Time local_midnight() const {
-		return midnight(true);
-	}
+	Time utc_midnight() const { return midnight(false);}
+	Time local_midnight() const { return midnight(true);}
 
 private:
 	friend class internal::TimeBase<Time>;
@@ -380,118 +415,141 @@ std::ostream& operator<<(std::ostream& os, Time time);
 // TimeDelta ------------------------------------------------------------------
 
 // static
-constexpr TimeDelta TimeDelta::from_days(int days) {
+constexpr TimeDelta TimeDelta::from_days(int days)
+{
 	return days == std::numeric_limits<int>::max()
 				? max()
 				: TimeDelta(days * Time::kMicrosecondsPerDay);
 }
 
 // static
-constexpr TimeDelta TimeDelta::from_hours(int hours) {
+constexpr TimeDelta TimeDelta::from_hours(int hours)
+{
 	return hours == std::numeric_limits<int>::max() 
 					? max()
 					: TimeDelta(hours * Time::kMicrosecondsPerHour);
 }
 
 // static
-constexpr TimeDelta TimeDelta::from_minutes(int minutes) {
+constexpr TimeDelta TimeDelta::from_minutes(int minutes)
+{
 	return minutes == std::numeric_limits<int>::max()
 					? max()
 					: TimeDelta(minutes * Time::kMicrosecondsPerMinute);
 }
 
 // static
-constexpr TimeDelta TimeDelta::from_seconds(int64_t secs) {
+constexpr TimeDelta TimeDelta::from_seconds(int64_t secs)
+{
 	return from_product(secs, Time::kMicrosecondsPerSecond);
 }
 
 // static
-constexpr TimeDelta TimeDelta::from_milliseconds(int64_t ms) {
+constexpr TimeDelta TimeDelta::from_milliseconds(int64_t ms)
+{
 	return from_product(ms, Time::kMicrosecondsPerMillisecond);
 }
 
 // static
-constexpr TimeDelta TimeDelta::from_microseconds(int64_t us) {
+constexpr TimeDelta TimeDelta::from_microseconds(int64_t us)
+{
 	return TimeDelta(us);
 }
 
 // static
-constexpr TimeDelta TimeDelta::from_seconds_d(double secs) {
+constexpr TimeDelta TimeDelta::from_seconds_d(double secs)
+{
 	return from_double(secs * Time::kMicrosecondsPerSecond);
 }
 
 // static
-constexpr TimeDelta TimeDelta::from_milliseconds_d(double ms) {
+constexpr TimeDelta TimeDelta::from_milliseconds_d(double ms)
+{
 	return from_double(ms * Time::kMicrosecondsPerMillisecond);
 }
 
 // static
-constexpr TimeDelta TimeDelta::from_microseconds_d(double us) {
+constexpr TimeDelta TimeDelta::from_microseconds_d(double us)
+{
 	return from_double(us);
 }
 
 // static
-constexpr TimeDelta TimeDelta::max() {
+constexpr TimeDelta TimeDelta::max()
+{
 	return TimeDelta(std::numeric_limits<int64_t>::max());
 }
 
 // static
-constexpr TimeDelta TimeDelta::min() {
+constexpr TimeDelta TimeDelta::min()
+{
 	return TimeDelta(std::numeric_limits<int64_t>::min());
 }
 
 // Must be defined before use below.
 template <typename T>
-constexpr T TimeDelta::divide_or_max(int64_t divisor) const {
+constexpr T TimeDelta::divide_or_max(int64_t divisor) const
+{
 	return is_max() ? std::numeric_limits<T>::max()
 					: static_cast<T>(delta_ / divisor);
 }
 
 // Must be defined before use below.
 template <>
-constexpr double TimeDelta::divide_or_max<double>(int64_t divisor) const {
+constexpr double TimeDelta::divide_or_max<double>(int64_t divisor) const
+{
 	return is_max() ? std::numeric_limits<double>::infinity()
 					: static_cast<double>(delta_) / divisor;
 }
 
-constexpr int TimeDelta::in_days() const {
+constexpr int TimeDelta::in_days() const
+{
 	return divide_or_max<int>(Time::kMicrosecondsPerDay);
 }
 
-constexpr int TimeDelta::in_hours() const {
+constexpr int TimeDelta::in_hours() const
+{
 	return divide_or_max<int>(Time::kMicrosecondsPerHour);
 }
 
-constexpr int TimeDelta::in_minutes() const {
+constexpr int TimeDelta::in_minutes() const
+{
 	return divide_or_max<int>(Time::kMicrosecondsPerMinute);
 }
 
-constexpr double TimeDelta::in_seconds_f() const {
+constexpr double TimeDelta::in_seconds_f() const
+{
 	return divide_or_max<double>(Time::kMicrosecondsPerSecond);
 }
 
-constexpr int64_t TimeDelta::in_seconds() const {
+constexpr int64_t TimeDelta::in_seconds() const
+{
 	return divide_or_max<int64_t>(Time::kMicrosecondsPerSecond);
 }
 
-constexpr double TimeDelta::in_milliseconds_f() const {
+constexpr double TimeDelta::in_milliseconds_f() const
+{
 	return divide_or_max<double>(Time::kMicrosecondsPerMillisecond);
 }
 
-constexpr int64_t TimeDelta::in_milliseconds() const {
+constexpr int64_t TimeDelta::in_milliseconds() const
+{
 	return divide_or_max<int64_t>(Time::kMicrosecondsPerMillisecond);
 }
 
-constexpr int64_t TimeDelta::in_microseconds() const {
+constexpr int64_t TimeDelta::in_microseconds() const
+{
 	return divide_or_max<int64_t>(1);
 }
 
-constexpr double TimeDelta::in_microseconds_f() const {
+constexpr double TimeDelta::in_microseconds_f() const
+{
 	return divide_or_max<double>(1);
 }
 
 // static
-constexpr TimeDelta TimeDelta::from_double(double value) {
+constexpr TimeDelta TimeDelta::from_double(double value)
+{
 	return value > std::numeric_limits<int64_t>::max()
 				? max()
 				: value < std::numeric_limits<int64_t>::min()
@@ -500,7 +558,8 @@ constexpr TimeDelta TimeDelta::from_double(double value) {
 }
 
 // static
-constexpr TimeDelta TimeDelta::from_product(int64_t value, int64_t positive_value) {
+constexpr TimeDelta TimeDelta::from_product(int64_t value, int64_t positive_value)
+{
   // DCHECK(positive_value > 0);
 	return value > std::numeric_limits<int64_t>::max() / positive_value
 				? max()

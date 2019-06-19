@@ -12,25 +12,31 @@
 #include <utility>
 #include <functional>
 
-namespace annety {
+namespace annety
+{
 class EventLoop;
 class SelectableFD;
 
-class Channel {
+class Channel
+{
 public:
 	using EventCallback = std::function<void()>;
 	using ReadEventCallback = std::function<void(Time)>;
 
-	void set_read_callback(ReadEventCallback cb) {
+	void set_read_callback(ReadEventCallback cb)
+	{
 		read_cb_ = std::move(cb);
 	}
-	void set_write_callback(EventCallback cb) {
+	void set_write_callback(EventCallback cb)
+	{
 		write_cb_ = std::move(cb);
 	}
-	void set_close_callback(EventCallback cb) {
+	void set_close_callback(EventCallback cb)
+	{
 		close_cb_ = std::move(cb);
 	}
-	void set_error_callback(EventCallback cb) {
+	void set_error_callback(EventCallback cb)
+	{
 		error_cb_ = std::move(cb);
 	}
 
@@ -41,59 +47,59 @@ public:
 
 	int fd() const;
 
-	int events() const {
-		return events_;
-	}
-	void set_revents(int revt) {
-		revents_ = revt;
-	}
-	int revents() const {
-		return revents_;
-	}
+	int events() const { return events_;}
 
-	bool is_none_event() const {
+	void set_revents(int revt) { revents_ = revt;}
+	int revents() const { return revents_;}
+
+	bool is_none_event() const
+	{
 		return events_ == kNoneEvent;
 	}
-	bool is_write_event() const {
+	bool is_write_event() const
+	{
 		return events_ & kWriteEvent;
 	}
-	bool is_read_event() const {
+	bool is_read_event() const
+	{
 		return events_ & kReadEvent;
 	}
 	
-	void disable_all_event() {
+	void disable_all_event()
+	{
 		events_ = kNoneEvent;
 		update();
 	}
-	void enable_read_event() {
+	void enable_read_event()
+	{
 		events_ |= kReadEvent;
 		update();
 	}
-	void disable_read_event() {
+	void disable_read_event()
+	{
 		events_ &= ~kReadEvent;
 		update();
 	}
-	void enable_write_event() {
+	void enable_write_event()
+	{
 		events_ |= kWriteEvent;
 		update();
 	}
-	void disable_write_event() {
+	void disable_write_event()
+	{
 		events_ &= ~kWriteEvent;
 		update();
 	}
 	
 	// for Poller
-	int index() {
-		return index_;
-	}
-	void set_index(int idx) {
-		index_ = idx;
-	}
+	int index() { return index_;}
+	void set_index(int idx) { index_ = idx;}
 
 	// for EventLoop
 	void handle_event(Time receive_tm);
 	
-	EventLoop* owner_loop() {
+	EventLoop* owner_loop()
+	{
 		return owner_loop_;
 	}
 

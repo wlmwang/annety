@@ -11,7 +11,8 @@
 #include <utility>
 #include <poll.h>
 
-namespace annety {
+namespace annety
+{
 const int Channel::kNoneEvent = 0;
 const int Channel::kReadEvent = POLLIN | POLLPRI;
 const int Channel::kWriteEvent = POLLOUT;
@@ -20,7 +21,8 @@ Channel::Channel(EventLoop* loop, SelectableFD* sfd)
 	: owner_loop_(loop),
 	  select_fd_(sfd) {}
 
-Channel::~Channel() {
+Channel::~Channel()
+{
 	DCHECK(!event_handling_);
 	DCHECK(!added_to_loop_);
 	if (owner_loop_->is_in_own_thread()) {
@@ -28,11 +30,13 @@ Channel::~Channel() {
 	}
 }
 
-int Channel::fd() const {
+int Channel::fd() const
+{
 	return select_fd_->internal_fd();
 }
 
-void Channel::handle_event(Time receive_tm) {
+void Channel::handle_event(Time receive_tm)
+{
 	event_handling_ = true;
 
 	LOG(INFO) << events_to_string(fd(), revents_);
@@ -70,19 +74,22 @@ void Channel::handle_event(Time receive_tm) {
 	event_handling_ = false;
 }
 
-void Channel::remove() {
+void Channel::remove()
+{
 	DCHECK(is_none_event());
 
 	added_to_loop_ = false;
 	owner_loop_->remove_channel(this);
 }
 
-void Channel::update() {
+void Channel::update()
+{
 	added_to_loop_ = true;
 	owner_loop_->update_channel(this);
 }
 
-std::string Channel::events_to_string(int fd, int ev) {
+std::string Channel::events_to_string(int fd, int ev)
+{
 	std::ostringstream oss;
 	
 	oss << fd << ": ";

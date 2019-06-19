@@ -20,7 +20,8 @@
 #include <stack>
 #include <unordered_set>
 
-namespace annety {
+namespace annety
+{
 // A class for enumerating the files in a provided path. The order of the
 // results is not guaranteed.
 //
@@ -32,10 +33,12 @@ namespace annety {
 //                             "*.txt");
 //   for (FilePath name = enums.next(); !name.empty(); name = enums.next())
 //     ...
-class FileEnumerator {
+class FileEnumerator
+{
 public:
 	// Note: copy & assign supported.
-	class FileInfo {
+	class FileInfo
+	{
 	public:
 		FileInfo();
 		~FileInfo();
@@ -50,9 +53,7 @@ public:
 		int64_t get_size() const;
 		Time get_last_modified_time() const;
 
-		const struct stat& stat() const {
-			return stat_;
-		}
+		const struct stat& stat() const { return stat_;}
 
 	private:
 		friend class FileEnumerator;
@@ -61,7 +62,8 @@ public:
 		FilePath filename_;
 	};
 
-	enum FileType {
+	enum FileType
+	{
 		FILES = 1 << 0,
 		DIRECTORIES = 1 << 1,
 		INCLUDE_DOT_DOT = 1 << 2,
@@ -69,7 +71,8 @@ public:
 	};
 
 	// Search policy for intermediate folders.
-	enum class FolderSearchPolicy {
+	enum class FolderSearchPolicy
+	{
 		// Recursive search will pass through folders whose names match the
 		// pattern. Inside each one, all files will be returned. Folders with names
 		// that do not match the pattern will be ignored within their interior.

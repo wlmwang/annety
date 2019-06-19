@@ -8,10 +8,12 @@
 #include "MutexLock.h"
 #include "ConditionVariable.h"
 
-namespace annety {
+namespace annety
+{
 class TimeDelta;
 
-class CountDownLatch {
+class CountDownLatch
+{
 public:
 	explicit CountDownLatch(int count);
 	

@@ -14,14 +14,16 @@
 #include <string>
 #include <vector>
 
-namespace annety {
-
-enum WhitespaceHandling {
+namespace annety
+{
+enum WhitespaceHandling
+{
 	KEEP_WHITESPACE,
 	TRIM_WHITESPACE,
 };
 
-enum SplitResult {
+enum SplitResult
+{
 	// Strictly return all results.
 	//
 	// If the input is ",," and the separator is ',' this will return a

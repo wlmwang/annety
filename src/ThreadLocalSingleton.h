@@ -11,30 +11,28 @@
 #include <pthread.h>
 #include <iostream>
 
-namespace annety {
+namespace annety
+{
 template<typename Type>
-class ThreadLocalSingleton final {
+class ThreadLocalSingleton final
+{
 public:
-	static bool empty() {
-		return data_.empty();
-	}
+	static bool empty(){ return data_.empty();}
 
-	static Type* get() {
-		return data_.get();
-	}
+	static Type* get() { return data_.get();}
 
 private:
 	// data
-	class ThreadLocalData : public ThreadLocal<Type> {
+	class ThreadLocalData : public ThreadLocal<Type>
+	{
 	public:
 		ThreadLocalData() 
 			: ThreadLocal<Type>(&ThreadLocalData::on_thread_exit) {}
 		
-		bool empty() {
-			return tls_instance_ == nullptr;
-		}
+		bool empty() { return tls_instance_ == nullptr;}
 
-		Type* get() {
+		Type* get()
+		{
 			if (!tls_instance_) {
 				tls_instance_ = ThreadLocal<Type>::get();
 			}
@@ -45,7 +43,8 @@ private:
 	private:
 		// 1. A thread(getspecific thread) exit will run on_thread_exit()
 		// 2. A thread(main thread) exit will run on_thread_exit()
-		static void on_thread_exit(void* ptr) {
+		static void on_thread_exit(void* ptr)
+		{
 #	if defined(OS_LINUX)
 			// TODO(MacOS): Now, tls_instance_ == 0 ???
 			DCHECK(tls_instance_ == ptr);

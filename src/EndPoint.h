@@ -12,9 +12,11 @@
 #include <stddef.h>		// offsetof
 #include <netinet/in.h>	// in_addr
 
-namespace annety {
+namespace annety
+{
 // wrapper of sockaddr_in[6]
-class EndPoint {
+class EndPoint
+{
 #if defined(OS_MACOSX)
 	static_assert(offsetof(sockaddr_in, sin_family) == 1, "sin_family offset 0");
 	static_assert(offsetof(sockaddr_in6, sin6_family) == 1, "sin6_family offset 0");
@@ -46,20 +48,27 @@ public:
 	EndPoint& operator=(const EndPoint&) = default;
 	~EndPoint() = default;
 	
-	void set_sock_addr_inet(const struct sockaddr_in& addr) {
+	void set_sock_addr_inet(const struct sockaddr_in& addr)
+	{
 		addr_ = addr;
 	}
-	void set_sock_addr_inet6(const struct sockaddr_in6& addr6) {
+
+	void set_sock_addr_inet6(const struct sockaddr_in6& addr6)
+	{
 		addr6_ = addr6;
 	}
 	const struct sockaddr* get_sock_addr() const;
 
-	sa_family_t family() const {
+	sa_family_t family() const 
+	{
 		return addr_.sin_family;
 	}
-	uint16_t port_net_endian() const {
+
+	uint16_t port_net_endian() const
+	{
 		return addr_.sin_port;
 	}
+	
 	uint32_t ip_net_endian() const;
 
 	std::string to_ip() const;
@@ -75,7 +84,8 @@ public:
 
 private:
 	// must sin[6]_family offset is 0
-	union {
+	union
+	{
 		struct sockaddr_in addr_;
 		struct sockaddr_in6 addr6_;
 	};

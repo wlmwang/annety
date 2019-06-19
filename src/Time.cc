@@ -13,9 +13,12 @@
 #include <cmath>	// isnan
 #include <ostream>
 
-namespace annety {
-namespace {
-Time TimeNowIgnoreTZ() {
+namespace annety
+{
+namespace
+{
+Time TimeNowIgnoreTZ()
+{
 	struct timeval tv;
 	struct timezone tz = {0, 0};  // UTC
 	CHECK(::gettimeofday(&tv, &tz) == 0);
@@ -30,12 +33,14 @@ Time TimeNowIgnoreTZ() {
 // Time --------------------------------------------------------------------
 
 // static
-Time Time::now() {
+Time Time::now()
+{
 	return TimeNowIgnoreTZ();
 }
 
 // static
-Time Time::from_time_t(time_t tt) {
+Time Time::from_time_t(time_t tt)
+{
 	if (tt == 0) {
 		return Time();
 	} else if (tt == std::numeric_limits<time_t>::max()) {
@@ -44,7 +49,8 @@ Time Time::from_time_t(time_t tt) {
 	return Time(tt * kMicrosecondsPerSecond);
 }
 
-time_t Time::to_time_t() const {
+time_t Time::to_time_t() const
+{
 	if (is_null()) {
 		return 0;
 	} else if (is_max()) {
@@ -54,7 +60,8 @@ time_t Time::to_time_t() const {
 }
 
 // static
-Time Time::from_timeval(struct timeval t) {
+Time Time::from_timeval(struct timeval t)
+{
 	DCHECK_LT(t.tv_usec, static_cast<int>(Time::kMicrosecondsPerSecond));
 	DCHECK_GE(t.tv_usec, 0);
 	if (t.tv_usec == 0 && t.tv_sec == 0) {
@@ -66,7 +73,8 @@ Time Time::from_timeval(struct timeval t) {
 	return Time((static_cast<int64_t>(t.tv_sec) * kMicrosecondsPerSecond) + t.tv_usec);
 }
 
-struct timeval Time::to_timeval() const {
+struct timeval Time::to_timeval() const
+{
 	struct timeval result;
 	if (is_null()) {
 		result.tv_sec = 0;
@@ -83,14 +91,16 @@ struct timeval Time::to_timeval() const {
 }
 
 // static
-Time Time::from_double_ts(double dt) {
+Time Time::from_double_ts(double dt)
+{
 	if (dt == 0 || std::isnan(dt)) {
 		return Time();
 	}
 	return Time(static_cast<int64_t>(dt * kMicrosecondsPerSecond));
 }
 
-double Time::to_double_ts() const {
+double Time::to_double_ts() const
+{
 	if (is_null()) {
 		return 0;
 	} else if (is_max()) {
@@ -99,7 +109,8 @@ double Time::to_double_ts() const {
 	return static_cast<double>(us_) / kMicrosecondsPerSecond;
 }
 
-Time Time::midnight(bool is_local) const {
+Time Time::midnight(bool is_local) const
+{
 	Exploded exploded;
 	to_explode(is_local, &exploded);
 	exploded.hour = 0;
@@ -117,18 +128,21 @@ Time Time::midnight(bool is_local) const {
 }
 
 // static
-bool Time::exploded_mostly_equals(const Exploded& lhs, const Exploded& rhs) {
+bool Time::exploded_mostly_equals(const Exploded& lhs, const Exploded& rhs)
+{
 	return lhs.year == rhs.year && lhs.month == rhs.month &&
 		   lhs.day_of_month == rhs.day_of_month && lhs.hour == rhs.hour &&
 		   lhs.minute == rhs.minute && lhs.second == rhs.second &&
 		   lhs.millisecond == rhs.millisecond;
 }
 
-std::ostream& operator<<(std::ostream& os, TimeDelta delta) {
+std::ostream& operator<<(std::ostream& os, TimeDelta delta)
+{
 	return os << delta.in_seconds_f() << " s";
 }
 
-std::ostream& operator<<(std::ostream& os, Time time) {
+std::ostream& operator<<(std::ostream& os, Time time)
+{
 	Time::Exploded exploded;
 	time.to_utc_explode(&exploded);
 	return os << string_printf("%04d-%02d-%02d %02d:%02d:%02d.%06d UTC",
@@ -142,13 +156,16 @@ std::ostream& operator<<(std::ostream& os, Time time) {
 }
 
 // Time::Exploded -------------------------------------------------------------
-namespace {
+namespace
+{
 // This prevents a crash on traversing the environment global and looking up
 // the 'TZ' variable in libc. See: crbug.com/390567.
-time_t time_t_from_tm(struct tm* timestruct, bool is_local) {
+time_t time_t_from_tm(struct tm* timestruct, bool is_local)
+{
 	return is_local ? ::mktime(timestruct) : ::timegm(timestruct);
 }
-struct tm* time_t_to_tm(time_t t, struct tm* timestruct, bool is_local) {
+struct tm* time_t_to_tm(time_t t, struct tm* timestruct, bool is_local)
+{
 	if (is_local) {
 		::localtime_r(&t, timestruct);
 	} else {
@@ -160,7 +177,8 @@ struct tm* time_t_to_tm(time_t t, struct tm* timestruct, bool is_local) {
 }	// namespace anonymous
 
 
-Time::Exploded* Time::to_explode(bool is_local, Exploded* exploded) const {
+Time::Exploded* Time::to_explode(bool is_local, Exploded* exploded) const
+{
 	// The following values are all rounded towards -infinity.
 	int64_t milliseconds;  // Milliseconds since epoch.
 	time_t seconds;       // Seconds since epoch.
@@ -198,7 +216,8 @@ Time::Exploded* Time::to_explode(bool is_local, Exploded* exploded) const {
 }
 
 // static
-bool Time::from_exploded(bool is_local, const Exploded& exploded, Time* time) {
+bool Time::from_exploded(bool is_local, const Exploded& exploded, Time* time)
+{
 	int month = exploded.month - 1;
 	int year = exploded.year - 1900;
 
@@ -315,11 +334,13 @@ bool Time::from_exploded(bool is_local, const Exploded& exploded, Time* time) {
 	return false;
 }
 
-inline bool is_in_range(int value, int lo, int hi) {
+inline bool is_in_range(int value, int lo, int hi)
+{
 	return lo <= value && value <= hi;
 }
 
-bool Time::Exploded::is_valid() const {
+bool Time::Exploded::is_valid() const
+{
 	return is_in_range(month, 1, 12) &&
 		   is_in_range(day_of_week, 0, 6) &&
 		   is_in_range(day_of_month, 1, 31) &&

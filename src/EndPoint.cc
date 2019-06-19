@@ -8,6 +8,8 @@
 
 #include <netdb.h>	// for struct hostent
 
+namespace annety
+{
 // \file <netinet/in.h>
 // #define INADDR_ANY       ((in_addr_t) 0x00000000)
 // #define INADDR_LOOPBACK  ((in_addr_t) 0x7f000001) /* Inet 127.0.0.1. */
@@ -16,14 +18,14 @@
 // extern const struct in6_addr in6addr_loopback; /* ::1 */
 //
 
-namespace annety {
 static const in_addr_t kInaddrAny = INADDR_ANY;
 static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;
 
 static_assert(sizeof(EndPoint) == sizeof(struct sockaddr_in6),
 			"EndPoint is same size as sockaddr_in6");
 
-EndPoint::EndPoint(uint16_t port, bool loopbackOnly, bool ipv6) {
+EndPoint::EndPoint(uint16_t port, bool loopbackOnly, bool ipv6)
+{
 	static_assert(offsetof(EndPoint, addr6_) == 0, "addr6_ offset 0");
 	static_assert(offsetof(EndPoint, addr_) == 0, "addr_ offset 0");
 
@@ -42,7 +44,8 @@ EndPoint::EndPoint(uint16_t port, bool loopbackOnly, bool ipv6) {
 	}
 }
 
-EndPoint::EndPoint(const StringPiece& ip, uint16_t port, bool ipv6) {
+EndPoint::EndPoint(const StringPiece& ip, uint16_t port, bool ipv6)
+{
 	if (ipv6) {
 		::memset(&addr6_, 0, sizeof addr6_);
 		sockets::from_ip_port(ip.as_string().c_str(), port, &addr6_);
@@ -52,35 +55,40 @@ EndPoint::EndPoint(const StringPiece& ip, uint16_t port, bool ipv6) {
 	}
 }
 
-const struct sockaddr* EndPoint::get_sock_addr() const {
+const struct sockaddr* EndPoint::get_sock_addr() const
+{
 	return sockets::sockaddr_cast(&addr6_);
 }
 
-std::string EndPoint::to_ip_port() const {
+std::string EndPoint::to_ip_port() const
+{
 	char buf[64] = "";
 	sockets::to_ip_port(buf, sizeof buf, get_sock_addr());
 	return buf;
 }
 
-std::string EndPoint::to_ip() const {
+std::string EndPoint::to_ip() const
+{
 	char buf[64] = "";
 	sockets::to_ip(buf, sizeof buf, get_sock_addr());
 	return buf;
 }
 
-uint16_t EndPoint::to_port() const {
+uint16_t EndPoint::to_port() const
+{
 	return net_to_host16(addr_.sin_port);
 }
 
-uint32_t EndPoint::ip_net_endian() const {
+uint32_t EndPoint::ip_net_endian() const
+{
 	DCHECK(family() == AF_INET);
 	return addr_.sin_addr.s_addr;
 }
 
 #if !defined(OS_MACOSX)
 static thread_local char tls_resolve_buffer[64 * 1024];
-
-bool EndPoint::resolve(const StringPiece& hostname, EndPoint* out) {
+bool EndPoint::resolve(const StringPiece& hostname, EndPoint* out)
+{
 	CHECK(out != nullptr);
 
 	struct hostent hent;

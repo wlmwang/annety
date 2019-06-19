@@ -25,9 +25,12 @@
 #include <memory>	// std::unique_ptr
 #include <string>
 
-namespace annety {
-namespace {
-struct ThreadParams {
+namespace annety
+{
+namespace
+{
+struct ThreadParams
+{
 public:
 	PlatformThread::TaskCallback thread_main_cb_;
 
@@ -37,7 +40,8 @@ public:
 };
 
 // |params| -> ThreadParams
-void* thread_func(void* params) {
+void* thread_func(void* params)
+{
 	DCHECK(params);
 
 	std::unique_ptr<ThreadParams> thread_params(static_cast<ThreadParams*>(params));
@@ -49,7 +53,8 @@ void* thread_func(void* params) {
 	return nullptr;
 }
 
-bool create_thread(bool joinable, PlatformThread::TaskCallback cb, ThreadRef* thread_ref) {
+bool create_thread(bool joinable, PlatformThread::TaskCallback cb, ThreadRef* thread_ref)
+{
 	DCHECK(thread_ref);
 
 	pthread_attr_t attributes;
@@ -84,7 +89,8 @@ bool create_thread(bool joinable, PlatformThread::TaskCallback cb, ThreadRef* th
 }  // namespace anonymous
 
 // static
-ThreadId PlatformThread::current_id() {
+ThreadId PlatformThread::current_id()
+{
 	// Pthreads doesn't have the concept of a thread ID, so we have to reach down
 	// into the kernel.
 #if defined(OS_MACOSX)
@@ -99,17 +105,20 @@ ThreadId PlatformThread::current_id() {
 }
 
 // static
-ThreadRef PlatformThread::current_ref() {
+ThreadRef PlatformThread::current_ref()
+{
 	return ThreadRef(::pthread_self());
 }
 
 // static
-void PlatformThread::yield_current_thread() {
+void PlatformThread::yield_current_thread()
+{
 	::sched_yield();
 }
 
 // static
-void PlatformThread::sleep(TimeDelta duration) {
+void PlatformThread::sleep(TimeDelta duration)
+{
 	struct timespec sleep_time, remaining;
 
 	// Break the duration into seconds and nanoseconds.
@@ -125,29 +134,34 @@ void PlatformThread::sleep(TimeDelta duration) {
 }
 
 // static
-bool PlatformThread::create(TaskCallback cb, ThreadRef* thread_ref) {
+bool PlatformThread::create(TaskCallback cb, ThreadRef* thread_ref)
+{
 	return create_thread(true, std::move(cb), thread_ref);
 }
 
 // static
-bool PlatformThread::create_non_joinable(TaskCallback cb) {
+bool PlatformThread::create_non_joinable(TaskCallback cb)
+{
 	ThreadRef unuse_ref;
 	return create_thread(false, std::move(cb), &unuse_ref);
 }
 
 // static
-void PlatformThread::join(ThreadRef thread_ref) {
+void PlatformThread::join(ThreadRef thread_ref)
+{
 	CHECK_EQ(0, pthread_join(thread_ref.ref(), nullptr));
 }
 
 // static
-void PlatformThread::detach(ThreadRef thread_ref) {
+void PlatformThread::detach(ThreadRef thread_ref)
+{
 	CHECK_EQ(0, pthread_detach(thread_ref.ref()));
 }
 
 #if defined(OS_MACOSX)
 // static
-void PlatformThread::set_name(const std::string& name) {
+void PlatformThread::set_name(const std::string& name)
+{
 	// Mac OS X does not expose the length limit of the name, so
 	// hardcode it.
 	const int kMaxNameLength = 63;
@@ -158,7 +172,8 @@ void PlatformThread::set_name(const std::string& name) {
 }
 #else
 // static
-void PlatformThread::set_name(const std::string& name) {
+void PlatformThread::set_name(const std::string& name)
+{
 	if (PlatformThread::current_id() == ::getpid() || name.empty()) {
 		return;
 	}

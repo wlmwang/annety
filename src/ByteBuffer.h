@@ -11,10 +11,11 @@
 #include <algorithm>
 #include <vector>
 #include <string>
-#include <assert.h>		// assert
 #include <stddef.h>
+#include <assert.h>		// assert
 
-namespace annety {
+namespace annety
+{
 // @code
 // +-------------------+------------------+------------------+
 // | prependable bytes |  readable bytes  |  writable bytes  |
@@ -24,7 +25,8 @@ namespace annety {
 // 0      <=      readerIndex   <=   writerIndex    <=     size
 // @code
 template<ssize_t LIMIT_SIZE = -1>
-class ByteBuffer {
+class ByteBuffer
+{
 public:
 	static const size_t kInitialSize = 1024;
 
@@ -41,18 +43,21 @@ public:
 	ByteBuffer& operator=(ByteBuffer&&) = default;
 	~ByteBuffer() = default;
 
-	void swap(ByteBuffer& rhs) {
+	void swap(ByteBuffer& rhs)
+	{
 		buffer_.swap(rhs.buffer_);
 		std::swap(readerIndex_, rhs.readerIndex_);
 		std::swap(writerIndex_, rhs.writerIndex_);
 	}
 
-	size_t readable_bytes() const {
+	size_t readable_bytes() const
+	{
 		assert(writerIndex_ >= readerIndex_);
 		return writerIndex_ - readerIndex_;
 	}
 
-	size_t writable_bytes() const {
+	size_t writable_bytes() const
+	{
 		assert(size() >= writerIndex_);
 
 		size_t vbytes = size();
@@ -63,30 +68,36 @@ public:
 		return vbytes - writerIndex_; 
 	}
 
-	char *begin_read() {
+	char *begin_read()
+	{
 		assert(readerIndex_ <= writerIndex_);
 		return data() + readerIndex_;
 	}
-	const char *begin_read() const {
+	const char *begin_read() const
+	{
 		assert(readerIndex_ <= writerIndex_);
 		return data() + readerIndex_;
 	}
 
-	char* begin_write() {
+	char* begin_write()
+	{
 		assert(writerIndex_ <= size());
 		return data() + writerIndex_;
 	}
-	const char* begin_write() const {
+	const char* begin_write() const
+	{
 		assert(writerIndex_ <= size());
 		return data() + writerIndex_;
 	}
 
-	void has_written(size_t len) {
+	void has_written(size_t len)
+	{
 		assert(writable_bytes() >= len);
 		writerIndex_ += len;
 	}
 
-	void has_read(size_t len) {
+	void has_read(size_t len)
+	{
 		if (len < readable_bytes()) {
 			readerIndex_ += len;
 		} else {
@@ -94,7 +105,8 @@ public:
 		}
 	}
 
-	void reset() {
+	void reset()
+	{
 		readerIndex_ = 0;
 		writerIndex_ = 0;
 	}
@@ -102,15 +114,18 @@ public:
 	// zero-copy.
 	// but use this carefully(about ownership), 
 	// and sometimes need call has_read() youself
-	StringPiece to_string_piece() const {
+	StringPiece to_string_piece() const
+	{
 		return StringPiece(begin_read(), readable_bytes());
 	}
 
-	std::string to_string() const {
+	std::string to_string() const
+	{
 		return std::string(begin_read(), readable_bytes());
 	}
 
-	std::string taken_as_string(ssize_t len = -1) {
+	std::string taken_as_string(ssize_t len = -1)
+	{
 		if (len <= -1) {
 			len = readable_bytes();
 		}
@@ -120,13 +135,16 @@ public:
 		return result;
 	}
 
-	bool append(const StringPiece& str) {
+	bool append(const StringPiece& str)
+	{
 		return append(str.data(), str.size());
 	}
-	bool append(const void* data, size_t len) {
+	bool append(const void* data, size_t len)
+	{
 		return append(static_cast<const char*>(data), len);
 	}
-	bool append(const char* data, size_t len) {
+	bool append(const char* data, size_t len)
+	{
 		ensure_writable_bytes(len);
 		if (writable_bytes() >= len) {
 			std::copy(data, data + len, begin_write());
@@ -136,33 +154,28 @@ public:
 		return false;
 	}
 
-	void shrink(size_t reserve) {
+	void shrink(size_t reserve)
+	{
 		buffer_.shrink_to_fit();
 		if (reserve) {
 			buffer_.reserve(reserve);
 		}
 	}
 
-	void ensure_writable_bytes(size_t len) {
+	void ensure_writable_bytes(size_t len)
+	{
 		make_writable_bytes(len);
 	}
 
 private:
-	char* data() {
-		return buffer_.data();
-	}
-	const char* data() const {
-		return buffer_.data();
-	}
+	char* data() { return buffer_.data();}
+	const char* data() const { return buffer_.data();}
 
-	size_t capacity() const {
-		return buffer_.capacity();
-	}
-	size_t size() const {
-		return buffer_.size();
-	}
+	size_t capacity() const { return buffer_.capacity();}
+	size_t size() const { return buffer_.size();}
   
-	void make_writable_bytes(size_t len) {
+	void make_writable_bytes(size_t len)
+	{
 		size_t real_writeable_bytes = writable_bytes();
 		if (LIMIT_SIZE != -1) {
 			size_t real_size = std::min(static_cast<size_t>(LIMIT_SIZE),
@@ -202,7 +215,8 @@ typedef ByteBuffer<4 * 1024 * 1000> LLogBuffer;
 
 // For testing only
 template<ssize_t LIMIT_SIZE>
-std::ostream& operator<<(std::ostream& os, const ByteBuffer<LIMIT_SIZE>& bb) {
+std::ostream& operator<<(std::ostream& os, const ByteBuffer<LIMIT_SIZE>& bb)
+{
 	return os << bb.to_string_piece();
 }
 

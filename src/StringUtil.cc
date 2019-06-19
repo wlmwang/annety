@@ -13,8 +13,10 @@
 #include <vector>
 #include <string>		// std::string,std::char_traits
 
-namespace annety {
-namespace strings {
+namespace annety
+{
+namespace strings
+{
 const char kWhitespace[] = {
 	0x09,	// CHARACTER TABULATION
 	0x0A,	// LINE FEED (LF)
@@ -31,9 +33,11 @@ const char kWhitespace[] = {
 //   http://www.gratisoft.us/todd/papers/strlcpy.html
 //   ftp://ftp.openbsd.org/pub/OpenBSD/src/lib/libc/string/{wcs,str}lcpy.c
 
-namespace {
+namespace
+{
 template <typename CHAR>
-size_t lcpy_T(CHAR* dst, const CHAR* src, size_t dst_size) {
+size_t lcpy_T(CHAR* dst, const CHAR* src, size_t dst_size)
+{
 	for (size_t i = 0; i < dst_size; ++i) {
 		// We hit and copied the terminating NULL.
 		if ((dst[i] = src[i]) == 0) {
@@ -55,12 +59,15 @@ size_t lcpy_T(CHAR* dst, const CHAR* src, size_t dst_size) {
 
 }	// namespace anonymous
 
-size_t strlcpy(char* dst, const char* src, size_t dst_size) {
+size_t strlcpy(char* dst, const char* src, size_t dst_size)
+{
 	return lcpy_T<char>(dst, src, dst_size);
 }
 
-namespace {
-std::string to_lower_T(StringPiece str) {
+namespace
+{
+std::string to_lower_T(StringPiece str)
+{
 	std::string ret;
 	ret.reserve(str.size());
 	for (size_t i = 0; i < str.size(); i++) {
@@ -69,7 +76,8 @@ std::string to_lower_T(StringPiece str) {
 	return ret;
 }
 
-std::string to_upper_T(StringPiece str) {
+std::string to_upper_T(StringPiece str)
+{
 	std::string ret;
 	ret.reserve(str.size());
 	for (size_t i = 0; i < str.size(); i++) {
@@ -80,17 +88,20 @@ std::string to_upper_T(StringPiece str) {
 
 }	// namespace anonymous
 
-std::string to_lower(StringPiece str) {
+std::string to_lower(StringPiece str)
+{
 	return to_lower_T(str);
 }
 
-std::string to_upper(StringPiece str) {
+std::string to_upper(StringPiece str)
+{
 	return to_upper_T(str);
 }
 
 // Compare----------------------------------------------------
 
-namespace {
+namespace
+{
 int compare_case_insensitive_T(StringPiece a,
                                StringPiece b)
 {
@@ -123,18 +134,21 @@ int compare_case_insensitive_T(StringPiece a,
 
 }	// namespace anonymous
 
-int compare_case_insensitive(StringPiece a, StringPiece b) {
+int compare_case_insensitive(StringPiece a, StringPiece b)
+{
 	return compare_case_insensitive_T(a, b);
 }
 
-bool equals_case_insensitive(StringPiece a, StringPiece b) {
+bool equals_case_insensitive(StringPiece a, StringPiece b)
+{
 	if (a.length() != b.length()) {
 		return false;
 	}
 	return compare_case_insensitive_T(a, b) == 0;
 }
 
-bool contains_only_chars(StringPiece input, StringPiece characters) {
+bool contains_only_chars(StringPiece input, StringPiece characters)
+{
 	return input.find_first_not_of(characters) == StringPiece::npos;
 }
 
@@ -153,7 +167,8 @@ bool contains_only_chars(StringPiece input, StringPiece characters) {
 // The hardcoded strings are typically very short so it doesn't matter, and the
 // string piece gives additional flexibility for the caller (doesn't have to be
 // null terminated) so we choose the StringPiece route.
-namespace {
+namespace
+{
 inline bool lower_case_equals_T(StringPiece str,
 								StringPiece lowercase_ascii)
 {
@@ -170,11 +185,13 @@ inline bool lower_case_equals_T(StringPiece str,
 
 }	// namespace anonymous
 
-bool lower_case_equals(StringPiece str, StringPiece lowercase_ascii) {
+bool lower_case_equals(StringPiece str, StringPiece lowercase_ascii)
+{
 	return lower_case_equals_T(str, lowercase_ascii);
 }
 
-namespace {
+namespace
+{
 bool starts_with_T(StringPiece str,
 				   StringPiece search_for,
 				   CompareCase case_sensitivity)
@@ -210,7 +227,8 @@ bool starts_with(StringPiece str,
 	return starts_with_T(str, search_for, case_sensitivity);
 }
 
-namespace {
+namespace
+{
 bool ends_with_T(StringPiece str,
 				 StringPiece search_for,
 				 CompareCase case_sensitivity)
@@ -248,7 +266,8 @@ bool ends_with(StringPiece str,
 }
 
 // Trim----------------------------------------------------
-namespace {
+namespace
+{
 TrimPositions trim_string_T(const std::string& input,
 							StringPiece trim_chars,
 							TrimPositions positions,
@@ -326,7 +345,8 @@ StringPiece trim_whitespace(StringPiece input, TrimPositions positions) {
 	return trim_string_piece_T(input, StringPiece(kWhitespace), positions);
 }
 
-namespace {
+namespace
+{
 inline typename std::string::value_type* write_into_T(std::string* str,
 													  size_t length_with_null) {
 	DCHECK_GT(length_with_null, 1u);
@@ -337,21 +357,25 @@ inline typename std::string::value_type* write_into_T(std::string* str,
 
 }	// namespace anonymous
 
-char* write_into(std::string* str, size_t length_with_null) {
+char* write_into(std::string* str, size_t length_with_null)
+{
 	return write_into_T(str, length_with_null);
 }
 
 // Join----------------------------------------------------
 
-namespace {
+namespace
+{
 // Overloaded function to append one string onto the end of another. Having a
 // separate overload for |source| as both string and StringPiece allows for more
 // efficient usage from functions templated to work with either type (avoiding a
 // redundant call to the StringPiece constructor in both cases).
-inline void append_to_string(std::string* target, const std::string& source) {
+inline void append_to_string(std::string* target, const std::string& source)
+{
 	target->append(source);
 }
-inline void append_to_string(std::string* target, const StringPiece& source) {
+inline void append_to_string(std::string* target, const StringPiece& source)
+{
 	source.append_to_string(target);
 }
 
@@ -413,28 +437,35 @@ std::string join_string(std::initializer_list<StringPiece> parts,
 
 // Replace----------------------------------------------------
 
-namespace {
+namespace
+{
 // A Matcher for DoReplaceMatchesAfterOffset() that matches substrings.
-struct SubstringMatcher {
+struct SubstringMatcher
+{
 	StringPiece find_this;
 
-	size_t find(const std::string& input, size_t pos) {
+	size_t find(const std::string& input, size_t pos)
+	{
 		return input.find(find_this.data(), pos, find_this.length());
 	}
-	size_t match_size() {
+	size_t match_size()
+	{
 		return find_this.length();
 	}
 };
 
 // A Matcher for DoReplaceMatchesAfterOffset() that matches single characters.
-struct CharacterMatcher {
+struct CharacterMatcher
+{
 	StringPiece find_any_of_these;
 
-	size_t find(const std::string& input, size_t pos) {
+	size_t find(const std::string& input, size_t pos)
+	{
 		return input.find_first_of(find_any_of_these.data(), pos,
 					find_any_of_these.length());
 	}
-	size_t match_size() {
+	size_t match_size()
+	{
 		return 1;
 	}
 };
@@ -456,27 +487,31 @@ bool do_replace_matches_after_offset(std::string* str,
 	using CharTraits = typename std::string::traits_type;	// std::char_traits<CharT>
 
 	const size_t find_length = matcher.match_size();
-	if (!find_length) {
+	if (!find_length)
+	{
 		return false;
 	}
 
 	// If the find string doesn't appear, there's nothing to do.
 	size_t first_match = matcher.find(*str, initial_offset);
-	if (first_match == std::string::npos) {
+	if (first_match == std::string::npos)
+	{
 		return false;
 	}
 
 	// If we're only replacing one instance, there's no need to do anything
 	// complicated.
 	const size_t replace_length = replace_with.length();
-	if (replace_type == ReplaceType::REPLACE_FIRST) {
+	if (replace_type == ReplaceType::REPLACE_FIRST)
+	{
 		str->replace(first_match, find_length, replace_with.data(), replace_length);
 		return true;
 	}
 
 	// If the find and replace strings are the same length, we can simply use
 	// replace() on each instance, and finish the entire operation in O(n) time.
-	if (find_length == replace_length) {
+	if (find_length == replace_length)
+	{
 		auto* buffer = &((*str)[0]);
 		for (size_t offset = first_match; offset != std::string::npos;
 			 offset = matcher.find(*str, offset + replace_length))

@@ -19,25 +19,30 @@
 #include <stdio.h>	// fwrite,abort
 #include <stdlib.h>
 
-namespace annety {
-namespace {
+namespace annety
+{
+namespace
+{
 const char* const kLogSeverityNames[4] = {"INFO", "WARNING", "ERROR", "FATAL"};
 static_assert(LOG_NUM_SEVERITIES == arraysize(kLogSeverityNames),
 			"Incorrect number of kLogSeverityNames");
 
-const char* log_severity_name(int severity) {
+const char* log_severity_name(int severity)
+{
 	if (severity >= 0 && severity < LOG_NUM_SEVERITIES) {
 		return kLogSeverityNames[severity];
 	}
 	return "UNKNOWN";
 }
 
-void defaultOutput(const char* msg, int len) {
+void defaultOutput(const char* msg, int len)
+{
 	size_t n = ::fwrite(msg, 1, len, stdout);
 	ALLOW_UNUSED_LOCAL(n);
 }
 
-void defaultFlush() {
+void defaultFlush()
+{
 	::fflush(stdout);
 }
 
@@ -55,24 +60,30 @@ LogSeverity g_min_log_level = 0;
 thread_local Time::Exploded tls_local_exploded{};
 thread_local std::string tls_format_ymdhis{};
 thread_local int64_t tls_last_second{};
+
 }	// namespace anonymous
 
-void SetMinLogLevel(int level) {
+void SetMinLogLevel(int level)
+{
 	g_min_log_level = std::min(LOG_FATAL, level);
 }
-int GetMinLogLevel() {
+int GetMinLogLevel()
+{
 	return g_min_log_level;
 }
-bool ShouldCreateLogMessage(int severity) {
+bool ShouldCreateLogMessage(int severity)
+{
 	return severity >= g_min_log_level;
 }
 
-LogOutputHandlerFunction SetLogOutputHandler(LogOutputHandlerFunction handler) {
+LogOutputHandlerFunction SetLogOutputHandler(LogOutputHandlerFunction handler)
+{
 	LogOutputHandlerFunction rt_handler = g_log_output_handler;
 	g_log_output_handler = handler;
 	return rt_handler;
 }
-LogFFlushHandlerFunction SetLogFFlushHandler(LogFFlushHandlerFunction handler) {
+LogFFlushHandlerFunction SetLogFFlushHandler(LogFFlushHandlerFunction handler)
+{
 	LogFFlushHandlerFunction rt_handler = g_log_fflush_handler;
 	g_log_fflush_handler = handler;
 	return rt_handler;
@@ -89,7 +100,8 @@ LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity sev, int err)
 	}
 }
 
-LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity sev, const std::string& msg, int err) 
+LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity sev, 
+						const std::string& msg, int err) 
 	: line_(line), file_(file), severity_(sev), errno_(err)
 {
 	begin();
@@ -101,7 +113,8 @@ LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity sev, const st
 	}
 }
 
-void LogMessage::Impl::begin() {
+void LogMessage::Impl::begin()
+{
 	// time exploded string
 	TimeDelta td = time_ - Time();
 	if (td.in_seconds() != tls_last_second) {
@@ -123,7 +136,8 @@ void LogMessage::Impl::begin() {
 	stream_ << log_severity_name(severity_) << " ";
 }
 
-void LogMessage::Impl::endl() {
+void LogMessage::Impl::endl()
+{
 	stream_ << " - " 
 			<< StringPiece(file_.basename_, file_.size_) << ':' << line_ 
 			<< '\n';
@@ -142,10 +156,12 @@ LogMessage::LogMessage(int line, const Filename& file, LogSeverity sev, const st
 	: LogMessage(line, file, sev, msg, 0) {}
 
 // {,D,P,DP}CHECK
-LogMessage::LogMessage(int line, const Filename& file, LogSeverity sev, const std::string& msg, int err) 
+LogMessage::LogMessage(int line, const Filename& file, LogSeverity sev, 
+						const std::string& msg, int err) 
 	: impl_(line, file, sev, msg, err) {}
 
-LogMessage::~LogMessage() {
+LogMessage::~LogMessage()
+{
 	impl_.endl();
 
 	// log message output
@@ -175,7 +191,8 @@ template std::string MakeCheckOpString<std::string, std::string>(
 	const std::string&, const std::string&, const char* name);
 
 // for NOTREACHED
-void LogErrorNotReached(int line, const LogMessage::Filename& file) {
+void LogErrorNotReached(int line, const LogMessage::Filename& file)
+{
 	LogMessage(line , file, LOG_ERROR).stream() 
 		<< "NOTREACHED() hit.";
 }

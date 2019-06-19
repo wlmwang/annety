@@ -17,10 +17,12 @@
 #include <functional>	// std::hash
 #include <stddef.h>
 
-namespace annety {
+namespace annety
+{
 // An abstraction to isolate users from the differences between native
 // pathnames on different platforms.
-class FilePath {
+class FilePath
+{
 public:
 	typedef std::string StringType;
 	typedef StringPiece StringPieceType;
@@ -62,21 +64,16 @@ public:
 	bool operator!=(const FilePath& that) const;
 
 	// Required for some STL containers and operations
-	bool operator<(const FilePath& that) const {
+	bool operator<(const FilePath& that) const
+	{
 		return path_ < that.path_;
 	}
 
-	const std::string& value() const {
-		return path_;
-	}
+	const std::string& value() const { return path_;}
 
-	bool empty() const {
-		return path_.empty();
-	}
+	bool empty() const { return path_.empty();}
 
-	void clear() {
-		path_.clear();
-	}
+	void clear() { path_.clear();}
 
 	// Returns true if |character| is in kSeparators.
 	static bool is_separator(char character);
@@ -253,15 +250,17 @@ std::ostream& operator<<(std::ostream& out, const FilePath& file_path);
 
 namespace std {
 template <>
-struct hash<annety::FilePath> {
+struct hash<annety::FilePath>
+{
 	typedef annety::FilePath argument_type;
 	typedef std::size_t result_type;
 	
-	result_type operator()(argument_type const& f) const {
+	result_type operator()(argument_type const& f) const
+	{
 		return std::hash<std::string>()(f.value());
 	}
 };
 
-}  // namespace std
+}	// namespace std
 
 #endif	// ANT_FILE_PATH_H_

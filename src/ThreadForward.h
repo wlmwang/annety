@@ -17,7 +17,8 @@
 #include <unistd.h>
 #include <pthread.h>
 
-namespace annety {
+namespace annety
+{
 // Used for logging. Always an integer value.
 #if defined(OS_MACOSX)
 typedef mach_port_t ThreadId;
@@ -35,26 +36,31 @@ const ThreadId kInvalidThreadId{0};
 // have no meaning there. Also, the internal identifier can be re-used
 // after a thread dies, so a ThreadRef cannot be reliably used
 // to distinguish a new thread from an old, dead thread.
-class ThreadRef {
+class ThreadRef
+{
 public:
 	typedef pthread_t RefType;
 
 	constexpr ThreadRef() : id_(0) {}
 	explicit constexpr ThreadRef(RefType id) : id_(id) {}
 
-	bool operator==(ThreadRef other) const {
+	bool operator==(ThreadRef other) const
+	{
 		return id_ == other.id_;
 	}
 
-	bool operator!=(ThreadRef other) const {
+	bool operator!=(ThreadRef other) const
+	{
 		return id_ != other.id_;
 	}
 
-	bool empty() const {
+	bool empty() const
+	{
 		return id_ == 0;
 	}
 	
-	RefType ref() const {
+	RefType ref() const
+	{
 		return id_;
 	}
 

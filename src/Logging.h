@@ -66,7 +66,8 @@
 // There is the special severity of DFATAL, which logs FATAL in debug mode,
 // ERROR in normal mode.
 
-namespace annety {
+namespace annety
+{
 typedef int LogSeverity;
 const LogSeverity LOG_VERBOSE = -1;  // This is level 1 verbosity
 const LogSeverity LOG_INFO = 0;
@@ -95,21 +96,25 @@ int GetMinLogLevel();
 // Used by LOG_IS_ON to lazy-evaluate stream arguments.
 bool ShouldCreateLogMessage(int severity);
 
-class LogMessage {
+class LogMessage
+{
 public:
 	// todo
 	// compile time calculation of basename of source file
-	class Filename {
+	class Filename
+	{
 	public:
 		template<int N>
-		Filename(const char (&path)[N]) : basename_(path), size_(N-1) {
+		Filename(const char (&path)[N]) : basename_(path), size_(N-1)
+		{
 			const char* slash = ::strrchr(basename_, '/');
 			if (slash) {
 				basename_ = slash + 1;
 				size_ -= basename_ - path;
 			}
 		}
-		explicit Filename(const char* path) : basename_(path) {
+		explicit Filename(const char* path) : basename_(path)
+		{
 			const char* slash = ::strrchr(path, '/');
 			if (slash) {
 				basename_ = slash + 1;
@@ -135,16 +140,13 @@ public:
 
 	~LogMessage();
 
-	LogStream& stream() {
-		return impl_.stream_;
-	}
+	LogStream& stream() { return impl_.stream_;}
 
-	LogSeverity severity() {
-		return impl_.severity_;
-	}
+	LogSeverity severity() { return impl_.severity_;}
 
 private:
-	class Impl {
+	class Impl
+	{
 	public:
 		Impl(int line, const Filename& file, LogSeverity sev, int err = 0);
 		Impl(int line, const Filename& file, LogSeverity sev, const std::string& msg, 
@@ -174,7 +176,8 @@ private:
 // This class is used to explicitly ignore values in the conditional
 // logging macros.  This avoids compiler warnings like "value computed
 // is not used" and "statement has no effect".
-class LogMessageVoidify {
+class LogMessageVoidify
+{
 public:
 	LogMessageVoidify() = default;
 	// This has to be an operator with a precedence lower than << but
@@ -240,7 +243,8 @@ extern annety::LogStream* g_swallow_stream;
 
 // Captures the result of a CHECK_EQ (for example) and facilitates testing as a
 // boolean.
-class CheckOpResult {
+class CheckOpResult
+{
 public:
 	// |message| must be not-empty if and only if the check failed.
 	// *Note: Move Construct will be called in CHECK_OP() 
@@ -248,13 +252,9 @@ public:
 	CheckOpResult(std::string&& message) : message_(std::move(message)) {}
 
 	// Returns true if the check succeeded.
-	operator bool() const {
-		return message_.empty();
-	}
+	operator bool() const { return message_.empty();}
 	// Returns the message.
-	std::string message() {
-		return message_;
-	}
+	std::string message() { return message_;}
 
 private:
 	std::string message_;
@@ -385,7 +385,8 @@ private:
 // function template because it is not performance critical and so can
 // be out of line, while the "Impl" code should be inline.
 template<class t1, class t2>
-std::string MakeCheckOpString(const t1& v1, const t2& v2, const char* names) {
+std::string MakeCheckOpString(const t1& v1, const t2& v2, const char* names)
+{
 	std::ostringstream ss;
 	ss << names << " (";
 	ss << v1 << " vs " << v2;

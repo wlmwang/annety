@@ -15,9 +15,12 @@
 #include <sys/stat.h>
 #include <utility>		// std::move
 
-namespace annety {
-namespace {
-void get_stat(const FilePath& path, bool show_links, struct stat* st) {
+namespace annety
+{
+namespace
+{
+void get_stat(const FilePath& path, bool show_links, struct stat* st)
+{
 	DCHECK(st);
 	const int res = show_links ? ::lstat(path.value().c_str(), st)
 							   : ::stat(path.value().c_str(), st);
@@ -35,25 +38,30 @@ void get_stat(const FilePath& path, bool show_links, struct stat* st) {
 
 // FileEnumerator::FileInfo ----------------------------------------------------
 
-FileEnumerator::FileInfo::FileInfo() {
+FileEnumerator::FileInfo::FileInfo()
+{
 	::memset(&stat_, 0, sizeof(stat_));
 }
 
 FileEnumerator::FileInfo::~FileInfo() = default;
 
-bool FileEnumerator::FileInfo::is_directory() const {
+bool FileEnumerator::FileInfo::is_directory() const
+{
 	return S_ISDIR(stat_.st_mode);
 }
 
-FilePath FileEnumerator::FileInfo::get_name() const {
+FilePath FileEnumerator::FileInfo::get_name() const
+{
 	return filename_;
 }
 
-int64_t FileEnumerator::FileInfo::get_size() const {
+int64_t FileEnumerator::FileInfo::get_size() const
+{
 	return stat_.st_size;
 }
 
-Time FileEnumerator::FileInfo::get_last_modified_time() const {
+Time FileEnumerator::FileInfo::get_last_modified_time() const
+{
 	return Time::from_time_t(stat_.st_mtime);
 }
 
@@ -104,7 +112,8 @@ FileEnumerator::FileEnumerator(const FilePath& root_path,
 
 FileEnumerator::~FileEnumerator() = default;
 
-FilePath FileEnumerator::next() {
+FilePath FileEnumerator::next()
+{
 	++current_directory_entry_;
 
 	// While we've exhausted the entries in the current directory, do the next
@@ -183,22 +192,26 @@ FilePath FileEnumerator::next() {
 		directory_entries_[current_directory_entry_].filename_);
 }
 
-FileEnumerator::FileInfo FileEnumerator::get_info() const {
+FileEnumerator::FileInfo FileEnumerator::get_info() const
+{
 	return directory_entries_[current_directory_entry_];
 }
 
-bool FileEnumerator::is_pattern_matched(const FilePath& path) const {
+bool FileEnumerator::is_pattern_matched(const FilePath& path) const
+{
 	return pattern_.empty() ||
 		!::fnmatch(pattern_.c_str(), path.value().c_str(), FNM_NOESCAPE);
 }
 
-bool FileEnumerator::should_skip(const FilePath& path) {
+bool FileEnumerator::should_skip(const FilePath& path)
+{
 	FilePath::StringType base = path.basename().value();
 	return base == "." || 
 		   (base == ".." && !(INCLUDE_DOT_DOT & file_type_));
 }
 
-bool FileEnumerator::is_type_matched(bool is_dir) const {
+bool FileEnumerator::is_type_matched(bool is_dir) const
+{
 	return (file_type_ &
 		(is_dir ? FileEnumerator::DIRECTORIES : FileEnumerator::FILES)) != 0;
 }

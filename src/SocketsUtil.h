@@ -7,8 +7,10 @@
 #include <arpa/inet.h>	// for sockaddr*
 #include <sys/socket.h>	// for SHUT_WR
 
-namespace annety {
-namespace sockets {
+namespace annety
+{
+namespace sockets
+{
 // static_cast
 const struct sockaddr_in* sockaddr_in_cast(const struct sockaddr* addr);
 const struct sockaddr_in6* sockaddr_in6_cast(const struct sockaddr* addr);

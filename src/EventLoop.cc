@@ -5,8 +5,10 @@
 #include "ThreadLocal.h"
 #include "PlatformThread.h"
 
-namespace annety {
-namespace {
+namespace annety
+{
+namespace
+{
 // one thread one loop
 void clean_tls_eventloop(void *ptr);
 ThreadLocal<EventLoop> tls_eventloop{&clean_tls_eventloop};
@@ -34,35 +36,42 @@ EventLoop::EventLoop() :
 	tls_eventloop.set(this);
 }
 
-EventLoop::~EventLoop() {
+EventLoop::~EventLoop()
+{
 	LOG(INFO) << "~EventLoop is called by thread " 
 		<< PlatformThread::current_ref().ref()
 		<< ", EventLoop " << this;
 }
 
-void EventLoop::loop() {
+void EventLoop::loop()
+{
 	//
 }
 
-void EventLoop::update_channel(Channel* ch) {
+void EventLoop::update_channel(Channel* ch)
+{
 	//
 }
 
-void EventLoop::remove_channel(Channel* ch) {
+void EventLoop::remove_channel(Channel* ch)
+{
 	//
 }
 
-bool EventLoop::has_channel(Channel* ch) {
+bool EventLoop::has_channel(Channel* ch)
+{
 	return false;
 }
 
-void EventLoop::check_in_own_thread() const {
+void EventLoop::check_in_own_thread() const
+{
 	CHECK(is_in_own_thread()) << " EventLoop was created by thread " 
 		<< owning_thread_.ref()
 		<< ", Current thread " << PlatformThread::current_ref().ref();
 }
 
-bool EventLoop::is_in_own_thread() const {
+bool EventLoop::is_in_own_thread() const
+{
 	return owning_thread_ == PlatformThread::current_ref();
 }
 

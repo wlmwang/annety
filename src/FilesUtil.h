@@ -23,10 +23,12 @@
 #include <set>
 #include <string>
 
-namespace annety {
+namespace annety
+{
 class Time;
 
-namespace files {
+namespace files
+{
 //-----------------------------------------------------------------------------
 // Functions that involve filesystem access or modification:
 
@@ -80,7 +82,8 @@ bool delete_file(const FilePath& path, bool recursive);
 // temporary files. On Windows it preserves attributes of the target file.
 // Returns true on success, leaving *error unchanged.
 // Returns false on failure and sets *error appropriately, if it is non-NULL.
-bool replace_file(const FilePath& from_path, const FilePath& to_path, File::Error* error);
+bool replace_file(const FilePath& from_path, const FilePath& to_path, 
+				  File::Error* error);
 
 // Copies a single file. Use CopyDirectory() to copy directories.
 // This function fails if either path contains traversal components ('..').
@@ -140,7 +143,8 @@ int create_and_open_fd_for_temporary_file_in_dir(const FilePath& dir,
 												 FilePath* path);
 
 // Bits and masks of the file permission.
-enum FilePermissionBits {
+enum FilePermissionBits
+{
 	FILE_PERMISSION_MASK              = S_IRWXU | S_IRWXG | S_IRWXO,
 	FILE_PERMISSION_USER_MASK         = S_IRWXU,
 	FILE_PERMISSION_GROUP_MASK        = S_IRWXG,
@@ -365,8 +369,8 @@ int get_unique_path_number(const FilePath& path,
 int get_maximum_path_component_length(const FilePath& path);
 
 // Internal --------------------------------------------------------------------
-
-namespace internal {
+namespace internal
+{
 
 // Same as Move but allows paths with traversal components.
 // Use only with extreme care.

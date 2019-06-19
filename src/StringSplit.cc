@@ -12,8 +12,10 @@
 #include <string>
 #include <stddef.h>
 
-namespace annety {
-namespace {
+namespace annety
+{
+namespace
+{
 // piece_to_output_type converts a StringPiece as needed to a given output type,
 // which is either the same type of StringPiece (a NOP) or the corresponding
 // non-piece string type.
@@ -21,16 +23,19 @@ namespace {
 // The default converter is a NOP, it works when the OutputType is the
 // correct StringPiece.
 template<typename OutputType>
-OutputType piece_to_output_type(StringPiece piece) {
+OutputType piece_to_output_type(StringPiece piece)
+{
 	return piece;
 }
 template<>  // Convert StringPiece to std::string
-std::string piece_to_output_type<std::string>(StringPiece piece) {
+std::string piece_to_output_type<std::string>(StringPiece piece)
+{
 	return piece.as_string();
 }
 
 // Returns the ASCII whitespace.
-StringPiece whitespace_for_type() {
+StringPiece whitespace_for_type()
+{
 	return strings::kWhitespace;
 }
 
@@ -40,10 +45,12 @@ StringPiece whitespace_for_type() {
 //
 // There is no corresponding FindFirstNotOf because StringPiece already
 // implements these different versions that do the optimized searching.
-size_t find_first_of(StringPiece piece, char c, size_t pos) {
+size_t find_first_of(StringPiece piece, char c, size_t pos)
+{
 	return piece.find(c, pos);
 }
-size_t find_first_of(StringPiece piece, StringPiece one_of, size_t pos) {
+size_t find_first_of(StringPiece piece, StringPiece one_of, size_t pos)
+{
 	return piece.find_first_of(one_of, pos);
 }
 

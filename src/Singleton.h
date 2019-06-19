@@ -12,25 +12,29 @@
 #include <functional>
 #include <pthread.h>
 
-namespace annety {
+namespace annety
+{
 // Default traits for Singleton<Type>. Calls operator new and operator delete on
 // the object. Registers automatic deletion at process exit.
 // Overload if you need arguments or another memory allocation function.
 template<typename Type>
-struct DefaultSingletonTraits {
+struct DefaultSingletonTraits
+{
 	// Set to true to automatically register deletion of the object on process
 	// exit. See below for the required call that makes this happen.
 	static const bool kRegisterAtExit = true;
 
 	// new the object.
-	static Type* create() {
+	static Type* create()
+	{
 		// The parenthesis is very important here; it forces POD type
 		// initialization.
 		return new Type();
 	}
 
 	// delete the object.
-	static void destory(Type* x) {
+	static void destory(Type* x)
+	{
 		delete x;
 	}
 };
@@ -39,7 +43,8 @@ struct DefaultSingletonTraits {
 // DefaultSingletonTraits except that the Singleton will not be cleaned up
 // at exit.
 template<typename Type>
-struct LeakySingletonTraits : public DefaultSingletonTraits<Type> {
+struct LeakySingletonTraits : public DefaultSingletonTraits<Type>
+{
 	static const bool kRegisterAtExit = false;
 };
 
@@ -114,20 +119,23 @@ struct LeakySingletonTraits : public DefaultSingletonTraits<Type> {
 //     exception-safe.
 
 template<typename Type, typename Traits = DefaultSingletonTraits<Type>>
-class Singleton {
+class Singleton
+{
  public:
 	// Classes using the Singleton<T> pattern should declare a GetInstance()
 	// method and call Singleton::get() from within that.
 	friend Type* Type::instance();
 
-	static Type* get() {
+	static Type* get()
+	{
 		DPCHECK(::pthread_once(&once_, &Singleton::create) == 0);
 		DCHECK(instance_ != nullptr);
 		return instance_;
 	}
 
 private:
-	static void create() {
+	static void create()
+	{
 		DCHECK(instance_ == nullptr);
 
 		instance_ = Traits::create();
@@ -139,7 +147,8 @@ private:
 	// Adapter function for use with AtExit().  This should be called single
 	// threaded, so don't use atomic operations.
 	// Calling OnExit while singleton is in use by other threads is a mistake.
-	static void on_exit(void* ptr) {
+	static void on_exit(void* ptr)
+	{
 		DCHECK(instance_ == ptr);
 
 		typedef char T_must_be_complete_type[sizeof(Type) == 0 ? -1 : 1];

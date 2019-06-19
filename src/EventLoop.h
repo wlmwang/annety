@@ -10,10 +10,12 @@
 #include <memory>
 #include <utility>
 
-namespace annety {
+namespace annety
+{
 class Channel;
 
-class EventLoop {
+class EventLoop
+{
 public:
 	EventLoop();
 	~EventLoop();

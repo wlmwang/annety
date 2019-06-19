@@ -8,9 +8,11 @@
 #include <execinfo.h>   // backtrace, backtrace_symbols
 #include <stdlib.h>
 
-namespace annety {
+namespace annety
+{
 // g++ -g -rdynamic
-std::string backtrace_to_string(bool demangle) {
+std::string backtrace_to_string(bool demangle)
+{
 	std::string stack;
 	const int max_frames = 200;
 	void* frame[max_frames];

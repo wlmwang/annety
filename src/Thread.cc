@@ -38,7 +38,8 @@ Thread::~Thread() {
 		<< "Joinable Thread destroyed without being Join()ed.";
 }
 
-Thread& Thread::start() {
+Thread& Thread::start()
+{
 	start_async();
 	// Wait for the thread to complete initialization.
 	latch_.await();
@@ -46,7 +47,8 @@ Thread& Thread::start() {
 	return *this;
 }
 
-Thread& Thread::start_async() {
+Thread& Thread::start_async()
+{
 	DCHECK(!has_start_been_attempted()) << "Tried to Start a thread multiple times.";
 	start_called_ = true;
 	bool success = options_.joinable
@@ -56,7 +58,8 @@ Thread& Thread::start_async() {
 	return *this;
 }
 
-void Thread::join() {
+void Thread::join()
+{
 	DCHECK(options_.joinable) << "A non-joinable thread can't be joined.";
 	DCHECK(has_start_been_attempted()) << "Tried to Join a never-started thread.";
 	DCHECK(!has_been_joined()) << "Tried to Join a thread multiple times.";
@@ -66,17 +69,20 @@ void Thread::join() {
 	joined_ = true;
 }
 
-ThreadId Thread::tid() {
+ThreadId Thread::tid()
+{
 	DCHECK(has_been_started());
 	return tid_;
 }
 
-ThreadRef Thread::ref() {
+ThreadRef Thread::ref()
+{
 	DCHECK(has_been_started());
 	return ref_;
 }
 
-void Thread::start_routine() {
+void Thread::start_routine()
+{
 	tid_ = PlatformThread::current_id();
 	
 	// Construct our full name of the form "name_prefix_/TID".

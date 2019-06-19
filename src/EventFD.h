@@ -6,17 +6,17 @@
 
 #include "Macros.h"
 
-namespace annety {
-class EventFD {
+namespace annety
+{
+class EventFD
+{
 public:
 	explicit EventFD(bool nonblock = true, bool cloexec = true);
 	explicit EventFD(int evtfd) : fd_(evtfd) {}
 
 	~EventFD();
 
-	int internal_fd() const {
-		return fd_;
-	}
+	int internal_fd() const { return fd_;}
 
 private:
 	int fd_;

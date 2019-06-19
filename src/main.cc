@@ -31,21 +31,26 @@
 using namespace annety;
 using namespace std;
 
-void test22() {
+void test22()
+{
 	throw Exception("<<<throw a exception>>>"); 
 }
-void test11() {
+void test11()
+{
 	test22();
 }
-void test() {
+void test()
+{
 	test11();
 }
 
-void func(void* ptr) {
+void func(void* ptr)
+{
 	std::cout << "AtExitManager:" << "*" << ptr << std::endl;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
 #if defined(OS_MACOSX)
 	cout << "mac osx" << endl;
 #elif defined(OS_LINUX)

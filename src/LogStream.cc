@@ -9,14 +9,17 @@
 #include <string.h>
 #include <stdio.h>	// snprintf
 
-namespace annety {
-namespace {
+namespace annety
+{
+namespace
+{
 const char kDigitMaps[] = "9876543210123456789";
 const char kDigitHexMaps[] = "0123456789ABCDEF";
 
 // Efficient Integer to String Conversions, by Matthew Wilson.
 template<typename T>
-size_t convert(char buf[], T value) {
+size_t convert(char buf[], T value)
+{
 	T i = value;
 	char* p = buf;
 
@@ -37,7 +40,8 @@ size_t convert(char buf[], T value) {
 }
 
 template<>
-size_t convert<uintptr_t>(char buf[], uintptr_t value) {
+size_t convert<uintptr_t>(char buf[], uintptr_t value)
+{
 	uintptr_t i = value;
 	char* p = buf;
 
@@ -56,7 +60,8 @@ size_t convert<uintptr_t>(char buf[], uintptr_t value) {
 }  // namespace anonymous
 
 template<typename T>
-LogStream& LogStream::format_number(T v) {
+LogStream& LogStream::format_number(T v)
+{
 	char buf[kMaxNumericSize+1];
 	size_t len = convert(buf, v);
 	buffer_.append(buf, len);
@@ -64,7 +69,8 @@ LogStream& LogStream::format_number(T v) {
 }
 
 template <>
-LogStream& LogStream::format_number<uintptr_t>(uintptr_t v) {
+LogStream& LogStream::format_number<uintptr_t>(uintptr_t v)
+{
 	char buf[kMaxNumericSize+3] {'0', 'x'};
 	size_t len = convert(buf+2, v);
 	buffer_.append(buf, len+2);
@@ -73,59 +79,72 @@ LogStream& LogStream::format_number<uintptr_t>(uintptr_t v) {
 
 // todo. replace this with Grisu3 by Florian Loitsch.
 template <>
-LogStream& LogStream::format_number<double>(double v) {
+LogStream& LogStream::format_number<double>(double v)
+{
 	char buf[kMaxNumericSize+1];
 	size_t len = ::snprintf(buf, kMaxNumericSize+1, "%.12g", v);
 	buffer_.append(buf, len);
 	return *this;
 }
 
-LogStream& LogStream::operator<<(const void* p) {
+LogStream& LogStream::operator<<(const void* p)
+{
 	return format_number(reinterpret_cast<uintptr_t>(p));
 }
 
-LogStream& LogStream::operator<<(float v) {
+LogStream& LogStream::operator<<(float v)
+{
 	return *this << static_cast<double>(v);
 }
 
-LogStream& LogStream::operator<<(short v) {
+LogStream& LogStream::operator<<(short v)
+{
 	return *this << static_cast<int>(v);
 }
 
-LogStream& LogStream::operator<<(unsigned short v) {
+LogStream& LogStream::operator<<(unsigned short v)
+{
 	return *this << static_cast<unsigned int>(v);
 }
 
-LogStream& LogStream::operator<<(int v) {
+LogStream& LogStream::operator<<(int v)
+{
 	return format_number(v);
 }
 
-LogStream& LogStream::operator<<(unsigned int v) {
+LogStream& LogStream::operator<<(unsigned int v)
+{
 	return format_number(v);
 }
 
-LogStream& LogStream::operator<<(long v) {
+LogStream& LogStream::operator<<(long v)
+{
 	return format_number(v);
 }
 
-LogStream& LogStream::operator<<(unsigned long v) {
+LogStream& LogStream::operator<<(unsigned long v)
+{
 	return format_number(v);
 }
 
-LogStream& LogStream::operator<<(long long v) {
+LogStream& LogStream::operator<<(long long v)
+{
 	return format_number(v);
 }
 
-LogStream& LogStream::operator<<(unsigned long long v) {
+LogStream& LogStream::operator<<(unsigned long long v)
+{
 	return format_number(v);
 }
 
-LogStream& LogStream::operator<<(double v) {
+LogStream& LogStream::operator<<(double v)
+{
 	return format_number(v);
 }
 
 // For testing only
-std::ostream& operator<<(std::ostream& os, const LogStream& ls) {
+std::ostream& operator<<(std::ostream& os, const LogStream& ls)
+{
 	return os << ls.buffer();
 }
 

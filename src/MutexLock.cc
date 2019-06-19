@@ -14,12 +14,16 @@
 
 #include <string>
 
-namespace annety {
-namespace internal {
+namespace annety
+{
+namespace internal
+{
 // errno to string ------------------------------------------------
-namespace {
+namespace
+{
 #if DCHECK_IS_ON()
-const char* additional_hint_for_system_error_code(int error_code) {
+const char* additional_hint_for_system_error_code(int error_code)
+{
 	switch (error_code) {
 	case EINVAL:
 		return "Hint: This is often related to a use-after-free.";
@@ -29,7 +33,8 @@ const char* additional_hint_for_system_error_code(int error_code) {
 }
 #endif  // DCHECK_IS_ON()
 
-std::string system_error_code_to_string(int error_code) {
+std::string system_error_code_to_string(int error_code)
+{
 #if DCHECK_IS_ON()
 	return safe_strerror(error_code) + ". " +
 		additional_hint_for_system_error_code(error_code);
@@ -42,7 +47,8 @@ std::string system_error_code_to_string(int error_code) {
 
 }	// namespace anonymous
 
-LockImpl::LockImpl() {
+LockImpl::LockImpl()
+{
 	pthread_mutexattr_t mta;
 	int rv = ::pthread_mutexattr_init(&mta);
 	DCHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
@@ -59,23 +65,27 @@ LockImpl::LockImpl() {
 	DCHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
 }
 
-LockImpl::~LockImpl() {
+LockImpl::~LockImpl()
+{
 	int rv = ::pthread_mutex_destroy(&native_handle_);
 	DCHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
 }
 
-bool LockImpl::try_lock() {
+bool LockImpl::try_lock()
+{
 	int rv = ::pthread_mutex_trylock(&native_handle_);
 	DCHECK(rv == 0 || rv == EBUSY) << ". " << system_error_code_to_string(rv);
 	return rv == 0;
 }
 
-void LockImpl::lock() {
+void LockImpl::lock()
+{
 	int rv = ::pthread_mutex_lock(&native_handle_);
 	DCHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
 }
 
-void LockImpl::unlock() {
+void LockImpl::unlock()
+{
 	int rv = ::pthread_mutex_unlock(&native_handle_);
 	DCHECK_EQ(rv, 0) << ". " << safe_strerror(rv);
 }
@@ -85,20 +95,24 @@ void LockImpl::unlock() {
 #if DCHECK_IS_ON()
 MutexLock::MutexLock() : lock_() {}
 
-MutexLock::~MutexLock() {
+MutexLock::~MutexLock()
+{
 	DCHECK(owning_thread_.empty());
 }
 
-void MutexLock::assert_acquired() const {
+void MutexLock::assert_acquired() const
+{
 	DCHECK(owning_thread_ == PlatformThread::current_ref());
 }
 
-void MutexLock::check_held_and_unmark() {
+void MutexLock::check_held_and_unmark()
+{
 	DCHECK(owning_thread_ == PlatformThread::current_ref());
 	owning_thread_ = ThreadRef();	// clear ref
 }
 
-void MutexLock::check_unheld_and_mark() {
+void MutexLock::check_unheld_and_mark()
+{
 	DCHECK(owning_thread_.empty());
 	owning_thread_ = PlatformThread::current_ref();
 }

@@ -2,6 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// Refactoring: Anny Wang
+// Date: Jun 03 2019
+
+#ifndef ANT_AT_EXIT_H
+#define ANT_AT_EXIT_H
+
+#include "Macros.h"
+#include "MutexLock.h"
+
+#include <stack>
+#include <functional>
+
+namespace annety
+{
 // This class provides a facility similar to the CRT atexit(), except that
 // we control when the callbacks are executed. Under Windows for a DLL they
 // happen at a really bad time and under the loader lock. This facility is
@@ -15,21 +29,8 @@
 // }
 // When the exit_manager object goes out of scope, all the registered
 // callbacks and singleton destructors will be called.
-
-// Refactoring: Anny Wang
-// Date: Jun 03 2019
-
-#ifndef ANT_AT_EXIT_H
-#define ANT_AT_EXIT_H
-
-#include "Macros.h"
-#include "MutexLock.h"
-
-#include <stack>
-#include <functional>
-
-namespace annety {
-class AtExitManager {
+class AtExitManager
+{
 public:
 	using AtExitCallback = std::function<void()>;
 

@@ -6,8 +6,10 @@
 
 #include <unistd.h> // close
 
-namespace annety {
-SelectableFD::~SelectableFD() {
+namespace annety
+{
+SelectableFD::~SelectableFD()
+{
 	int ret = ::close(fd_);
 	PLOG_IF(ERROR, ret < 0) << "::close failed";
 }

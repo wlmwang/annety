@@ -10,8 +10,10 @@
 #include <string>
 #include <limits>
 
-namespace annety {
-class LogStream {
+namespace annety
+{
+class LogStream
+{
 	static const int kMaxNumericSize = 32;
 	
 	static_assert(kMaxNumericSize - 10 > std::numeric_limits<double>::digits10,
@@ -58,11 +60,13 @@ public:
 	LogStream& operator<<(const unsigned char* str) {
 		return operator<<(reinterpret_cast<const char*>(str));
 	}
-	LogStream& operator<<(char v) {
+	LogStream& operator<<(char v)
+	{
 		buffer_.append(&v, 1);
 		return *this;
 	}
-	LogStream& operator<<(const char* str) {
+	LogStream& operator<<(const char* str)
+	{
 		if (str) {
 			buffer_.append(str, strlen(str));
 		} else {
@@ -71,39 +75,47 @@ public:
 		return *this;
 	}
 	
-	LogStream& operator<<(bool v) {
+	LogStream& operator<<(bool v)
+	{
 		buffer_.append(v ? "1" : "0", 1);
 		return *this;
 	}
 
-	LogStream& operator<<(const std::string& v) {
+	LogStream& operator<<(const std::string& v)
+	{
 		buffer_.append(v.c_str(), v.size());
 		return *this;
 	}
-	LogStream& operator<<(const StringPiece& v) {
+	LogStream& operator<<(const StringPiece& v)
+	{
 		buffer_.append(v.data(), v.size());
 		return *this;
 	}
 
-	LogStream& operator<<(const LogBuffer& v) {
+	LogStream& operator<<(const LogBuffer& v)
+	{
 		return operator<<(v.to_string_piece());
 	}
 
-	LogStream& operator<<(const StdEndLine&) {
+	LogStream& operator<<(const StdEndLine&)
+	{
 		buffer_.append("\n", 1);
 		return *this;
 	}
 
 	// append to buffer
-	void append(const char* data, size_t len) {
+	void append(const char* data, size_t len)
+	{
 		buffer_.append(data, len);
 	}
 
-	void reset() {
+	void reset()
+	{
 		buffer_.reset();
 	}
 	
-	const LogBuffer& buffer() const {
+	const LogBuffer& buffer() const
+	{
 		return buffer_;
 	}
 

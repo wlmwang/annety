@@ -13,8 +13,10 @@
 #include <limits.h>		// UCHAR_MAX
 #include <stddef.h>
 
-namespace annety {
-namespace {
+namespace annety
+{
+namespace
+{
 // For each character in characters_wanted, sets the index corresponding
 // to the ASCII code of that character to 1 in table.  This is used by
 // the find_.*_of methods below to tell whether or not a character is in
@@ -35,8 +37,10 @@ inline void build_lookup_table(const StringPiece& characters_wanted,
 
 }	// namespace anonymous
 
-namespace internal {
-void copy_to_string_T(const StringPiece& self, std::string* target) {
+namespace internal
+{
+void copy_to_string_T(const StringPiece& self, std::string* target)
+{
 	if (self.empty()) {
 		target->clear();
 	} else {
@@ -44,17 +48,20 @@ void copy_to_string_T(const StringPiece& self, std::string* target) {
 	}
 }
 
-void copy_to_string(const StringPiece& self, std::string* target) {
+void copy_to_string(const StringPiece& self, std::string* target)
+{
 	copy_to_string_T(self, target);
 }
 
-void append_to_string_T(const StringPiece& self, std::string* target) {
+void append_to_string_T(const StringPiece& self, std::string* target)
+{
 	if (!self.empty()) {
 		target->append(self.data(), self.size());
 	}
 }
 
-void append_to_string(const StringPiece& self, std::string* target) {
+void append_to_string(const StringPiece& self, std::string* target)
+{
 	append_to_string_T(self, target);
 }
 
@@ -67,7 +74,8 @@ size_t copy_T(const StringPiece& self,
 	return ret;
 }
 
-size_t copy(const StringPiece& self, char* buf, size_t n, size_t pos) {
+size_t copy(const StringPiece& self, char* buf, size_t n, size_t pos)
+{
 	return copy_T(self, buf, n, pos);
 }
 
@@ -87,7 +95,8 @@ size_t find_T(const StringPiece& self,
 	return xpos + s.size() <= self.size() ? xpos : StringPiece::npos;
 }
 
-size_t find(const StringPiece& self, const StringPiece& s, size_t pos) {
+size_t find(const StringPiece& self, const StringPiece& s, size_t pos)
+{
 	return find_T(self, s, pos);
 }
 
@@ -106,7 +115,8 @@ size_t find_T(const StringPiece& self,
 			static_cast<size_t>(result - self.begin()) : StringPiece::npos;
 }
 
-size_t find(const StringPiece& self, char c, size_t pos) {
+size_t find(const StringPiece& self, char c, size_t pos)
+{
 	return find_T(self, c, pos);
 }
 
@@ -131,7 +141,8 @@ size_t rfind_T(const StringPiece& self,
 		static_cast<size_t>(result - self.begin()) : StringPiece::npos;
 }
 
-size_t rfind(const StringPiece& self, const StringPiece& s, size_t pos) {
+size_t rfind(const StringPiece& self, const StringPiece& s, size_t pos)
+{
 	return rfind_T(self, s, pos);
 }
 
@@ -156,7 +167,8 @@ size_t rfind_T(const StringPiece& self,
   	return StringPiece::npos;
 }
 
-size_t rfind(const StringPiece& self, char c, size_t pos) {
+size_t rfind(const StringPiece& self, char c, size_t pos)
+{
 	return rfind_T(self, c, pos);
 }
 
@@ -228,12 +240,14 @@ size_t find_first_not_of_T(const StringPiece& self,
 	return StringPiece::npos;
 }
 
-size_t find_first_not_of(const StringPiece& self, char c, size_t pos) {
+size_t find_first_not_of(const StringPiece& self, char c, size_t pos)
+{
 	return find_first_not_of_T(self, c, pos);
 }
 
 // 8-bit version using lookup table.
-size_t find_last_of(const StringPiece& self, const StringPiece& s, size_t pos) {
+size_t find_last_of(const StringPiece& self, const StringPiece& s, size_t pos)
+{
 	if (self.size() == 0 || s.size() == 0) {
 		return StringPiece::npos;
 	}
@@ -307,7 +321,8 @@ size_t find_last_not_of_T(const StringPiece& self,
 	return StringPiece::npos;
 }
 
-size_t find_last_not_of(const StringPiece& self, char c, size_t pos) {
+size_t find_last_not_of(const StringPiece& self, char c, size_t pos)
+{
 	return find_last_not_of_T(self, c, pos);
 }
 
@@ -324,12 +339,14 @@ StringPiece substr_T(const StringPiece& self,
 	return StringPiece(self.data() + pos, n);
 }
 
-StringPiece substr(const StringPiece& self, size_t pos, size_t n) {
+StringPiece substr(const StringPiece& self, size_t pos, size_t n)
+{
 	return substr_T(self, pos, n);
 }
 
 void assert_iterators_in_order(std::string::const_iterator begin,
-							   std::string::const_iterator end) {
+							   std::string::const_iterator end)
+{
 	DCHECK(begin <= end) << "StringPiece iterators swapped or invalid.";
 }
 
@@ -337,7 +354,8 @@ void assert_iterators_in_order(std::string::const_iterator begin,
 
 
 // for testing only
-std::ostream& operator<<(std::ostream& os, const StringPiece& piece) {
+std::ostream& operator<<(std::ostream& os, const StringPiece& piece)
+{
 	return os.write(piece.data(), static_cast<std::streamsize>(piece.size()));
 }
 

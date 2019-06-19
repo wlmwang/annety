@@ -25,9 +25,12 @@
 #include <stdio.h>		// fread,feof,ferror,ftell,fileno
 #include <stddef.h>
 
-namespace annety {
-namespace files {
-namespace {
+namespace annety
+{
+namespace files
+{
+namespace
+{
 // The maximum number of 'uniquified' files we will try to create.
 // This is used when the filename we're trying to download is already in use,
 // so we create a new unique filename by appending " (nnn)" before the
@@ -39,7 +42,8 @@ static const int kMaxUniqueFiles = 100;
 // Appends |mode_char| to |mode| before the optional character set encoding; see
 // https://www.gnu.org/software/libc/manual/html_node/Opening-Streams.html for
 // details.
-std::string append_mode_character(StringPiece mode, char mode_char) {
+std::string append_mode_character(StringPiece mode, char mode_char)
+{
 	std::string result(mode.as_string());
 	size_t comma_pos = result.find(',');
 	result.insert(comma_pos == std::string::npos ? result.length() : comma_pos, 1,
@@ -50,7 +54,8 @@ std::string append_mode_character(StringPiece mode, char mode_char) {
 
 }	// namespace anonymous
 
-bool is_directory_empty(const FilePath& dir_path) {
+bool is_directory_empty(const FilePath& dir_path)
+{
 	FileEnumerator files(dir_path, false,
 						 FileEnumerator::FILES | FileEnumerator::DIRECTORIES);
 	if (files.next().empty()) {
@@ -59,7 +64,8 @@ bool is_directory_empty(const FilePath& dir_path) {
 	return false;
 }
 
-int64_t compute_directory_size(const FilePath& root_path) {
+int64_t compute_directory_size(const FilePath& root_path)
+{
 	int64_t running_size = 0;
 	FileEnumerator file_iter(root_path, true, FileEnumerator::FILES);
 	while (!file_iter.next().empty()) {
@@ -68,11 +74,13 @@ int64_t compute_directory_size(const FilePath& root_path) {
 	return running_size;
 }
 
-bool create_directory(const FilePath& full_path) {
+bool create_directory(const FilePath& full_path)
+{
 	return create_directory_and_get_error(full_path, nullptr);
 }
 
-FILE* file_to_FILE(File file, const char* mode) {
+FILE* file_to_FILE(File file, const char* mode)
+{
 	FILE* stream = ::fdopen(file.get_platform_file(), mode);
 	if (stream) {
 		file.take_platform_file();
@@ -80,7 +88,8 @@ FILE* file_to_FILE(File file, const char* mode) {
 	return stream;
 }
 
-FILE* open_FILE(const FilePath& filename, const char* mode) {
+FILE* open_FILE(const FilePath& filename, const char* mode)
+{
 	// 'e' is unconditionally added below, so be sure there is not one already
 	// present before a comma in |mode|.
 	DCHECK(::strchr(mode, 'e') == nullptr ||
@@ -110,14 +119,16 @@ FILE* open_FILE(const FilePath& filename, const char* mode) {
 	return result;
 }
 
-bool close_FILE(FILE* file) {
+bool close_FILE(FILE* file)
+{
 	if (file == nullptr) {
 		return true;
 	}
 	return ::fclose(file) == 0;
 }
 
-bool truncate_FILE(FILE* file) {
+bool truncate_FILE(FILE* file)
+{
 	if (file == nullptr) {
 		return false;
 	}
@@ -134,7 +145,8 @@ bool truncate_FILE(FILE* file) {
 	return true;
 }
 
-bool contents_equal(const FilePath& filename1, const FilePath& filename2) {
+bool contents_equal(const FilePath& filename1, const FilePath& filename2)
+{
 	// We open the file in binary format even if they are text files because
 	// we are just comparing that bytes are exactly same in both files and not
 	// doing anything smart with text formatting.
@@ -170,7 +182,8 @@ bool contents_equal(const FilePath& filename1, const FilePath& filename2) {
 	return true;
 }
 
-bool text_contents_equal(const FilePath& filename1, const FilePath& filename2) {
+bool text_contents_equal(const FilePath& filename1, const FilePath& filename2)
+{
 	std::ifstream file1(filename1.value().c_str(), std::ios::in);
 	std::ifstream file2(filename2.value().c_str(), std::ios::in);
 
@@ -282,12 +295,14 @@ bool read_file_to_string_with_max_size(const FilePath& path,
 	return read_status;
 }
 
-bool read_file_to_string(const FilePath& path, std::string* contents) {
+bool read_file_to_string(const FilePath& path, std::string* contents)
+{
 	return read_file_to_string_with_max_size(path, contents,
 				std::numeric_limits<size_t>::max());
 }
 
-bool read_from_fd(int fd, char* buffer, size_t bytes) {
+bool read_from_fd(int fd, char* buffer, size_t bytes)
+{
 	size_t total_read = 0;
 	while (total_read < bytes) {
 		ssize_t bytes_read =
@@ -300,7 +315,8 @@ bool read_from_fd(int fd, char* buffer, size_t bytes) {
 	return total_read == bytes;
 }
 
-int read_file(const FilePath& filename, char* data, int max_size) {
+int read_file(const FilePath& filename, char* data, int max_size)
+{
 	int fd = HANDLE_EINTR(::open(filename.value().c_str(), O_RDONLY));
 	if (fd < 0) {
 		DPLOG(ERROR) << "Unable to open file " << filename.value();
@@ -315,7 +331,8 @@ int read_file(const FilePath& filename, char* data, int max_size) {
 	return bytes_read;
 }
 
-bool write_to_fd(const int fd, const char* data, int size) {
+bool write_to_fd(const int fd, const char* data, int size)
+{
 	// Allow for partial writes.
 	ssize_t bytes_written_total = 0;
 	for (ssize_t bytes_written_partial = 0; bytes_written_total < size;
@@ -332,7 +349,8 @@ bool write_to_fd(const int fd, const char* data, int size) {
 	return true;
 }
 
-int write_file(const FilePath& filename, const char* data, int size) {
+int write_file(const FilePath& filename, const char* data, int size)
+{
 	int fd = HANDLE_EINTR(::creat(filename.value().c_str(), 0666));
 	if (fd < 0) {
 		DPLOG(ERROR) << "Unable to creat file " << filename.value();
@@ -347,7 +365,8 @@ int write_file(const FilePath& filename, const char* data, int size) {
 	return bytes_written;
 }
 
-bool append_to_file(const FilePath& filename, const char* data, int size) {
+bool append_to_file(const FilePath& filename, const char* data, int size)
+{
 	bool ret = true;
 	int fd = HANDLE_EINTR(::open(filename.value().c_str(), O_WRONLY | O_APPEND));
 	if (fd < 0) {
@@ -369,7 +388,8 @@ bool append_to_file(const FilePath& filename, const char* data, int size) {
 	return ret;
 }
 
-bool set_non_blocking(int fd) {
+bool set_non_blocking(int fd)
+{
 	const int flags = ::fcntl(fd, F_GETFL);
 	if (flags == -1) {
 		DPLOG(ERROR) << "Unable to fcntl file F_GETFL " << fd;
@@ -385,7 +405,8 @@ bool set_non_blocking(int fd) {
 	return true;
 }
 
-bool set_close_on_exec(int fd) {
+bool set_close_on_exec(int fd)
+{
 	const int flags = ::fcntl(fd, F_GETFD);
 	if (flags == -1) {
 		DPLOG(ERROR) << "Unable to fcntl file F_GETFD " << fd;

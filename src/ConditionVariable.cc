@@ -16,7 +16,8 @@
 #include <time.h>
 #include <sys/time.h>
 
-namespace annety {
+namespace annety
+{
 ConditionVariable::ConditionVariable(MutexLock& user_lock)
 	: user_mutex_(user_lock.lock_.native_handle())
 #if DCHECK_IS_ON()
@@ -39,7 +40,8 @@ ConditionVariable::ConditionVariable(MutexLock& user_lock)
 	DCHECK_EQ(0, rv);
 }
 
-ConditionVariable::~ConditionVariable() {
+ConditionVariable::~ConditionVariable()
+{
 #if defined(OS_MACOSX)
 	{
 		// This hack is necessary to avoid a fatal pthreads subsystem bug in the
@@ -58,7 +60,8 @@ ConditionVariable::~ConditionVariable() {
 	DCHECK_EQ(0, rv);
 }
 
-void ConditionVariable::wait() {
+void ConditionVariable::wait()
+{
 #if DCHECK_IS_ON()
 	user_lock_.check_held_and_unmark();
 #endif
@@ -69,7 +72,8 @@ void ConditionVariable::wait() {
 #endif
 }
 
-void ConditionVariable::timed_wait(const TimeDelta& max_time) {
+void ConditionVariable::timed_wait(const TimeDelta& max_time)
+{
 	int64_t usecs = max_time.in_microseconds();
 	struct timespec relative_time;
 	relative_time.tv_sec = usecs / Time::kMicrosecondsPerSecond;
@@ -110,12 +114,14 @@ void ConditionVariable::timed_wait(const TimeDelta& max_time) {
 #endif
 }
 
-void ConditionVariable::broadcast() {
+void ConditionVariable::broadcast()
+{
 	int rv = ::pthread_cond_broadcast(&condition_);
 	DCHECK_EQ(0, rv);
 }
 
-void ConditionVariable::signal() {
+void ConditionVariable::signal()
+{
 	int rv = ::pthread_cond_signal(&condition_);
 	DCHECK_EQ(0, rv);
 }

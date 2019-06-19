@@ -17,7 +17,8 @@
 #include <time.h>
 #include <sys/time.h>	// futimes,timeval
 
-namespace annety {
+namespace annety
+{
 // Make sure our Whence mappings match the system headers.
 static_assert(File::FROM_BEGIN == SEEK_SET && File::FROM_CURRENT == SEEK_CUR &&
 			  File::FROM_END == SEEK_END,
@@ -25,26 +26,32 @@ static_assert(File::FROM_BEGIN == SEEK_SET && File::FROM_CURRENT == SEEK_CUR &&
 
 static_assert(sizeof(int64_t) == sizeof(off_t), "off_t must be 64 bits");
 
-namespace {
-bool is_open_append(PlatformFile file) {
+namespace
+{
+bool is_open_append(PlatformFile file)
+{
 	return (::fcntl(file, F_GETFL) & O_APPEND) != 0;
 }
 
 #if defined(OS_BSD) || defined(OS_MACOSX)
-int call_fstat(int fd, stat_wrapper_t *st) {
+int call_fstat(int fd, stat_wrapper_t *st)
+{
 	return ::fstat(fd, st);
 }
 #else
-int call_fstat(int fd, stat_wrapper_t *st) {
+int call_fstat(int fd, stat_wrapper_t *st)
+{
 	return ::fstat64(fd, st);
 }
 #endif  // defined(OS_BSD) || defined(OS_MACOSX)
 
-int call_ftruncate(PlatformFile file, int64_t length) {
+int call_ftruncate(PlatformFile file, int64_t length)
+{
 	return HANDLE_EINTR(::ftruncate(file, length));
 }
 
-int call_futimes(PlatformFile file, const struct timeval times[2]) {
+int call_futimes(PlatformFile file, const struct timeval times[2])
+{
 #ifdef __USE_XOPEN2K8
 	// futimens should be available, but futimes might not be
 	// http://pubs.opengroup.org/onlinepubs/9699919799/
@@ -60,7 +67,8 @@ int call_futimes(PlatformFile file, const struct timeval times[2]) {
 #endif  // __USE_XOPEN2K8
 }
 
-File::Error call_fcntl_flock(PlatformFile file, bool do_lock) {
+File::Error call_fcntl_flock(PlatformFile file, bool do_lock)
+{
 	struct flock lock;
 	lock.l_type = do_lock ? F_WRLCK : F_UNLCK;
 	lock.l_whence = SEEK_SET;
@@ -79,12 +87,12 @@ File::Error call_fcntl_flock(PlatformFile file, bool do_lock) {
 File::Info::Info()
 	: size(0),
 	  is_directory(false),
-	  is_symbolic_link(false) {
-}
+	  is_symbolic_link(false) {}
 
 File::Info::~Info() = default;
 
-void File::Info::from_stat(const stat_wrapper_t& stat_info) {
+void File::Info::from_stat(const stat_wrapper_t& stat_info)
+{
 	is_directory = S_ISDIR(stat_info.st_mode);
 	is_symbolic_link = S_ISLNK(stat_info.st_mode);
 	size = stat_info.st_size;
@@ -133,8 +141,7 @@ void File::Info::from_stat(const stat_wrapper_t& stat_info) {
 File::File()
 	: error_details_(FILE_ERROR_FAILED),
 	  created_(false),
-	  async_(false) {
-}
+	  async_(false) {}
 
 File::File(const FilePath& path, uint32_t flags)
 	: error_details_(FILE_OK), created_(false), async_(false)
@@ -158,8 +165,7 @@ File::File(PlatformFile platform_file, bool async)
 File::File(Error error_details)
 	: error_details_(error_details),
 	  created_(false),
-	  async_(false) {
-}
+	  async_(false) {}
 
 File::File(File&& other)
 	: file_(other.take_platform_file()),
@@ -167,12 +173,13 @@ File::File(File&& other)
 	  created_(other.created()),
 	  async_(other.async_) {}
 
-File::~File() {
-	// Go through the AssertIOAllowed logic.
+File::~File()
+{
 	this->close();
 }
 
-File& File::operator=(File&& other) {
+File& File::operator=(File&& other)
+{
 	this->close();
 	set_platform_file(other.take_platform_file());
 	error_details_ = other.error_details();
@@ -181,7 +188,8 @@ File& File::operator=(File&& other) {
 	return *this;
 }
 
-void File::initialize(const FilePath& path, uint32_t flags) {
+void File::initialize(const FilePath& path, uint32_t flags)
+{
 	if (path.references_parent()) {
 		errno = EACCES;
 		error_details_ = FILE_ERROR_ACCESS_DENIED;
@@ -190,33 +198,39 @@ void File::initialize(const FilePath& path, uint32_t flags) {
 	do_initialize(path, flags);
 }
 
-bool File::is_valid() const {
+bool File::is_valid() const
+{
 	return file_.is_valid();
 }
 
-PlatformFile File::get_platform_file() const {
+PlatformFile File::get_platform_file() const
+{
 	return file_.get();
 }
 
-PlatformFile File::take_platform_file() {
+PlatformFile File::take_platform_file()
+{
 	return file_.release();
 }
 
-void File::close() {
+void File::close()
+{
 	if (!is_valid()) {
 		return;
 	}
 	file_.reset();
 }
 
-int64_t File::seek(Whence whence, int64_t offset) {
+int64_t File::seek(Whence whence, int64_t offset)
+{
 	DCHECK(is_valid());
 
 	return ::lseek(file_.get(), static_cast<off_t>(offset),
 				   static_cast<int>(whence));
 }
 
-int File::read(int64_t offset, char* data, int size) {
+int File::read(int64_t offset, char* data, int size)
+{
 	DCHECK(is_valid());
 	if (size < 0) {
 		return -1;
@@ -237,7 +251,8 @@ int File::read(int64_t offset, char* data, int size) {
 	return bytes_read ? bytes_read : rv;
 }
 
-int File::read_at_current_pos(char* data, int size) {
+int File::read_at_current_pos(char* data, int size)
+{
 	DCHECK(is_valid());
 	if (size < 0) {
 	return -1;
@@ -258,7 +273,8 @@ int File::read_at_current_pos(char* data, int size) {
 	return bytes_read ? bytes_read : rv;
 }
 
-int File::read_no_best_effort(int64_t offset, char* data, int size) {
+int File::read_no_best_effort(int64_t offset, char* data, int size)
+{
 	DCHECK(is_valid());
 	if (size < 0) {
 		return -1;
@@ -267,7 +283,8 @@ int File::read_no_best_effort(int64_t offset, char* data, int size) {
 	return HANDLE_EINTR(::pread(file_.get(), data, size, offset));
 }
 
-int File::read_at_current_pos_no_best_effort(char* data, int size) {
+int File::read_at_current_pos_no_best_effort(char* data, int size)
+{
 	DCHECK(is_valid());
 	if (size < 0) {
 		return -1;
@@ -276,7 +293,8 @@ int File::read_at_current_pos_no_best_effort(char* data, int size) {
 	return HANDLE_EINTR(::read(file_.get(), data, size));
 }
 
-int File::write(int64_t offset, const char* data, int size) {
+int File::write(int64_t offset, const char* data, int size)
+{
 	// note: O_APPEND flags called open() will ignore offset
 	if (is_open_append(file_.get())) {
 		return write_at_current_pos(data, size);
@@ -302,7 +320,8 @@ int File::write(int64_t offset, const char* data, int size) {
 	return bytes_written ? bytes_written : rv;
 }
 
-int File::write_at_current_pos(const char* data, int size) {
+int File::write_at_current_pos(const char* data, int size)
+{
 	DCHECK(is_valid());
 	if (size < 0) {
 		return -1;
@@ -323,7 +342,8 @@ int File::write_at_current_pos(const char* data, int size) {
 	return bytes_written ? bytes_written : rv;
 }
 
-int File::write_at_current_pos_no_best_effort(const char* data, int size) {
+int File::write_at_current_pos_no_best_effort(const char* data, int size)
+{
 	DCHECK(is_valid());
 	if (size < 0) {
 		return -1;
@@ -332,7 +352,8 @@ int File::write_at_current_pos_no_best_effort(const char* data, int size) {
 	return HANDLE_EINTR(::write(file_.get(), data, size));
 }
 
-int64_t File::get_length() {
+int64_t File::get_length()
+{
 	DCHECK(is_valid());
 
 	stat_wrapper_t file_info;
@@ -343,13 +364,15 @@ int64_t File::get_length() {
 	return file_info.st_size;
 }
 
-bool File::set_length(int64_t length) {
+bool File::set_length(int64_t length)
+{
 	DCHECK(is_valid());
 
 	return !call_ftruncate(file_.get(), length);
 }
 
-bool File::set_times(Time last_access_time, Time last_modified_time) {
+bool File::set_times(Time last_access_time, Time last_modified_time)
+{
 	DCHECK(is_valid());
 
 	timeval times[2];
@@ -359,7 +382,8 @@ bool File::set_times(Time last_access_time, Time last_modified_time) {
 	return !call_futimes(file_.get(), times);
 }
 
-bool File::get_info(Info* info) {
+bool File::get_info(Info* info)
+{
 	DCHECK(is_valid());
 
 	stat_wrapper_t file_info;
@@ -371,19 +395,22 @@ bool File::get_info(Info* info) {
 	return true;
 }
 
-File::Error File::lock() {
+File::Error File::lock()
+{
 	DCHECK(is_valid());
 
 	return call_fcntl_flock(file_.get(), true);
 }
 
-File::Error File::unlock() {
+File::Error File::unlock()
+{
 	DCHECK(is_valid());
 
 	return call_fcntl_flock(file_.get(), false);
 }
 
-File File::duplicate() const {
+File File::duplicate() const
+{
 	if (!is_valid()) {
 		return File();
 	}
@@ -397,7 +424,8 @@ File File::duplicate() const {
 }
 
 // Static.
-File::Error File::os_error_to_file_error(int saved_errno) {
+File::Error File::os_error_to_file_error(int saved_errno)
+{
 	switch (saved_errno) {
 		case EACCES:
 		case EISDIR:
@@ -431,7 +459,8 @@ File::Error File::os_error_to_file_error(int saved_errno) {
 }
 
 // TODO(erikkay): does it make sense to support FLAG_EXCLUSIVE_* here?
-void File::do_initialize(const FilePath& path, uint32_t flags) {
+void File::do_initialize(const FilePath& path, uint32_t flags)
+{
 	DCHECK(!is_valid());
 
 	int open_flags = 0;
@@ -519,7 +548,8 @@ void File::do_initialize(const FilePath& path, uint32_t flags) {
 	file_.reset(descriptor);
 }
 
-bool File::flush() {
+bool File::flush()
+{
 	DCHECK(is_valid());
 
 #if defined(OS_LINUX)
@@ -529,17 +559,20 @@ bool File::flush() {
 #endif
 }
 
-void File::set_platform_file(PlatformFile file) {
+void File::set_platform_file(PlatformFile file)
+{
 	DCHECK(!file_.is_valid());
 	file_.reset(file);
 }
 
 // static
-File::Error File::get_last_file_error() {
+File::Error File::get_last_file_error()
+{
 	return File::os_error_to_file_error(errno);
 }
 
-std::string File::error_to_string(Error error) {
+std::string File::error_to_string(Error error)
+{
 	switch (error) {
 		case FILE_OK:
 			return "FILE_OK";

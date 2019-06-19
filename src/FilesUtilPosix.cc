@@ -32,35 +32,44 @@
 #include <unistd.h>		// mkdir,rmdir,unlink,pipe,readlink,close
 #include <stddef.h>
 
-namespace annety {
-namespace files {
-namespace {
+namespace annety
+{
+namespace files
+{
+namespace
+{
 const char kTempFileNamePattern[] = "annety.temp.XXXXXX";
 
 #if defined(OS_BSD) || defined(OS_MACOSX)
-int call_stat(const char* path, stat_wrapper_t* sb) {
+int call_stat(const char* path, stat_wrapper_t* sb)
+{
 	return ::stat(path, sb);
 }
-int call_lstat(const char* path, stat_wrapper_t* sb) {
+int call_lstat(const char* path, stat_wrapper_t* sb)
+{
 	return ::lstat(path, sb);
 }
 #else
-int call_stat(const char* path, stat_wrapper_t* sb) {
+int call_stat(const char* path, stat_wrapper_t* sb)
+{
 	return ::stat64(path, sb);
 }
-int call_lstat(const char* path, stat_wrapper_t* sb) {
+int call_lstat(const char* path, stat_wrapper_t* sb)
+{
 	return ::lstat64(path, sb);
 }
 #endif
 
-std::string temp_file_name() {
+std::string temp_file_name()
+{
 	return std::string(kTempFileNamePattern);
 }
 
 // Helper for VerifyPathControlledByUser.
 bool verify_specific_path_controlled_by_user(const FilePath& path,
 											 uid_t owner_uid,
-											 const std::set<gid_t>& group_gids) {
+											 const std::set<gid_t>& group_gids)
+{
 	stat_wrapper_t stat_info;
 	if (call_lstat(path.value().c_str(), &stat_info) != 0) {
 		DPLOG(ERROR) << "Failed to get information on path "
@@ -98,7 +107,8 @@ bool verify_specific_path_controlled_by_user(const FilePath& path,
 // Helper for do_copy_directory
 bool advance_enumerator_with_stat(FileEnumerator* traversal,
 								  FilePath* out_next_path,
-								  struct stat* out_next_stat) {
+								  struct stat* out_next_stat)
+{
 	DCHECK(out_next_path);
 	DCHECK(out_next_stat);
 	*out_next_path = traversal->next();
@@ -109,7 +119,8 @@ bool advance_enumerator_with_stat(FileEnumerator* traversal,
 	*out_next_stat = traversal->get_info().stat();
 	return true;
 }
-bool copy_file_contents(File* infile, File* outfile) {
+bool copy_file_contents(File* infile, File* outfile)
+{
 	static constexpr size_t kBufferSize = 32768;
 	std::vector<char> buffer(kBufferSize);
 
@@ -294,7 +305,8 @@ bool do_copy_directory(const FilePath& from_path,
 // -------------------------------------------------------------------
 
 #if defined(OS_MACOSX)
-bool get_tempdir(FilePath* path) {
+bool get_tempdir(FilePath* path)
+{
 	// In order to facilitate hermetic runs on macOS, first check
 	// $MAC_CHROMIUM_TMPDIR. We check this instead of $TMPDIR because external
 	// programs currently set $TMPDIR with no effect, but when we respect it
@@ -311,7 +323,8 @@ bool get_tempdir(FilePath* path) {
 	return true;
 }
 
-FilePath get_homedir() {
+FilePath get_homedir()
+{
 	const char* home_dir = ::getenv("HOME");
 	if (home_dir && home_dir[0]) {
 		return FilePath(home_dir);
@@ -327,7 +340,8 @@ FilePath get_homedir() {
 	return FilePath("/tmp");
 }
 #else
-bool get_tempdir(FilePath* path) {
+bool get_tempdir(FilePath* path)
+{
 	const char* tmp = ::getenv("TMPDIR");
 	if (tmp) {
 		*path = FilePath(tmp);
@@ -338,7 +352,8 @@ bool get_tempdir(FilePath* path) {
 	return true;
 }
 
-FilePath get_homedir() {
+FilePath get_homedir()
+{
 	const char* home_dir = ::getenv("HOME");
 	if (home_dir && home_dir[0]) {
 		return FilePath(home_dir);
@@ -368,7 +383,8 @@ bool copy_directory_excl(const FilePath& from_path,
 	return do_copy_directory(from_path, to_path, recursive, true);
 }
 
-bool directory_exists(const FilePath& path) {
+bool directory_exists(const FilePath& path)
+{
 	stat_wrapper_t file_info;
 	if (call_stat(path.value().c_str(), &file_info) != 0) {
 		return false;
@@ -376,15 +392,18 @@ bool directory_exists(const FilePath& path) {
 	return S_ISDIR(file_info.st_mode);
 }
 
-bool path_exists(const FilePath& path) {
+bool path_exists(const FilePath& path)
+{
 	return ::access(path.value().c_str(), F_OK) == 0;
 }
 
-bool path_is_writable(const FilePath& path) {
+bool path_is_writable(const FilePath& path)
+{
 	return ::access(path.value().c_str(), W_OK) == 0;
 }
 
-FilePath make_absolute_filepath(const FilePath& input) {
+FilePath make_absolute_filepath(const FilePath& input)
+{
 	char full_path[PATH_MAX];
 	if (::realpath(input.value().c_str(), full_path) == nullptr) {
 		return FilePath();
@@ -392,7 +411,8 @@ FilePath make_absolute_filepath(const FilePath& input) {
 	return FilePath(full_path);
 }
 
-bool normalize_filepath(const FilePath& path, FilePath* normalized_path) {
+bool normalize_filepath(const FilePath& path, FilePath* normalized_path)
+{
 	FilePath real_path_result = make_absolute_filepath(path);
 	if (real_path_result.empty()) {
 		return false;
@@ -408,7 +428,8 @@ bool normalize_filepath(const FilePath& path, FilePath* normalized_path) {
 	return true;
 }
 
-bool get_file_size(const FilePath& file_path, int64_t* file_size) {
+bool get_file_size(const FilePath& file_path, int64_t* file_size)
+{
 	File::Info info;
 	if (!get_file_info(file_path, &info)) {
 		DLOG(ERROR) << "Unable to get file info " << file_path.value();
@@ -418,7 +439,8 @@ bool get_file_size(const FilePath& file_path, int64_t* file_size) {
 	return true;
 }
 
-bool get_file_info(const FilePath& file_path, File::Info* results) {
+bool get_file_info(const FilePath& file_path, File::Info* results)
+{
 	stat_wrapper_t file_info;
 	if (call_stat(file_path.value().c_str(), &file_info) != 0) {
 		return false;
@@ -428,10 +450,12 @@ bool get_file_info(const FilePath& file_path, File::Info* results) {
 	return true;
 }
 
-bool get_current_directory(FilePath* dir) {
+bool get_current_directory(FilePath* dir)
+{
 	// getcwd can return ENOENT, which implies it checks against the disk.
 	char system_buffer[PATH_MAX] = "";
-	if (!::getcwd(system_buffer, sizeof(system_buffer))) {
+	if (!::getcwd(system_buffer, sizeof(system_buffer)))
+	{
 		NOTREACHED();
 		return false;
 	}
@@ -439,7 +463,8 @@ bool get_current_directory(FilePath* dir) {
 	return true;
 }
 
-bool set_current_directory(const FilePath& path) {
+bool set_current_directory(const FilePath& path)
+{
 	return ::chdir(path.value().c_str()) == 0;
 }
 
@@ -457,7 +482,8 @@ bool touch_file(const FilePath& path,
 	return file.set_times(last_accessed, last_modified);
 }
 
-bool move_file(const FilePath& from_path, const FilePath& to_path) {
+bool move_file(const FilePath& from_path, const FilePath& to_path)
+{
 	if (from_path.references_parent() || to_path.references_parent()) {
 		DLOG(ERROR) << "Unable to move_file reference parent path " 
 					<< from_path.value() << ">>>" << to_path.value();
@@ -466,7 +492,8 @@ bool move_file(const FilePath& from_path, const FilePath& to_path) {
 	return internal::move_unsafe(from_path, to_path);
 }
 
-bool delete_file(const FilePath& path, bool recursive) {
+bool delete_file(const FilePath& path, bool recursive)
+{
 	const char* path_str = path.value().c_str();
 	stat_wrapper_t file_info;
 	if (call_lstat(path_str, &file_info) != 0) {
@@ -504,7 +531,8 @@ bool delete_file(const FilePath& path, bool recursive) {
 	return success;
 }
 
-bool replace_file(const FilePath& from_path, const FilePath& to_path, File::Error* error) {
+bool replace_file(const FilePath& from_path, const FilePath& to_path, File::Error* error)
+{
 	if (::rename(from_path.value().c_str(), to_path.value().c_str()) == 0) {
 		return true;
 	}
@@ -515,7 +543,8 @@ bool replace_file(const FilePath& from_path, const FilePath& to_path, File::Erro
 }
 
 #if defined(OS_MACOSX)
-bool copy_file(const FilePath& from_path, const FilePath& to_path) {
+bool copy_file(const FilePath& from_path, const FilePath& to_path)
+{
 	if (from_path.references_parent() || to_path.references_parent()) {
 		return false;
 	}
@@ -524,7 +553,8 @@ bool copy_file(const FilePath& from_path, const FilePath& to_path) {
 }
 #else
 // Mac has its own implementation, this is for all other Posix systems.
-bool copy_file(const FilePath& from_path, const FilePath& to_path) {
+bool copy_file(const FilePath& from_path, const FilePath& to_path)
+{
 	File infile;
 	infile = File(from_path, File::FLAG_OPEN | File::FLAG_READ);
 	if (!infile.is_valid()) {
@@ -540,7 +570,8 @@ bool copy_file(const FilePath& from_path, const FilePath& to_path) {
 }
 #endif  // !defined(OS_MACOSX)
 
-bool get_posix_file_permissions(const FilePath& path, int* mode) {
+bool get_posix_file_permissions(const FilePath& path, int* mode)
+{
   DCHECK(mode);
 
 	stat_wrapper_t file_info;
@@ -585,7 +616,8 @@ bool create_symbolic_link(const FilePath& target_path,
 					 symlink_path.value().c_str()) != -1;
 }
 
-bool read_symbolic_link(const FilePath& symlink_path, FilePath* target_path) {
+bool read_symbolic_link(const FilePath& symlink_path, FilePath* target_path)
+{
 	DCHECK(!symlink_path.empty());
 	DCHECK(target_path);
 
@@ -603,7 +635,8 @@ bool read_symbolic_link(const FilePath& symlink_path, FilePath* target_path) {
 
 // TODO(rkc): Refactor GetFileInfo and FileEnumerator to handle symlinks
 // correctly. http://code.google.com/p/chromium-os/issues/detail?id=15948
-bool is_link(const FilePath& file_path) {
+bool is_link(const FilePath& file_path)
+{
 	stat_wrapper_t st;
 	// If we can't lstat the file, it's safe to assume that the file won't at
 	// least be a 'followable' link.
@@ -625,7 +658,8 @@ int create_and_open_fd_for_temporary_file_in_dir(const FilePath& directory,
 	return HANDLE_EINTR(::mkstemp(buffer));
 }
 
-bool create_temporary_file(FilePath* path) {
+bool create_temporary_file(FilePath* path)
+{
 	// For call to close().
 	FilePath directory;
 	if (!get_tempdir(&directory)) {
@@ -641,13 +675,15 @@ bool create_temporary_file(FilePath* path) {
 	return true;
 }
 
-bool create_temporary_file_in_dir(const FilePath& dir, FilePath* temp_file) {
+bool create_temporary_file_in_dir(const FilePath& dir, FilePath* temp_file)
+{
 	// For call to close().
 	int fd = create_and_open_fd_for_temporary_file_in_dir(dir, temp_file);
 	return ((fd >= 0) && !IGNORE_EINTR(::close(fd)));
 }
 
-FILE* create_and_open_temporary_file_in_dir(const FilePath& dir, FilePath* path) {
+FILE* create_and_open_temporary_file_in_dir(const FilePath& dir, FilePath* path)
+{
 	int fd = create_and_open_fd_for_temporary_file_in_dir(dir, path);
 	if (fd < 0) {
 		return nullptr;
@@ -660,7 +696,8 @@ FILE* create_and_open_temporary_file_in_dir(const FilePath& dir, FilePath* path)
 	return file;
 }
 
-FILE* create_and_open_temporary_file(FilePath* path) {
+FILE* create_and_open_temporary_file(FilePath* path)
+{
 	FilePath directory;
 	if (!get_tempdir(&directory)) {
 		DLOG(ERROR) << "Unable to get temp dir";
@@ -797,11 +834,13 @@ bool verify_path_controlled_by_user(const FilePath& base,
 	return true;
 }
 
-int get_maximum_path_component_length(const FilePath& path) {
+int get_maximum_path_component_length(const FilePath& path)
+{
 	return ::pathconf(path.value().c_str(), _PC_NAME_MAX);
 }
 
-bool create_local_non_blocking_pipe(int fds[2]) {
+bool create_local_non_blocking_pipe(int fds[2])
+{
 #if defined(OS_LINUX)
 	return 
 		::pipe2(fds, O_CLOEXEC | O_NONBLOCK) == 0;
@@ -831,10 +870,10 @@ bool create_local_non_blocking_pipe(int fds[2]) {
 #endif
 }
 
-// -----------------------------------------------------------------------------
-
+// ----------------------------------------------------------------
 namespace internal {
-bool move_unsafe(const FilePath& from_path, const FilePath& to_path) {
+bool move_unsafe(const FilePath& from_path, const FilePath& to_path)
+{
 	// Windows compatibility: if |to_path| exists, |from_path| and |to_path|
 	// must be the same type, either both files, or both directories.
 	stat_wrapper_t to_file_info;

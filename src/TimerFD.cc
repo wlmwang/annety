@@ -7,8 +7,10 @@
 #include <unistd.h>
 #include <sys/timerfd.h>  // timerfd
 
-namespace annety {
-TimerFD::TimerFD(bool nonblock, bool cloexec) {
+namespace annety
+{
+TimerFD::TimerFD(bool nonblock, bool cloexec)
+{
 	int flags = 0;
 	if (nonblock) {
 		flags |= TFD_NONBLOCK;
@@ -21,7 +23,8 @@ TimerFD::TimerFD(bool nonblock, bool cloexec) {
 	PLOG_IF(ERROR, fd_ < 0) << "::timerfd_create failed";
 }
 
-TimerFD::~TimerFD() {
+TimerFD::~TimerFD()
+{
 	int ret = ::close(fd_);
 	PLOG_IF(ERROR, ret < 0) << "::close failed";
 }

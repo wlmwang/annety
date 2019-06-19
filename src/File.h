@@ -17,7 +17,8 @@
 #include <stdint.h>
 #include <sys/stat.h>
 
-namespace annety {
+namespace annety
+{
 // platform file
 #if defined(OS_POSIX)
 using PlatformFile = int;
@@ -41,7 +42,8 @@ typedef struct stat64 stat_wrapper_t;
 // obvious non-modifying way are marked as const. Any method that forward calls
 // to the OS is not considered const, even if there is no apparent change to
 // member variables.
-class File {
+class File
+{
 public:
 	// FLAG_(OPEN|CREATE).* are mutually exclusive. You should specify exactly one
 	// of the five (possibly combining with other flags) when opening or creating
@@ -50,7 +52,8 @@ public:
 	// will be consistent with O_APPEND on POSIX.
 	// FLAG_EXCLUSIVE_(READ|WRITE) only grant exclusive access to the file on
 	// creation on POSIX; for existing files, consider using Lock().
-	enum Flags {
+	enum Flags
+	{
 		FLAG_OPEN = 1 << 0,				// Opens a file, only if it exists.
 		FLAG_CREATE = 1 << 1,			// Creates a new file, only if it does not
 										// already exist.
@@ -79,7 +82,8 @@ public:
 	// FILE_ERROR_ACCESS_DENIED is returned when a call fails because of a
 	// filesystem restriction. FILE_ERROR_SECURITY is returned when a browser
 	// policy doesn't allow the operation to be executed.
-	enum Error {
+	enum Error
+	{
 		FILE_OK = 0,
 		FILE_ERROR_FAILED = -1,
 		FILE_ERROR_IN_USE = -2,
@@ -102,7 +106,8 @@ public:
 	};
 
 	// This explicit mapping matches both FILE_ on Windows and SEEK_ on Linux.
-	enum Whence {
+	enum Whence
+	{
 		FROM_BEGIN   = 0,
 		FROM_CURRENT = 1,
 		FROM_END     = 2
@@ -113,7 +118,8 @@ public:
 	// make sure to update all functions that use it in file_util_{win|posix}.cc,
 	// too, and the ParamTraits<wutil::File::Info> implementation in
 	// ipc/ipc_message_utils.cc.
-	struct Info {
+	struct Info
+	{
 		Info();
 		~Info();
 
@@ -172,18 +178,14 @@ public:
 	// Returns true if a new file was created (or an old one truncated to zero
 	// length to simulate a new file, which can happen with
 	// FLAG_CREATE_ALWAYS), and false otherwise.
-	bool created() const {
-		return created_;
-	}
+	bool created() const { return created_;}
 
 	// Returns the OS result of opening this file. Note that the way to verify
 	// the success of the operation is to use IsValid(), not this method:
 	//   File file(path, flags);
 	//   if (!file.IsValid())
 	//     return;
-	Error error_details() const {
-		return error_details_;
-	}
+	Error error_details() const { return error_details_;}
 
 	PlatformFile get_platform_file() const;
 	PlatformFile take_platform_file();
@@ -290,9 +292,7 @@ public:
 	// underlying file is deleted when the last handle to it is closed.
 	File duplicate() const;
 
-	bool async() const {
-		return async_;
-	}
+	bool async() const { return async_;}
 
 	static Error os_error_to_file_error(int saved_errno);
 

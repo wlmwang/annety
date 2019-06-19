@@ -15,15 +15,18 @@
 
 #include <pthread.h>
 
-namespace annety {
-class TimeDelta;
-
+namespace annety
+{
 // ConditionVariable wraps pthreads condition variable synchronization .
 // This functionality is very helpful for having several threads wait for 
 // an event, as is common with a thread pool managed by a master.  
 // The meaning of such an event in the (worker) thread pool scenario is 
 // that additional tasks are now available for processing.
-class ConditionVariable {
+
+class TimeDelta;
+
+class ConditionVariable
+{
 public:
 	// Construct a cv for use with ONLY one user lock.
 	explicit ConditionVariable(MutexLock& user_lock);

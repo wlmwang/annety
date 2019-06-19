@@ -16,8 +16,10 @@
 #include <errno.h>	// errno
 #include <stdio.h>	// vsnprintf
 
-namespace annety {
-namespace {
+namespace annety
+{
+namespace
+{
 // Overloaded wrappers around vsnprintf and vswprintf. The buf_size parameter
 // is the size of the buffer. These return the number of characters in the
 // formatted string excluding the NUL terminator. If the buffer is not
@@ -97,7 +99,8 @@ static void string_appendvt(StringType* dst,
 
 } // namespace anonymous
 
-std::string string_printf(const char* format, ...) {
+std::string string_printf(const char* format, ...)
+{
 	va_list ap;
 	::va_start(ap, format);
 	std::string result;
@@ -106,13 +109,15 @@ std::string string_printf(const char* format, ...) {
 	return result;
 }
 
-std::string string_printv(const char* format, va_list ap) {
+std::string string_printv(const char* format, va_list ap)
+{
 	std::string result;
 	string_appendv(&result, format, ap);
 	return result;
 }
 
-const std::string& sstring_printf(std::string* dst, const char* format, ...) {
+const std::string& sstring_printf(std::string* dst, const char* format, ...)
+{
 	va_list ap;
 	::va_start(ap, format);
 	dst->clear();
@@ -121,7 +126,8 @@ const std::string& sstring_printf(std::string* dst, const char* format, ...) {
 	return *dst;
 }
 
-const std::string& string_appendf(std::string* dst, const char* format, ...) {
+const std::string& string_appendf(std::string* dst, const char* format, ...)
+{
 	va_list ap;
 	::va_start(ap, format);
 	string_appendv(dst, format, ap);
@@ -129,7 +135,8 @@ const std::string& string_appendf(std::string* dst, const char* format, ...) {
 	return *dst;
 }
 
-void string_appendv(std::string* dst, const char* format, va_list ap) {
+void string_appendv(std::string* dst, const char* format, va_list ap)
+{
 	string_appendvt(dst, format, ap);
 }
 

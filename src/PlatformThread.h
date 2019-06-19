@@ -17,9 +17,11 @@
 #include <stddef.h>
 #include <pthread.h>
 
-namespace annety {
+namespace annety
+{
 // A namespace for low-level thread functions.
-class PlatformThread {
+class PlatformThread
+{
 public:
 	using TaskCallback = std::function<void()>;
 

@@ -8,7 +8,8 @@
 #include <string>
 #include <functional>
 
-namespace annety {
+namespace annety
+{
 ThreadPool::ThreadPool(int num_threads, const std::string& name_prefix) 
 	: name_prefix_(name_prefix),
 	  num_threads_(num_threads),
@@ -16,12 +17,14 @@ ThreadPool::ThreadPool(int num_threads, const std::string& name_prefix)
 	  empty_cv_(lock_),
 	  full_cv_(lock_) {}
 
-ThreadPool::~ThreadPool() {
+ThreadPool::~ThreadPool()
+{
 	DCHECK(threads_.empty());
 	DCHECK(thread_main_cbs_.empty());
 }
 
-ThreadPool& ThreadPool::start() {
+ThreadPool& ThreadPool::start()
+{
 	DCHECK(threads_.empty() && running_ == false) 
 		<< "start() called with outstanding threads.";
 	running_ = true;
@@ -40,7 +43,8 @@ ThreadPool& ThreadPool::start() {
 	return *this;
 }
 
-void ThreadPool::stop() {
+void ThreadPool::stop()
+{
 	// tell all threads to quit their tasker loop.
 	DCHECK(running_ == true) 
 		<< "stop() called with no outstanding threads.";
@@ -58,7 +62,8 @@ void ThreadPool::stop() {
 	thread_main_cbs_.clear();
 }
 
-void ThreadPool::joinall() {
+void ThreadPool::joinall()
+{
 	DCHECK(running_ == true) 
 		<< "join_all() called with no outstanding threads.";
 
@@ -74,17 +79,20 @@ void ThreadPool::joinall() {
 	running_ = false;
 }
 
-size_t ThreadPool::get_task_size() const {
+size_t ThreadPool::get_task_size() const
+{
 	AutoLock locked(lock_);
 	return thread_main_cbs_.size();
 }
 
-bool ThreadPool::full() const {
+bool ThreadPool::full() const
+{
 	lock_.assert_acquired();
 	return max_task_size_ > 0 && max_task_size_ <= thread_main_cbs_.size();
 }
 
-void ThreadPool::run_task(const TaskCallback& cb, int repeat_count) {
+void ThreadPool::run_task(const TaskCallback& cb, int repeat_count)
+{
 	DCHECK(running_ == true) << 
 		"run_task() called with no outstanding threads.";
 
@@ -108,7 +116,8 @@ void ThreadPool::run_task(const TaskCallback& cb, int repeat_count) {
 	}
 }
 
-void ThreadPool::loop() {
+void ThreadPool::loop()
+{
 	try {
 		if (thread_init_cb_) {
 			thread_init_cb_();

@@ -9,22 +9,26 @@
 
 #include <pthread.h>
 
-namespace annety {
+namespace annety
+{
 template<typename Type>
 class ThreadLocalSingleton;
 
 template<typename Type>
-class ThreadLocal {
+class ThreadLocal
+{
 public:
 	using DeleteFuncType = void(*)(void*);
 
-	ThreadLocal(const DeleteFuncType func = &ThreadLocal::local_dtor) {
+	ThreadLocal(const DeleteFuncType func = &ThreadLocal::local_dtor)
+	{
 		DCHECK(func);
 		DPCHECK(::pthread_key_create(&tls_key_, local_dtor_func_ = func) == 0);
 	}
 	
 	// no virtual even ThreadLocalSingleton extends this
-	~ThreadLocal() {
+	~ThreadLocal()
+	{
 		// 1. ThreadLocal<> and tls_key_ have the same lifetime
 		// 2. TODO: pthread_key_delete could not call local_dtor_func_() when
 		// pthread_key_create called by one thread
@@ -35,16 +39,19 @@ public:
 		}
 	}
 	
-	bool empty() {
+	bool empty()
+	{
 		return ::pthread_getspecific(tls_key_) == nullptr;
 	}
 
-	Type* get() {
+	Type* get()
+	{
 		Type* ptr = static_cast<Type*>(::pthread_getspecific(tls_key_));
 		return ptr? ptr: set(new Type());
 	}
 	
-	Type* set(Type* ptr) {
+	Type* set(Type* ptr)
+	{
 		DPCHECK(::pthread_getspecific(tls_key_) == nullptr);
 		DPCHECK(::pthread_setspecific(tls_key_, ptr) == 0);
 		return ptr;
@@ -56,7 +63,8 @@ private:
 	// 1. Scoped ThreadLocal end of lifetime will run local_dtor(). [auto]
 	// 2. A thread(getspecific ThreadLocal) exit will run local_dtor() [auto]
 	// 3. A thread(created ThreadLocal) exit will run local_dtor()
-	static void local_dtor(void *ptr) {
+	static void local_dtor(void *ptr)
+	{
 		DCHECK(ptr);
 
 		typedef char T_must_be_complete_type[sizeof(Type) == 0 ? -1 : 1];

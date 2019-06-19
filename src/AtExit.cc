@@ -10,7 +10,8 @@
 
 #include <utility>
 
-namespace annety {
+namespace annety
+{
 // Keep a stack of registered AtExitManagers.  We always operate on the most
 // recent, and we should never have more than one outside of testing (for a
 // statically linked version of this library).  Testing may use the shadow
@@ -19,14 +20,16 @@ namespace annety {
 // this for thread-safe access, since it will only be modified in testing.
 static AtExitManager* g_top_manager = nullptr;
 
-AtExitManager::AtExitManager() : next_manager_(g_top_manager) {
+AtExitManager::AtExitManager() : next_manager_(g_top_manager)
+{
 	// If multiple modules instantiate AtExitManagers they'll end up living in this
 	// module... they have to coexist.
 	DCHECK(!g_top_manager);
 	g_top_manager = this;
 }
 
-AtExitManager::~AtExitManager() {
+AtExitManager::~AtExitManager()
+{
 	if (!g_top_manager) {
 		NOTREACHED() << "Tried to ~AtExitManager without an AtExitManager";
 		return;
@@ -38,7 +41,8 @@ AtExitManager::~AtExitManager() {
 }
 
 // static
-void AtExitManager::register_callback(AtExitCallback cb) {
+void AtExitManager::register_callback(AtExitCallback cb)
+{
 	DCHECK(cb);
 	if (!g_top_manager) {
 		NOTREACHED() << "Tried to register_callback without an AtExitManager";
@@ -50,7 +54,8 @@ void AtExitManager::register_callback(AtExitCallback cb) {
 }
 
 // static
-void AtExitManager::process_callbacks() {
+void AtExitManager::process_callbacks()
+{
 	if (!g_top_manager) {
 		NOTREACHED() << "Tried to process_callbacks without an AtExitManager";
 		return;
@@ -69,7 +74,8 @@ void AtExitManager::process_callbacks() {
 	}
 }
 
-AtExitManager::AtExitManager(bool shadow) : next_manager_(g_top_manager) {
+AtExitManager::AtExitManager(bool shadow) : next_manager_(g_top_manager)
+{
 	DCHECK(shadow || !g_top_manager);
 	g_top_manager = this;
 }

@@ -20,18 +20,22 @@
 #include <string>
 #include <vector>
 
-namespace annety {
-namespace strings {
+namespace annety
+{
+namespace strings
+{
 // Misc----------------------------------------------------
 
 // Chromium code style is to not use malloc'd strings; this is only for use
 // for interaction with APIs that require it.
-inline char* strdup(const char* str) {
+inline char* strdup(const char* str)
+{
 	return ::strdup(str);
 }
 
 inline int vsnprintf(char* buffer, size_t size,
-					 const char* format, va_list arguments) {
+					 const char* format, va_list arguments)
+{
 	return ::vsnprintf(buffer, size, format, arguments);
 }
 
@@ -65,13 +69,15 @@ size_t strlcpy(char* dst, const char* src, size_t dst_size);
 
 // ASCII-specific tolower.  The standard library's tolower is locale sensitive,
 // so we don't want to use it here.
-inline char to_lower(char c) {
+inline char to_lower(char c)
+{
 	return (c >= 'A' && c <= 'Z') ? (c + ('a' - 'A')) : c;
 }
 
 // ASCII-specific toupper.  The standard library's toupper is locale sensitive,
 // so we don't want to use it here.
-inline char to_upper(char c) {
+inline char to_upper(char c)
+{
 	return (c >= 'a' && c <= 'z') ? (c + ('A' - 'a')) : c;
 }
 
@@ -91,7 +97,8 @@ std::string to_upper(StringPiece str);
 // context (combining accents), and require handling UTF-16. If you need
 // proper Unicode support, use wutil::i18n::ToLower/FoldCase and then just
 // use a normal operator== on the result.
-template<typename Char> struct CaseInsensitiveCompare {
+template<typename Char> struct CaseInsensitiveCompare
+{
 public:
 	bool operator()(Char x, Char y) const {
 		return to_lower(x) == to_lower(y);
@@ -130,7 +137,8 @@ bool lower_case_equals(StringPiece str,
 // best to call wutil::i18n::ToLower() or wutil::i18n::FoldCase() (see
 // wUtil/i18n/case_conversion.h for usage advice) on the arguments, and then use
 // the results to a case-sensitive comparison.
-enum class CompareCase {
+enum class CompareCase
+{
 	SENSITIVE,
 	INSENSITIVE,
 };
@@ -146,28 +154,34 @@ bool ends_with(StringPiece str,
 // Determines the type of ASCII character, independent of locale (the C
 // library versions will change based on locale).
 template <typename Char>
-inline bool is_ascii_whitespace(Char c) {
+inline bool is_ascii_whitespace(Char c)
+{
 	return c == ' ' || c == '\r' || c == '\n' || c == '\t';
 }
 template <typename Char>
-inline bool is_ascii_alpha(Char c) {
+inline bool is_ascii_alpha(Char c)
+{
 	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 template <typename Char>
-inline bool is_ascii_upper(Char c) {
+inline bool is_ascii_upper(Char c)
+{
 	return c >= 'A' && c <= 'Z';
 }
 template <typename Char>
-inline bool is_ascii_lower(Char c) {
+inline bool is_ascii_lower(Char c)
+{
 	return c >= 'a' && c <= 'z';
 }
 template <typename Char>
-inline bool is_ascii_digit(Char c) {
+inline bool is_ascii_digit(Char c)
+{
 	return c >= '0' && c <= '9';
 }
 
 template <typename Char>
-inline bool is_hex_digit(Char c) {
+inline bool is_hex_digit(Char c)
+{
 	return (c >= '0' && c <= '9') ||
 		   (c >= 'A' && c <= 'F') ||
 		   (c >= 'a' && c <= 'f');
@@ -180,7 +194,8 @@ extern const char kWhitespace[];
 
 // Trim----------------------------------------------------
 
-enum TrimPositions {
+enum TrimPositions
+{
 	TRIM_NONE     = 0,
 	TRIM_LEADING  = 1 << 0,
 	TRIM_TRAILING = 1 << 1,

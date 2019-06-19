@@ -10,12 +10,15 @@
 #include <string>
 #include <functional>
 
-namespace annety {
-class Thread {
+namespace annety
+{
+class Thread
+{
 public:
 	using TaskCallback = std::function<void()>;
 
-	struct Options {
+	struct Options
+	{
 	public:
 		Options() = default;
 		~Options() = default;
@@ -65,19 +68,13 @@ public:
 	// TaskCallback() has run). If the thread was started with start_async(), but it
 	// hasn't been initialized yet (i.e. TaskCallback() has not run), then this will
 	// return False.
-	bool has_been_started() const {
-		return started_;
-	}
+	bool has_been_started() const { return started_;}
 
 	// Returns True if join() has ever been called.
-	bool has_been_joined() const {
-		return joined_;
-	}
+	bool has_been_joined() const { return joined_;}
 	
 	// Returns true if start() or start_async() has been called.
-	bool has_start_been_attempted() const {
-		return start_called_;
-	}
+	bool has_start_been_attempted() const { return start_called_;}
 
 private:
 	void start_routine();

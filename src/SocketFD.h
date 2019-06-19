@@ -7,8 +7,10 @@
 #include "Macros.h"
 #include "SelectableFD.h"
 
-namespace annety {
-class SocketFD : public SelectableFD {
+namespace annety
+{
+class SocketFD : public SelectableFD
+{
 public:
 	explicit SocketFD(bool nonblock = true, bool cloexec = true);
 	explicit SocketFD(int sckfd) : SelectableFD(sckfd) {}
