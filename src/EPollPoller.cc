@@ -38,7 +38,7 @@ EPollPoller::EPollPoller(EventLoop* loop)
 
 EPollPoller::~EPollPoller()
 {
-	::close(epollfd_);
+	CHECK(::close(epollfd_) == 0);
 }
 
 Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
@@ -46,10 +46,7 @@ Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 	LOG(TRACE) << "watching total fd count " << (long long)channels_.size();
 	ScopedClearLastError();
 
-	int num = ::epoll_wait(epollfd_,
-						events_.data(),
-						static_cast<int>(events_.size()),
-						timeout_ms);
+	int num = ::epoll_wait(epollfd_, events_.data(), events_.size(), timeout_ms);
 
 	Time now(Time::now());
 	if (num > 0)

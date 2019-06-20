@@ -19,7 +19,7 @@ public:
 	EPollPoller(EventLoop* loop);
 	~EPollPoller() override;
 
-	Time poll(int timeout_ms, ChannelList* activeChannels) override;
+	Time poll(int timeout_ms, ChannelList* active_channels) override;
 
 	void update_channel(Channel* channel) override;
 	void remove_channel(Channel* channel) override;
@@ -31,7 +31,7 @@ private:
 
 	static const char* operation_to_string(int op);
 	
-	void fill_active_channels(int numEvents, ChannelList* activeChannels) const;
+	void fill_active_channels(int num, ChannelList* active_channels) const;
 	void update(int operation, Channel* channel);
 
 private:

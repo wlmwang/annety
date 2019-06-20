@@ -27,15 +27,15 @@ void clean_tls_eventloop(void *ptr) {
 }	// namespace anonymous
 
 EventLoop::EventLoop() 
-	: owning_thread_(PlatformThread::current_ref()),
+	: owning_thread_(new ThreadRef(PlatformThread::current_ref())),
 	  poller_(new EPollPoller(this))
 {
 	LOG(TRACE) << "EventLoop is creating by thread " 
-		<< owning_thread_.ref() 
+		<< owning_thread_->ref() 
 		<< ", EventLoop " << this;
 	
 	CHECK(tls_eventloop.empty()) << "EventLoop has created by thread " 
-		<< owning_thread_.ref() << ", Now current thread is " 
+		<< owning_thread_->ref() << ", Now current thread is " 
 		<< PlatformThread::current_ref().ref();
 
 	tls_eventloop.set(this);
@@ -107,13 +107,13 @@ bool EventLoop::has_channel(Channel* channel)
 
 bool EventLoop::check_in_own_thread(bool fatal) const
 {
-	bool is_in_own_thread = owning_thread_ == PlatformThread::current_ref();
+	bool is_in_own_thread = *owning_thread_ == PlatformThread::current_ref();
 	if (fatal) {
-		CHECK(is_in_owner_thread) << " EventLoop was created by thread " 
-			<< owning_thread_.ref() << ", But current thread is " 
+		CHECK(is_in_own_thread) << " EventLoop was created by thread " 
+			<< owning_thread_->ref() << ", But current thread is " 
 			<< PlatformThread::current_ref().ref();
 	}
-	return is_in_owner_thread;
+	return is_in_own_thread;
 }
 
 }	// namespace annety

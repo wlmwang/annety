@@ -6,7 +6,6 @@
 
 #include "Macros.h"
 #include "Time.h"
-#include "ThreadForward.h"
 
 #include <vector>
 #include <memory>
@@ -14,6 +13,7 @@
 
 namespace annety
 {
+class ThreadRef;
 class Channel;
 class Poller;
 
@@ -40,7 +40,7 @@ private:
 	bool looping_{false};
 	bool event_handling_{false};
 
-	ThreadRef owning_thread_;
+	std::unique_ptr<ThreadRef> owning_thread_;
 	std::unique_ptr<Poller> poller_;
 	
 	// scratch variables

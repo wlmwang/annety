@@ -26,7 +26,10 @@
 #include "Singleton.h"
 #include "ThreadLocal.h"
 #include "ThreadLocalSingleton.h"
+
 #include "EventLoop.h"
+#include "EndPoint.h"
+#include "TcpServer.h"
 
 using namespace annety;
 using namespace std;
@@ -376,6 +379,9 @@ int main(int argc, char* argv[])
 
 	// EventLoop
 	EventLoop loop;
+	TcpServer serv(&loop, EndPoint(11099), "");
+	serv.start();
+
 	loop.loop();
 }
 

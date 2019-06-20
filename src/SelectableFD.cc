@@ -2,7 +2,6 @@
 // Date: Jun 17 2019
 
 #include "SelectableFD.h"
-#include "Logging.h"
 
 #include <unistd.h> // close
 

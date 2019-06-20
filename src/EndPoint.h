@@ -32,7 +32,7 @@ class EndPoint
 public:
 	// Constructs an endpoint with given port number.
 	// Mostly used in TcpServer listening.
-	explicit EndPoint(uint16_t port, bool loopbackOnly = false, bool ipv6 = false);
+	explicit EndPoint(uint16_t port = 0, bool loopbackOnly = false, bool ipv6 = false);
 
 	// Constructs an endpoint with given ip and port.
 	// |ip| "0.0.0.0"

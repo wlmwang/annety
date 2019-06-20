@@ -5,15 +5,20 @@
 #define ANT_SELECTABLE_FD_H_
 
 #include "Macros.h"
+#include "Logging.h"
 
 namespace annety
 {
 class SelectableFD
 {
 public:
-	explicit SelectableFD(int sckfd) : fd_(sckfd) {}
-	
 	SelectableFD() = default;
+	
+	explicit SelectableFD(int sckfd) : fd_(sckfd)
+	{
+		LOG_IF(ERROR, fd_ < 0) << "fd invaild " << fd_;
+	}
+
 	virtual ~SelectableFD();
 	
 	int internal_fd() const { return fd_;}
