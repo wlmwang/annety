@@ -6,6 +6,7 @@
 #include "PlatformThread.h"
 #include "Poller.h"
 #include "EPollPoller.h"
+#include "PollPoller.h"
 #include "Channel.h"
 
 namespace annety
@@ -28,7 +29,7 @@ void clean_tls_eventloop(void *ptr) {
 
 EventLoop::EventLoop() 
 	: owning_thread_(new ThreadRef(PlatformThread::current_ref())),
-	  poller_(new EPollPoller(this))
+	  poller_(new PollPoller(this))
 {
 	LOG(TRACE) << "EventLoop is creating by thread " 
 		<< owning_thread_->ref() 

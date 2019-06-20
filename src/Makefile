@@ -28,7 +28,7 @@ CC_SRC		:= main.cc \
 			   EndPoint.cc SocketsUtil.cc \
 			   SelectableFD.cc SocketFD.cc \
 			   Channel.cc TcpServer.cc Acceptor.cc \
-			   EventLoop.cc Poller.cc EPollPoller.cc
+			   EventLoop.cc Poller.cc EPollPoller.cc PollPoller.cc
 
 # 编译文件
 OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))

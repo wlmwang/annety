@@ -44,13 +44,12 @@ EPollPoller::~EPollPoller()
 Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 {
 	LOG(TRACE) << "watching total fd count " << (long long)channels_.size();
-	ScopedClearLastError();
+	ScopedClearLastError last_error();
 
 	int num = ::epoll_wait(epollfd_, events_.data(), events_.size(), timeout_ms);
 
 	Time now(Time::now());
-	if (num > 0)
-	{
+	if (num > 0) {
 		LOG(TRACE) << num << " events happened";
 
 		fill_active_channels(num, active_channels);
@@ -63,7 +62,7 @@ Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 	} else {
 		// error happens, log uncommon ones
 		if (errno != EINTR) {
-			PLOG(ERROR) << "poll() failed";
+			PLOG(ERROR) << "epoll_wait() failed";
 		}
 	}
 	return now;
@@ -93,7 +92,6 @@ void EPollPoller::update_channel(Channel* channel)
 {
 	Poller::check_in_own_thread();
 
-	// 在 epoll 中，index 被用作几个特征值（epoll 有注册机制，无需维护索引）
 	const int index = channel->index();
 	LOG(TRACE) << "fd = " << channel->fd() 
 		<< " events = " << channel->events() << " index = " << index;
