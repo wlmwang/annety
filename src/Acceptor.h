@@ -15,18 +15,17 @@ namespace annety
 class EventLoop;
 class EndPoint;
 
-// Acceptor of incoming TCP connections
 class Acceptor
 {
 public:
-	using NewConnectCallback = std::function<void(int, const EndPoint&)>;
+	using NewConnectionCallback = std::function<void(const SocketFD&, const EndPoint&)>;
 
-	Acceptor(EventLoop* loop, const EndPoint& listenAddr, bool reuseport);
+	Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport);
 	~Acceptor();
 	
-	void set_new_connect_callback(const NewConnectCallback& cb)
+	void set_new_connection_callback(const NewConnectionCallback& cb)
 	{
-		new_connect_cb_ = cb;
+		new_connection_cb_ = cb;
 	}
 
 	bool listenning() const { return listenning_; }
@@ -42,10 +41,11 @@ private:
 	SocketFD accept_socket_;
 	Channel accept_channel_;
 	
-	NewConnectCallback new_connect_cb_;
-	//int idle_fd_;
+	NewConnectionCallback new_connection_cb_;
 
-	bool listenning_;
+	bool listenning_{false};
+
+	DISALLOW_COPY_AND_ASSIGN(Acceptor);
 };
 
 }	// namespace annety

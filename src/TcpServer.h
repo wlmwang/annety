@@ -5,22 +5,24 @@
 #define ANT_TCP_SERVER_H_
 
 #include "Macros.h"
+#include "CallbackForward.h"
 
 #include <string>
 #include <memory>
+#include <map>
 
 namespace annety
 {
+class SocketFD;
 class EndPoint;
 class Acceptor;
 class EventLoop;
-//class EventLoopThreadPool;
 
-// TCP server, supports single-threaded and thread-pool models.
 class TcpServer
 {
+using ConnectionMap = std::map<std::string, TcpConnectionPtr>;
+
 public:
-	//using ThreadInitCallback = std::function<void(EventLoop*)>;
 	enum Option
 	{
 		kNoReusePort,
@@ -28,8 +30,8 @@ public:
 	};
 
 	TcpServer(EventLoop* loop,
-			  const EndPoint& listenAddr,
-			  const std::string& nameArg,
+			  const EndPoint& addr,
+			  const std::string& name = "",
 			  Option option = kNoReusePort);
 
 	~TcpServer();
@@ -40,36 +42,10 @@ public:
 
 	void start();
 
-	// // Set connection callback.
-	// // Not thread safe.
-	// void setConnectionCallback(const ConnectionCallback& cb)
-	// {
-	// 	connection_cb_ = cb;
-	// }
-	// // Set message callback.
-	// // Not thread safe.
-	// void setMessageCallback(const MessageCallback& cb)
-	// {
-	// 	message_cb_ = cb;
-	// }
-	// // Set write complete callback.
-	// // Not thread safe.
-	// void setWriteCompleteCallback(const WriteCompleteCallback& cb)
-	// {
-	// 	write_complete_cb_ = cb;
-	// }
+private:
+	void new_connection(const SocketFD& conn_sfd, const EndPoint& peerAddr);
 
 private:
-	// // Thread safe.
-	// void removeConnection(const TcpConnectionPtr& conn);
-	// // Not thread safe, but in loop
-	// void removeConnectionInLoop(const TcpConnectionPtr& conn);
-	// // Not thread safe, but in loop
-	// void newConnection(int sockfd, const EndPoint& peerAddr);
-
-private:
-	// using ConnectionMap = std::map<string, TcpConnectionPtr>;
-
 	EventLoop* owner_loop_{nullptr};
 	const std::string ip_port_;
 	const std::string name_;
@@ -77,18 +53,10 @@ private:
 	int started_{0};
 	std::unique_ptr<Acceptor> acceptor_;
 
-	//std::shared_ptr<EventLoopThreadPool> threadPool_;
-	//ThreadInitCallback threadInitCallback_;
+	int next_connId_{0};
+	ConnectionMap connections_;
 
-	// // user callback
-	// ConnectionCallback connection_cb_;
-	// MessageCallback message_cb_;
-	// WriteCompleteCallback write_complete_cb_;
-	
-	// AtomicInt32 started_;
-	// int nextConnId_;
-
-	// ConnectionMap connections_;
+	DISALLOW_COPY_AND_ASSIGN(TcpServer);
 };
 
 }	// namespace annety

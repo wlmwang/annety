@@ -11,7 +11,9 @@
 
 namespace annety
 {
-// All client visible callbacks go here.
+using std::placeholders::_1;
+using std::placeholders::_2;
+using std::placeholders::_3;
 
 class Buffer;
 class TcpConnection;

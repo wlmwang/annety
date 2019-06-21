@@ -13,6 +13,7 @@
 #include <sys/socket.h>	// SOMAXCONN,struct sockaddr,sockaddr_in[6]
 #include <sys/uio.h>	// struct iovec,readv
 #include <unistd.h>		// close
+#include <netinet/tcp.h>
 
 namespace annety
 {
@@ -187,6 +188,44 @@ void shutdown(int sockfd, int how)
 {
 	int ret = ::shutdown(sockfd, how);
 	PLOG_IF(ERROR, ret < 0) << "::shutdown failed";
+}
+
+void set_tcp_nodelay(int sockfd, bool on)
+{
+	int optval = on ? 1 : 0;
+	int ret = ::setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY,
+					&optval, static_cast<socklen_t>(sizeof optval));
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt TCP_NODELAY failed";
+}
+
+void set_reuse_addr(int sockfd, bool on)
+{
+	int optval = on ? 1 : 0;
+	int ret = ::setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR,
+					&optval, static_cast<socklen_t>(sizeof optval));
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEADDR failed";
+}
+
+void set_reuse_port(int sockfd, bool on)
+{
+#ifdef SO_REUSEPORT
+	int optval = on ? 1 : 0;
+	int ret = ::setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT,
+					&optval, static_cast<socklen_t>(sizeof optval));
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEPORT failed";
+#else
+	if (on) {
+		LOG(ERROR) << "SO_REUSEPORT is not supported.";
+	}
+#endif
+}
+
+void set_keepalive(int sockfd, bool on)
+{
+	int optval = on ? 1 : 0;
+	int ret = ::setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE,
+					&optval, static_cast<socklen_t>(sizeof optval));
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_KEEPALIVE failed";
 }
 
 struct sockaddr_in6 get_local_addr(int sockfd)

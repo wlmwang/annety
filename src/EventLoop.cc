@@ -13,18 +13,15 @@ namespace annety
 {
 namespace
 {
-const int kPollTimeoutMs = 10000;
-
-void clean_tls_eventloop(void *ptr);
-
-// one thread one loop
-ThreadLocal<EventLoop> tls_eventloop{&clean_tls_eventloop};	// tls
-
 void clean_tls_eventloop(void *ptr) {
 	LOG(TRACE) << "TLS EventLoop has clean by thread " 
 		<< PlatformThread::current_ref().ref()
 		<< ", Deleted EventLoop " << ptr;
 }
+
+// one loop one thread
+ThreadLocal<EventLoop> tls_eventloop{&clean_tls_eventloop};
+const int kPollTimeoutMs = 10000;
 }	// namespace anonymous
 
 EventLoop::EventLoop() 
@@ -51,10 +48,9 @@ EventLoop::~EventLoop()
 
 void EventLoop::loop()
 {
-	check_in_own_thread(true);
+	check_in_own_thread();
 
 	CHECK(!looping_);
-
 	looping_ = true;
 	LOG(TRACE) << "EventLoop " << this << " begin looping";
 
@@ -64,11 +60,11 @@ void EventLoop::loop()
 
 		// handling event channels
 		event_handling_ = true;
-		for (Channel* channel : active_channels_) {
-			current_active_channel_ = channel;
-			current_active_channel_->handle_event(poll_tm_);
+		for (Channel* ch : active_channels_) {
+			current_channel_ = ch;
+			current_channel_->handle_event(poll_tm_);
 		}
-		current_active_channel_ = nullptr;
+		current_channel_ = nullptr;
 		event_handling_ = false;
 	}
 
@@ -88,12 +84,6 @@ void EventLoop::remove_channel(Channel* channel)
 {
 	check_in_own_thread(true);
 	DCHECK(channel->owner_loop() == this);
-
-	// if (event_handling_) {
-	// 	DCHECK(current_active_channel_ == channel ||
-	// 		std::find(active_channels_.begin(), active_channels_.end(), channel) 
-	// 				== active_channels_.end());
-	// }
 
 	poller_->remove_channel(channel);
 }

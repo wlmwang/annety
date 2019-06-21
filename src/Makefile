@@ -27,7 +27,7 @@ CC_SRC		:= main.cc \
 			   File.cc FilePath.cc FileEnumerator.cc FilesUtil.cc FilesUtilPosix.cc \
 			   EndPoint.cc SocketsUtil.cc \
 			   SelectableFD.cc SocketFD.cc \
-			   Channel.cc TcpServer.cc Acceptor.cc \
+			   Channel.cc Acceptor.cc TcpServer.cc TcpConnection.cc \
 			   EventLoop.cc Poller.cc EPollPoller.cc PollPoller.cc
 
 # 编译文件

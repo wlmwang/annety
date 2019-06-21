@@ -25,6 +25,11 @@ void listen(int sockfd);
 int connect(int sockfd, const struct sockaddr* addr);
 void shutdown(int sockfd, int how = SHUT_WR);
 
+void set_tcp_nodelay(int sockfd, bool on);
+void set_reuse_addr(int sockfd, bool on);
+void set_reuse_port(int sockfd, bool on);
+void set_keepalive(int sockfd, bool on);
+
 struct sockaddr_in6 get_local_addr(int sockfd);
 struct sockaddr_in6 get_peer_addr(int sockfd);
 

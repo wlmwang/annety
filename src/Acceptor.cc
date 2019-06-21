@@ -16,35 +16,47 @@ namespace annety
 {
 namespace internal
 {
-void bind(const SelectableFD& sfd, const EndPoint& addr) {
-	sockets::bind(sfd.internal_fd(), addr.get_sock_addr());
+int socket(const EndPoint& addr) {
+	return sockets::socket(addr.family(), true, true);
 }
-
+void bind(const SelectableFD& sfd, const EndPoint& addr) {
+	sockets::bind(sfd.internal_fd(), addr.get_sockaddr());
+}
 void listen(const SelectableFD& sfd) {
 	sockets::listen(sfd.internal_fd());
 }
-
 int accept(const SelectableFD& sfd, EndPoint& peeraddr) {
 	struct sockaddr_in6 addr;
 	::memset(&addr, 0, sizeof addr);
-
 	int connfd = sockets::accept(sfd.internal_fd(), &addr);
 	if (connfd >= 0) {
-		peeraddr.set_sock_addr_inet6(addr);
+		peeraddr.set_sockaddr_in6(addr);
 	}
 	return connfd;
+}
+void close(const SelectableFD& sfd) {
+	sockets::close(sfd.internal_fd());
+}
+void set_reuse_addr(const SelectableFD& sfd, bool on) {
+	sockets::set_reuse_addr(sfd.internal_fd(), on);
+}
+
+void set_reuse_port(const SelectableFD& sfd, bool on) {
+	sockets::set_reuse_port(sfd.internal_fd(), on);
 }
 
 }	// namespace internal
 
-Acceptor::Acceptor(EventLoop* loop, const EndPoint& listenAddr, bool reuseport)
+Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport)
 	: owner_loop_(loop),
-	  accept_socket_(sockets::socket(listenAddr.family(), true, true)),
-	  accept_channel_(owner_loop_, &accept_socket_),
-	  listenning_(false)
+	  accept_socket_(internal::socket(addr)),
+	  accept_channel_(owner_loop_, &accept_socket_)
 {
-	// listen socket
-	internal::bind(accept_socket_, listenAddr);
+	internal::set_reuse_addr(accept_socket_, true);
+	internal::set_reuse_port(accept_socket_, reuseport);
+	
+	internal::bind(accept_socket_, addr);
+
 	accept_channel_.set_read_callback(std::bind(&Acceptor::handle_read, this));
 }
 
@@ -67,28 +79,21 @@ void Acceptor::handle_read()
 {
 	owner_loop_->check_in_own_thread(true);
 
-	EndPoint peerAddr;
-	int connfd = internal::accept(accept_socket_, peerAddr);
+	EndPoint peeraddr;
+	int connfd = internal::accept(accept_socket_, peeraddr);
 	if (connfd >= 0) {
-		LOG(TRACE) << "Accepts of " << peerAddr.to_ip_port();
+		LOG(TRACE) << "Accepts of " << connfd << "|" << peeraddr.to_ip_port();
 
-		// connect handler
-		if (new_connect_cb_) {
-			new_connect_cb_(connfd, peerAddr);
+		SocketFD conn_sfd(connfd);
+		if (new_connection_cb_) {
+			new_connection_cb_(conn_sfd, peeraddr);
 		} else {
-			sockets::close(connfd);
+			internal::close(conn_sfd);
 		}
 	} else {
-		LOG(ERROR) << "in Acceptor::handle_read";
-
-		// Read the section named "The special problem of
-		// accept()ing when you can't" in libev's doc.
-		// By Marc Lehmann, author of libev.
+		LOG(ERROR) << "Acceptor::handle_read";
 		if (errno == EMFILE) {
-			// ::close(idleFd_);
-			// idleFd_ = ::accept(acceptSocket_.fd(), NULL, NULL);
-			// ::close(idleFd_);
-			// idleFd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
+			//...
 		}
 	}
 }

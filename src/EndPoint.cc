@@ -55,7 +55,7 @@ EndPoint::EndPoint(const StringPiece& ip, uint16_t port, bool ipv6)
 	}
 }
 
-const struct sockaddr* EndPoint::get_sock_addr() const
+const struct sockaddr* EndPoint::get_sockaddr() const
 {
 	return sockets::sockaddr_cast(&addr6_);
 }
@@ -63,14 +63,14 @@ const struct sockaddr* EndPoint::get_sock_addr() const
 std::string EndPoint::to_ip_port() const
 {
 	char buf[64] = "";
-	sockets::to_ip_port(buf, sizeof buf, get_sock_addr());
+	sockets::to_ip_port(buf, sizeof buf, get_sockaddr());
 	return buf;
 }
 
 std::string EndPoint::to_ip() const
 {
 	char buf[64] = "";
-	sockets::to_ip(buf, sizeof buf, get_sock_addr());
+	sockets::to_ip(buf, sizeof buf, get_sockaddr());
 	return buf;
 }
 
