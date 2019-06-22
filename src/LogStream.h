@@ -26,7 +26,7 @@ class LogStream
 		"kMaxNumericSize is large enough");
 
 	// for the function signature of std::endl
-	// STL:
+	// STL define:
 	// template<class CharT, class Traits>
 	// std::basic_ostream<CharT, Traits>& endl(std::basic_ostream<CharT, Traits>& os);
 	typedef std::basic_ostream<char, std::char_traits<char>> CharOStream;
@@ -92,7 +92,7 @@ public:
 		return *this;
 	}
 
-	LogStream& operator<<(const LogBuffer& v)
+	LogStream& operator<<(const ByteBuffer& v)
 	{
 		return operator<<(v.to_string_piece());
 	}
@@ -114,7 +114,7 @@ public:
 		buffer_.reset();
 	}
 	
-	const LogBuffer& buffer() const
+	const ByteBuffer& buffer() const
 	{
 		return buffer_;
 	}
@@ -124,10 +124,10 @@ private:
 	LogStream& format_number(T);
 
 private:
-	LogBuffer buffer_;
+	// fixed buffer
+	ByteBuffer buffer_{1024};
 };
 
-// For testing only
 std::ostream& operator<<(std::ostream& os, const LogStream& ls);
 
 }	// namespace annety

@@ -20,15 +20,15 @@ INCFLAGS	:= ${DIR_INC} -I${DIR_SRC}
 
 # 源文件
 CC_SRC		:= main.cc \
-			   LogStream.cc Logging.cc Time.cc AtExit.cc Exception.cc SafeStrerror.cc  \
+			   AtExit.cc Time.cc Exception.cc ByteBuffer.cc LogStream.cc Logging.cc \
+			   StringPiece.cc SafeStrerror.cc StringSplit.cc StringUtil.cc StringPrintf.cc \
+			   File.cc FilePath.cc FileEnumerator.cc FilesUtil.cc FilesUtilPosix.cc \
 			   MutexLock.cc ConditionVariable.cc CountDownLatch.cc \
 			   PlatformThread.cc Thread.cc ThreadPool.cc \
-			   StringPiece.cc StringPrintf.cc StringSplit.cc StringUtil.cc \
-			   File.cc FilePath.cc FileEnumerator.cc FilesUtil.cc FilesUtilPosix.cc \
 			   EndPoint.cc SocketsUtil.cc \
 			   SelectableFD.cc SocketFD.cc \
 			   Channel.cc Acceptor.cc TcpServer.cc TcpConnection.cc \
-			   EventLoop.cc Poller.cc EPollPoller.cc PollPoller.cc
+			   EventLoop.cc Poller.cc PollPoller.cc
 
 # 编译文件
 OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))

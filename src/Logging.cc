@@ -166,7 +166,7 @@ LogMessage::~LogMessage()
 
 	// log message output
 	if (g_log_output_handler) {
-		const LogBuffer& bf(stream().buffer());
+		const ByteBuffer& bf(stream().buffer());
 		g_log_output_handler(bf.begin_read(), bf.readable_bytes());
 	}
 	// i/o fflush

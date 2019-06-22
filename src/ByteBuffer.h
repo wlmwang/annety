@@ -7,34 +7,34 @@
 #include "StringPiece.h"
 
 #include <iosfwd>
-#include <ostream>
 #include <algorithm>
 #include <vector>
 #include <string>
 #include <stddef.h>
-#include <assert.h>		// assert
+#include <assert.h>
 
 namespace annety
 {
-// @code
+// cannot use LOG/CHECK macros, because LOG/CHECK Low-level implementation
+// is ByteBuffer. so we use assert() macros here.
+
+// @coding
 // +-------------------+------------------+------------------+
 // | prependable bytes |  readable bytes  |  writable bytes  |
 // |                   |     (CONTENT)    |                  |
 // +-------------------+------------------+------------------+
 // |                   |                  |                  |
 // 0      <=      readerIndex   <=   writerIndex    <=     size
-// @code
-template<ssize_t LIMIT_SIZE = -1>
+// @coding
 class ByteBuffer
 {
 public:
-	static const size_t kInitialSize = 1024;
+	static const ssize_t kUnLimitSize = -1;
+	static const size_t  kInitialSize = 1024;
 
-	static_assert(LIMIT_SIZE >= -1 && LIMIT_SIZE != 0, 
-				  "illegal LIMIT SIZE buffer");
-
-	explicit ByteBuffer(size_t initialSize = kInitialSize)
-				: buffer_(LIMIT_SIZE>0? LIMIT_SIZE: initialSize) {}
+	explicit ByteBuffer(ssize_t max_size = kUnLimitSize, size_t init_size = kInitialSize)
+				: max_size_(max_size),
+				  buffer_(max_size>0? max_size: init_size) {}
 
 	// copy-ctor, move-ctor, dtor and assignment
 	ByteBuffer(const ByteBuffer&) = default;
@@ -45,75 +45,73 @@ public:
 
 	void swap(ByteBuffer& rhs)
 	{
+		std::swap(max_size_, rhs.max_size_);
+		std::swap(reader_index_, rhs.reader_index_);
+		std::swap(writer_index_, rhs.writer_index_);
 		buffer_.swap(rhs.buffer_);
-		std::swap(readerIndex_, rhs.readerIndex_);
-		std::swap(writerIndex_, rhs.writerIndex_);
+	}
+	
+	void reset()
+	{
+		reader_index_ = 0;
+		writer_index_ = 0;
 	}
 
 	size_t readable_bytes() const
 	{
-		assert(writerIndex_ >= readerIndex_);
-		return writerIndex_ - readerIndex_;
+		assert(writer_index_ >= reader_index_);
+		return writer_index_ - reader_index_;
 	}
 
 	size_t writable_bytes() const
 	{
-		assert(size() >= writerIndex_);
-
+		assert(size() >= writer_index_);
 		size_t vbytes = size();
-		if (LIMIT_SIZE != -1) {
-			vbytes = LIMIT_SIZE;
-			assert(vbytes >= writerIndex_);
+		if (max_size_ != kUnLimitSize) {
+			vbytes = max_size_;
+			assert(vbytes >= writer_index_);
 		}
-		return vbytes - writerIndex_; 
+		return vbytes - writer_index_; 
 	}
 
 	char *begin_read()
 	{
-		assert(readerIndex_ <= writerIndex_);
-		return data() + readerIndex_;
+		assert(reader_index_ <= writer_index_);
+		return data() + reader_index_;
 	}
 	const char *begin_read() const
 	{
-		assert(readerIndex_ <= writerIndex_);
-		return data() + readerIndex_;
+		assert(reader_index_ <= writer_index_);
+		return data() + reader_index_;
 	}
 
 	char* begin_write()
 	{
-		assert(writerIndex_ <= size());
-		return data() + writerIndex_;
+		assert(writer_index_ <= size());
+		return data() + writer_index_;
 	}
 	const char* begin_write() const
 	{
-		assert(writerIndex_ <= size());
-		return data() + writerIndex_;
+		assert(writer_index_ <= size());
+		return data() + writer_index_;
 	}
 
 	void has_written(size_t len)
 	{
 		assert(writable_bytes() >= len);
-		writerIndex_ += len;
+		writer_index_ += len;
 	}
 
 	void has_read(size_t len)
 	{
 		if (len < readable_bytes()) {
-			readerIndex_ += len;
+			reader_index_ += len;
 		} else {
 			reset();
 		}
 	}
 
-	void reset()
-	{
-		readerIndex_ = 0;
-		writerIndex_ = 0;
-	}
-
-	// zero-copy.
-	// but use this carefully(about ownership), 
-	// and sometimes need call has_read() youself
+	// Use this carefully(about ownership)
 	StringPiece to_string_piece() const
 	{
 		return StringPiece(begin_read(), readable_bytes());
@@ -124,6 +122,7 @@ public:
 		return std::string(begin_read(), readable_bytes());
 	}
 
+	// -1 means taken all byte data
 	std::string taken_as_string(ssize_t len = -1)
 	{
 		if (len <= -1) {
@@ -153,6 +152,11 @@ public:
 		}
 		return false;
 	}
+	
+	void ensure_writable_bytes(size_t len)
+	{
+		make_writable_bytes(len);
+	}
 
 	void shrink(size_t reserve)
 	{
@@ -162,11 +166,6 @@ public:
 		}
 	}
 
-	void ensure_writable_bytes(size_t len)
-	{
-		make_writable_bytes(len);
-	}
-
 private:
 	char* data() { return buffer_.data();}
 	const char* data() const { return buffer_.data();}
@@ -174,51 +173,16 @@ private:
 	size_t capacity() const { return buffer_.capacity();}
 	size_t size() const { return buffer_.size();}
   
-	void make_writable_bytes(size_t len)
-	{
-		size_t real_writeable_bytes = writable_bytes();
-		if (LIMIT_SIZE != -1) {
-			size_t real_size = std::min(static_cast<size_t>(LIMIT_SIZE),
-										size());
-			real_writeable_bytes = real_size - writerIndex_;
-		}
-
-		if (real_writeable_bytes < len) {
-			if (LIMIT_SIZE != -1 && LIMIT_SIZE - writerIndex_ < len) {
-				// std::stderr << "Not enough space to write"
-				//             << "limit size:" << LIMIT_SIZE
-				//             << "writable bytes:" << writable_bytes()
-				//             << "append bytes" << len;
-				return;
-			}
-			buffer_.resize(writerIndex_+len);
-		} else if (begin_read() != data()) {
-			// move readable data to the front, make space inside buffer
-			size_t readable = readable_bytes();
-			std::copy(begin_read(), begin_write(), data());
-			readerIndex_ = 0;
-			writerIndex_ = readerIndex_ + readable;
-			assert(readable == readable_bytes());
-		}
-	}
+	void make_writable_bytes(size_t len);
 
 private:
+	ssize_t max_size_{kUnLimitSize};
+	size_t reader_index_{0};
+	size_t writer_index_{0};
 	std::vector<char> buffer_;
-	size_t readerIndex_{0};
-	size_t writerIndex_{0};
 };
 
-// template instance
-typedef ByteBuffer<-1> UnboundedBuffer;
-typedef ByteBuffer<4 * 1024> LogBuffer;
-typedef ByteBuffer<4 * 1024 * 1000> LLogBuffer;
-
-// For testing only
-template<ssize_t LIMIT_SIZE>
-std::ostream& operator<<(std::ostream& os, const ByteBuffer<LIMIT_SIZE>& bb)
-{
-	return os << bb.to_string_piece();
-}
+std::ostream& operator<<(std::ostream& os, const ByteBuffer& bb);
 
 }	// namespace annety
 
