@@ -14,7 +14,7 @@ class SelectableFD
 public:
 	SelectableFD() = default;
 	
-	explicit SelectableFD(int sckfd) : fd_(sckfd)
+	explicit SelectableFD(int fd) : fd_(fd)
 	{
 		LOG_IF(ERROR, fd_ < 0) << "fd invaild " << fd_;
 	}

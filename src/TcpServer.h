@@ -43,7 +43,10 @@ public:
 	void start();
 
 private:
-	void new_connection(const SocketFD& conn_sfd, const EndPoint& peerAddr);
+	void new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr);
+	void remove_connection(const TcpConnectionPtr& conn);
+
+	void remove_connection_in_loop(const TcpConnectionPtr& conn);
 
 private:
 	EventLoop* owner_loop_{nullptr};
@@ -53,7 +56,7 @@ private:
 	int started_{0};
 	std::unique_ptr<Acceptor> acceptor_;
 
-	int next_connId_{0};
+	int next_conn_id_{0};
 	ConnectionMap connections_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpServer);

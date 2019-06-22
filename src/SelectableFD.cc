@@ -2,15 +2,13 @@
 // Date: Jun 17 2019
 
 #include "SelectableFD.h"
-
-#include <unistd.h> // close
+#include "SocketsUtil.h"
 
 namespace annety
 {
 SelectableFD::~SelectableFD()
 {
-	int ret = ::close(fd_);
-	PLOG_IF(ERROR, ret < 0) << "::close failed";
+	sockets::close(fd_);
 }
 
 }	// namespace annety

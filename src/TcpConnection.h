@@ -23,7 +23,7 @@ class TcpConnection : public std::enable_shared_from_this<TcpConnection>
 public:
 	TcpConnection(EventLoop* loop,
 				const std::string& name,
-				const SocketFD& sfd,
+				SelectableFDPtr sockfd,
 				const EndPoint& localaddr,
 				const EndPoint& peeraddr);
 	~TcpConnection();
@@ -31,17 +31,33 @@ public:
 	EventLoop* get_owner_loop() const { return owner_loop_; }
 	const std::string& name() const { return name_; }
 
+	
+
+	void set_close_callback(const CloseCallback& cb)
+	{
+		close_cb_ = cb;
+	}
+
 	void connect_established();
+
+	void connect_destroyed();
 
 private:
 	enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting};
 	void handle_read(Time receive_tm);
+	void handle_close();
+	void handle_error();
+
+	const char* state_to_string() const;
 
 	EventLoop* owner_loop_;
 	const std::string name_;
 	StateE state_;
-	std::unique_ptr<SocketFD> socket_;
-	std::unique_ptr<Channel> channel_;
+
+	SelectableFDPtr conn_socket_;
+	std::unique_ptr<Channel> conn_channel_;
+
+	CloseCallback close_cb_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpConnection);
 };

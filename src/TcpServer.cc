@@ -10,8 +10,9 @@
 #include "SocketFD.h"
 #include "TcpConnection.h"
 
+#include <utility>
 #include <stdio.h>  // snprintf
-  
+
 namespace annety
 {
 TcpServer::TcpServer(EventLoop* loop,
@@ -43,32 +44,57 @@ void TcpServer::start()
 	started_ = 1;
 }
 
-void TcpServer::new_connection(const SocketFD& conn_sfd, const EndPoint& peeraddr)
+void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 {
 	owner_loop_->check_in_own_thread(true);
 
-	EventLoop* io_loop = owner_loop_;
+	EventLoop* loop = owner_loop_;
   
-	char buf[64];
-	::snprintf(buf, sizeof buf, "-%s#%d", ip_port_.c_str(), next_connId_++);
-	std::string conn_name = name_ + buf;
+	char buf[128];
+	::snprintf(buf, sizeof buf, "-%s#%d", ip_port_.c_str(), next_conn_id_++);
+	std::string name = name_ + buf;
 
 	LOG(INFO) << "TcpServer::new_connection [" << name_
-		<< "] - new connection [" << conn_name
+		<< "] - new connection [" << name
 		<< "] from " << peeraddr.to_ip_port();
 
-	EndPoint localaddr(sockets::get_local_addr(conn_sfd.internal_fd()));
-	TcpConnectionPtr conn(new TcpConnection(io_loop,
-											conn_name,
-											conn_sfd,
-											localaddr,
-											peeraddr));
-	
-	connections_[conn_name] = conn;
+	EndPoint localaddr(sockets::get_local_addr(sockfd->internal_fd()));
+	TcpConnectionPtr conn(new TcpConnection(loop, name, std::move(sockfd),
+											localaddr, peeraddr));
 
-	LOG(INFO) << "use cout" << conn.use_count();
+	connections_[name] = conn;
+	
+	conn->set_close_callback(
+		std::bind(&TcpServer::remove_connection, this, _1));
 
 	conn->connect_established();
 }
+
+void TcpServer::remove_connection(const TcpConnectionPtr& conn)
+{
+	remove_connection_in_loop(conn);
+
+	// FIXME: unsafe
+	// loop_->runInLoop(std::bind(&TcpServer::removeConnectionInLoop, this, conn));
+}
+
+void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
+{
+	owner_loop_->check_in_own_thread(true);
+
+	LOG(INFO) << "TcpServer::removeConnectionInLoop [" << name_
+		<< "] - connection " << conn->name();
+
+	size_t n = connections_.erase(conn->name());
+	(void)n;
+	DCHECK(n == 1);
+
+	conn->connect_destroyed();
+
+	// EventLoop* ioLoop = conn->getLoop();
+	// ioLoop->queueInLoop(
+	// 	std::bind(&TcpConnection::connectDestroyed, conn));
+}
+
 
 }	// namespace annety

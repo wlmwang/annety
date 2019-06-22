@@ -5,20 +5,22 @@
 #define ANT_ACCEPTOR_H_
 
 #include "Macros.h"
-#include "Channel.h"
-#include "SocketFD.h"
+#include "CallbackForward.h"
 
 #include <functional>
+#include <memory>
 
 namespace annety
 {
 class EventLoop;
 class EndPoint;
+class SelectableFD;
+class Channel;
 
 class Acceptor
 {
 public:
-	using NewConnectionCallback = std::function<void(const SocketFD&, const EndPoint&)>;
+	using NewConnectionCallback = std::function<void(SelectableFDPtr, const EndPoint&)>;
 
 	Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport);
 	~Acceptor();
@@ -35,15 +37,16 @@ private:
 	void handle_read();
 
 private:
-	EventLoop* owner_loop_;
-	
+	EventLoop* owner_loop_{nullptr};
+	bool listenning_{false};
+
 	// listen socket
-	SocketFD accept_socket_;
-	Channel accept_channel_;
+	std::unique_ptr<SelectableFD> accept_socket_;
+	std::unique_ptr<Channel> accept_channel_;
 	
 	NewConnectionCallback new_connection_cb_;
 
-	bool listenning_{false};
+	int idle_fd_;
 
 	DISALLOW_COPY_AND_ASSIGN(Acceptor);
 };

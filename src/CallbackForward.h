@@ -15,23 +15,25 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
 
-class Buffer;
+class SelectableFD;
+using SelectableFDPtr = std::unique_ptr<SelectableFD>;
+
 class TcpConnection;
-typedef std::shared_ptr<TcpConnection> TcpConnectionPtr;
+using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
 
-// user callback
-typedef std::function<void()> TimerCallback;
-typedef std::function<void (const TcpConnectionPtr&)> ConnectionCallback;
+// // user callback
+// typedef std::function<void()> TimerCallback;
+// typedef std::function<void (const TcpConnectionPtr&)> ConnectionCallback;
 typedef std::function<void (const TcpConnectionPtr&)> CloseCallback;
-typedef std::function<void (const TcpConnectionPtr&)> WriteCompleteCallback;
-typedef std::function<void (const TcpConnectionPtr&, size_t)> HighWaterMarkCallback;
+// typedef std::function<void (const TcpConnectionPtr&)> WriteCompleteCallback;
+// typedef std::function<void (const TcpConnectionPtr&, size_t)> HighWaterMarkCallback;
 
-// the data has been read to (buf, len)
-typedef std::function<void (const TcpConnectionPtr&, Buffer*, Time)> MessageCallback;
+// // the data has been read to (buf, len)
+// typedef std::function<void (const TcpConnectionPtr&, Buffer*, Time)> MessageCallback;
 
-// default handler
-void defaultConnectionCallback(const TcpConnectionPtr& conn);
-void defaultMessageCallback(const TcpConnectionPtr& conn, Buffer* buffer, Time receiveTime);
+// // default handler
+// void defaultConnectionCallback(const TcpConnectionPtr& conn);
+// void defaultMessageCallback(const TcpConnectionPtr& conn, Buffer* buffer, Time receiveTime);
 
 }	// namespace annety
 

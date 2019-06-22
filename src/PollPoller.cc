@@ -18,7 +18,7 @@ PollPoller::~PollPoller() = default;
 
 Time PollPoller::poll(int timeout_ms, ChannelList* active_channels)
 {
-	ScopedClearLastError last_error();
+	ScopedClearLastError last_error;
 
 	int num = ::poll(pollfds_.data(), pollfds_.size(), timeout_ms);
 
