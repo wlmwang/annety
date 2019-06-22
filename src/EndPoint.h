@@ -30,30 +30,28 @@ class EndPoint
 #endif	// defined(OS_MACOSX)
 
 public:
-	explicit EndPoint(uint16_t port = 0, bool loopbackOnly = false, bool ipv6 = false);
+	explicit EndPoint(uint16_t port = 0, bool loopback_only = false, bool ipv6 = false);
 
 	// |ip| "0.0.0.0"
 	EndPoint(const StringPiece& ip, uint16_t port, bool ipv6 = false);
 
-	// *addr_in => endpoint
+	// sockaddr_in[6] => EndPoint
 	explicit EndPoint(const struct sockaddr_in& addr) : addr_(addr) {}
 	explicit EndPoint(const struct sockaddr_in6& addr) : addr6_(addr) {}
 	
-	// default copy/assignment is ok
+	// default copy/assign is ok
 	EndPoint(const EndPoint&) = default;
 	EndPoint& operator=(const EndPoint&) = default;
 	~EndPoint() = default;
 	
 	void set_sockaddr_in(const struct sockaddr_in& addr) { addr_ = addr;}
-	
-	void set_sockaddr_in6(const struct sockaddr_in6& addr6) { addr6_ = addr6;}
+	void set_sockaddr_in(const struct sockaddr_in6& addr6) { addr6_ = addr6;}
 
+	// &addr6_ => sockaddr*
 	const struct sockaddr* get_sockaddr() const;
 
 	sa_family_t family() const  { return addr_.sin_family;}
-
 	uint16_t port_net_endian() const { return addr_.sin_port;}
-	
 	uint32_t ip_net_endian() const;
 
 	std::string to_ip() const;

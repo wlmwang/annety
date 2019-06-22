@@ -24,7 +24,7 @@ static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;
 static_assert(sizeof(EndPoint) == sizeof(struct sockaddr_in6),
 			"EndPoint is same size as sockaddr_in6");
 
-EndPoint::EndPoint(uint16_t port, bool loopbackOnly, bool ipv6)
+EndPoint::EndPoint(uint16_t port, bool loopback_only, bool ipv6)
 {
 	static_assert(offsetof(EndPoint, addr6_) == 0, "addr6_ offset 0");
 	static_assert(offsetof(EndPoint, addr_) == 0, "addr_ offset 0");
@@ -32,13 +32,13 @@ EndPoint::EndPoint(uint16_t port, bool loopbackOnly, bool ipv6)
 	if (ipv6) {
 		::memset(&addr6_, 0, sizeof addr6_);
 		addr6_.sin6_family = AF_INET6;
-		in6_addr ip = loopbackOnly ? in6addr_loopback : in6addr_any;
+		in6_addr ip = loopback_only ? in6addr_loopback : in6addr_any;
 		addr6_.sin6_addr = ip;
 		addr6_.sin6_port = host_to_net16(port);
 	} else {
 		::memset(&addr_, 0, sizeof addr_);
 		addr_.sin_family = AF_INET;
-		in_addr_t ip = loopbackOnly ? kInaddrLoopback : kInaddrAny;
+		in_addr_t ip = loopback_only ? kInaddrLoopback : kInaddrAny;
 		addr_.sin_addr.s_addr = host_to_net32(ip);
 		addr_.sin_port = host_to_net16(port);
 	}
