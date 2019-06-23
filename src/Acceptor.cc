@@ -4,10 +4,10 @@
 #include "Acceptor.h"
 #include "Logging.h"
 #include "EndPoint.h"
-#include "Channel.h"
-#include "EventLoop.h"
 #include "SocketFD.h"
 #include "SocketsUtil.h"
+#include "Channel.h"
+#include "EventLoop.h"
 
 #include <utility>
 #include <errno.h>
@@ -51,30 +51,30 @@ void set_reuse_port(const SelectableFD& sfd, bool on) {
 
 Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport)
 	: owner_loop_(loop),
-	  accept_socket_(new SocketFD(internal::socket(addr))),
-	  accept_channel_(new Channel(owner_loop_, accept_socket_.get())),
+	  listen_socket_(new SocketFD(internal::socket(addr))),
+	  listen_channel_(new Channel(owner_loop_, listen_socket_.get())),
 	  idle_fd_(::open("/dev/null", O_RDONLY | O_CLOEXEC))
 {
-	internal::set_reuse_addr(*accept_socket_, true);
-	internal::set_reuse_port(*accept_socket_, reuseport);
-	internal::bind(*accept_socket_, addr);
+	internal::set_reuse_addr(*listen_socket_, true);
+	internal::set_reuse_port(*listen_socket_, reuseport);
+	internal::bind(*listen_socket_, addr);
 	
-	accept_channel_->set_read_callback(std::bind(&Acceptor::handle_read, this));
+	listen_channel_->set_read_callback(std::bind(&Acceptor::handle_read, this));
 }
 
 Acceptor::~Acceptor()
 {
-	accept_channel_->disable_all_event();
-	accept_channel_->remove();
+	listen_channel_->disable_all_event();
+	listen_channel_->remove();
 }
 
 void Acceptor::listen()
 {
 	owner_loop_->check_in_own_thread(true);
 	
-	listenning_ = true;
-	internal::listen(*accept_socket_);
-	accept_channel_->enable_read_event();
+	listen_ = true;
+	internal::listen(*listen_socket_);
+	listen_channel_->enable_read_event();
 }
 
 void Acceptor::handle_read()
@@ -82,14 +82,14 @@ void Acceptor::handle_read()
 	owner_loop_->check_in_own_thread(true);
 
 	EndPoint peeraddr;
-	int connfd = internal::accept(*accept_socket_, peeraddr);
+	int connfd = internal::accept(*listen_socket_, peeraddr);
 	if (connfd >= 0) {
 		LOG(TRACE) << "accept of " << connfd << "|" << peeraddr.to_ip_port();
 
 		// make new connection sock of socketFD
 		SelectableFDPtr sockfd(new SocketFD(connfd));
-		if (new_connection_cb_) {
-			new_connection_cb_(std::move(sockfd), peeraddr);
+		if (new_connect_cb_) {
+			new_connect_cb_(std::move(sockfd), peeraddr);
 		} else {
 			internal::close(*sockfd);
 		}
@@ -101,7 +101,7 @@ void Acceptor::handle_read()
 		// By Marc Lehmann, author of libev.
 		if (errno == EMFILE) {
 			DPCHECK(::close(idle_fd_) == 0);
-			DPCHECK(::close(::accept(accept_socket_->internal_fd(), NULL, NULL)) == 0);
+			DPCHECK(::close(::accept(listen_socket_->internal_fd(), NULL, NULL)) == 0);
 			idle_fd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
 		}
 	}

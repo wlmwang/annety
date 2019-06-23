@@ -228,7 +228,7 @@ int set_reuse_port(int servfd, bool on)
 #endif
 }
 
-int set_keepalive(int fd, bool on)
+int set_keep_alive(int fd, bool on)
 {
 	int optval = on ? 1 : 0;
 	int ret = ::setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE,

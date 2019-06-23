@@ -110,6 +110,11 @@ public:
 			reset();
 		}
 	}
+	
+	void has_read_all()
+	{
+		reset();
+	}
 
 	// Use this carefully(about ownership)
 	StringPiece to_string_piece() const
@@ -166,7 +171,7 @@ public:
 		}
 	}
 
-private:
+protected:
 	char* data() { return buffer_.data();}
 	const char* data() const { return buffer_.data();}
 

@@ -15,6 +15,7 @@
 namespace annety
 {
 // wrapper of sockaddr_in[6]
+// std::is_standard_layout<EndPoint>::value == true; is_pod; is_trivial
 class EndPoint
 {
 #if defined(OS_MACOSX)

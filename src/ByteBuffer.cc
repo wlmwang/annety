@@ -4,7 +4,7 @@
 #include "ByteBuffer.h"
 #include "Logging.h"
 
-// #include <iostream>
+// #include <iostream>	// std::stderr
 #include <ostream>
 
 namespace annety

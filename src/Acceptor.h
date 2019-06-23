@@ -20,17 +20,20 @@ class Channel;
 class Acceptor
 {
 public:
-	using NewConnectionCallback = std::function<void(SelectableFDPtr, const EndPoint&)>;
+	using NewConnectCallback = std::function<void(SelectableFDPtr, const EndPoint&)>;
 
 	Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport);
 	~Acceptor();
 	
-	void set_new_connection_callback(const NewConnectionCallback& cb)
+	void set_new_connect_callback(const NewConnectCallback& cb)
 	{
-		new_connection_cb_ = cb;
+		new_connect_cb_ = cb;
 	}
 
-	bool listenning() const { return listenning_; }
+	bool is_listen() const {
+		return listen_;
+	}
+	
 	void listen();
 
 private:
@@ -38,13 +41,13 @@ private:
 
 private:
 	EventLoop* owner_loop_{nullptr};
-	bool listenning_{false};
+	bool listen_{false};
 
 	// listen socket
-	std::unique_ptr<SelectableFD> accept_socket_;
-	std::unique_ptr<Channel> accept_channel_;
+	SelectableFDPtr listen_socket_;
+	std::unique_ptr<Channel> listen_channel_;
 	
-	NewConnectionCallback new_connection_cb_;
+	NewConnectCallback new_connect_cb_;
 
 	int idle_fd_;
 

@@ -30,34 +30,97 @@ public:
 
 	EventLoop* get_owner_loop() const { return owner_loop_; }
 	const std::string& name() const { return name_; }
+	const EndPoint& local_addr() const { return local_addr_; }
+	const EndPoint& peer_addr() const { return peer_addr_; }
+	bool connected() const { return state_ == kConnected; }
+	bool disconnected() const { return state_ == kDisconnected; }
 
-	
+	// void send(std::string&& message); // C++11
+	void send(const void* message, int len);
+	void send(const StringPiece& message);
+	// void send(NetByteBuffer&& message); // C++11
+	void send(NetByteBuffer* message);  // this one will swap data
+	void shutdown(); // NOT thread safe, no simultaneous calling
+	void force_close();
+	void force_close_with_delay(double seconds);
+	void set_tcp_nodelay(bool on);
+
+	// reading or not
+	void start_read();
+	void stop_read();
+	bool is_reading() const { return reading_; };
+
+	void set_connection_callback(const ConnectionCallback& cb)
+	{
+		connection_cb_ = cb;
+	}
+	void set_message_callback(const MessageCallback& cb)
+	{
+		message_cb_ = cb;
+	}
+	void set_write_complete_callback(const WriteCompleteCallback& cb)
+	{
+		write_complete_cb_ = cb;
+	}
+	void set_high_water_mark_callback(const HighWaterMarkCallback& cb, size_t highWaterMark)
+	{
+		high_water_mark_cb_ = cb;
+		high_water_mark_ = highWaterMark;
+	}
 
 	void set_close_callback(const CloseCallback& cb)
 	{
 		close_cb_ = cb;
 	}
+	
+	NetByteBuffer* input_buffer();
+	NetByteBuffer* output_buffer();
 
 	void connect_established();
-
 	void connect_destroyed();
 
 private:
 	enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting};
-	void handle_read(Time receive_tm);
+
+	void handle_read(Time recv_tm);
+	void handle_write();
 	void handle_close();
 	void handle_error();
 
+	void send_in_loop(const StringPiece& message);
+	void send_in_loop(const void* message, size_t len);
+	void shutdown_in_loop();
+	void force_close_in_loop();
+	void start_read_in_loop();
+	void stop_read_in_loop();
+
+	void setState(StateE s) { state_ = s; }
 	const char* state_to_string() const;
 
+private:
 	EventLoop* owner_loop_;
 	const std::string name_;
-	StateE state_;
+	StateE state_{kConnecting};
+	bool reading_{true};
 
-	SelectableFDPtr conn_socket_;
-	std::unique_ptr<Channel> conn_channel_;
+	const EndPoint local_addr_;
+	const EndPoint peer_addr_;
+
+	// connect socket
+	SelectableFDPtr connect_socket_;
+	std::unique_ptr<Channel> connect_channel_;
 
 	CloseCallback close_cb_;
+
+	// user callback function
+	ConnectionCallback connection_cb_;
+	MessageCallback message_cb_;
+	WriteCompleteCallback write_complete_cb_;
+	HighWaterMarkCallback high_water_mark_cb_;
+	size_t high_water_mark_{64*1024*1024};
+
+	std::unique_ptr<NetByteBuffer> input_buffer_;
+	std::unique_ptr<NetByteBuffer> output_buffer_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpConnection);
 };

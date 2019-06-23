@@ -23,7 +23,8 @@ Channel::Channel(EventLoop* loop, SelectableFD* sfd)
 
 Channel::~Channel()
 {
-	DCHECK(!event_handling_);
+	// todo??
+	// DCHECK(!event_handling_);
 	DCHECK(!added_to_loop_);
 
 	if (owner_loop_->check_in_own_thread(false)) {

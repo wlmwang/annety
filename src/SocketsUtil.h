@@ -27,7 +27,7 @@ int shutdown(int fd, int how = SHUT_WR);
 
 int set_reuse_addr(int servfd, bool on);
 int set_reuse_port(int servfd, bool on);
-int set_keepalive(int fd, bool on);
+int set_keep_alive(int fd, bool on);
 int set_tcp_nodelay(int fd, bool on);
 
 struct sockaddr_in6 get_local_addr(int fd);

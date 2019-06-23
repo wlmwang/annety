@@ -7,9 +7,10 @@
 #include "Macros.h"
 #include "CallbackForward.h"
 
+#include <map>
 #include <string>
 #include <memory>
-#include <map>
+#include <atomic>
 
 namespace annety
 {
@@ -20,9 +21,9 @@ class EventLoop;
 
 class TcpServer
 {
-using ConnectionMap = std::map<std::string, TcpConnectionPtr>;
-
 public:
+	using ThreadInitCallback = std::function<void(EventLoop*)>;
+
 	enum Option
 	{
 		kNoReusePort,
@@ -31,10 +32,24 @@ public:
 
 	TcpServer(EventLoop* loop,
 			  const EndPoint& addr,
-			  const std::string& name = "",
+			  const std::string& name = "annety-srv",
 			  Option option = kNoReusePort);
 
 	~TcpServer();
+
+	// not thread safe.
+	void setConnectionCallback(const ConnectionCallback& cb)
+	{
+		connection_cb_ = cb;
+	}
+	void setMessageCallback(const MessageCallback& cb)
+	{
+		message_cb_ = cb;
+	}
+	void setWriteCompleteCallback(const WriteCompleteCallback& cb)
+	{
+		write_complete_cb_ = cb;
+	}
 
 	const std::string& ip_port() const { return ip_port_; }
 	const std::string& name() const { return name_; }
@@ -49,14 +64,24 @@ private:
 	void remove_connection_in_loop(const TcpConnectionPtr& conn);
 
 private:
-	EventLoop* owner_loop_{nullptr};
-	const std::string ip_port_;
-	const std::string name_;
+	using ConnectionMap = std::map<std::string, TcpConnectionPtr>;
 
-	int started_{0};
+	EventLoop* owner_loop_{nullptr};
+	const std::string name_;
+	const std::string ip_port_;
+
+	// ATOMIC_FLAG_INIT is macros
+	std::atomic_flag started_ = ATOMIC_FLAG_INIT;
+
 	std::unique_ptr<Acceptor> acceptor_;
 
-	int next_conn_id_{0};
+	// user callback function
+	ConnectionCallback connection_cb_;
+	MessageCallback message_cb_;
+	WriteCompleteCallback write_complete_cb_;
+	ThreadInitCallback thread_init_cb_;
+
+	std::atomic<int> next_conn_id_{0};
 	ConnectionMap connections_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpServer);
