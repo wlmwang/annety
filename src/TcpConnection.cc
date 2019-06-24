@@ -39,7 +39,7 @@ ssize_t write(const SelectableFD& sfd, const void* buf, size_t len) {
 void default_connection_callback(const TcpConnectionPtr& conn)
 {
 	// testing
-	// conn->send("welcome to annety!!!\n");
+	conn->send("welcome to annety!!!\r\n");
 
 	LOG(TRACE) << conn->local_addr().to_ip_port() << " -> "
 			   << conn->peer_addr().to_ip_port() << " is "
@@ -142,7 +142,7 @@ void TcpConnection::send_in_loop(const StringPiece& message)
 
 void TcpConnection::send_in_loop(const void* data, size_t len)
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	ssize_t nwrote = 0;
 	size_t remaining = len;
@@ -203,7 +203,7 @@ void TcpConnection::shutdown()
 
 void TcpConnection::shutdown_in_loop()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	if (!connect_channel_->is_write_event()) {
 		// we are not writing
@@ -232,7 +232,7 @@ void TcpConnection::force_close_with_delay(double seconds)
 
 void TcpConnection::force_close_in_loop()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	if (state_ == kConnected || state_ == kDisconnecting) {
 		// as if we received 0 byte in handleRead();
@@ -248,7 +248,7 @@ void TcpConnection::start_read()
 
 void TcpConnection::start_read_in_loop()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	if (!reading_ || !connect_channel_->is_read_event()) {
 		connect_channel_->enable_read_event();
@@ -264,7 +264,7 @@ void TcpConnection::stop_read()
 
 void TcpConnection::stop_read_in_loop()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	if (reading_ || connect_channel_->is_read_event()) {
 		connect_channel_->disable_read_event();
@@ -274,7 +274,7 @@ void TcpConnection::stop_read_in_loop()
 
 void TcpConnection::connect_established()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 	
 	DCHECK(state_ == kConnecting);
 	state_ = kConnected;
@@ -287,7 +287,7 @@ void TcpConnection::connect_established()
 
 void TcpConnection::connect_destroyed()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	if (state_ == kConnected) {
 		state_ = kDisconnected;
@@ -300,7 +300,7 @@ void TcpConnection::connect_destroyed()
 
 void TcpConnection::handle_read(Time recv_tm)
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	ScopedClearLastError last_err;
 
@@ -318,7 +318,7 @@ void TcpConnection::handle_read(Time recv_tm)
 
 void TcpConnection::handle_write()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	if (connect_channel_->is_write_event()) {
 		ssize_t n = internal::write(*connect_socket_, output_buffer_->begin_read(), 
@@ -349,7 +349,7 @@ void TcpConnection::handle_write()
 
 void TcpConnection::handle_close()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	LOG(TRACE) << "fd = " << connect_channel_->fd() << " state = " << state_to_string();
 	DCHECK(state_ == kConnected || state_ == kDisconnecting);

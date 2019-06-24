@@ -133,7 +133,7 @@ public:
 		if (len <= -1) {
 			len = readable_bytes();
 		}
-		assert(len <= readable_bytes());
+		assert(static_cast<size_t>(len) <= readable_bytes());
 		std::string result(begin_read(), len);
 		has_read(static_cast<size_t>(len));
 		return result;

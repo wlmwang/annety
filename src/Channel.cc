@@ -27,7 +27,7 @@ Channel::~Channel()
 	// DCHECK(!event_handling_);
 	DCHECK(!added_to_loop_);
 
-	if (owner_loop_->check_in_own_thread(false)) {
+	if (owner_loop_->check_in_own_loop(false)) {
 		// channel must has removed
 		DCHECK(!owner_loop_->has_channel(this));
 	}
@@ -40,7 +40,7 @@ int Channel::fd() const
 
 void Channel::handle_event(Time receive_tm)
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 	
 	event_handling_ = true;
 	LOG(TRACE) << "handling event " << revents_to_string();
@@ -73,7 +73,7 @@ void Channel::handle_event(Time receive_tm)
 
 void Channel::remove()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	// channel must has disable_all_event
 	DCHECK(is_none_event());
@@ -84,7 +84,7 @@ void Channel::remove()
 
 void Channel::update()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	added_to_loop_ = true;
 	owner_loop_->update_channel(this);

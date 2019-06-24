@@ -38,9 +38,9 @@ public:
 
 	virtual bool has_channel(Channel* channel) const;
 
-	void check_in_own_thread() const
+	void check_in_own_loop() const
 	{
-		owner_loop_->check_in_own_thread(true);
+		owner_loop_->check_in_own_loop(true);
 	}
 
 protected:

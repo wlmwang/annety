@@ -58,7 +58,7 @@ void PollPoller::fill_active_channels(int num, ChannelList* active_channels) con
 
 void PollPoller::update_channel(Channel* channel)
 {
-	Poller::check_in_own_thread();
+	Poller::check_in_own_loop();
 	
 	const int index = channel->index();
 	LOG(TRACE) << "fd = " << channel->fd() 
@@ -100,7 +100,7 @@ void PollPoller::update_channel(Channel* channel)
 
 void PollPoller::remove_channel(Channel* channel)
 {
-	Poller::check_in_own_thread();
+	Poller::check_in_own_loop();
 
 	LOG(TRACE) << "fd = " << channel->fd();
 

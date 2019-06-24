@@ -32,7 +32,7 @@ public:
 	void remove_channel(Channel* channel);
 	bool has_channel(Channel *channel);
 
-	bool check_in_own_thread(bool fatal = true) const;
+	bool check_in_own_loop(bool fatal = true) const;
 
 private:
 	bool quit_{false};

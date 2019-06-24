@@ -48,7 +48,7 @@ EventLoop::~EventLoop()
 
 void EventLoop::loop()
 {
-	check_in_own_thread();
+	check_in_own_loop();
 
 	CHECK(!looping_);
 	looping_ = true;
@@ -74,7 +74,7 @@ void EventLoop::loop()
 
 void EventLoop::update_channel(Channel* channel)
 {
-	check_in_own_thread(true);
+	check_in_own_loop(true);
 	DCHECK(channel->owner_loop() == this);
 
 	poller_->update_channel(channel);
@@ -82,7 +82,7 @@ void EventLoop::update_channel(Channel* channel)
 
 void EventLoop::remove_channel(Channel* channel)
 {
-	check_in_own_thread(true);
+	check_in_own_loop(true);
 	DCHECK(channel->owner_loop() == this);
 
 	poller_->remove_channel(channel);
@@ -90,13 +90,13 @@ void EventLoop::remove_channel(Channel* channel)
 
 bool EventLoop::has_channel(Channel* channel)
 {
-	check_in_own_thread(true);
+	check_in_own_loop(true);
 	DCHECK(channel->owner_loop() == this);
 
 	return poller_->has_channel(channel);
 }
 
-bool EventLoop::check_in_own_thread(bool fatal) const
+bool EventLoop::check_in_own_loop(bool fatal) const
 {
 	bool is_in_own_thread = *owning_thread_ == PlatformThread::current_ref();
 	if (fatal) {

@@ -31,7 +31,7 @@ TcpServer::TcpServer(EventLoop* loop,
 
 TcpServer::~TcpServer()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 	LOG(TRACE) << "TcpServer::~TcpServer [" << name_ << "] destructing";
 
 	for (auto& item : connections_) {
@@ -55,13 +55,13 @@ void TcpServer::start()
 
 void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	// EventLoop* loop = thread_pool_->get_next_loop();
 	EventLoop* loop = owner_loop_;
   
 	char buf[128];
-	::snprintf(buf, sizeof buf, "-%s#%d", ip_port_.c_str(), ++next_conn_id_);
+	::snprintf(buf, sizeof buf, "#%s#%d", ip_port_.c_str(), ++next_conn_id_);
 	std::string name = name_ + buf;
 
 	LOG(INFO) << "TcpServer::new_connection [" << name_
@@ -93,7 +93,7 @@ void TcpServer::remove_connection(const TcpConnectionPtr& conn)
 
 void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	LOG(INFO) << "TcpServer::remove_connection_in_loop [" << name_
 		<< "] - connection " << conn->name();

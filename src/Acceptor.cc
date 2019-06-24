@@ -70,7 +70,7 @@ Acceptor::~Acceptor()
 
 void Acceptor::listen()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 	
 	listen_ = true;
 	internal::listen(*listen_socket_);
@@ -79,14 +79,14 @@ void Acceptor::listen()
 
 void Acceptor::handle_read()
 {
-	owner_loop_->check_in_own_thread(true);
+	owner_loop_->check_in_own_loop(true);
 
 	EndPoint peeraddr;
 	int connfd = internal::accept(*listen_socket_, peeraddr);
 	if (connfd >= 0) {
-		LOG(TRACE) << "accept of " << connfd << "|" << peeraddr.to_ip_port();
+		LOG(TRACE) << "Acceptor::handle_read " << peeraddr.to_ip_port();
 
-		// make new connection sock of socketFD
+		// make a new connection sock of socketFD
 		SelectableFDPtr sockfd(new SocketFD(connfd));
 		if (new_connect_cb_) {
 			new_connect_cb_(std::move(sockfd), peeraddr);
@@ -94,7 +94,7 @@ void Acceptor::handle_read()
 			internal::close(*sockfd);
 		}
 	} else {
-		PLOG(ERROR) << "accept failed";
+		PLOG(ERROR) << "Acceptor::handle_read failed";
 
 		// Read the section named "The special problem of
 		// accept()ing when you can't" in libev's doc.

@@ -19,6 +19,7 @@ class NetByteBuffer : public ByteBuffer
 public:
 	// inheritance of construct
 	using ByteBuffer::ByteBuffer;
+	explicit NetByteBuffer() : ByteBuffer() {}
 
 	// copy-ctor, move-ctor, dtor and assignment
 	NetByteBuffer(const NetByteBuffer&) = default;
