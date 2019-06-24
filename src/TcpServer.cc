@@ -60,7 +60,7 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 	// EventLoop* loop = thread_pool_->get_next_loop();
 	EventLoop* loop = owner_loop_;
   
-	char buf[128];
+	char buf[64];
 	::snprintf(buf, sizeof buf, "#%s#%d", ip_port_.c_str(), ++next_conn_id_);
 	std::string name = name_ + buf;
 

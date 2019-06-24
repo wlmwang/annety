@@ -38,7 +38,7 @@ public:
 	const EndPoint& peer_addr() const { return peer_addr_; }
 	bool connected() const { return state_ == kConnected; }
 	bool disconnected() const { return state_ == kDisconnected; }
-	
+
 	void send(const void* message, int len);
 	void send(const StringPiece& message);
 	void send(NetBuffer&& message);

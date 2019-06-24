@@ -39,7 +39,7 @@ ssize_t write(const SelectableFD& sfd, const void* buf, size_t len) {
 void default_connection_callback(const TcpConnectionPtr& conn)
 {
 	// testing
-	conn->send("\r\nwelcome to annety!!!\r\n");
+	// conn->send("\r\nwelcome to annety!!!\r\n");
 
 	LOG(TRACE) << conn->local_addr().to_ip_port() << " -> "
 			   << conn->peer_addr().to_ip_port() << " is "
@@ -51,7 +51,7 @@ void default_connection_callback(const TcpConnectionPtr& conn)
 void default_message_callback(const TcpConnectionPtr&, NetBuffer* buf, Time)
 {
 	// testing
-	std::cout << buf->peek() << std::endl;
+	// std::cout << buf->peek() << std::endl;
 	
 	buf->has_read_all();
 }
@@ -73,7 +73,8 @@ TcpConnection::TcpConnection(EventLoop* loop,
 	LOG(TRACE) << "TcpConnection::construct[" <<  name_ << "] at " << this
 		<< " fd=" << connect_socket_->internal_fd();
 
-	// cannot use shared_from_this(), Otherwise circular reference with Channel
+	// Cannot use shared_from_this(), Otherwise it forms a circular reference 
+	// to the Channel object
 	connect_channel_->set_read_callback(
 		std::bind(&TcpConnection::handle_read, this, _1));
 	connect_channel_->set_write_callback(
