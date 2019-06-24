@@ -6,6 +6,7 @@
 #include "Channel.h"
 #include "ScopedClearLastError.h"
 
+#include <algorithm>
 #include <errno.h>
 #include <poll.h>
 #include <unistd.h>
@@ -18,6 +19,9 @@ PollPoller::~PollPoller() = default;
 
 Time PollPoller::poll(int timeout_ms, ChannelList* active_channels)
 {
+	Poller::check_in_own_loop();
+
+	LOG(TRACE) << "watching total fd count " << (long long)channels_.size();
 	ScopedClearLastError last_error;
 
 	int num = ::poll(pollfds_.data(), pollfds_.size(), timeout_ms);
@@ -30,9 +34,9 @@ Time PollPoller::poll(int timeout_ms, ChannelList* active_channels)
 	} else if (num == 0) {
 		LOG(TRACE) << "nothing happened";
 	} else {
-		// error happens, log uncommon ones
+		// error happens
 		if (errno != EINTR) {
-			PLOG(ERROR) << "poll() failed";
+			PLOG(ERROR) << "PollPoller::poll() failed";
 		}
 	}
 	return now;
@@ -40,6 +44,8 @@ Time PollPoller::poll(int timeout_ms, ChannelList* active_channels)
 
 void PollPoller::fill_active_channels(int num, ChannelList* active_channels) const
 {
+	Poller::check_in_own_loop();
+	
 	PollFdList::const_iterator pfd = pollfds_.begin();
 	for (; pfd != pollfds_.end() && num > 0; ++pfd) {
 		if (pfd->revents > 0) {
@@ -88,12 +94,14 @@ void PollPoller::update_channel(Channel* channel)
 		struct pollfd& pfd = pollfds_[idx];
 		DCHECK(pfd.fd == channel->fd() || pfd.fd == -channel->fd()-1);
 
+		// update
 		pfd.fd = channel->fd();
 		pfd.events = static_cast<short>(channel->events());
 		pfd.revents = 0;
+
+		// ignore this pollfd
 		if (channel->is_none_event()) {
-			// ignore this pollfd
-			pfd.fd = -channel->fd()-1;
+			pfd.fd = -channel->fd()-1;	// avoid fd=0
 		}
 	}
 }
@@ -102,27 +110,32 @@ void PollPoller::remove_channel(Channel* channel)
 {
 	Poller::check_in_own_loop();
 
-	LOG(TRACE) << "fd = " << channel->fd();
+	int fd = channel->fd();
+	LOG(TRACE) << "fd = " << fd;
 
-	DCHECK(channels_.find(channel->fd()) != channels_.end());
-	DCHECK(channels_[channel->fd()] == channel);
+	DCHECK(channels_.find(fd) != channels_.end());
+	DCHECK(channels_[fd] == channel);
 	DCHECK(channel->is_none_event());
 
 	int idx = channel->index();
 	DCHECK(0 <= idx && idx < static_cast<int>(pollfds_.size()));
-	const struct pollfd& pfd = pollfds_[idx]; (void)pfd;
-	DCHECK(pfd.fd == -channel->fd()-1 && pfd.events == channel->events());
-	size_t n = channels_.erase(channel->fd());
-	DCHECK(n == 1); (void)n;
+	
+	const struct pollfd& pfd = pollfds_[idx];
+	DCHECK(pfd.fd == -fd-1 && pfd.events == channel->events());
+	
+	size_t n = channels_.erase(fd);
+	DCHECK(n == 1);
+	
 	if (static_cast<size_t>(idx) == pollfds_.size()-1) {
 		pollfds_.pop_back();
 	} else {
-		int channelAtEnd = pollfds_.back().fd;
-		iter_swap(pollfds_.begin()+idx, pollfds_.end()-1);
-		if (channelAtEnd < 0) {
-			channelAtEnd = -channelAtEnd-1;
+		// O(1). erase container element
+		int channel_at_end = pollfds_.back().fd;
+		std::iter_swap(pollfds_.begin()+idx, pollfds_.end()-1);
+		if (channel_at_end < 0) {
+			channel_at_end = -channel_at_end-1;
 		}
-		channels_[channelAtEnd]->set_index(idx);
+		channels_[channel_at_end]->set_index(idx);
 		pollfds_.pop_back();
 	}
 }

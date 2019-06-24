@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 22 2019
 
-#ifndef ANT_NET_BYTE_BUFFER_H
-#define ANT_NET_BYTE_BUFFER_H
+#ifndef ANT_NET_BUFFER_H
+#define ANT_NET_BUFFER_H
 
 #include "ByteOrder.h"
 
@@ -14,19 +14,19 @@
 
 namespace annety
 {
-class NetByteBuffer : public ByteBuffer
+class NetBuffer : public ByteBuffer
 {
 public:
 	// inheritance of construct
 	using ByteBuffer::ByteBuffer;
-	explicit NetByteBuffer() : ByteBuffer() {}
+	explicit NetBuffer() : ByteBuffer() {}
 
 	// copy-ctor, move-ctor, dtor and assignment
-	NetByteBuffer(const NetByteBuffer&) = default;
-	NetByteBuffer(NetByteBuffer&&) = default;
-	NetByteBuffer& operator=(const NetByteBuffer&) = default;
-	NetByteBuffer& operator=(NetByteBuffer&&) = default;
-	~NetByteBuffer() = default;
+	NetBuffer(const NetBuffer&) = default;
+	NetBuffer(NetBuffer&&) = default;
+	NetBuffer& operator=(const NetBuffer&) = default;
+	NetBuffer& operator=(NetBuffer&&) = default;
+	~NetBuffer() = default;
   
 	const char* peek() const { return begin_read();}
 
@@ -123,4 +123,4 @@ public:
 
 }	// namespace annety
 
-#endif	// ANT_NET_BYTE_BUFFER_H
+#endif	// ANT_NET_BUFFER_H

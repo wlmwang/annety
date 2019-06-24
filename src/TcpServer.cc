@@ -31,7 +31,7 @@ TcpServer::TcpServer(EventLoop* loop,
 
 TcpServer::~TcpServer()
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 	LOG(TRACE) << "TcpServer::~TcpServer [" << name_ << "] destructing";
 
 	for (auto& item : connections_) {
@@ -55,7 +55,7 @@ void TcpServer::start()
 
 void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	// EventLoop* loop = thread_pool_->get_next_loop();
 	EventLoop* loop = owner_loop_;
@@ -74,7 +74,7 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 
 	connections_[name] = conn;
 	
-	// forward register user callback to TcpConnection
+	// Transfer register user callbacks to TcpConnection
 	conn->set_connection_callback(connection_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
@@ -93,7 +93,7 @@ void TcpServer::remove_connection(const TcpConnectionPtr& conn)
 
 void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	LOG(INFO) << "TcpServer::remove_connection_in_loop [" << name_
 		<< "] - connection " << conn->name();
@@ -106,6 +106,5 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 	// 	std::bind(&TcpConnection::connect_destroyed, conn));
 	conn->connect_destroyed();
 }
-
 
 }	// namespace annety

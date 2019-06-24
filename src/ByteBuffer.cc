@@ -4,7 +4,7 @@
 #include "ByteBuffer.h"
 #include "Logging.h"
 
-// #include <iostream>	// std::stderr
+// #include <iostream>	// std::cerr
 #include <ostream>
 
 namespace annety
@@ -19,10 +19,10 @@ void ByteBuffer::make_writable_bytes(size_t len)
 
 	if (real_writeable_bytes < len) {
 		if (max_size_ != kUnLimitSize && max_size_ - writer_index_ < len) {
-			// std::stderr << "not enough space to write"
-			//             << "limit size:" << max_size_
-			//             << "writable bytes:" << writable_bytes()
-			//             << "append bytes" << len;
+			// std::cerr << "not enough space to write"
+			// 		<< "limit size:" << max_size_
+			// 		<< "writable bytes:" << writable_bytes()
+			// 		<< "append bytes" << len;
 			return;
 		}
 		buffer_.resize(writer_index_+len);

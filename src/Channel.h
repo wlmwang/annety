@@ -17,6 +17,10 @@ namespace annety
 class EventLoop;
 class SelectableFD;
 
+// A selectable I/O channel.
+//
+// This class does not holds life-time of the file descriptor.
+// The file descriptor could be a socket, eventfd, timerfd or signalfd
 class Channel
 {
 public:

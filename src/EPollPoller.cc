@@ -13,8 +13,7 @@
 
 namespace annety
 {
-// On Linux, the constants of poll(2) and epoll(4)
-// are expected to be the same.
+// the constants of poll(2) and epoll(4) are expected to be the same.
 static_assert(EPOLLIN == POLLIN,        "epoll uses same flag values as poll");
 static_assert(EPOLLPRI == POLLPRI,      "epoll uses same flag values as poll");
 static_assert(EPOLLOUT == POLLOUT,      "epoll uses same flag values as poll");
@@ -43,6 +42,8 @@ EPollPoller::~EPollPoller()
 
 Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 {
+	Poller::check_in_own_loop();
+
 	LOG(TRACE) << "watching total fd count " << (long long)channels_.size();
 	ScopedClearLastError last_error();
 
@@ -60,17 +61,18 @@ Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 	} else if (num == 0) {
 		LOG(TRACE) << "nothing happened";
 	} else {
-		// error happens, log uncommon ones
+		// error happens
 		if (errno != EINTR) {
-			PLOG(ERROR) << "epoll_wait() failed";
+			PLOG(ERROR) << "PollPoller::poll() failed";
 		}
 	}
 	return now;
 }
 
-void EPollPoller::fill_active_channels(int num,
-									ChannelList* active_channels) const
+void EPollPoller::fill_active_channels(int num, ChannelList* active_channels) const
 {
+	Poller::check_in_own_loop();
+
 	DCHECK(static_cast<size_t>(num) <= events_.size());
 	
 	for (int i = 0; i < num; ++i) {
@@ -113,10 +115,10 @@ void EPollPoller::update_channel(Channel* channel)
 	} else {
 		// update existing one with EPOLL_CTL_MOD/DEL
 		int fd = channel->fd();
-		(void)fd;
 		DCHECK(channels_.find(fd) != channels_.end());
 		DCHECK(channels_[fd] == channel);
 		DCHECK(index == kAdded);
+
 		if (channel->is_none_event()) {
 			update(EPOLL_CTL_DEL, channel);
 			channel->set_index(kDeleted);
@@ -139,10 +141,8 @@ void EPollPoller::remove_channel(Channel* channel)
 
 	int index = channel->index();
 	DCHECK(index == kAdded || index == kDeleted);
-
-	// 删除 channel 句柄
+	
 	size_t n = channels_.erase(fd);
-	(void)n;
 	DCHECK(n == 1);
 
 	if (index == kAdded) {

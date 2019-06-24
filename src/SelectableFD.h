@@ -9,6 +9,10 @@
 
 namespace annety
 {
+// Wrapper for selectable the file descriptor,
+// and the Wrapper holds life-time of the file description
+//
+// The file descriptor could be a socket, eventfd, timerfd or signalfd
 class SelectableFD
 {
 public:

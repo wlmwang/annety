@@ -2,14 +2,14 @@
 // Date: Jun 17 2019
 
 #include "TcpConnection.h"
-#include "NetByteBuffer.h"
 #include "Channel.h"
+#include "NetBuffer.h"
 #include "EndPoint.h"
 #include "EventLoop.h"
 #include "SocketFD.h"
-#include "Logging.h"
 #include "SocketsUtil.h"
 #include "ScopedClearLastError.h"
+#include "Logging.h"
 
 #include <utility>
 #include <iostream>
@@ -39,7 +39,7 @@ ssize_t write(const SelectableFD& sfd, const void* buf, size_t len) {
 void default_connection_callback(const TcpConnectionPtr& conn)
 {
 	// testing
-	conn->send("welcome to annety!!!\r\n");
+	conn->send("\r\nwelcome to annety!!!\r\n");
 
 	LOG(TRACE) << conn->local_addr().to_ip_port() << " -> "
 			   << conn->peer_addr().to_ip_port() << " is "
@@ -48,7 +48,7 @@ void default_connection_callback(const TcpConnectionPtr& conn)
 	// because some users want to register message callback only.
 }
 
-void default_message_callback(const TcpConnectionPtr&, NetByteBuffer* buf, Time)
+void default_message_callback(const TcpConnectionPtr&, NetBuffer* buf, Time)
 {
 	// testing
 	std::cout << buf->peek() << std::endl;
@@ -67,13 +67,13 @@ TcpConnection::TcpConnection(EventLoop* loop,
     peer_addr_(peeraddr),
     connect_socket_(std::move(sockfd)),
     connect_channel_(new Channel(owner_loop_, connect_socket_.get())),
-    input_buffer_(new NetByteBuffer()),
-    output_buffer_(new NetByteBuffer())
+    input_buffer_(new NetBuffer()),
+    output_buffer_(new NetBuffer())
 {
 	LOG(TRACE) << "TcpConnection::construct[" <<  name_ << "] at " << this
 		<< " fd=" << connect_socket_->internal_fd();
 
-	// cannot use shared_from_this()
+	// cannot use shared_from_this(), Otherwise circular reference with Channel
 	connect_channel_->set_read_callback(
 		std::bind(&TcpConnection::handle_read, this, _1));
 	connect_channel_->set_write_callback(
@@ -100,7 +100,6 @@ void TcpConnection::set_tcp_nodelay(bool on)
 	internal::set_tcp_nodelay(*connect_socket_, on);
 }
 
-
 void TcpConnection::send(const void* data, int len)
 {
 	send(StringPiece(static_cast<const char*>(data), len));
@@ -120,7 +119,13 @@ void TcpConnection::send(const StringPiece& message)
 	}
 }
 
-void TcpConnection::send(NetByteBuffer* buf)
+void TcpConnection::send(NetBuffer&& message)
+{
+	NetBuffer msg(std::move(message));
+	send(&msg);
+}
+
+void TcpConnection::send(NetBuffer* buf)
 {
 	if (state_ == kConnected) {
 		// if (loop_->isInLoopThread()) {
@@ -142,7 +147,7 @@ void TcpConnection::send_in_loop(const StringPiece& message)
 
 void TcpConnection::send_in_loop(const void* data, size_t len)
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	ssize_t nwrote = 0;
 	size_t remaining = len;
@@ -185,6 +190,7 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 			high_water_mark_cb_(shared_from_this(), oldLen + remaining);
 		}
 
+		// Copy data to output_buffer_
 		output_buffer_->append(static_cast<const char*>(data) + nwrote, remaining);
 		if (!connect_channel_->is_write_event()) {
 			connect_channel_->enable_write_event();
@@ -203,7 +209,7 @@ void TcpConnection::shutdown()
 
 void TcpConnection::shutdown_in_loop()
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	if (!connect_channel_->is_write_event()) {
 		// we are not writing
@@ -232,7 +238,7 @@ void TcpConnection::force_close_with_delay(double seconds)
 
 void TcpConnection::force_close_in_loop()
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	if (state_ == kConnected || state_ == kDisconnecting) {
 		// as if we received 0 byte in handleRead();
@@ -248,7 +254,7 @@ void TcpConnection::start_read()
 
 void TcpConnection::start_read_in_loop()
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	if (!reading_ || !connect_channel_->is_read_event()) {
 		connect_channel_->enable_read_event();
@@ -264,7 +270,7 @@ void TcpConnection::stop_read()
 
 void TcpConnection::stop_read_in_loop()
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	if (reading_ || connect_channel_->is_read_event()) {
 		connect_channel_->disable_read_event();
@@ -274,7 +280,7 @@ void TcpConnection::stop_read_in_loop()
 
 void TcpConnection::connect_established()
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 	
 	DCHECK(state_ == kConnecting);
 	state_ = kConnected;
@@ -287,7 +293,7 @@ void TcpConnection::connect_established()
 
 void TcpConnection::connect_destroyed()
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	if (state_ == kConnected) {
 		state_ = kDisconnected;
@@ -300,7 +306,7 @@ void TcpConnection::connect_destroyed()
 
 void TcpConnection::handle_read(Time recv_tm)
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	ScopedClearLastError last_err;
 
@@ -318,7 +324,7 @@ void TcpConnection::handle_read(Time recv_tm)
 
 void TcpConnection::handle_write()
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	if (connect_channel_->is_write_event()) {
 		ssize_t n = internal::write(*connect_socket_, output_buffer_->begin_read(), 
@@ -349,7 +355,7 @@ void TcpConnection::handle_write()
 
 void TcpConnection::handle_close()
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	LOG(TRACE) << "fd = " << connect_channel_->fd() << " state = " << state_to_string();
 	DCHECK(state_ == kConnected || state_ == kDisconnecting);

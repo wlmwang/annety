@@ -36,12 +36,26 @@ public:
 				: max_size_(max_size),
 				  buffer_(max_size>0? max_size: init_size) {}
 
-	// copy-ctor, move-ctor, dtor and assignment
+	// copy, dtor and assignment
 	ByteBuffer(const ByteBuffer&) = default;
-	ByteBuffer(ByteBuffer&&) = default;
 	ByteBuffer& operator=(const ByteBuffer&) = default;
-	ByteBuffer& operator=(ByteBuffer&&) = default;
 	~ByteBuffer() = default;
+	
+	// move 
+	ByteBuffer(ByteBuffer&& rhs) 
+		: max_size_(rhs.max_size_),
+		  reader_index_(rhs.reader_index_),
+		  writer_index_(rhs.writer_index_),
+		  buffer_(std::move(rhs.buffer_))
+	{
+		rhs.reset();
+	}
+	ByteBuffer& operator=(ByteBuffer&& rhs)
+	{
+		swap(rhs);
+		rhs.reset();
+		return *this;
+	}
 
 	void swap(ByteBuffer& rhs)
 	{

@@ -25,7 +25,7 @@ CC_SRC		:= main.cc \
 			   File.cc FilePath.cc FileEnumerator.cc FilesUtil.cc FilesUtilPosix.cc \
 			   MutexLock.cc ConditionVariable.cc CountDownLatch.cc \
 			   PlatformThread.cc Thread.cc ThreadPool.cc \
-			   EndPoint.cc SocketsUtil.cc NetByteBuffer.cc \
+			   EndPoint.cc SocketsUtil.cc NetBuffer.cc \
 			   SelectableFD.cc SocketFD.cc \
 			   Channel.cc Acceptor.cc TcpServer.cc TcpConnection.cc \
 			   EventLoop.cc Poller.cc PollPoller.cc

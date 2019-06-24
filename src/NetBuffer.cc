@@ -1,14 +1,14 @@
 // Refactoring: Anny Wang
 // Date: Jun 22 2019
 
-#include "NetByteBuffer.h"
+#include "NetBuffer.h"
 #include "SocketsUtil.h"
 
 #include <errno.h>
 
 namespace annety
 {
-ssize_t NetByteBuffer::read_fd(int fd, int* err)
+ssize_t NetBuffer::read_fd(int fd, int* err)
 {
 	const size_t writable = writable_bytes();
 
@@ -36,7 +36,6 @@ ssize_t NetByteBuffer::read_fd(int fd, int* err)
 	// if (n == writable + sizeof extrabuf) {
 	// 	goto line_12;
 	// }
-	
 	return n;
 }
 

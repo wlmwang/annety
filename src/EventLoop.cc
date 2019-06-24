@@ -4,24 +4,32 @@
 #include "EventLoop.h"
 #include "ThreadLocal.h"
 #include "PlatformThread.h"
-#include "Poller.h"
-// #include "EPollPoller.h"
-#include "PollPoller.h"
 #include "Channel.h"
+#include "Poller.h"
+#include "PollPoller.h"
+// #include "EPollPoller.h"
+
+#include <signal.h>
 
 namespace annety
 {
 namespace
 {
-void clean_tls_eventloop(void *ptr) {
+void clean_tls_event_loop(void *ptr) {
 	LOG(TRACE) << "TLS EventLoop has clean by thread " 
 		<< PlatformThread::current_ref().ref()
 		<< ", Deleted EventLoop " << ptr;
 }
 
-// one loop one thread
-ThreadLocal<EventLoop> tls_eventloop{&clean_tls_eventloop};
+// There is at most one EventLoop object per thread
+ThreadLocal<EventLoop> tls_event_loop{&clean_tls_event_loop};
 const int kPollTimeoutMs = 10000;
+
+// Ignore the SIGPIPE signal
+BEFORE_MAIN_EXECUTOR() {
+	::signal(SIGPIPE, SIG_IGN);
+}
+
 }	// namespace anonymous
 
 EventLoop::EventLoop() 
@@ -32,11 +40,11 @@ EventLoop::EventLoop()
 		<< owning_thread_->ref() 
 		<< ", EventLoop " << this;
 	
-	CHECK(tls_eventloop.empty()) << "EventLoop has created by thread " 
+	CHECK(tls_event_loop.empty()) << "EventLoop has created by thread " 
 		<< owning_thread_->ref() << ", Now current thread is " 
 		<< PlatformThread::current_ref().ref();
 
-	tls_eventloop.set(this);
+	tls_event_loop.set(this);
 }
 
 EventLoop::~EventLoop()
@@ -74,7 +82,7 @@ void EventLoop::loop()
 
 void EventLoop::update_channel(Channel* channel)
 {
-	check_in_own_loop(true);
+	check_in_own_loop();
 	DCHECK(channel->owner_loop() == this);
 
 	poller_->update_channel(channel);
@@ -82,7 +90,7 @@ void EventLoop::update_channel(Channel* channel)
 
 void EventLoop::remove_channel(Channel* channel)
 {
-	check_in_own_loop(true);
+	check_in_own_loop();
 	DCHECK(channel->owner_loop() == this);
 
 	poller_->remove_channel(channel);
@@ -90,21 +98,21 @@ void EventLoop::remove_channel(Channel* channel)
 
 bool EventLoop::has_channel(Channel* channel)
 {
-	check_in_own_loop(true);
+	check_in_own_loop();
 	DCHECK(channel->owner_loop() == this);
 
 	return poller_->has_channel(channel);
 }
 
-bool EventLoop::check_in_own_loop(bool fatal) const
+void EventLoop::check_in_own_loop() const
 {
-	bool is_in_own_thread = *owning_thread_ == PlatformThread::current_ref();
-	if (fatal) {
-		CHECK(is_in_own_thread) << " EventLoop was created by thread " 
-			<< owning_thread_->ref() << ", But current thread is " 
-			<< PlatformThread::current_ref().ref();
-	}
-	return is_in_own_thread;
+	CHECK(is_in_own_loop()) << " EventLoop was created by thread " 
+		<< owning_thread_->ref() << ", But current thread is " 
+		<< PlatformThread::current_ref().ref();
+}
+
+bool EventLoop::is_in_own_loop() const {
+	return *owning_thread_ == PlatformThread::current_ref();
 }
 
 }	// namespace annety

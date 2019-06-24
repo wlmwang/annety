@@ -14,8 +14,9 @@
 
 namespace annety
 {
-// wrapper of sockaddr_in[6]
-// std::is_standard_layout<EndPoint>::value == true; is_pod; is_trivial
+// Wrapper for sockaddr_in[6], and exposing sockaddr* interface to users.
+//
+// EndPoint is standard layout class, but do not trivial class and pod.
 class EndPoint
 {
 #if defined(OS_MACOSX)
@@ -31,9 +32,10 @@ class EndPoint
 #endif	// defined(OS_MACOSX)
 
 public:
+	// |port| to EndPoint, ip default "0.0.0.0"
 	explicit EndPoint(uint16_t port = 0, bool loopback_only = false, bool ipv6 = false);
 
-	// |ip| "0.0.0.0"
+	// |ip| "127.0.0.1"/port to EndPoint
 	EndPoint(const StringPiece& ip, uint16_t port, bool ipv6 = false);
 
 	// sockaddr_in[6] => EndPoint
@@ -45,10 +47,11 @@ public:
 	EndPoint& operator=(const EndPoint&) = default;
 	~EndPoint() = default;
 	
+	// set sockaddr to EndPoint
 	void set_sockaddr_in(const struct sockaddr_in& addr) { addr_ = addr;}
 	void set_sockaddr_in(const struct sockaddr_in6& addr6) { addr6_ = addr6;}
 
-	// &addr6_ => sockaddr*
+	// for bind/connect/recvfrom/sendto etc.
 	const struct sockaddr* get_sockaddr() const;
 
 	sa_family_t family() const  { return addr_.sin_family;}

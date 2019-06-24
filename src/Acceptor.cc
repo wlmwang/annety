@@ -70,7 +70,7 @@ Acceptor::~Acceptor()
 
 void Acceptor::listen()
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 	
 	listen_ = true;
 	internal::listen(*listen_socket_);
@@ -79,7 +79,7 @@ void Acceptor::listen()
 
 void Acceptor::handle_read()
 {
-	owner_loop_->check_in_own_loop(true);
+	owner_loop_->check_in_own_loop();
 
 	EndPoint peeraddr;
 	int connfd = internal::accept(*listen_socket_, peeraddr);

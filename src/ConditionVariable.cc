@@ -25,7 +25,7 @@ ConditionVariable::ConditionVariable(MutexLock& user_lock)
 #endif
 {
 	int rv = 0;
-// Mac can use relative time deadlines.
+// Macosx can use relative time deadlines.
 #if !defined(OS_MACOSX)
 	pthread_condattr_t attrs;
 	rv = ::pthread_condattr_init(&attrs);

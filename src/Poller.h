@@ -40,7 +40,7 @@ public:
 
 	void check_in_own_loop() const
 	{
-		owner_loop_->check_in_own_loop(true);
+		owner_loop_->check_in_own_loop();
 	}
 
 protected:

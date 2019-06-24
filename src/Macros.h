@@ -54,7 +54,7 @@ constexpr size_t size(const T (&array)[N]) noexcept {
 
 // Put following code somewhere global to run it before main():
 //  Use like:
-//   GLOBAL_INIT()
+//   BEFORE_MAIN_EXECUTOR()
 //   {
 //       ... your code ...
 //   }
@@ -62,23 +62,22 @@ constexpr size_t size(const T (&array)[N]) noexcept {
 // Your can:
 //   * Write any code and access global variables.
 //   * Use ASSERT_*.
-//   * Have multiple GLOBAL_INIT() in one scope.
+//   * Have multiple BEFORE_MAIN_EXECUTOR() in one scope.
 //
 // Since the code run in global scope, quit with exit() or similar functions.
 #if defined(__cplusplus)
-#define GLOBAL_INIT											\
+#define BEFORE_MAIN_EXECUTOR								\
 namespace {													\
-	struct MACROS_CONCAT(GlobalInit, __LINE__) {			\
-		MACROS_CONCAT(GlobalInit, __LINE__)() { init(); }	\
+	struct MACROS_CONCAT(_GlobalInit, __LINE__) {			\
+		MACROS_CONCAT(_GlobalInit, __LINE__)() { init(); }	\
 		void init();										\
 	} MACROS_CONCAT(g_global_init_dummy_, __LINE__);		\
 }	/* namespace anonymous */								\
-void MACROS_CONCAT(GlobalInit, __LINE__)::init
+void MACROS_CONCAT(_GlobalInit, __LINE__)::init
 #else
-
-#define GLOBAL_INIT											\
-    static void __attribute__((constructor))				\
-    MACROS_CONCAT(g_global_init_, __LINE__)
+#define BEFORE_MAIN_EXECUTOR								\
+	static void __attribute__((constructor))				\
+	MACROS_CONCAT(g_global_init_dummy_, __LINE__)
 #endif
 
 #endif	// ANT_MACROS_H_

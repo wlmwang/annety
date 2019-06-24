@@ -19,6 +19,9 @@ class EndPoint;
 class Acceptor;
 class EventLoop;
 
+// TCP server, supports single-threaded and thread-pool models.
+//
+// This class holds life-time of Acceptor
 class TcpServer
 {
 public:
@@ -32,7 +35,7 @@ public:
 
 	TcpServer(EventLoop* loop,
 			  const EndPoint& addr,
-			  const std::string& name = "annety-srv",
+			  const std::string& name = "ant-srv",
 			  Option option = kNoReusePort);
 
 	~TcpServer();
@@ -75,7 +78,7 @@ private:
 
 	std::unique_ptr<Acceptor> acceptor_;
 
-	// user callback function
+	// user callback functions
 	ConnectionCallback connection_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;

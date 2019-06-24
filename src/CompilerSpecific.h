@@ -12,12 +12,12 @@
 
 // Annotate a variable indicating it's ok if the variable is not used.
 // e.g:
-// 		int x = 1; ALLOW_UNUSED_LOCAL(x);
+// 	int x = 1; ALLOW_UNUSED_LOCAL(x);
 #define ALLOW_UNUSED_LOCAL(x) (void)x
 
 // Annotate a typedef or function indicating it's ok if it's not used.
 // e.g:
-// 		typedef Foo Bar ALLOW_UNUSED_TYPE;
+// 	typedef Foo Bar ALLOW_UNUSED_TYPE;
 #if defined(COMPILER_GCC) || defined(__clang__)
 #define ALLOW_UNUSED_TYPE __attribute__((unused))
 #else
@@ -26,7 +26,7 @@
 
 // Annotate a function indicating the caller must examine the return value.
 // e.g:
-//   int foo() WARN_UNUSED_RESULT;
+// 	int foo() WARN_UNUSED_RESULT;
 #undef WARN_UNUSED_RESULT
 #if defined(COMPILER_GCC) || defined(__clang__)
 #define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
@@ -38,9 +38,9 @@
 // really sure you don't want to do anything with the return value of a function
 // that has been marked WARN_UNUSED_RESULT, wrap it with this. 
 // e.g:
-//   std::unique_ptr<MyType> my_var = ...;
-//   if (TakeOwnership(my_var.get()) == SUCCESS)
-//     ignore_result(my_var.release());
+// 	std::unique_ptr<MyType> my_var = ...;
+//  if (TakeOwnership(my_var.get()) == SUCCESS)
+// 		ignore_result(my_var.release());
 namespace annety {
 namespace internal {
 template<typename T>

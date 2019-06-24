@@ -17,6 +17,7 @@ class ThreadRef;
 class Channel;
 class Poller;
 
+// Reactor, one loop per thread.
 class EventLoop
 {
 using ChannelList = std::vector<Channel*>;
@@ -32,7 +33,8 @@ public:
 	void remove_channel(Channel* channel);
 	bool has_channel(Channel *channel);
 
-	bool check_in_own_loop(bool fatal = true) const;
+	void check_in_own_loop() const;
+	bool is_in_own_loop() const;
 
 private:
 	bool quit_{false};

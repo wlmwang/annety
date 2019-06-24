@@ -6,7 +6,7 @@
 #include "SocketsUtil.h"
 #include "Logging.h"
 
-#include <netdb.h>	// for struct hostent
+#include <netdb.h>	// struct hostent
 
 namespace annety
 {
@@ -16,7 +16,37 @@ namespace annety
 // ---
 // extern const struct in6_addr in6addr_any;      /* :: */
 // extern const struct in6_addr in6addr_loopback; /* ::1 */
+
+// /* Structure sockaddr */
+// struct sockaddr {
+// 		sa_family_t sa_family;  /* address family: AF_INET */
+// 		char sa_data[14];       /* Address data.  */
+// };
+
+// /* Structure describing an Internet socket address.  */
+// struct sockaddr_in {
+// 		sa_family_t    sin_family; /* address family: AF_INET */
+// 		uint16_t       sin_port;   /* port in network byte order */
+// 		struct in_addr sin_addr;   /* internet address */
+// };
+
+// /* address family: AF_INET/AF_INET6 */
+// typedef unsigned short int sa_family_t;
 //
+// /* Internet address. */
+// typedef uint32_t in_addr_t;
+// struct in_addr {
+// 		in_addr_t       s_addr;     /* address in network byte order */
+// };
+
+// /* Structure Internet socket address of IPv6 */
+// struct sockaddr_in6 {
+// 		sa_family_t     sin6_family;   /* address family: AF_INET6 */
+// 		uint16_t        sin6_port;     /* port in network byte order */
+// 		uint32_t        sin6_flowinfo; /* IPv6 flow information */
+// 		struct in6_addr sin6_addr;     /* IPv6 address */
+// 		uint32_t        sin6_scope_id; /* IPv6 scope-id */
+// };
 
 static const in_addr_t kInaddrAny = INADDR_ANY;
 static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;

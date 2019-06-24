@@ -17,6 +17,9 @@ class EndPoint;
 class SelectableFD;
 class Channel;
 
+// Acceptor of incoming socket connections.
+//
+// This class holds life-time of listen-socket and listen-channel
 class Acceptor
 {
 public:

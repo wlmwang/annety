@@ -18,6 +18,10 @@ class Channel;
 class EventLoop;
 class SocketFD;
 
+// TCP connection.
+//
+// this class holds life-time of connect-socket and connect-channel,
+// Ant its own life-time was hold by server and users
 class TcpConnection : public std::enable_shared_from_this<TcpConnection>
 {
 public:
@@ -34,12 +38,11 @@ public:
 	const EndPoint& peer_addr() const { return peer_addr_; }
 	bool connected() const { return state_ == kConnected; }
 	bool disconnected() const { return state_ == kDisconnected; }
-
-	// void send(std::string&& message); // C++11
+	
 	void send(const void* message, int len);
 	void send(const StringPiece& message);
-	// void send(NetByteBuffer&& message); // C++11
-	void send(NetByteBuffer* message);  // this one will swap data
+	void send(NetBuffer&& message);
+	void send(NetBuffer* message);  // this one will swap data
 	void shutdown(); // NOT thread safe, no simultaneous calling
 	void force_close();
 	void force_close_with_delay(double seconds);
@@ -73,8 +76,8 @@ public:
 		close_cb_ = cb;
 	}
 	
-	NetByteBuffer* input_buffer();
-	NetByteBuffer* output_buffer();
+	NetBuffer* input_buffer();
+	NetBuffer* output_buffer();
 
 	void connect_established();
 	void connect_destroyed();
@@ -119,8 +122,8 @@ private:
 	HighWaterMarkCallback high_water_mark_cb_;
 	size_t high_water_mark_{64*1024*1024};
 
-	std::unique_ptr<NetByteBuffer> input_buffer_;
-	std::unique_ptr<NetByteBuffer> output_buffer_;
+	std::unique_ptr<NetBuffer> input_buffer_;
+	std::unique_ptr<NetBuffer> output_buffer_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpConnection);
 };
