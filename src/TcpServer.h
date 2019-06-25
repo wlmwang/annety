@@ -39,26 +39,27 @@ public:
 			  Option option = kNoReusePort);
 
 	~TcpServer();
-
-	// not thread safe.
-	void setConnectionCallback(const ConnectionCallback& cb)
-	{
-		connection_cb_ = cb;
-	}
-	void setMessageCallback(const MessageCallback& cb)
-	{
-		message_cb_ = cb;
-	}
-	void setWriteCompleteCallback(const WriteCompleteCallback& cb)
-	{
-		write_complete_cb_ = cb;
-	}
-
+	
 	const std::string& ip_port() const { return ip_port_; }
 	const std::string& name() const { return name_; }
 	EventLoop* get_owner_loop() const { return owner_loop_; }
 
 	void start();
+
+	// The following interfaces are usually be called before start()
+	// They are all *Not thread safe*
+	void set_connect_callback(const ConnectCallback& cb)
+	{
+		connect_cb_ = cb;
+	}
+	void set_message_callback(const MessageCallback& cb)
+	{
+		message_cb_ = cb;
+	}
+	void set_write_complete_callback(const WriteCompleteCallback& cb)
+	{
+		write_complete_cb_ = cb;
+	}
 
 private:
 	void new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr);
@@ -79,12 +80,14 @@ private:
 	std::unique_ptr<Acceptor> acceptor_;
 
 	// user callback functions
-	ConnectionCallback connection_cb_;
+	ConnectCallback connect_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;
+
 	ThreadInitCallback thread_init_cb_;
 
-	std::atomic<int> next_conn_id_{0};
+	std::atomic<int> next_conn_id_{1};
+	// All connections pool(map)
 	ConnectionMap connections_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpServer);

@@ -36,9 +36,12 @@ public:
 	const std::string& name() const { return name_; }
 	const EndPoint& local_addr() const { return local_addr_; }
 	const EndPoint& peer_addr() const { return peer_addr_; }
+
+	// not thread safe.
 	bool connected() const { return state_ == kConnected; }
 	bool disconnected() const { return state_ == kDisconnected; }
 
+	// not thread safe.
 	void send(const void* message, int len);
 	void send(const StringPiece& message);
 	void send(NetBuffer&& message);
@@ -46,6 +49,7 @@ public:
 	void shutdown(); // NOT thread safe, no simultaneous calling
 	void force_close();
 	void force_close_with_delay(double seconds);
+
 	void set_tcp_nodelay(bool on);
 
 	// reading or not
@@ -53,9 +57,9 @@ public:
 	void stop_read();
 	bool is_reading() const { return reading_; };
 
-	void set_connection_callback(const ConnectionCallback& cb)
+	void set_connect_callback(const ConnectCallback& cb)
 	{
-		connection_cb_ = cb;
+		connect_cb_ = cb;
 	}
 	void set_message_callback(const MessageCallback& cb)
 	{
@@ -65,10 +69,10 @@ public:
 	{
 		write_complete_cb_ = cb;
 	}
-	void set_high_water_mark_callback(const HighWaterMarkCallback& cb, size_t highWaterMark)
+	void set_high_water_mark_callback(const HighWaterMarkCallback& cb, size_t high_water_mark)
 	{
 		high_water_mark_cb_ = cb;
-		high_water_mark_ = highWaterMark;
+		high_water_mark_ = high_water_mark;
 	}
 
 	void set_close_callback(const CloseCallback& cb)
@@ -103,8 +107,8 @@ private:
 private:
 	EventLoop* owner_loop_;
 	const std::string name_;
-	StateE state_{kConnecting};
 	bool reading_{true};
+	StateE state_{kConnecting};
 
 	const EndPoint local_addr_;
 	const EndPoint peer_addr_;
@@ -116,7 +120,7 @@ private:
 	CloseCallback close_cb_;
 
 	// user callback function
-	ConnectionCallback connection_cb_;
+	ConnectCallback connect_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;
 	HighWaterMarkCallback high_water_mark_cb_;

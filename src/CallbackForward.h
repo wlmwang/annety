@@ -21,15 +21,15 @@ class NetBuffer;
 class TcpConnection;
 using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
 using TimerCallback = std::function<void()>;
-using ConnectionCallback = std::function<void(const TcpConnectionPtr&)>;
+using ConnectCallback = std::function<void(const TcpConnectionPtr&)>;
 using CloseCallback = std::function<void(const TcpConnectionPtr&)>;
 using WriteCompleteCallback = std::function<void(const TcpConnectionPtr&)>;
 using HighWaterMarkCallback = std::function<void(const TcpConnectionPtr&, size_t)>;
 using MessageCallback = std::function<void(const TcpConnectionPtr&, NetBuffer*, Time)>;
 
-// -----------------------------------------------------------------------------
+// internal ------------------------------------------------------------------
 // default callback handler
-void default_connection_callback(const TcpConnectionPtr&);
+void default_connect_callback(const TcpConnectionPtr&);
 void default_message_callback(const TcpConnectionPtr&, NetBuffer*, Time);
 
 class SelectableFD;

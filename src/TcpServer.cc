@@ -22,7 +22,7 @@ TcpServer::TcpServer(EventLoop* loop,
 	: owner_loop_(loop), name_(name),
 	  ip_port_(addr.to_ip_port()),
 	  acceptor_(new Acceptor(loop, addr, option == kReusePort)),
-	  connection_cb_(default_connection_callback),
+	  connect_cb_(default_connect_callback),
 	  message_cb_(default_message_callback)
 {
 	acceptor_->set_new_connect_callback(
@@ -75,7 +75,7 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 	connections_[name] = conn;
 	
 	// Transfer register user callbacks to TcpConnection
-	conn->set_connection_callback(connection_cb_);
+	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
 	conn->set_close_callback(

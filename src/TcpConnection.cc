@@ -12,7 +12,6 @@
 #include "Logging.h"
 
 #include <utility>
-#include <iostream>
 
 namespace annety
 {
@@ -36,23 +35,17 @@ ssize_t write(const SelectableFD& sfd, const void* buf, size_t len) {
 
 }	// namespace internal
 
-void default_connection_callback(const TcpConnectionPtr& conn)
+void default_connect_callback(const TcpConnectionPtr& conn)
 {
-	// testing
-	// conn->send("\r\nwelcome to annety!!!\r\n");
-
 	LOG(TRACE) << conn->local_addr().to_ip_port() << " -> "
 			   << conn->peer_addr().to_ip_port() << " is "
-			   << (conn->connected() ? "UP" : "DOWN");		   
+			   << (conn->connected() ? "UP" : "DOWN");
 	// do not call conn->force_close()
 	// because some users want to register message callback only.
 }
 
 void default_message_callback(const TcpConnectionPtr&, NetBuffer* buf, Time)
 {
-	// testing
-	// std::cout << buf->peek() << std::endl;
-	
 	buf->has_read_all();
 }
 
@@ -289,7 +282,7 @@ void TcpConnection::connect_established()
 	// connect_channel_->tie(shared_from_this());
 	connect_channel_->enable_read_event();
 
-	connection_cb_(shared_from_this());
+	connect_cb_(shared_from_this());
 }
 
 void TcpConnection::connect_destroyed()
@@ -300,7 +293,7 @@ void TcpConnection::connect_destroyed()
 		state_ = kDisconnected;
 		connect_channel_->disable_all_event();
 
-		connection_cb_(shared_from_this());
+		connect_cb_(shared_from_this());
 	}
 	connect_channel_->remove();
 }
@@ -366,7 +359,7 @@ void TcpConnection::handle_close()
 	connect_channel_->disable_all_event();
 
 	TcpConnectionPtr backup(shared_from_this());
-	connection_cb_(backup);
+	connect_cb_(backup);
 
 	close_cb_(backup);
 }

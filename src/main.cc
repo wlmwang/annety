@@ -31,6 +31,7 @@
 #include "EventLoop.h"
 #include "EndPoint.h"
 #include "TcpServer.h"
+#include "TcpConnection.h"
 
 using namespace annety;
 using namespace std;
@@ -107,28 +108,28 @@ int main(int argc, char* argv[])
 	// std::cout << "errno(10):" << safe_strerror(10) << std::endl;
 	// std::cout << "errno(11):" << fast_safe_strerror(11) << std::endl;
 
-	// ByteBuffer/NetBuffer
-	ByteBuffer bb{10};
+	// // ByteBuffer/NetBuffer
+	// ByteBuffer bb{10};
 
-	bb.append("123456");
-	bb.append("ab");
-	bb.append("cd");
+	// bb.append("123456");
+	// bb.append("ab");
+	// bb.append("cd");
 
-	ByteBuffer bb1 = bb;
+	// ByteBuffer bb1 = bb;
 
-	cout << "take before:" << bb << endl;
-	cout << "take all:" << bb.taken_as_string() << endl;	// taken
-	cout << "take after:" << bb << "|" << bb1 << endl;
+	// cout << "take before:" << bb << endl;
+	// cout << "take all:" << bb.taken_as_string() << endl;	// taken
+	// cout << "take after:" << bb << "|" << bb1 << endl;
 
-	bb.append("01");
-	bb.append("23");
+	// bb.append("01");
+	// bb.append("23");
 
-	cout << "append success:" << bb.append("4567890") << endl;
-	cout << "append success:" << bb.append("a") << endl;
-	cout << "append rt:" << bb << endl;
+	// cout << "append success:" << bb.append("4567890") << endl;
+	// cout << "append success:" << bb.append("a") << endl;
+	// cout << "append rt:" << bb << endl;
 
-	ByteBuffer bb2 = std::move(bb);
-	std::cout << "std::move:" << bb2 << "|" << bb << std::endl;
+	// ByteBuffer bb2 = std::move(bb);
+	// std::cout << "std::move:" << bb2 << "|" << bb << std::endl;
 
 	// // LogStream
 	// LogStream stream;
@@ -381,14 +382,29 @@ int main(int argc, char* argv[])
 	// tt.start();
 	// tt.join();
 
-	// EndPoint
-	std::cout << "is_standard_layout:" << std::is_standard_layout<EndPoint>::value << std::endl;
-	std::cout << "is_trivial:" << std::is_trivial<EndPoint>::value << std::endl;
-	std::cout << "is_pod:" << std::is_pod<EndPoint>::value << std::endl;
+	// // EndPoint
+	// std::cout << "is_standard_layout:" << std::is_standard_layout<EndPoint>::value << std::endl;
+	// std::cout << "is_trivial:" << std::is_trivial<EndPoint>::value << std::endl;
+	// std::cout << "is_pod:" << std::is_pod<EndPoint>::value << std::endl;
 	
 	// EventLoop
 	EventLoop loop;
-	TcpServer serv(&loop, EndPoint(11099), "annety-server");
+	TcpServer serv(&loop, EndPoint(11099));
+	
+	// register connect handle
+	serv.set_connect_callback([](const TcpConnectionPtr& conn){
+		conn->send("\r\nwelcome to annety!!!\r\n\r\n");
+
+		LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
+			   << conn->peer_addr().to_ip_port() << " is "
+			   << (conn->connected() ? "UP" : "DOWN");
+	});
+	// register message handle
+	serv.set_message_callback([](const TcpConnectionPtr&, NetBuffer* buf, Time){
+		std::cout << buf->peek() << std::endl;
+		buf->has_read_all();
+	});
+
 	serv.start();
 
 	loop.loop();
