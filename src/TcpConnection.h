@@ -11,6 +11,7 @@
 
 #include <string>
 #include <memory>
+#include <functional>
 
 namespace annety
 {
@@ -101,7 +102,7 @@ private:
 	void start_read_in_loop();
 	void stop_read_in_loop();
 
-	void setState(StateE s) { state_ = s; }
+	void set_state(StateE s) { state_ = s; }
 	const char* state_to_string() const;
 
 private:

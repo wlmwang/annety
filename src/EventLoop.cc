@@ -80,6 +80,18 @@ void EventLoop::loop()
 	looping_ = false;
 }
 
+void EventLoop::quit()
+{
+	quit_ = true;
+
+	// There is a chance that loop() just executes while(!quit_) and exits,
+	// then EventLoop destructs, then we are accessing an invalid object.
+	// Can be fixed using mutex_ in both places.
+	if (!is_in_own_loop()) {
+		// wakeup();
+	}
+}
+
 void EventLoop::update_channel(Channel* channel)
 {
 	check_in_own_loop();

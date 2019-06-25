@@ -28,6 +28,8 @@ public:
 	
 	void loop();
 
+	void quit();
+	
 	// internal ---------------------------------
 	void update_channel(Channel* channel);
 	void remove_channel(Channel* channel);

@@ -11,6 +11,7 @@
 #include <string>
 #include <memory>
 #include <atomic>
+#include <functional>
 
 namespace annety
 {
