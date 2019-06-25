@@ -7,11 +7,11 @@
 
 namespace annety
 {
-SocketFD::SocketFD(bool nonblock, bool cloexec)
-{
-	fd_ = sockets::socket(AF_INET, nonblock, cloexec);
-	DCHECK(fd_ >= 0);
-}
+// SocketFD::SocketFD(bool nonblock, bool cloexec)
+// {
+// 	fd_ = sockets::socket(AF_INET, nonblock, cloexec);
+// 	DCHECK(fd_ >= 0);
+// }
 
 SocketFD::~SocketFD() = default;
 

@@ -352,9 +352,9 @@ int close(int fd)
 	return ret;
 }
 
-ssize_t read(int sockfd, void *buf, size_t count)
+ssize_t read(int sockfd, void *buf, size_t len)
 {
-	ssize_t ret = ::read(sockfd, buf, count);
+	ssize_t ret = ::read(sockfd, buf, len);
 	PLOG_IF(ERROR, ret < 0) << "::read failed";
 	return ret;
 }
@@ -365,9 +365,9 @@ ssize_t readv(int sockfd, const struct iovec *iov, int iovcnt)
 	return ret;
 }
 
-ssize_t write(int sockfd, const void *buf, size_t count)
+ssize_t write(int sockfd, const void *buf, size_t len)
 {
-	int ret = ::write(sockfd, buf, count);
+	int ret = ::write(sockfd, buf, len);
 	PLOG_IF(ERROR, ret < 0) << "::write failed";
 	return ret;
 }

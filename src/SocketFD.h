@@ -12,7 +12,7 @@ namespace annety
 class SocketFD : public SelectableFD
 {
 public:
-	explicit SocketFD(bool nonblock = true, bool cloexec = true);
+	explicit SocketFD(bool nonblock = true, bool cloexec = true) = delete;
 	explicit SocketFD(int sckfd) : SelectableFD(sckfd) {}
 
 	virtual ~SocketFD() override;
