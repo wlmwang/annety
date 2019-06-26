@@ -399,6 +399,7 @@ int main(int argc, char* argv[])
 			   << conn->peer_addr().to_ip_port() << " is "
 			   << (conn->connected() ? "UP" : "DOWN");
 	});
+	
 	// register message handle
 	serv.set_message_callback([](const TcpConnectionPtr&, NetBuffer* buf, Time){
 		std::cout << buf->peek() << std::endl;

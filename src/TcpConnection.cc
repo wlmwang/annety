@@ -17,20 +17,18 @@ namespace annety
 {
 namespace internal
 {
-void set_keep_alive(const SelectableFD& sfd, bool on) {
+// Specific connect socket related function interfaces
+void set_keep_alive(const SelectableFD& sfd, bool on)
+{
 	sockets::set_keep_alive(sfd.internal_fd(), on);
 }
-
-void set_tcp_nodelay(const SelectableFD& sfd, bool on) {
+void set_tcp_nodelay(const SelectableFD& sfd, bool on)
+{
 	sockets::set_tcp_nodelay(sfd.internal_fd(), on);
 }
-
-void shutdown_write(const SelectableFD& sfd) {
-	sockets::shutdown(sfd.internal_fd());
-}
-
-ssize_t write(const SelectableFD& sfd, const void* buf, size_t len) {
-	return sockets::write(sfd.internal_fd(), buf, len);
+void shutdown(const SelectableFD& sfd, int how = SHUT_WR)
+{
+	sockets::shutdown(sfd.internal_fd(), how);
 }
 
 }	// namespace internal
@@ -77,6 +75,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
 	connect_channel_->set_error_callback(
 		std::bind(&TcpConnection::handle_error, this));
 
+	// set keep-alive sockopt
 	internal::set_keep_alive(*connect_socket_, true);
 }
 
@@ -153,7 +152,7 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 
 	// if no thing in output queue, try writing directly
 	if (!connect_channel_->is_write_event() && output_buffer_->readable_bytes() == 0) {
-		nwrote = internal::write(*connect_socket_, data, len);
+		nwrote = connect_socket_->write(data, len);
 		if (nwrote >= 0) {
 			remaining = len - nwrote;
 			if (remaining == 0 && write_complete_cb_) {
@@ -206,8 +205,7 @@ void TcpConnection::shutdown_in_loop()
 	owner_loop_->check_in_own_loop();
 
 	if (!connect_channel_->is_write_event()) {
-		// we are not writing
-		internal::shutdown_write(*connect_socket_);
+		internal::shutdown(*connect_socket_);
 	}
 }
 
@@ -304,7 +302,8 @@ void TcpConnection::handle_read(Time recv_tm)
 
 	ScopedClearLastError last_err;
 
-	ssize_t n = input_buffer_->read_fd(connect_channel_->fd());
+	// packaged ::read() call
+	ssize_t n = input_buffer_->read_fd(connect_socket_->internal_fd());
 	if (n > 0) {
 		message_cb_(shared_from_this(), input_buffer_.get(), recv_tm);
 	} else if (n == 0) {
@@ -321,8 +320,8 @@ void TcpConnection::handle_write()
 	owner_loop_->check_in_own_loop();
 
 	if (connect_channel_->is_write_event()) {
-		ssize_t n = internal::write(*connect_socket_, output_buffer_->begin_read(), 
-								    output_buffer_->readable_bytes());
+		ssize_t n = connect_socket_->write(output_buffer_->begin_read(),
+										   output_buffer_->readable_bytes());
 		if (n > 0) {
 			output_buffer_->has_read(n);
 			if (output_buffer_->readable_bytes() == 0) {
@@ -342,7 +341,7 @@ void TcpConnection::handle_write()
 			// }
 		}
 	} else {
-		LOG(TRACE) << "Connection fd = " << connect_channel_->fd()
+		LOG(TRACE) << "Connection fd = " << connect_socket_->internal_fd()
 			<< " is down, no more writing";
 	}
 }
@@ -351,7 +350,7 @@ void TcpConnection::handle_close()
 {
 	owner_loop_->check_in_own_loop();
 
-	LOG(TRACE) << "fd = " << connect_channel_->fd() << " state = " << state_to_string();
+	LOG(TRACE) << "fd = " << connect_socket_->internal_fd() << " state = " << state_to_string();
 	DCHECK(state_ == kConnected || state_ == kDisconnecting);
 
 	state_ = kDisconnected;

@@ -7,16 +7,18 @@
 #include "Macros.h"
 #include "SelectableFD.h"
 
+#include <sys/socket.h>
+
 namespace annety
 {
 class SocketFD : public SelectableFD
 {
 public:
-	explicit SocketFD(bool nonblock = true, bool cloexec = true) = delete;
-	explicit SocketFD(int sckfd) : SelectableFD(sckfd) {}
+	using SelectableFD::SelectableFD;
 
-	virtual ~SocketFD() override;
-
+	SocketFD() = delete;
+	SocketFD(sa_family_t family, bool nonblock, bool cloexec);
+	
 private:
 	DISALLOW_COPY_AND_ASSIGN(SocketFD);
 };

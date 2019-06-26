@@ -18,16 +18,17 @@ namespace annety
 {
 namespace internal
 {
-int socket(const EndPoint& addr) {
-	return sockets::socket(addr.family(), true, true);
-}
-int bind(const SelectableFD& sfd, const EndPoint& addr) {
+// Specific listen socket related function interfaces
+int bind(const SelectableFD& sfd, const EndPoint& addr)
+{
 	return sockets::bind(sfd.internal_fd(), addr.get_sockaddr());
 }
-int listen(const SelectableFD& sfd) {
+int listen(const SelectableFD& sfd)
+{
 	return sockets::listen(sfd.internal_fd());
 }
-int accept(const SelectableFD& sfd, EndPoint& peeraddr) {
+int accept(const SelectableFD& sfd, EndPoint& peeraddr)
+{
 	struct sockaddr_in6 addr;
 	::memset(&addr, 0, sizeof addr);
 	int connfd = sockets::accept(sfd.internal_fd(), &addr);
@@ -36,14 +37,12 @@ int accept(const SelectableFD& sfd, EndPoint& peeraddr) {
 	}
 	return connfd;
 }
-void close(const SelectableFD& sfd) {
-	sockets::close(sfd.internal_fd());
-}
-void set_reuse_addr(const SelectableFD& sfd, bool on) {
+void set_reuse_addr(const SelectableFD& sfd, bool on)
+{
 	sockets::set_reuse_addr(sfd.internal_fd(), on);
 }
-
-void set_reuse_port(const SelectableFD& sfd, bool on) {
+void set_reuse_port(const SelectableFD& sfd, bool on)
+{
 	sockets::set_reuse_port(sfd.internal_fd(), on);
 }
 
@@ -51,7 +50,7 @@ void set_reuse_port(const SelectableFD& sfd, bool on) {
 
 Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport)
 	: owner_loop_(loop),
-	  listen_socket_(new SocketFD(internal::socket(addr))),
+	  listen_socket_(new SocketFD(addr.family(), true, true)),
 	  listen_channel_(new Channel(owner_loop_, listen_socket_.get())),
 	  idle_fd_(::open("/dev/null", O_RDONLY | O_CLOEXEC))
 {
@@ -84,15 +83,14 @@ void Acceptor::handle_read()
 	EndPoint peeraddr;
 	int connfd = internal::accept(*listen_socket_, peeraddr);
 	if (connfd >= 0) {
-		LOG(TRACE) << "Acceptor::handle_read " << peeraddr.to_ip_port();
+		LOG(TRACE) << "Acceptor::handle_read " << peeraddr.to_ip_port() << " fd " << connfd;
 
 		// make a new connection sock of socketFD
 		SelectableFDPtr sockfd(new SocketFD(connfd));
 		if (new_connect_cb_) {
 			new_connect_cb_(std::move(sockfd), peeraddr);
-		} else {
-			internal::close(*sockfd);
 		}
+		// sockfd is unique_ptr, so no need to delete or close(fd) here
 	} else {
 		PLOG(ERROR) << "Acceptor::handle_read failed";
 
