@@ -6,10 +6,12 @@
 
 #include "Macros.h"
 #include "Time.h"
+#include "CallbackForward.h"
 
 #include <vector>
 #include <memory>
 #include <utility>
+#include <functional>
 
 namespace annety
 {
@@ -31,12 +33,17 @@ public:
 	void quit();
 	
 	// internal ---------------------------------
+	void wakeup();
+	
 	void update_channel(Channel* channel);
 	void remove_channel(Channel* channel);
 	bool has_channel(Channel *channel);
 
 	void check_in_own_loop() const;
 	bool is_in_own_loop() const;
+
+private:
+	void handle_read();
 
 private:
 	bool quit_{false};
@@ -46,6 +53,9 @@ private:
 	std::unique_ptr<ThreadRef> owning_thread_;
 	std::unique_ptr<Poller> poller_;
 	
+	SelectableFDPtr wakeup_socket_;
+	std::unique_ptr<Channel> wakeup_channel_;
+
 	Time poll_tm_;
 	ChannelList active_channels_;
 	Channel* current_channel_{nullptr};

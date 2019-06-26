@@ -4,6 +4,7 @@
 #include "EventLoop.h"
 #include "ThreadLocal.h"
 #include "PlatformThread.h"
+#include "EventFD.h"
 #include "Channel.h"
 #include "Poller.h"
 #include "PollPoller.h"
@@ -34,7 +35,9 @@ BEFORE_MAIN_EXECUTOR() {
 
 EventLoop::EventLoop() 
 	: owning_thread_(new ThreadRef(PlatformThread::current_ref())),
-	  poller_(new PollPoller(this))
+	  poller_(new PollPoller(this)),
+	  wakeup_socket_(new EventFD(true, true)),
+	  wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {
 	LOG(TRACE) << "EventLoop is creating by thread " 
 		<< owning_thread_->ref() 
@@ -45,6 +48,11 @@ EventLoop::EventLoop()
 		<< PlatformThread::current_ref().ref();
 
 	tls_event_loop.set(this);
+
+	wakeup_channel_->set_read_callback(
+		std::bind(&EventLoop::handle_read, this));
+	
+	wakeup_channel_->enable_read_event();
 }
 
 EventLoop::~EventLoop()
@@ -89,6 +97,24 @@ void EventLoop::quit()
 	// Can be fixed using mutex_ in both places.
 	if (!is_in_own_loop()) {
 		// wakeup();
+	}
+}
+
+void EventLoop::wakeup()
+{
+	uint64_t one = 1;
+	ssize_t n = wakeup_socket_->write(&one, sizeof one);
+	if (n != sizeof one) {
+		PLOG(ERROR) << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
+	}
+}
+
+void EventLoop::handle_read()
+{
+	uint64_t one = 1;
+	ssize_t n = wakeup_socket_->read(&one, sizeof one);
+	if (n != sizeof one) {
+		PLOG(ERROR) << "EventLoop::handle_read() reads " << n << " bytes instead of 8";
 	}
 }
 

@@ -5,22 +5,19 @@
 #define ANT_EVENT_FD_H_
 
 #include "Macros.h"
+#include "SelectableFD.h"
 
 namespace annety
 {
-class EventFD
+class EventFD : public SelectableFD
 {
 public:
-	explicit EventFD(bool nonblock = true, bool cloexec = true);
-	explicit EventFD(int evtfd) : fd_(evtfd) {}
+	using SelectableFD::SelectableFD;
 
-	~EventFD();
-
-	int internal_fd() const { return fd_;}
+	EventFD() = delete;
+	EventFD(bool nonblock, bool cloexec);
 
 private:
-	int fd_;
-
 	DISALLOW_COPY_AND_ASSIGN(EventFD);
 };
 
