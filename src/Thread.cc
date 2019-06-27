@@ -2,8 +2,10 @@
 // Date: May 28 2019
 
 #include "Thread.h"
+#include "CompilerSpecific.h"
 #include "PlatformThread.h"
 #include "Logging.h"
+#include "StringPiece.h"
 #include "StringPrintf.h"
 #include "Exception.h"
 
@@ -11,7 +13,32 @@
 #include <utility>
 #include <functional>
 
-namespace annety {
+namespace annety
+{
+namespace threads
+{
+// fixed, destruct not control
+thread_local static ThreadId tls_tid{0};
+thread_local static std::string tls_tid_string;
+
+ThreadId tid()
+{
+	if (UNLIKELY(tls_tid == 0)) {
+		tls_tid = PlatformThread::current_id();
+	}
+	return tls_tid;
+}
+
+StringPiece tid_string()
+{
+	if (UNLIKELY(tls_tid_string.empty())) {
+		sstring_printf(&tls_tid_string, "%d", tid());
+	}
+	return tls_tid_string;
+}
+
+}	// namespace threads
+
 Thread::Thread(const TaskCallback& cb, const std::string& name_prefix)
 	: Thread(cb, name_prefix, Options()) {}
 

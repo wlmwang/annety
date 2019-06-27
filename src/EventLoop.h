@@ -22,9 +22,10 @@ class Poller;
 // Reactor, one loop per thread.
 class EventLoop
 {
-using ChannelList = std::vector<Channel*>;
-
 public:
+	using ChannelList = std::vector<Channel*>;
+	using Functor = std::function<void()>;
+
 	EventLoop();
 	~EventLoop();
 	
@@ -42,9 +43,13 @@ public:
 	void check_in_own_loop() const;
 	bool is_in_own_loop() const;
 
+	void run_in_own_loop(Functor cb);
+	void queue_in_own_loop(Functor cb);
+
 private:
 	void handle_read();
-
+	void do_calling_wakeup_functors();
+	
 private:
 	bool quit_{false};
 	bool looping_{false};
@@ -59,6 +64,12 @@ private:
 	Time poll_tm_;
 	ChannelList active_channels_;
 	Channel* current_channel_{nullptr};
+	
+	// atomic
+	bool calling_wakeup_functors_{false};
+
+	mutable MutexLock lock_;
+	std::vector<Functor> wakeup_functors_;
 
 	DISALLOW_COPY_AND_ASSIGN(EventLoop);
 };

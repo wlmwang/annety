@@ -10,9 +10,9 @@
 
 #include "Macros.h"
 #include "CompilerSpecific.h"
+#include "ScopedClearLastError.h"
 #include "LogStream.h"
 #include "Time.h"
-#include "ScopedClearLastError.h"
 
 #include <sstream>
 #include <string>

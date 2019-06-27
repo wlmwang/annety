@@ -387,6 +387,9 @@ int main(int argc, char* argv[])
 	// std::cout << "is_trivial:" << std::is_trivial<EndPoint>::value << std::endl;
 	// std::cout << "is_pod:" << std::is_pod<EndPoint>::value << std::endl;
 	
+	// std::cout << "tid:" << threads::tid() << std::endl;
+	// std::cout << "tid:" << threads::tid() << std::endl;
+
 	// EventLoop
 	EventLoop loop;
 	TcpServer serv(&loop, EndPoint(11099));

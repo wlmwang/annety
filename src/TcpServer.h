@@ -88,7 +88,8 @@ private:
 	ThreadInitCallback thread_init_cb_;
 
 	std::atomic<int> next_conn_id_{1};
-	// All connections pool(map)
+	
+	// all connections pool(map)
 	ConnectionMap connections_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpServer);

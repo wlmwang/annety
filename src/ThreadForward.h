@@ -26,6 +26,13 @@ typedef mach_port_t ThreadId;
 typedef pid_t ThreadId;
 #endif
 
+class StringPiece;
+namespace threads
+{
+ThreadId tid();
+StringPiece tid_string();
+}	// namespace threads
+
 const ThreadId kInvalidThreadId{0};
 
 // Used for thread checking and debugging.

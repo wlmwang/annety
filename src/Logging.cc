@@ -9,6 +9,7 @@
 #include "Macros.h"			// arraysize
 #include "SafeStrerror.h"
 #include "StringPrintf.h"
+#include "ThreadForward.h"
 #include "Time.h"
 
 #include <algorithm>
@@ -57,6 +58,7 @@ LogFFlushHandlerFunction g_log_fflush_handler = &defaultFlush;
 LogSeverity g_min_log_level = 0;
 
 // For cache colums logging
+// fixed, destruct not control
 thread_local Time::Exploded tls_local_exploded{};
 thread_local std::string tls_format_ymdhis{};
 thread_local int64_t tls_last_second{};
@@ -130,7 +132,9 @@ void LogMessage::Impl::begin()
 	}
 	stream_ << string_printf("%s.%06d ", tls_format_ymdhis.c_str(), 
 				static_cast<int>(td.internal_value() % Time::kMicrosecondsPerSecond));
+	
 	// tid string
+	stream_ << threads::tid_string() << " ";
 
 	// severity string
 	stream_ << log_severity_name(severity_) << " ";

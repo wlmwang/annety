@@ -82,6 +82,8 @@ void EventLoop::loop()
 		}
 		current_channel_ = nullptr;
 		event_handling_ = false;
+		
+		do_calling_wakeup_functors();
 	}
 
 	LOG(TRACE) << "EventLoop " << this << " finish looping";
@@ -96,7 +98,7 @@ void EventLoop::quit()
 	// then EventLoop destructs, then we are accessing an invalid object.
 	// Can be fixed using mutex_ in both places.
 	if (!is_in_own_loop()) {
-		// wakeup();
+		wakeup();
 	}
 }
 
@@ -144,6 +146,27 @@ bool EventLoop::has_channel(Channel* channel)
 	return poller_->has_channel(channel);
 }
 
+void EventLoop::run_in_own_loop(Functor cb)
+{
+	if (is_in_own_loop()) {
+		cb();
+	} else {
+		queue_in_own_loop(std::move(cb));
+	}
+}
+
+void EventLoop::queue_in_own_loop(Functor cb)
+{
+	{
+		AutoLock locked(lock_);
+		wakeup_functors_.push_back(std::move(cb));
+	}
+
+	if (!is_in_own_loop() || calling_wakeup_functors_) {
+		wakeup();
+	}
+}
+
 void EventLoop::check_in_own_loop() const
 {
 	CHECK(is_in_own_loop()) << " EventLoop was created by thread " 
@@ -151,8 +174,24 @@ void EventLoop::check_in_own_loop() const
 		<< PlatformThread::current_ref().ref();
 }
 
-bool EventLoop::is_in_own_loop() const {
+bool EventLoop::is_in_own_loop() const
+{
 	return *owning_thread_ == PlatformThread::current_ref();
+}
+
+void EventLoop::do_calling_wakeup_functors()
+{
+	calling_wakeup_functors_ = true;
+	std::vector<Functor> functors;
+	{
+		AutoLock locked(lock_);
+		functors.swap(wakeup_functors_);
+	}
+
+	for (const Functor& func : functors) {
+		func();
+	}
+	calling_wakeup_functors_ = false;
 }
 
 }	// namespace annety
