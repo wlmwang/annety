@@ -11,6 +11,9 @@ namespace annety
 {
 namespace sockets
 {
+bool set_non_blocking(int fd);
+bool set_close_on_exec(int fd);
+
 // static_cast
 const struct sockaddr_in* sockaddr_in_cast(const struct sockaddr* addr);
 const struct sockaddr_in6* sockaddr_in6_cast(const struct sockaddr* addr);

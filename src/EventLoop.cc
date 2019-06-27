@@ -107,6 +107,7 @@ void EventLoop::wakeup()
 	if (n != sizeof one) {
 		PLOG(ERROR) << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
 	}
+	LOG(TRACE) << "EventLoop wakeup";
 }
 
 void EventLoop::handle_read()
@@ -116,6 +117,7 @@ void EventLoop::handle_read()
 	if (n != sizeof one) {
 		PLOG(ERROR) << "EventLoop::handle_read() reads " << n << " bytes instead of 8";
 	}
+	LOG(TRACE) << "EventLoop handle_read";
 }
 
 void EventLoop::update_channel(Channel* channel)

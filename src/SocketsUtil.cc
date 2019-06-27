@@ -19,8 +19,6 @@ namespace annety
 {
 namespace sockets
 {
-namespace
-{
 bool set_non_blocking(int fd) 
 {
 	const int flags = ::fcntl(fd, F_GETFL);
@@ -54,8 +52,6 @@ bool set_close_on_exec(int fd)
 	}
 	return true;
 }
-
-}	// namespace anonymous
 
 const struct sockaddr* sockaddr_cast(const struct sockaddr_in6* addr) 
 {
