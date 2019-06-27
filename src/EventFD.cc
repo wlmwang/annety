@@ -74,8 +74,9 @@ int EventFD::close()
 #if defined(OS_LINUX)
 	return SelectableFD::close();
 #else
-	// fds_[0] will be closed in ~SelectableFD()
-	return sockets::close(fds_[1]);
+	int r1 = sockets::close(fds_[0]);
+	int r2 = sockets::close(fds_[1]);
+	return r1 != 0? r1: r2;
 #endif
 }
 

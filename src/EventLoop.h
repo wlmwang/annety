@@ -6,6 +6,7 @@
 
 #include "Macros.h"
 #include "Time.h"
+#include "MutexLock.h"
 #include "CallbackForward.h"
 
 #include <vector>
