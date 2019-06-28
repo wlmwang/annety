@@ -3,15 +3,16 @@
 
 #include "TcpServer.h"
 #include "Logging.h"
-#include "Acceptor.h"
-#include "EventLoop.h"
+#include "StringPrintf.h"
 #include "SocketsUtil.h"
-#include "EndPoint.h"
 #include "SocketFD.h"
+#include "EndPoint.h"
+#include "Acceptor.h"
 #include "TcpConnection.h"
+#include "EventLoop.h"
+#include "EventLoopThreadPool.h"
 
 #include <utility>
-#include <stdio.h>  // snprintf
 
 namespace annety
 {
@@ -22,6 +23,7 @@ TcpServer::TcpServer(EventLoop* loop,
 	: owner_loop_(loop), name_(name),
 	  ip_port_(addr.to_ip_port()),
 	  acceptor_(new Acceptor(loop, addr, option == kReusePort)),
+	  thread_pool_(new EventLoopThreadPool(this, name_)),
 	  connect_cb_(default_connect_callback),
 	  message_cb_(default_message_callback)
 {
@@ -43,11 +45,18 @@ TcpServer::~TcpServer()
 	}
 }
 
+void TcpServer::set_thread_num(int num_threads)
+{
+	CHECK(0 <= num_threads);
+	thread_pool_->set_thread_num(num_threads);
+}
+
 void TcpServer::start()
 {
 	if (!started_.test_and_set()) {
 		// thread_pool_->start(thread_init_cb_);
-		
+
+		// current thread setting listen
 		CHECK(!acceptor_->is_listen());
 		acceptor_->listen();
 	}
@@ -59,10 +68,9 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 
 	// EventLoop* loop = thread_pool_->get_next_loop();
 	EventLoop* loop = owner_loop_;
-  
-	char buf[64];
-	::snprintf(buf, sizeof buf, "#%s#%d", ip_port_.c_str(), ++next_conn_id_);
-	std::string name = name_ + buf;
+  	
+	std::string name = name_ + string_printf("#%s#%d", 
+									ip_port_.c_str(), next_conn_id_++);
 
 	LOG(INFO) << "TcpServer::new_connection [" << name_
 		<< "] - new connection [" << name

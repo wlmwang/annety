@@ -81,7 +81,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
 
 TcpConnection::~TcpConnection()
 {
-	LOG(TRACE) << "TcpConnection::dtor[" <<  name_ << "] at " << this
+	LOG(TRACE) << "TcpConnection::destruct[" <<  name_ << "] at " << this
 		<< " fd=" << connect_socket_->internal_fd()
 		<< " state=" << state_to_string();
 

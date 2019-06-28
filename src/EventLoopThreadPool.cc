@@ -5,6 +5,7 @@
 #include "EventLoopThread.h"
 #include "EventLoop.h"
 #include "Logging.h"
+#include "StringPrintf.h"
 
 #include <stdio.h>
 
@@ -23,10 +24,8 @@ void EventLoopThreadPool::start(const ThreadInitCallback& cb)
 	started_ = true;
 
 	for (int i = 0; i < num_threads_; ++i) {
-		char buf[32];
-		::snprintf(buf, sizeof buf, "%d", i);
-		std::string name = name_ + buf;
-		
+		std::string name = name_ + string_printf("%d", i);
+
 		EventLoopThread* t = new EventLoopThread(cb, name);
 		threads_.push_back(std::unique_ptr<EventLoopThread>(t));
 		loops_.push_back(t->start_loop());

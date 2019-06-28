@@ -19,6 +19,7 @@ class SocketFD;
 class EndPoint;
 class Acceptor;
 class EventLoop;
+class EventLoopThreadPool;
 
 // Wrapper server with TCP protocol
 // It supports single-thread and thread-pool models
@@ -48,6 +49,13 @@ public:
 	EventLoop* get_owner_loop() const { return owner_loop_; }
 
 	void start();
+
+	void set_thread_num(int num_threads);
+	
+	void set_thread_init_callback(const ThreadInitCallback& cb)
+	{
+		thread_init_cb_ = cb;
+	}
 
 	// The following interfaces are usually be called before start()
 	// They are all *Not thread safe*
@@ -80,13 +88,16 @@ private:
 	// ATOMIC_FLAG_INIT is macros
 	std::atomic_flag started_ = ATOMIC_FLAG_INIT;
 
+	// accept connect socket
 	std::unique_ptr<Acceptor> acceptor_;
+	
+	// worker thread pool
+	std::unique_ptr<EventLoopThreadPool> thread_pool_;
 
 	// user callback functions
 	ConnectCallback connect_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;
-
 	ThreadInitCallback thread_init_cb_;
 
 	std::atomic<int> next_conn_id_{1};
