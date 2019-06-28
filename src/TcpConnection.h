@@ -19,10 +19,10 @@ class Channel;
 class EventLoop;
 class SocketFD;
 
-// TCP connection
+// Wrapper client with TCP protocol
 //
-// this class holds life-time of connect-socket and connect-channel,
-// And its own life-time was hold by server and users
+// this class owns life-time of connect socket and connect channel,
+// and itself life-time was hold by TcpServer and users
 class TcpConnection : public std::enable_shared_from_this<TcpConnection>
 {
 public:

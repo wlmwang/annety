@@ -17,7 +17,7 @@ namespace annety
 {
 namespace threads
 {
-// fixed, destruct not control
+// FIXME: destruct not control
 thread_local static ThreadId tls_tid{0};
 thread_local static std::string tls_tid_string;
 

@@ -58,7 +58,7 @@ LogFFlushHandlerFunction g_log_fflush_handler = &defaultFlush;
 LogSeverity g_min_log_level = 0;
 
 // For cache colums logging
-// fixed, destruct not control
+// FIXME: destruct not control
 thread_local Time::Exploded tls_local_exploded{};
 thread_local std::string tls_format_ymdhis{};
 thread_local int64_t tls_last_second{};

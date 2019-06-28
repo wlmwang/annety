@@ -17,9 +17,9 @@ class EndPoint;
 class SelectableFD;
 class Channel;
 
-// Acceptor of incoming socket connections.
+// Wrapper listen socket used to accept connect sockets
 //
-// This class holds life-time of listen-socket and listen-channel
+// This class owns life-time of listen socket and listen channel
 class Acceptor
 {
 public:

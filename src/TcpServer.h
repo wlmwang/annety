@@ -20,9 +20,11 @@ class EndPoint;
 class Acceptor;
 class EventLoop;
 
-// TCP server, supports single-threaded and thread-pool models.
+// Wrapper server with TCP protocol
+// It supports single-thread and thread-pool models
 //
-// This class holds life-time of Acceptor
+// This class owns life-time of Acceptor, and also storage all TcpConnections 
+// which has been connected itself.
 class TcpServer
 {
 public:
@@ -36,7 +38,7 @@ public:
 
 	TcpServer(EventLoop* loop,
 			  const EndPoint& addr,
-			  const std::string& name = "ant-srv",
+			  const std::string& name = "a-srv",
 			  Option option = kNoReusePort);
 
 	~TcpServer();
