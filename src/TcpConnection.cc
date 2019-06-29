@@ -100,15 +100,16 @@ void TcpConnection::send(const void* data, int len)
 
 void TcpConnection::send(const StringPiece& message)
 {
+	// FIXME: as string
 	if (state_ == kConnected) {
-		// if (loop_->isInLoopThread()) {
-		// 	send_in_loop(message);
-		// } else {
-		// 	void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::sendInLoop;
-		// 	loop_->runInLoop(std::bind(fp, this, message.as_string()));
-		// 	// std::forward<string>(message)));
-		// }
-		send_in_loop(message);
+		if (owner_loop_->is_in_own_loop()) {
+			send_in_loop(message);
+		} else {
+			void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::send_in_loop;
+			owner_loop_->run_in_own_loop(std::bind(fp, this, message.as_string()));
+			// std::forward<string>(message)));
+		}
+		// send_in_loop(message);
 	}
 }
 
@@ -120,16 +121,16 @@ void TcpConnection::send(NetBuffer&& message)
 
 void TcpConnection::send(NetBuffer* buf)
 {
+	// FIXME: as string
 	if (state_ == kConnected) {
-		// if (loop_->isInLoopThread()) {
-		// 	send_in_loop(buf->peek(), buf->readable_bytes());
-		// 	buf->has_read_all();
-		// } else {
-		// 	void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::sendInLoop;
-		// 	loop_->runInLoop(std::bind(fp, this, buf->retrieveAllAsString()));
-		// 	//std::forward<string>(message)));
-		// }
-		send_in_loop(buf->peek(), buf->readable_bytes());
+		if (owner_loop_->is_in_own_loop()) {
+			send_in_loop(buf->taken_as_string());
+		} else {
+			void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::send_in_loop;
+			owner_loop_->run_in_own_loop(std::bind(fp, this, buf->taken_as_string()));
+			//std::forward<string>(message)));
+		}
+		// send_in_loop(buf->peek(), buf->readable_bytes());
 	}
 }
 
@@ -156,8 +157,8 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 		if (nwrote >= 0) {
 			remaining = len - nwrote;
 			if (remaining == 0 && write_complete_cb_) {
-				// loop_->queueInLoop(std::bind(write_complete_cb_, shared_from_this()));
-				write_complete_cb_(shared_from_this());
+				owner_loop_->queue_in_own_loop(std::bind(write_complete_cb_, shared_from_this()));
+				// write_complete_cb_(shared_from_this());
 			}
 		} else {
 			nwrote = 0;
@@ -177,10 +178,9 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 		if (oldLen + remaining >= high_water_mark_ && oldLen < high_water_mark_ 
 			&& high_water_mark_cb_)
 		{
-			// 发送缓冲区长度“高水位”时，回调用户函数
-			// 注：只会触发一次！
-			// loop_->queueInLoop(std::bind(high_water_mark_cb_, shared_from_this(), oldLen + remaining));
-			high_water_mark_cb_(shared_from_this(), oldLen + remaining);
+			owner_loop_->queue_in_own_loop(std::bind(high_water_mark_cb_, shared_from_this(), 
+										oldLen + remaining));
+			// high_water_mark_cb_(shared_from_this(), oldLen + remaining);
 		}
 
 		// Copy data to output_buffer_
@@ -195,8 +195,8 @@ void TcpConnection::shutdown()
 {
 	if (state_ == kConnected) {
 		state_ = kDisconnecting;
-		// loop_->runInLoop(std::bind(&TcpConnection::shutdownInLoop, this));
-		shutdown_in_loop();
+		owner_loop_->run_in_own_loop(std::bind(&TcpConnection::shutdown_in_loop, this));
+		// shutdown_in_loop();
 	}
 }
 
@@ -214,8 +214,8 @@ void TcpConnection::force_close()
 	// FIXME: use compare and swap
 	if (state_ == kConnected || state_ == kDisconnecting) {
 		state_ = kDisconnecting;
-		// loop_->queueInLoop(std::bind(&TcpConnection::force_close_in_loop, shared_from_this()));
-		force_close_in_loop();
+		owner_loop_->queue_in_own_loop(std::bind(&TcpConnection::force_close_in_loop, shared_from_this()));
+		// force_close_in_loop();
 	}
 }
 
@@ -224,7 +224,7 @@ void TcpConnection::force_close_with_delay(double seconds)
 	if (state_ == kConnected || state_ == kDisconnecting) {
 		state_ = kDisconnecting;
 		// not forceCloseInLoop to avoid race condition
-		// loop_->runAfter(seconds, makeWeakCallback(shared_from_this(), &TcpConnection::force_close));
+		// owner_loop_->runAfter(seconds, makeWeakCallback(shared_from_this(), &TcpConnection::force_close));
 	}
 }
 
@@ -240,8 +240,8 @@ void TcpConnection::force_close_in_loop()
 
 void TcpConnection::start_read()
 {
-	// loop_->runInLoop(std::bind(&TcpConnection::start_read_in_loop, this));
-	start_read_in_loop();
+	owner_loop_->run_in_own_loop(std::bind(&TcpConnection::start_read_in_loop, this));
+	// start_read_in_loop();
 }
 
 void TcpConnection::start_read_in_loop()
@@ -256,8 +256,8 @@ void TcpConnection::start_read_in_loop()
 
 void TcpConnection::stop_read()
 {
-	// loop_->runInLoop(std::bind(&TcpConnection::stop_read_in_loop, this));
-	stop_read_in_loop();
+	owner_loop_->run_in_own_loop(std::bind(&TcpConnection::stop_read_in_loop, this));
+	// stop_read_in_loop();
 }
 
 void TcpConnection::stop_read_in_loop()
@@ -273,7 +273,7 @@ void TcpConnection::stop_read_in_loop()
 void TcpConnection::connect_established()
 {
 	owner_loop_->check_in_own_loop();
-	
+
 	DCHECK(state_ == kConnecting);
 	state_ = kConnected;
 
@@ -281,6 +281,8 @@ void TcpConnection::connect_established()
 	connect_channel_->enable_read_event();
 
 	connect_cb_(shared_from_this());
+
+	LOG(TRACE) << "connect was established";
 }
 
 void TcpConnection::connect_destroyed()
@@ -294,6 +296,8 @@ void TcpConnection::connect_destroyed()
 		connect_cb_(shared_from_this());
 	}
 	connect_channel_->remove();
+
+	LOG(TRACE) << "connect was destroyed";
 }
 
 void TcpConnection::handle_read(Time recv_tm)
@@ -302,7 +306,7 @@ void TcpConnection::handle_read(Time recv_tm)
 
 	ScopedClearLastError last_err;
 
-	// packaged ::read() call
+	// wrap ::read() call
 	ssize_t n = input_buffer_->read_fd(connect_socket_->internal_fd());
 	if (n > 0) {
 		message_cb_(shared_from_this(), input_buffer_.get(), recv_tm);
@@ -327,8 +331,8 @@ void TcpConnection::handle_write()
 			if (output_buffer_->readable_bytes() == 0) {
 				connect_channel_->disable_write_event();
 				if (write_complete_cb_) {
-					// loop_->queueInLoop(std::bind(writeCompleteCallback_, shared_from_this()));
-					write_complete_cb_(shared_from_this());
+					owner_loop_->queue_in_own_loop(std::bind(write_complete_cb_, shared_from_this()));
+					// write_complete_cb_(shared_from_this());
 				}
 				if (state_ == kDisconnecting) {
 					shutdown_in_loop();

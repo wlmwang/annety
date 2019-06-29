@@ -20,10 +20,11 @@ TcpServer::TcpServer(EventLoop* loop,
 					 const EndPoint& addr,
 					 const std::string& name,
 					 Option option)
-	: owner_loop_(loop), name_(name),
+	: owner_loop_(loop),
+	  name_(name),
 	  ip_port_(addr.to_ip_port()),
 	  acceptor_(new Acceptor(loop, addr, option == kReusePort)),
-	  thread_pool_(new EventLoopThreadPool(this, name_)),
+	  thread_pool_(new EventLoopThreadPool(loop, name)),
 	  connect_cb_(default_connect_callback),
 	  message_cb_(default_message_callback)
 {
@@ -39,9 +40,9 @@ TcpServer::~TcpServer()
 	for (auto& item : connections_) {
 		TcpConnectionPtr conn(item.second);
 		item.second.reset();
-		// conn->get_owner_oop()->runInLoop(
-		// 	std::bind(&TcpConnection::connect_destroyed, conn));
-		conn->connect_destroyed();
+		conn->get_owner_loop()->run_in_own_loop(
+			std::bind(&TcpConnection::connect_destroyed, conn));
+		// conn->connect_destroyed();
 	}
 }
 
@@ -54,9 +55,9 @@ void TcpServer::set_thread_num(int num_threads)
 void TcpServer::start()
 {
 	if (!started_.test_and_set()) {
-		// thread_pool_->start(thread_init_cb_);
+		thread_pool_->start(thread_init_cb_);
 
-		// current thread setting listen
+		// setting current thread listen
 		CHECK(!acceptor_->is_listen());
 		acceptor_->listen();
 	}
@@ -66,8 +67,8 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 {
 	owner_loop_->check_in_own_loop();
 
-	// EventLoop* loop = thread_pool_->get_next_loop();
-	EventLoop* loop = owner_loop_;
+	EventLoop* loop = thread_pool_->get_next_loop();
+	// EventLoop* loop = owner_loop_;
   	
 	std::string name = name_ + string_printf("#%s#%d", 
 									ip_port_.c_str(), next_conn_id_++);
@@ -89,14 +90,14 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 	conn->set_close_callback(
 		std::bind(&TcpServer::remove_connection, this, _1));
 
-	// loop->runInLoop(std::bind(&TcpConnection::connect_established, conn));
-	conn->connect_established();
+	loop->run_in_own_loop(std::bind(&TcpConnection::connect_established, conn));
+	// conn->connect_established();
 }
 
 void TcpServer::remove_connection(const TcpConnectionPtr& conn)
 {
-	// loop_->runInLoop(std::bind(&TcpServer::remove_connection_in_loop, this, conn));
-	remove_connection_in_loop(conn);
+	owner_loop_->run_in_own_loop(std::bind(&TcpServer::remove_connection_in_loop, this, conn));
+	// remove_connection_in_loop(conn);
 }
 
 void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
@@ -109,10 +110,9 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 	size_t n = connections_.erase(conn->name());
 	DCHECK(n == 1);
 
-	// EventLoop* loop = conn->get_loop();
-	// loop->queueInLoop(
-	// 	std::bind(&TcpConnection::connect_destroyed, conn));
-	conn->connect_destroyed();
+	conn->get_owner_loop()->queue_in_own_loop(
+		std::bind(&TcpConnection::connect_destroyed, conn));
+	// conn->connect_destroyed();
 }
 
 }	// namespace annety

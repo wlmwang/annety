@@ -393,10 +393,13 @@ int main(int argc, char* argv[])
 	// EventLoop
 	EventLoop loop;
 	TcpServer serv(&loop, EndPoint(11099));
-	
+	serv.set_thread_num(5);
+
 	// register connect handle
 	serv.set_connect_callback([](const TcpConnectionPtr& conn){
-		conn->send("\r\nwelcome to annety!!!\r\n\r\n");
+		conn->send("\r\n********************\r\n");
+		conn->send("\r\nwelcome to annety!!!\r\n");
+		conn->send("\r\n********************\r\n");
 
 		LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
 			   << conn->peer_addr().to_ip_port() << " is "

@@ -30,6 +30,7 @@ void EventLoopThreadPool::start(const ThreadInitCallback& cb)
 		threads_.push_back(std::unique_ptr<EventLoopThread>(t));
 		loops_.push_back(t->start_loop());
 	}
+	// no thread pool, reuse current threads
 	if (num_threads_ == 0 && cb) {
 		cb(owner_loop_);
 	}
@@ -39,7 +40,7 @@ EventLoop* EventLoopThreadPool::get_next_loop()
 {
 	owner_loop_->check_in_own_loop();
 
-	DCHECK(!started_);
+	DCHECK(started_);
 	EventLoop* loop = owner_loop_;
 
 	// round-robin
