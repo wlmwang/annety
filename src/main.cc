@@ -397,9 +397,9 @@ int main(int argc, char* argv[])
 
 	// register connect handle
 	serv.set_connect_callback([](const TcpConnectionPtr& conn){
-		conn->send("\r\n********************\r\n");
-		conn->send("\r\nwelcome to annety!!!\r\n");
-		conn->send("\r\n********************\r\n");
+		conn->send("********************\r\n");
+		conn->send("welcome to annety!!!\r\n");
+		conn->send("********************\r\n");
 
 		LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
 			   << conn->peer_addr().to_ip_port() << " is "
