@@ -42,20 +42,20 @@ void Channel::handle_event(Time receive_tm)
 {
 	owner_loop_->check_in_own_loop();
 	
-	LOG(TRACE) << "handling event begin " << revents_to_string();
+	LOG(TRACE) << "Channel::handle_event is handling event begin " << revents_to_string();
 	event_handling_ = true;
 
 	// hup event
 	if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
-		LOG_IF(WARNING, logging_hup_) << "fd = " << fd() 
-			<< " Channel::handle_event() POLLHUP";
+		LOG_IF(WARNING, logging_hup_) << "Channel::handle_event fd = " << fd() 
+			<< " POLLHUP event has received";
 		
 		if (close_cb_) close_cb_();
 	}
 	// error
 	if (revents_ & (POLLERR | POLLNVAL)) {
-		LOG_IF(WARNING, revents_ & POLLNVAL) << "fd = " << fd() 
-			<< " Channel::handle_event() POLLNVAL";
+		LOG_IF(WARNING, revents_ & POLLNVAL) << "Channel::handle_event fd = " << fd() 
+			<< " POLLNVAL event has received";
 		
 		if (error_cb_) error_cb_();
 	}
@@ -69,7 +69,7 @@ void Channel::handle_event(Time receive_tm)
 	}
 
 	event_handling_ = false;
-	LOG(TRACE) << "handling event finish";
+	LOG(TRACE) << "Channel::handle_event event was handled finish";
 }
 
 void Channel::remove()
@@ -105,30 +105,32 @@ std::string Channel::events_to_string(int fd, int ev)
 {
 	std::ostringstream oss;
 
-	oss << fd << ": ";
+	oss << "[fd=" << fd << " event: ";
 	if (ev & POLLIN) {
-		oss << "IN ";
+		oss << "IN";
 	}
 	if (ev & POLLPRI) {
-		oss << "PRI ";
+		oss << "PRI";
 	}
 	if (ev & POLLOUT) {
-		oss << "OUT ";
+		oss << "OUT";
 	}
 	if (ev & POLLHUP) {
-		oss << "HUP ";
+		oss << "HUP";
 	}
 #if !defined(OS_MACOSX)
 	if (ev & POLLRDHUP) {
-		oss << "RDHUP ";
+		oss << "RDHUP";
 	}
 #endif	// OS_MACOSX
 	if (ev & POLLERR) {
-		oss << "ERR ";
+		oss << "ERR";
 	}
 	if (ev & POLLNVAL) {
-		oss << "NVAL ";
+		oss << "NVAL";
 	}
+	oss << "]";
+
 	return oss.str();
 }
 

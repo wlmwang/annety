@@ -54,6 +54,9 @@ Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport)
 	  listen_channel_(new Channel(owner_loop_, listen_socket_.get())),
 	  idle_fd_(::open("/dev/null", O_RDONLY | O_CLOEXEC))
 {
+	LOG(TRACE) << "Acceptor::Acceptor [" <<  addr.to_ip_port() << "] of "
+		<< " fd=" << listen_socket_->internal_fd() << " is constructing";
+
 	internal::set_reuse_addr(*listen_socket_, true);
 	internal::set_reuse_port(*listen_socket_, reuseport);
 	internal::bind(*listen_socket_, addr);
@@ -83,7 +86,8 @@ void Acceptor::handle_read()
 	EndPoint peeraddr;
 	int connfd = internal::accept(*listen_socket_, peeraddr);
 	if (connfd >= 0) {
-		LOG(TRACE) << "Acceptor::handle_read " << peeraddr.to_ip_port() << " fd " << connfd;
+		LOG(TRACE) << "Acceptor::handle_read the peer " << peeraddr.to_ip_port() 
+				<< " fd " << connfd << " is accepting";
 
 		// make a new connection sock of socketFD
 		SelectableFDPtr sockfd(new SocketFD(connfd));

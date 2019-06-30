@@ -24,7 +24,7 @@ void clean_tls_event_loop(void *ptr) {
 
 // There is at most one EventLoop object per thread
 ThreadLocal<EventLoop> tls_event_loop{&clean_tls_event_loop};
-const int kPollTimeoutMs = 10000;
+const int kPollTimeoutMs = 30000;
 
 // Ignore the SIGPIPE signal
 BEFORE_MAIN_EXECUTOR() {
@@ -39,12 +39,12 @@ EventLoop::EventLoop()
 	  wakeup_socket_(new EventFD(true, true)),
 	  wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {
-	LOG(TRACE) << "EventLoop is creating by thread " 
+	LOG(TRACE) << "EventLoop::EventLoop is creating by thread " 
 		<< owning_thread_->ref() 
 		<< ", EventLoop " << this;
 	
-	CHECK(tls_event_loop.empty()) << "EventLoop has created by thread " 
-		<< owning_thread_->ref() << ", Now current thread is " 
+	CHECK(tls_event_loop.empty()) << "EventLoop::EventLoop has created by thread " 
+		<< owning_thread_->ref() << ", now current thread is " 
 		<< PlatformThread::current_ref().ref();
 
 	tls_event_loop.set(this);
@@ -57,9 +57,9 @@ EventLoop::EventLoop()
 
 EventLoop::~EventLoop()
 {
-	LOG(TRACE) << "~EventLoop is called by thread " 
+	LOG(TRACE) << "EventLoop::~EventLoop is called by thread " 
 		<< PlatformThread::current_ref().ref()
-		<< ", Deleted EventLoop " << this;
+		<< ", deleted EventLoop " << this;
 }
 
 void EventLoop::loop()
@@ -68,7 +68,7 @@ void EventLoop::loop()
 
 	CHECK(!looping_);
 	looping_ = true;
-	LOG(TRACE) << "EventLoop " << this << " begin looping";
+	LOG(TRACE) << "EventLoop::loop " << this << " is begin looping";
 
 	while (!quit_) {
 		active_channels_.clear();
@@ -86,7 +86,7 @@ void EventLoop::loop()
 		do_calling_wakeup_functors();
 	}
 
-	LOG(TRACE) << "EventLoop " << this << " finish looping";
+	LOG(TRACE) << "EventLoop::loop " << this << " has finish looping";
 	looping_ = false;
 }
 
@@ -107,9 +107,9 @@ void EventLoop::wakeup()
 	uint64_t one = 1;
 	ssize_t n = wakeup_socket_->write(&one, sizeof one);
 	if (n != sizeof one) {
-		PLOG(ERROR) << "EventLoop::wakeup() writes " << n << " bytes instead of 8";
+		PLOG(ERROR) << "EventLoop::wakeup writes " << n << " bytes instead of 8";
 	}
-	LOG(TRACE) << "EventLoop wakeup";
+	LOG(TRACE) << "EventLoop::wakeup";
 }
 
 void EventLoop::handle_read()
@@ -117,9 +117,9 @@ void EventLoop::handle_read()
 	uint64_t one = 1;
 	ssize_t n = wakeup_socket_->read(&one, sizeof one);
 	if (n != sizeof one) {
-		PLOG(ERROR) << "EventLoop::handle_read() reads " << n << " bytes instead of 8";
+		PLOG(ERROR) << "EventLoop::handle_read reads " << n << " bytes instead of 8";
 	}
-	LOG(TRACE) << "EventLoop handle_read";
+	LOG(TRACE) << "EventLoop::handle_read";
 }
 
 void EventLoop::update_channel(Channel* channel)
@@ -169,8 +169,8 @@ void EventLoop::queue_in_own_loop(Functor cb)
 
 void EventLoop::check_in_own_loop() const
 {
-	CHECK(is_in_own_loop()) << " EventLoop was created by thread " 
-		<< owning_thread_->ref() << ", But current thread is " 
+	CHECK(is_in_own_loop()) << " EventLoop::check_in_own_loop was created by thread " 
+		<< owning_thread_->ref() << ", but current thread is " 
 		<< PlatformThread::current_ref().ref();
 }
 

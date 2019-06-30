@@ -393,7 +393,7 @@ int main(int argc, char* argv[])
 	// EventLoop
 	EventLoop loop;
 	TcpServer serv(&loop, EndPoint(11099));
-	serv.set_thread_num(5);
+	// serv.set_thread_num(1);
 
 	// register connect handle
 	serv.set_connect_callback([](const TcpConnectionPtr& conn){

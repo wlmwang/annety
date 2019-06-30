@@ -21,22 +21,24 @@ Time PollPoller::poll(int timeout_ms, ChannelList* active_channels)
 {
 	Poller::check_in_own_loop();
 
-	LOG(TRACE) << "watching total fd count " << (long long)channels_.size();
+	LOG(TRACE) << "PollPoller::poll is watching " << (long long)channels_.size() 
+			<< " file descriptions";
+
 	ScopedClearLastError last_error;
 
 	int num = ::poll(pollfds_.data(), pollfds_.size(), timeout_ms);
 
 	Time now(Time::now());
 	if (num > 0) {
-		LOG(TRACE) << num << " events happened";
+		LOG(TRACE) << "PollPoller::poll is having " << num << " events happened";
 
 		fill_active_channels(num, active_channels);
 	} else if (num == 0) {
-		LOG(TRACE) << "nothing happened";
+		LOG(TRACE) << "PollPoller::poll was nothing happened";
 	} else {
 		// error happens
 		if (errno != EINTR) {
-			PLOG(ERROR) << "PollPoller::poll() failed";
+			PLOG(ERROR) << "PollPoller::poll a failed happened";
 		}
 	}
 	return now;
@@ -67,7 +69,7 @@ void PollPoller::update_channel(Channel* channel)
 	Poller::check_in_own_loop();
 	
 	const int index = channel->index();
-	LOG(TRACE) << "fd = " << channel->fd() 
+	LOG(TRACE) << "PollPoller::update_channel fd = " << channel->fd() 
 		<< " events = " << channel->events() << " index = " << index;
 
 	if (channel->index() < 0) {
@@ -111,7 +113,7 @@ void PollPoller::remove_channel(Channel* channel)
 	Poller::check_in_own_loop();
 
 	int fd = channel->fd();
-	LOG(TRACE) << "fd = " << fd;
+	LOG(TRACE) << "PollPoller::remove_channel fd = " << fd;
 
 	DCHECK(channels_.find(fd) != channels_.end());
 	DCHECK(channels_[fd] == channel);

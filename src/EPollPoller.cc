@@ -44,14 +44,16 @@ Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 {
 	Poller::check_in_own_loop();
 
-	LOG(TRACE) << "watching total fd count " << (long long)channels_.size();
+	LOG(TRACE) << "EPollPoller::poll is watching " << (long long)channels_.size() 
+			<< " file descriptions";
+	
 	ScopedClearLastError last_error();
 
 	int num = ::epoll_wait(epollfd_, events_.data(), events_.size(), timeout_ms);
 
 	Time now(Time::now());
 	if (num > 0) {
-		LOG(TRACE) << num << " events happened";
+		LOG(TRACE) << "EPollPoller::poll is having " << num << " events happened";
 
 		fill_active_channels(num, active_channels);
 
@@ -59,11 +61,11 @@ Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 			events_.resize(events_.size()*2);
 		}
 	} else if (num == 0) {
-		LOG(TRACE) << "nothing happened";
+		LOG(TRACE) << "EPollPoller::poll was nothing happened";
 	} else {
 		// error happens
 		if (errno != EINTR) {
-			PLOG(ERROR) << "PollPoller::poll() failed";
+			PLOG(ERROR) << "EPollPoller::poll a failed happened";
 		}
 	}
 	return now;
@@ -95,7 +97,7 @@ void EPollPoller::update_channel(Channel* channel)
 	Poller::check_in_own_loop();
 
 	const int index = channel->index();
-	LOG(TRACE) << "fd = " << channel->fd() 
+	LOG(TRACE) << "EPollPoller::update_channel fd = " << channel->fd() 
 		<< " events = " << channel->events() << " index = " << index;
 	
 	if (index == kNew || index == kDeleted) {
@@ -133,7 +135,7 @@ void EPollPoller::remove_channel(Channel* channel)
 	Poller::check_in_own_loop();
 
 	int fd = channel->fd();
-	LOG(TRACE) << "fd = " << fd;
+	LOG(TRACE) << "PollPoller::remove_channel fd = " << fd;
 
 	DCHECK(channels_.find(fd) != channels_.end());
 	DCHECK(channels_[fd] == channel);
@@ -159,14 +161,16 @@ void EPollPoller::update(int operation, Channel* channel)
 	event.data.ptr = channel;
 	int fd = channel->fd();
 
-	LOG(TRACE) << "epoll_ctl op = " << operation_to_string(operation)
+	LOG(TRACE) << "EPollPoller::update epoll_ctl op = " << operation_to_string(operation)
 		<< " fd = " << fd << " event = { " << channel->events_to_string() << " }";
 	
 	if (::epoll_ctl(epollfd_, operation, fd, &event) < 0) {
 		if (operation == EPOLL_CTL_DEL) {
-			LOG(ERROR) << "epoll_ctl op =" << operation_to_string(operation) << " fd =" << fd;
+			LOG(ERROR) << "EPollPoller::update epoll_ctl op =" << operation_to_string(operation) 
+					<< " fd =" << fd;
 		} else {
-			LOG(FATAL) << "epoll_ctl op =" << operation_to_string(operation) << " fd =" << fd;
+			LOG(FATAL) << "EPollPoller::update epoll_ctl op =" << operation_to_string(operation) 
+					<< " fd =" << fd;
 		}
 	}
 }
@@ -181,7 +185,7 @@ const char* EPollPoller::operation_to_string(int op)
 	case EPOLL_CTL_MOD:
 		return "MOD";
 	default:
-		DCHECK(false && "ERROR op");
+		NOTREACHED();
 		return "Unknown Operation";
 	}
 }
