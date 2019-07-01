@@ -27,7 +27,7 @@ CC_SRC		:= main.cc \
 			   PlatformThread.cc Thread.cc ThreadPool.cc \
 			   EndPoint.cc SocketsUtil.cc NetBuffer.cc \
 			   SelectableFD.cc SocketFD.cc EventFD.cc \
-			   Channel.cc Acceptor.cc TcpServer.cc TcpConnection.cc \
+			   Channel.cc Acceptor.cc TcpServer.cc TcpConnection.cc Connector.cc TcpClient.cc \
 			   EventLoop.cc Poller.cc PollPoller.cc \
 			   EventLoopThread.cc EventLoopThreadPool.cc
 

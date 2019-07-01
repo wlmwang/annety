@@ -16,6 +16,15 @@
 
 namespace annety
 {
+namespace internal
+{
+struct sockaddr_in6 get_local_addr(const SelectableFD& sfd)
+{
+	return sockets::get_local_addr(sfd.internal_fd());
+}
+
+}	// namespace internal
+
 TcpServer::TcpServer(EventLoop* loop,
 					 const EndPoint& addr,
 					 const std::string& name,
@@ -72,11 +81,12 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 	std::string name = name_ + string_printf("#%s#%d", 
 								ip_port_.c_str(), next_conn_id_++);
 
+	EndPoint localaddr(internal::get_local_addr(*sockfd));
+
 	LOG(INFO) << "TcpServer::new_connection [" << name_
 		<< "] accept new connection [" << name
 		<< "] from " << peeraddr.to_ip_port();
 
-	EndPoint localaddr(sockets::get_local_addr(sockfd->internal_fd()));
 	TcpConnectionPtr conn(new TcpConnection(loop, name, std::move(sockfd),
 											localaddr, peeraddr));
 
@@ -107,6 +117,7 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 	size_t n = connections_.erase(conn->name());
 	DCHECK(n == 1);
 
+	// Can't remove conn here, because we are inside Channel::handle_event
 	conn->get_owner_loop()->queue_in_own_loop(
 		std::bind(&TcpConnection::connect_destroyed, conn));
 }

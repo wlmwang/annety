@@ -30,8 +30,9 @@
 
 #include "EventLoop.h"
 #include "EndPoint.h"
-#include "TcpServer.h"
 #include "TcpConnection.h"
+#include "TcpServer.h"
+#include "TcpClient.h"
 
 using namespace annety;
 using namespace std;
@@ -391,29 +392,58 @@ int main(int argc, char* argv[])
 	// std::cout << "tid:" << threads::tid() << std::endl;
 
 	// EventLoop
-	EventLoop loop;
-	TcpServer serv(&loop, EndPoint(11099));
-	// serv.set_thread_num(1);
+	Thread ss([]() {
+		EventLoop loop;
+		TcpServer srv(&loop, EndPoint(11099));
+		// srv.set_thread_num(1);
 
-	// register connect handle
-	serv.set_connect_callback([](const TcpConnectionPtr& conn){
-		conn->send("********************\r\n");
-		conn->send("welcome to annety!!!\r\n");
-		conn->send("********************\r\n");
+		// register connect handle
+		srv.set_connect_callback([](const TcpConnectionPtr& conn) {
+			conn->send("********************\r\n");
+			conn->send("welcome to annety!!!\r\n");
+			conn->send("********************\r\n");
 
-		LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
-			   << conn->peer_addr().to_ip_port() << " is "
-			   << (conn->connected() ? "UP" : "DOWN");
+			LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
+				   << conn->peer_addr().to_ip_port() << " s is "
+				   << (conn->connected() ? "UP" : "DOWN");
+		});
+		
+		// register message handle
+		srv.set_message_callback([](const TcpConnectionPtr&, NetBuffer* buf, Time) {
+			std::cout << buf->peek() << std::endl;
+			buf->has_read_all();
+		});
+
+		srv.start();
+		
+		loop.loop();
 	});
-	
-	// register message handle
-	serv.set_message_callback([](const TcpConnectionPtr&, NetBuffer* buf, Time){
-		std::cout << buf->peek() << std::endl;
-		buf->has_read_all();
+	ss.start();
+	//ss.join();
+
+	// TcpClient
+	Thread cc([]() {
+		EventLoop loop;
+		TcpClient crv(&loop, EndPoint(11099));
+
+		crv.set_connect_callback([](const TcpConnectionPtr& conn) {
+			// conn->send("********************\r\n");
+			// conn->send("welcome to annety!!!\r\n");
+			// conn->send("********************\r\n");
+
+			LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
+				   << conn->peer_addr().to_ip_port() << " c is "
+				   << (conn->connected() ? "UP" : "DOWN");
+		});
+
+		crv.connect();
+
+		loop.loop();
 	});
+	cc.start();
 
-	serv.start();
-
-	loop.loop();
+	// join
+	//cc.join();
+	ss.join();
 }
 

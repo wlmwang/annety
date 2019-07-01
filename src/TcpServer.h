@@ -75,7 +75,6 @@ public:
 private:
 	void new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr);
 	void remove_connection(const TcpConnectionPtr& conn);
-
 	void remove_connection_in_loop(const TcpConnectionPtr& conn);
 
 private:

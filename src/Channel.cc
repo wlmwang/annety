@@ -107,27 +107,27 @@ std::string Channel::events_to_string(int fd, int ev)
 
 	oss << "[fd=" << fd << " event: ";
 	if (ev & POLLIN) {
-		oss << "IN";
+		oss << "IN ";
 	}
 	if (ev & POLLPRI) {
-		oss << "PRI";
+		oss << "PRI ";
 	}
 	if (ev & POLLOUT) {
-		oss << "OUT";
+		oss << "OUT ";
 	}
 	if (ev & POLLHUP) {
-		oss << "HUP";
+		oss << "HUP ";
 	}
 #if !defined(OS_MACOSX)
 	if (ev & POLLRDHUP) {
-		oss << "RDHUP";
+		oss << "RDHUP ";
 	}
 #endif	// OS_MACOSX
 	if (ev & POLLERR) {
-		oss << "ERR";
+		oss << "ERR ";
 	}
 	if (ev & POLLNVAL) {
-		oss << "NVAL";
+		oss << "NVAL ";
 	}
 	oss << "]";
 
