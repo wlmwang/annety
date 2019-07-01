@@ -39,7 +39,7 @@ EventLoop::EventLoop()
 	  wakeup_socket_(new EventFD(true, true)),
 	  wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {
-	LOG(TRACE) << "EventLoop::EventLoop is creating by thread " 
+	LOG(INFO) << "EventLoop::EventLoop is creating by thread " 
 		<< owning_thread_->ref() 
 		<< ", EventLoop " << this;
 	

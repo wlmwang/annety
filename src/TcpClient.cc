@@ -18,6 +18,16 @@ namespace internal
 {
 // define in TcpServer.cc
 struct sockaddr_in6 get_local_addr(const SelectableFD& sfd);
+
+void remove_connection(EventLoop* loop, const TcpConnectionPtr& conn)
+{
+	loop->queue_in_own_loop(std::bind(&TcpConnection::connect_destroyed, conn));
+}
+void remove_connector(const ConnectorPtr& connector)
+{
+	// ...
+}
+
 }	// namespace internal
 
 TcpClient::TcpClient(EventLoop* loop,
@@ -30,42 +40,45 @@ TcpClient::TcpClient(EventLoop* loop,
 	  connect_cb_(default_connect_callback),
 	  message_cb_(default_message_callback)
 {
+	LOG(INFO) << "TcpClient::TcpClient " << name_ 
+		<< " is constructing, which is listening on " << ip_port_;
+
 	connector_->set_new_connect_callback(
 		std::bind(&TcpClient::new_connection, this, _1, _2));
 }
 
 TcpClient::~TcpClient()
 {
-	// LOG(TRACE) << "TcpClient::~TcpClient [" << name_ << "] is destructing";
+	LOG(TRACE) << "TcpClient::~TcpClient [" << name_ << "] is destructing";
 
-	// TcpConnectionPtr conn;
-	// bool unique = false;
-	// {
-	// 	AutoLock locked(lock_);
-	// 	unique = connection_.unique();
-	// 	conn = connection_;
-	// }
+	TcpConnectionPtr conn;
+	bool unique = false;
+	{
+		AutoLock locked(lock_);
+		unique = connection_.unique();
+		conn = connection_;
+	}
 
-	// if (conn)
-	// {
-	// 	DCHECK(owner_loop_ == conn->get_own_loop());
-	// 	// FIXME: not 100% safe, if we are in different thread
-	// 	CloseCallback cb = std::bind(&detail::remove_connection, owner_loop_, _1);
-	// 	owner_loop_->run_in_own_loop(
-	// 		std::bind(&TcpConnection::set_close_callback, conn, cb));
-	// 	if (unique) {
-	// 		conn->force_close();
-	// 	}
-	// } else {
-	// 	connector_->stop();
-	// 	// FIXME: HACK
-	// 	// owner_loop_->runAfter(1, std::bind(&detail::remove_connector, connector_));
-	// }
+	if (conn) {
+		DCHECK(owner_loop_ == conn->get_owner_loop());
+
+		// FIXME: not 100% safe, if we are in different thread
+		CloseCallback cb = std::bind(&internal::remove_connection, owner_loop_, _1);
+		owner_loop_->run_in_own_loop(std::bind(&TcpConnection::set_close_callback, conn, cb));
+		if (unique) {
+			conn->force_close();
+		}
+	} else {
+		connector_->stop();
+		
+		// FIXME: HACK
+		// owner_loop_->runAfter(1, std::bind(&detail::remove_connector, connector_));
+		owner_loop_->queue_in_own_loop(std::bind(&internal::remove_connector, connector_));
+	}
 }
 
 void TcpClient::connect()
 {
-	LOG(INFO) << "TcpClient::connect[" << name_ << "] - connecting to " << ip_port_;
 	connect_ = true;
 	connector_->start();
 }

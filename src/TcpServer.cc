@@ -37,6 +37,9 @@ TcpServer::TcpServer(EventLoop* loop,
 	  connect_cb_(default_connect_callback),
 	  message_cb_(default_message_callback)
 {
+	LOG(INFO) << "TcpServer::TcpServer " << name_ 
+		<< " is constructing, which is connecting to " << ip_port_;
+
 	acceptor_->set_new_connect_callback(
 		std::bind(&TcpServer::new_connection, this, _1, _2));
 }

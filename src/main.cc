@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 
 #include "StringPrintf.h"
 #include "StringPiece.h"
@@ -395,11 +396,11 @@ int main(int argc, char* argv[])
 	Thread ss([]() {
 		EventLoop loop;
 		TcpServer srv(&loop, EndPoint(11099));
-		// srv.set_thread_num(1);
+		srv.set_thread_num(2);
 
 		// register connect handle
 		srv.set_connect_callback([](const TcpConnectionPtr& conn) {
-			conn->send("********************\r\n");
+			conn->send("\r\n********************\r\n");
 			conn->send("welcome to annety!!!\r\n");
 			conn->send("********************\r\n");
 
@@ -409,9 +410,15 @@ int main(int argc, char* argv[])
 		});
 		
 		// register message handle
-		srv.set_message_callback([](const TcpConnectionPtr&, NetBuffer* buf, Time) {
-			std::cout << buf->peek() << std::endl;
-			buf->has_read_all();
+		srv.set_message_callback([](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
+			// LOG(INFO) << "srv:" << buf->to_string_piece();
+			// buf->has_read_all();
+			LOG(INFO) << "srv:" << buf->taken_as_string();
+
+			// send time
+			std::ostringstream oss;
+			oss << t;
+			conn->send(oss.str());
 		});
 
 		srv.start();
@@ -427,13 +434,21 @@ int main(int argc, char* argv[])
 		TcpClient crv(&loop, EndPoint(11099));
 
 		crv.set_connect_callback([](const TcpConnectionPtr& conn) {
-			// conn->send("********************\r\n");
-			// conn->send("welcome to annety!!!\r\n");
-			// conn->send("********************\r\n");
-
 			LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
 				   << conn->peer_addr().to_ip_port() << " c is "
 				   << (conn->connected() ? "UP" : "DOWN");
+		});
+		
+		// register message handle
+		crv.set_message_callback([](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
+			// LOG(INFO) << "crv:" << buf->to_string_piece();
+			// buf->has_read_all();
+			LOG(INFO) << "crv:" << buf->taken_as_string();
+			
+			// send time
+			std::ostringstream oss;
+			oss << t;
+			conn->send(oss.str());
 		});
 
 		crv.connect();

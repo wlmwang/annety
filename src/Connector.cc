@@ -1,3 +1,5 @@
+// Refactoring: Anny Wang
+// Date: Jun 30 2019
 
 #include "Connector.h"
 #include "Logging.h"
@@ -166,7 +168,7 @@ void Connector::retry()
 	connect_socket_.reset();
 
 	if (connect_) {
-		LOG(INFO) << "Connector::retry - retry connecting to " << server_addr_.to_ip_port()
+		LOG(INFO) << "Connector::retry connecting to " << server_addr_.to_ip_port()
 			<< " in " << retry_delay_ms_ << " milliseconds. ";
 
 		// owner_loop_->runAfter(retry_delay_ms_/1000.0,
@@ -175,7 +177,7 @@ void Connector::retry()
 
 		owner_loop_->queue_in_own_loop(std::bind(&Connector::start_in_own_loop, shared_from_this()));
 	} else {
-		LOG(TRACE) << "do not connect";
+		LOG(TRACE) << "Connector::retry do not connect";
 	}
 }
 
@@ -188,6 +190,7 @@ void Connector::handle_write()
 
 	if (state_ == kConnecting) {
 		DCHECK(connect_socket_);
+		
 		remove_and_reset_channel();
 
 		errno = internal::get_sock_error(*connect_socket_);
@@ -210,7 +213,7 @@ void Connector::handle_write()
 			}
 		}
 	} else {
-		// todo. what happened?
+		// todo.
 		DCHECK(state_ == kDisconnected);
 	}
 }

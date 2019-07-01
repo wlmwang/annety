@@ -143,7 +143,7 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 
 	ssize_t nwrote = 0;
 	size_t remaining = len;
-	bool faultError = false;
+	bool fault_error = false;
 	if (state_ == kDisconnected) {
 		LOG(WARNING) << "TcpConnection::send_in_loop was disconnected, give up writing";
 		return;
@@ -156,21 +156,20 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 			remaining = len - nwrote;
 			if (remaining == 0 && write_complete_cb_) {
 				owner_loop_->queue_in_own_loop(std::bind(write_complete_cb_, shared_from_this()));
-				// write_complete_cb_(shared_from_this());
 			}
 		} else {
 			nwrote = 0;
 			if (errno != EWOULDBLOCK) {
 				PLOG(ERROR) << "TcpConnection::send_in_loop";
 				if (errno == EPIPE || errno == ECONNRESET) {
-					faultError = true;
+					fault_error = true;
 				}
 			}
 		}
 	}
 
 	DCHECK(remaining <= len);
-	if (!faultError && remaining > 0) {
+	if (!fault_error && remaining > 0) {
 		size_t oldLen = output_buffer_->readable_bytes();
 
 		if (oldLen + remaining >= high_water_mark_ && oldLen < high_water_mark_ 

@@ -135,7 +135,6 @@ public:
 	{
 		return StringPiece(begin_read(), readable_bytes());
 	}
-
 	std::string to_string() const
 	{
 		return std::string(begin_read(), readable_bytes());
@@ -148,6 +147,7 @@ public:
 			len = readable_bytes();
 		}
 		assert(static_cast<size_t>(len) <= readable_bytes());
+		
 		std::string result(begin_read(), len);
 		has_read(static_cast<size_t>(len));
 		return result;
