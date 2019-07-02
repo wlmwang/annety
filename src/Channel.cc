@@ -46,7 +46,8 @@ void Channel::handle_event(Time receive_tm)
 	event_handling_ = true;
 
 	// hup event
-	if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
+	// FIXME: revents_ & POLLOUT? (::connect could be trigger?)
+	if ((revents_ & POLLHUP) && (!(revents_ & POLLIN) /*|| !(revents_ & POLLOUT)*/)) {
 		LOG_IF(WARNING, logging_hup_) << "Channel::handle_event fd = " << fd() 
 			<< " POLLHUP event has received";
 		

@@ -396,7 +396,7 @@ int main(int argc, char* argv[])
 	Thread ss([]() {
 		EventLoop loop;
 		TcpServer srv(&loop, EndPoint(11099));
-		srv.set_thread_num(2);
+		// srv.set_thread_num(2);
 
 		// register connect handle
 		srv.set_connect_callback([](const TcpConnectionPtr& conn) {
@@ -458,7 +458,7 @@ int main(int argc, char* argv[])
 	cc.start();
 
 	// join
-	//cc.join();
+	// cc.join();
 	ss.join();
 }
 

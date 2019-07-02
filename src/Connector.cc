@@ -107,7 +107,7 @@ void Connector::connect()
 	DCHECK(!connect_socket_);
 	connect_socket_.reset(new SocketFD(server_addr_.family(), true, true));
 
-	ScopedClearLastError last_error{};
+	ScopedClearLastError last_error;
 
 	// non-block ::connect()
 	internal::connect(*connect_socket_, server_addr_);
@@ -186,11 +186,10 @@ void Connector::handle_write()
 	owner_loop_->check_in_own_loop();
 	LOG(TRACE) << "Connector::handle_write " << state_;
 
-	ScopedClearLastError last_error{};
+	ScopedClearLastError last_error;
 
 	if (state_ == kConnecting) {
 		DCHECK(connect_socket_);
-		
 		remove_and_reset_channel();
 
 		errno = internal::get_sock_error(*connect_socket_);
@@ -213,7 +212,7 @@ void Connector::handle_write()
 			}
 		}
 	} else {
-		// todo.
+		// Linux trigger(poll): POLLOUT POLLHUP POLLERR
 		DCHECK(state_ == kDisconnected);
 	}
 }
@@ -224,7 +223,7 @@ void Connector::handle_error()
 	LOG(ERROR) << "Connector::handle_error state=" << state_;
 	
 	if (state_ == kConnecting) {
-		ScopedClearLastError last_error{};
+		ScopedClearLastError last_error;
 		errno = internal::get_sock_error(*connect_socket_);
 		PLOG(TRACE) << "Connector::handle_error failed";
 

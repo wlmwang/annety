@@ -296,7 +296,7 @@ void TcpConnection::handle_read(Time recv_tm)
 {
 	owner_loop_->check_in_own_loop();
 
-	ScopedClearLastError last_err;
+	ScopedClearLastError last_error;
 
 	// wrapper ::read() call
 	ssize_t n = input_buffer_->read_fd(connect_socket_->internal_fd());

@@ -47,7 +47,7 @@ Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 	LOG(TRACE) << "EPollPoller::poll is watching " << (long long)channels_.size() 
 			<< " file descriptions";
 	
-	ScopedClearLastError last_error();
+	ScopedClearLastError last_error;
 
 	int num = ::epoll_wait(epollfd_, events_.data(), events_.size(), timeout_ms);
 
