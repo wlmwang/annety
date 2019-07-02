@@ -55,7 +55,7 @@ LogFFlushHandlerFunction g_log_fflush_handler = &defaultFlush;
 // Any log at or above this level will be displayed. Anything below this level 
 // will be silently ignored.
 // 0=TRACE 1=INFO 2=WARNING 3=ERROR 4=FATAL
-LogSeverity g_min_log_level = 0;
+LogSeverity g_min_log_severity = 0;
 
 // For cache colums logging
 // FIXME: destruct not control
@@ -65,26 +65,26 @@ thread_local int64_t tls_last_second{};
 
 }	// namespace anonymous
 
-void SetMinLogLevel(int level)
+void set_min_log_severity(LogSeverity severity)
 {
-	g_min_log_level = std::min(LOG_FATAL, level);
+	g_min_log_severity = std::min(LOG_FATAL, (int)severity);
 }
-int GetMinLogLevel()
+LogSeverity get_min_log_severity()
 {
-	return g_min_log_level;
+	return g_min_log_severity;
 }
-bool ShouldCreateLogMessage(int severity)
+bool should_logging_message(LogSeverity severity)
 {
-	return severity >= g_min_log_level;
+	return severity >= g_min_log_severity;
 }
 
-LogOutputHandlerFunction SetLogOutputHandler(LogOutputHandlerFunction handler)
+LogOutputHandlerFunction set_log_output_handler(LogOutputHandlerFunction handler)
 {
 	LogOutputHandlerFunction rt_handler = g_log_output_handler;
 	g_log_output_handler = handler;
 	return rt_handler;
 }
-LogFFlushHandlerFunction SetLogFFlushHandler(LogFFlushHandlerFunction handler)
+LogFFlushHandlerFunction set_log_fflush_handler(LogFFlushHandlerFunction handler)
 {
 	LogFFlushHandlerFunction rt_handler = g_log_fflush_handler;
 	g_log_fflush_handler = handler;

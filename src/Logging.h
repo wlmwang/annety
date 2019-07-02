@@ -88,14 +88,14 @@ const LogSeverity LOG_DFATAL = LOG_FATAL;
 using LogOutputHandlerFunction = void(*)(const char* msg, int len);
 using LogFFlushHandlerFunction = void(*)();
 
-LogOutputHandlerFunction SetLogOutputHandler(LogOutputHandlerFunction handler);
-LogFFlushHandlerFunction SetLogFFlushHandler(LogFFlushHandlerFunction handler);
+LogOutputHandlerFunction set_log_output_handler(LogOutputHandlerFunction handler);
+LogFFlushHandlerFunction set_log_fflush_handler(LogFFlushHandlerFunction handler);
 
-void SetMinLogLevel(int level);
-int GetMinLogLevel();
+void set_min_log_severity(LogSeverity severity);
+LogSeverity get_min_log_severity();
 
-// Used by LOG_IS_ON to lazy-evaluate stream arguments.
-bool ShouldCreateLogMessage(int severity);
+// internal. Used by LOG_IS_ON to lazy-evaluate stream arguments.
+bool should_logging_message(LogSeverity severity);
 
 class LogMessage
 {
@@ -203,7 +203,7 @@ public:
 					   ##__VA_ARGS__)
 
 #define LOG_IS_ON(severity) \
-	(annety::ShouldCreateLogMessage(annety::LOG_ ## severity))
+	(annety::should_logging_message(annety::LOG_ ## severity))
 
 #define LOG_STREAM(severity, ...)	\
 	COMPACK_LOG_HANDLE(severity, ##__VA_ARGS__).stream()

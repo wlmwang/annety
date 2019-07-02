@@ -30,31 +30,47 @@ public:
 	EventLoop();
 	~EventLoop();
 	
+	// Must called in own loop thread
 	void loop();
 
+	// Not 100% thread safe if you call through a raw pointer,
+	// better to call through shared_ptr<EventLoop> for 100% safety
 	void quit();
 	
-	// internal ---------------------------------
-	void wakeup();
-	
+	// Internal method---------------------------------
+
+	// *Not thread safe* , but run in own loop thread aways.
 	void update_channel(Channel* channel);
 	void remove_channel(Channel* channel);
 	bool has_channel(Channel *channel);
 
+	// Run callback immediately in the own loop thread.
+	// Maybe it wakeup the own loop thread and run the cb.
+	// If in the own loop thread, cb is run within the call-function.
+	// *Thread safe*
+	void run_in_own_loop(Functor cb);
+
+	// Queue callback in the own loop.
+	// Run after finish looping.
+	// *Thread safe*
+	void queue_in_own_loop(Functor cb);
+	
 	void check_in_own_loop() const;
 	bool is_in_own_loop() const;
 
-	void run_in_own_loop(Functor cb);
-	void queue_in_own_loop(Functor cb);
-
 private:
+	// *Not thread safe* , but run in own loop thread aways.
 	void handle_read();
 	void do_calling_wakeup_functors();
+	void wakeup();
 	
+	void print_active_channels() const;
+
 private:
-	bool quit_{false};
+	// atomic
 	bool looping_{false};
 	bool event_handling_{false};
+	uint64_t looping_times_{0};
 
 	std::unique_ptr<ThreadRef> owning_thread_;
 	std::unique_ptr<Poller> poller_;

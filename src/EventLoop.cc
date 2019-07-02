@@ -26,7 +26,7 @@ void clean_tls_event_loop(void *ptr) {
 ThreadLocal<EventLoop> tls_event_loop{&clean_tls_event_loop};
 const int kPollTimeoutMs = 30000;
 
-// Ignore the SIGPIPE signal
+// Ignore SIGPIPE signal
 BEFORE_MAIN_EXECUTOR() {
 	::signal(SIGPIPE, SIG_IGN);
 }
@@ -57,6 +57,8 @@ EventLoop::EventLoop()
 
 EventLoop::~EventLoop()
 {
+	CHECK(looping_ == false);
+	
 	LOG(TRACE) << "EventLoop::~EventLoop is called by thread " 
 		<< PlatformThread::current_ref().ref()
 		<< ", deleted EventLoop " << this;
@@ -70,10 +72,15 @@ void EventLoop::loop()
 	looping_ = true;
 	LOG(TRACE) << "EventLoop::loop " << this << " is begin looping";
 
-	while (!quit_) {
+	while (looping_) {
 		active_channels_.clear();
 		poll_tm_ = poller_->poll(kPollTimeoutMs, &active_channels_);
 
+		if (LOG_IS_ON(TRACE)) {
+			print_active_channels();
+		}
+		looping_times_++;
+		
 		// handling event channels
 		event_handling_ = true;
 		for (Channel* ch : active_channels_) {
@@ -83,6 +90,7 @@ void EventLoop::loop()
 		current_channel_ = nullptr;
 		event_handling_ = false;
 		
+		// wakeup and run queue functions
 		do_calling_wakeup_functors();
 	}
 
@@ -92,11 +100,7 @@ void EventLoop::loop()
 
 void EventLoop::quit()
 {
-	quit_ = true;
-
-	// There is a chance that loop() just executes while(!quit_) and exits,
-	// then EventLoop destructs, then we are accessing an invalid object.
-	// Can be fixed using mutex_ in both places.
+	looping_ = false;
 	if (!is_in_own_loop()) {
 		wakeup();
 	}
@@ -192,6 +196,13 @@ void EventLoop::do_calling_wakeup_functors()
 		func();
 	}
 	calling_wakeup_functors_ = false;
+}
+
+void EventLoop::print_active_channels() const
+{
+	for (const Channel* ch : active_channels_) {
+		LOG(TRACE) << "EventLoop::print_active_channels {" << ch->revents_to_string() << "}";
+	}
 }
 
 }	// namespace annety
