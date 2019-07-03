@@ -22,7 +22,7 @@ INCFLAGS	:= ${DIR_INC} -I${DIR_SRC}
 CC_SRC		:= main.cc \
 			   AtExit.cc Time.cc Exception.cc ByteBuffer.cc LogStream.cc Logging.cc \
 			   StringPiece.cc SafeStrerror.cc StringSplit.cc StringUtil.cc StringPrintf.cc \
-			   File.cc FilePath.cc FileEnumerator.cc FilesUtil.cc FilesUtilPosix.cc \
+			   File.cc FilePath.cc FileEnumerator.cc FilesUtil.cc FilesUtilPosix.cc LogFile.cc \
 			   MutexLock.cc ConditionVariable.cc CountDownLatch.cc \
 			   PlatformThread.cc Thread.cc ThreadPool.cc \
 			   EndPoint.cc SocketsUtil.cc NetBuffer.cc \
