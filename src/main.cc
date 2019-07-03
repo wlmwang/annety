@@ -190,9 +190,13 @@ int main(int argc, char* argv[])
 	// LogFile for Logging
 	char name[256]{0};
 	strncpy(name, argv[0], sizeof name - 1);
-	g_log_file.reset(new LogFile(::basename(name), 200*1000));
+	g_log_file.reset(new LogFile(FilePath(::basename(name))));
 	set_log_output_handler(output_func);
 	set_log_fflush_handler(flush_func);
+
+	// for (int i = 0; i < 1000000; ++i) {
+	// 	LOG(INFO) << "1234567890 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	// }
 
 	// // PlatformThreadHandle
 	// PlatformThreadHandle handle;

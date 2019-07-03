@@ -5,10 +5,12 @@
 #define ANT_LOG_FILE_H_
 
 #include "Macros.h"
+#include "Time.h"
 #include "MutexLock.h"
 #include "StringPiece.h"
-#include "Time.h"
+#include "FilePath.h"
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include <inttypes.h>
@@ -20,11 +22,10 @@ class File;
 class LogFile
 {
 public:
-	LogFile(const std::string& basename,
-			off_t rotate_size_b = 10*1024*1024,
+	LogFile(const FilePath& path /*base filename*/,
+			off_t rotate_size_b = 100*2^20,
 			int flush_interval_s = 3,
-			int check_every_n = 1024,
-			bool thread_safe = true);
+			int check_every_n = 1024);
 
 	~LogFile();
 
@@ -32,31 +33,24 @@ public:
 	void append(const char* message, int len);
 
 	void flush();
-	bool rotate();
+	void rotate(bool force = false);
 
 private:
 	void append_unlocked(const char* message, int len);
 
 private:
-	const std::string basename_;
+	const FilePath path_;
 	const off_t rotate_size_b_;
 	const int check_every_n_;
 	const TimeDelta flush_interval_s_;
 
-	int count_{0};
-	off_t written_{0};
-
-	// time_t startOfPeriod_;// 滚动日志当日 0 点时间戳
-	// time_t lastRoll_;     // 上一次滚动日志文件时间戳
-	// time_t lastFlush_;    // 上一次刷新磁盘时间戳
-	// std::unique_ptr<FileUtil::AppendFile> file_;  // 日志文件句柄
+	std::atomic<int> count_{0};
+	std::atomic<off_t> written_{0};
 
 	Time last_rotate_;
 	Time last_flush_;
-	Time start_period_;
 
-	std::unique_ptr<MutexLock> lock_;
-
+	MutexLock lock_;
 	std::unique_ptr<File> file_;
 };
 
