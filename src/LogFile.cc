@@ -15,11 +15,10 @@ namespace annety
 {
 namespace
 {
-pid_t pid()
+pid_t getpid()
 {
 	return ::getpid();
 }
-
 std::string hostname()
 {
 	// HOST_NAME_MAX 64
@@ -51,8 +50,8 @@ FilePath get_log_filename(const FilePath& path)
 								exploded.minute,
 								exploded.second);
 
-	// hostname().pid().log
-	string_appendf(&filename, "%s.%d.%s", hostname().c_str(), pid(), "log");
+	// hostname().getpid().log
+	string_appendf(&filename, "%s.%d.%s", hostname().c_str(), getpid(), "log");
 
 	return FilePath(filename);
 }
@@ -61,15 +60,13 @@ FilePath get_log_filename(const FilePath& path)
 
 LogFile::LogFile(const FilePath& path,
 				off_t rotate_size_b,
-				int flush_interval_s,
 				int check_every_n)
 	: path_(path),
 	  rotate_size_b_(rotate_size_b),
-	  check_every_n_(check_every_n),
-	  flush_interval_s_(TimeDelta::from_seconds(flush_interval_s))
+	  check_every_n_(check_every_n)
 {
 	assert(!path_.ends_with_separator());
-	rotate();
+	rotate(true);
 }
 
 LogFile::~LogFile() = default;
@@ -86,42 +83,38 @@ void LogFile::append(const char* message, int len)
 
 void LogFile::flush()
 {
-	file_->flush();
+	if (file_) {
+		file_->flush();
+	}
 }
 
 void LogFile::append_unlocked(const char* message, int len)
 {
-	assert(file_->write_at_current_pos(message, len) == len);
-
 	if (written_.fetch_add(len) > rotate_size_b_) {
 		rotate(true);
 	} else {
 		if (count_.fetch_add(1) >= check_every_n_) {
 			count_.store(0);
-
-			// FIXME: non atomic
-			Time curr = Time::now();
-			if (curr - last_flush_ > flush_interval_s_) {
-				file_->flush();
-				last_flush_ = curr;
-			}
 			rotate();
 		}
 	}
+	assert(file_->write_at_current_pos(message, len) == len);
 }
 
 void LogFile::rotate(bool force)
 {
-	auto do_rotate_with_locked = [=] (const Time& curr) {
-		if (file_) {
-			file_->flush();
-		}
-		written_.store(0);
+	auto do_rotate_with_locked = [this](const Time& curr) {
+		lock_.assert_acquired();
+		flush();
 
+		File* file = new File(get_log_filename(path_), File::FLAG_OPEN_ALWAYS |
+													   File::FLAG_APPEND);
+		
+		assert(file->error_details() == File::FILE_OK);
+		written_.store(file->get_length());
+
+		file_.reset(file);
 		last_rotate_ = curr;
-		last_flush_ = curr;
-		file_.reset(new File(get_log_filename(path_), 
-							 File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND));
 	};
 
 	Time curr = Time::now();
@@ -133,6 +126,8 @@ void LogFile::rotate(bool force)
 		AutoLock locked(lock_);
 		if (curr.utc_midnight() > last_rotate_) {
 			do_rotate_with_locked(curr);
+		} else {
+			flush();
 		}
 	}
 }

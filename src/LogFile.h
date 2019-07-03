@@ -22,9 +22,8 @@ class File;
 class LogFile
 {
 public:
-	LogFile(const FilePath& path /*base filename*/,
-			off_t rotate_size_b = 100*2^20,
-			int flush_interval_s = 3,
+	LogFile(const FilePath& path /*basename*/,
+			off_t rotate_size_b = 100*1024*1024,
 			int check_every_n = 1024);
 
 	~LogFile();
@@ -47,11 +46,9 @@ private:
 	std::atomic<int> count_{0};
 	std::atomic<off_t> written_{0};
 
-	Time last_rotate_;
-	Time last_flush_;
-
 	MutexLock lock_;
 	std::unique_ptr<File> file_;
+	Time last_rotate_;
 };
 
 }	// namespace annety
