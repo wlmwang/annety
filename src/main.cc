@@ -57,6 +57,18 @@ void func(void* ptr)
 	std::cout << "AtExitManager:" << "*" << ptr << std::endl;
 }
 
+// Logging
+std::unique_ptr<LogFile> g_log_file;
+void output_func(const char* msg, int len)
+{
+	g_log_file->append(msg, len);
+}
+
+void flush_func()
+{
+	g_log_file->flush();
+}
+
 int main(int argc, char* argv[])
 {
 #if defined(OS_MACOSX)
@@ -170,10 +182,17 @@ int main(int argc, char* argv[])
 	// DCHECK_LE(1, 2);
 	// // NOTREACHED();	// debug abort/release ERROR
 
-	// LogFile
-	LogFile ll("logging", 1024);
-	ll.append("test1", strlen("test1"));
-	ll.append("test2", strlen("test2"));
+	// // LogFile
+	// LogFile ll("logging", 1024);
+	// ll.append("test1", strlen("test1"));
+	// ll.append("test2", strlen("test2"));
+
+	// LogFile for Logging
+	char name[256]{0};
+	strncpy(name, argv[0], sizeof name - 1);
+	g_log_file.reset(new LogFile(::basename(name), 200*1000));
+	set_log_output_handler(output_func);
+	set_log_fflush_handler(flush_func);
 
 	// // PlatformThreadHandle
 	// PlatformThreadHandle handle;
@@ -398,73 +417,73 @@ int main(int argc, char* argv[])
 	// std::cout << "tid:" << threads::tid() << std::endl;
 	// std::cout << "tid:" << threads::tid() << std::endl;
 
-	// // EventLoop
-	// Thread ss([]() {
-	// 	EventLoop loop;
-	// 	TcpServer srv(&loop, EndPoint(11099));
-	// 	// srv.set_thread_num(2);
+	// EventLoop
+	Thread ss([]() {
+		EventLoop loop;
+		TcpServer srv(&loop, EndPoint(11099));
+		// srv.set_thread_num(2);
 
-	// 	// register connect handle
-	// 	srv.set_connect_callback([](const TcpConnectionPtr& conn) {
-	// 		conn->send("\r\n********************\r\n");
-	// 		conn->send("welcome to annety!!!\r\n");
-	// 		conn->send("********************\r\n");
+		// register connect handle
+		srv.set_connect_callback([](const TcpConnectionPtr& conn) {
+			conn->send("\r\n********************\r\n");
+			conn->send("welcome to annety!!!\r\n");
+			conn->send("********************\r\n");
 
-	// 		LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
-	// 			   << conn->peer_addr().to_ip_port() << " s is "
-	// 			   << (conn->connected() ? "UP" : "DOWN");
-	// 	});
+			LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
+				   << conn->peer_addr().to_ip_port() << " s is "
+				   << (conn->connected() ? "UP" : "DOWN");
+		});
 		
-	// 	// register message handle
-	// 	srv.set_message_callback([](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
-	// 		// LOG(INFO) << "srv:" << buf->to_string_piece();
-	// 		// buf->has_read_all();
-	// 		LOG(INFO) << "srv:" << buf->taken_as_string();
+		// register message handle
+		srv.set_message_callback([](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
+			// LOG(INFO) << "srv:" << buf->to_string_piece();
+			// buf->has_read_all();
+			LOG(INFO) << "srv:" << buf->taken_as_string();
 
-	// 		// send time
-	// 		std::ostringstream oss;
-	// 		oss << t;
-	// 		conn->send(oss.str());
-	// 	});
+			// send time
+			std::ostringstream oss;
+			oss << t;
+			conn->send(oss.str());
+		});
 
-	// 	srv.start();
+		srv.start();
 		
-	// 	loop.loop();
-	// });
-	// ss.start();
-	// //ss.join();
+		loop.loop();
+	});
+	ss.start();
+	//ss.join();
 
-	// // TcpClient
-	// Thread cc([]() {
-	// 	EventLoop loop;
-	// 	TcpClient crv(&loop, EndPoint(11099));
+	// TcpClient
+	Thread cc([]() {
+		EventLoop loop;
+		TcpClient crv(&loop, EndPoint(11099));
 
-	// 	crv.set_connect_callback([](const TcpConnectionPtr& conn) {
-	// 		LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
-	// 			   << conn->peer_addr().to_ip_port() << " c is "
-	// 			   << (conn->connected() ? "UP" : "DOWN");
-	// 	});
+		crv.set_connect_callback([](const TcpConnectionPtr& conn) {
+			LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
+				   << conn->peer_addr().to_ip_port() << " c is "
+				   << (conn->connected() ? "UP" : "DOWN");
+		});
 		
-	// 	// register message handle
-	// 	crv.set_message_callback([](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
-	// 		// LOG(INFO) << "crv:" << buf->to_string_piece();
-	// 		// buf->has_read_all();
-	// 		LOG(INFO) << "crv:" << buf->taken_as_string();
+		// register message handle
+		crv.set_message_callback([](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
+			// LOG(INFO) << "crv:" << buf->to_string_piece();
+			// buf->has_read_all();
+			LOG(INFO) << "crv:" << buf->taken_as_string();
 			
-	// 		// send time
-	// 		std::ostringstream oss;
-	// 		oss << t;
-	// 		conn->send(oss.str());
-	// 	});
+			// send time
+			std::ostringstream oss;
+			oss << t;
+			conn->send(oss.str());
+		});
 
-	// 	crv.connect();
+		crv.connect();
 
-	// 	loop.loop();
-	// });
-	// cc.start();
+		loop.loop();
+	});
+	cc.start();
 
-	// // join
-	// // cc.join();
-	// ss.join();
+	// join
+	// cc.join();
+	ss.join();
 }
 
