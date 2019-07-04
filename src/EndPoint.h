@@ -14,7 +14,7 @@
 
 namespace annety
 {
-// Wrapper for sockaddr_in[6], and exposing sockaddr* interface to users.
+// Wrapper for sockaddr_in[6], and expose sockaddr* interface to users.
 //
 // EndPoint is standard layout class, but do not trivial class and pod.
 class EndPoint

@@ -12,14 +12,16 @@ namespace annety
 class TimerFD : public SelectableFD
 {
 public:
-	explicit TimerFD(bool nonblock = true, bool cloexec = true);
-	explicit TimerFD(int sckfd) : SelectableFD(sckfd) {}
+	using SelectableFD::SelectableFD;
 
-	virtual ~SocketFD() override;
-	
+	TimerFD() = delete;
+	TimerFD(bool nonblock, bool cloexec);
+
+	virtual int close() override;
+	virtual ssize_t read(void *buf, size_t len) override;
+	virtual ssize_t write(const void *buf, size_t len) override;
+
 private:
-	int fd_;
-
 	DISALLOW_COPY_AND_ASSIGN(TimerFD);
 };
 

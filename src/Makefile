@@ -26,7 +26,7 @@ CC_SRC		:= main.cc \
 			   MutexLock.cc ConditionVariable.cc CountDownLatch.cc \
 			   PlatformThread.cc Thread.cc ThreadPool.cc \
 			   EndPoint.cc SocketsUtil.cc NetBuffer.cc \
-			   SelectableFD.cc SocketFD.cc EventFD.cc \
+			   SelectableFD.cc SocketFD.cc EventFD.cc TimerFD.cc \
 			   Channel.cc Acceptor.cc TcpServer.cc TcpConnection.cc Connector.cc TcpClient.cc \
 			   EventLoop.cc Poller.cc PollPoller.cc \
 			   EventLoopThread.cc EventLoopThreadPool.cc
