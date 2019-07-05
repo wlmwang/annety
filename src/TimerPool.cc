@@ -9,7 +9,6 @@
 #include "Timer.h"
 
 #include <algorithm>
-#include <iostream>
 
 namespace annety
 {
@@ -59,13 +58,8 @@ void TimerPool::add_timer_in_own_loop(Timer* timer)
 
 	bool earliest_changed = save(timer);
 	if (earliest_changed) {
-		// todo
-		// resetTimerfd(timerfd_, timer->expired());
-
 		// FIXME: implicit_cast<>
 		TimerFD* ts = static_cast<TimerFD*>(timer_socket_.get());
-		std::cout << timer->expired() << "|" << Time::now() << std::endl;
-
 		ts->reset(timer->expired() - Time::now());
 	}
 }
@@ -86,10 +80,11 @@ void TimerPool::cancel_timer_in_own_loop(TimerId timer_id)
 
 		active_timers_.erase(it);
 		// DCHECK
-
 	} else if (calling_expired_timers_) {
 		canceling_timers_.insert(timer);
 	}
+	LOG(TRACE) << "TimerPool::cancel_timer_in_own_loop " << (it != active_timers_.end());
+
 	DCHECK(timers_.size() == active_timers_.size());
 }
 
@@ -173,8 +168,6 @@ void TimerPool::reset(Time tm, const std::vector<Entry>& expired_timers)
 		// FIXME: implicit_cast<>
 		TimerFD* ts = static_cast<TimerFD*>(timer_socket_.get());
 		ts->reset(next_expired - Time::now());
-
-		// resetTimerfd(timerfd_, next_expired);
 	}
 }
 

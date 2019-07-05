@@ -6,6 +6,7 @@
 
 #include "Macros.h"
 #include "Time.h"
+#include "TimerId.h"
 #include "CallbackForward.h"
 
 #include <string>

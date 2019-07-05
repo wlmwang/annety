@@ -428,6 +428,11 @@ int main(int argc, char* argv[])
 		TcpServer srv(&loop, EndPoint(11099));
 		// srv.set_thread_num(2);
 
+		// register timer
+		TimerId timer_id = loop.run_every(3, []() {
+			LOG(INFO) << "run this";
+		});
+
 		// register connect handle
 		srv.set_connect_callback([](const TcpConnectionPtr& conn) {
 			conn->send("\r\n********************\r\n");
@@ -440,20 +445,18 @@ int main(int argc, char* argv[])
 		});
 		
 		// register message handle
-		srv.set_message_callback([](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
+		srv.set_message_callback([&loop, &timer_id](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
 			// LOG(INFO) << "srv:" << buf->to_string_piece();
 			// buf->has_read_all();
 			LOG(INFO) << "srv:" << buf->taken_as_string();
 
-			// send time
-			std::ostringstream oss;
-			oss << t;
-			conn->send(oss.str());
-		});
+			// timer
+			loop.cancel(timer_id);
 
-		// register timer
-		loop.run_every(3, []() {
-			LOG(INFO) << "run this";
+			// // send time
+			// std::ostringstream oss;
+			// oss << t;
+			// conn->send(oss.str());
 		});
 
 		srv.start();

@@ -10,7 +10,6 @@
 #endif
 
 #include <unistd.h>
-#include <iostream>
 
 namespace annety
 {
@@ -34,7 +33,7 @@ int reset_timerfd(int timerfd, TimeDelta delta_ms)
 	if (delta_ms.is_null()) {
 		return -1;
 	}
-	
+
 	struct itimerspec it;
 	::memset(&it, 0, sizeof it);
 	it.it_value = delta_ms.to_timespec();
