@@ -20,12 +20,23 @@ using std::placeholders::_3;
 class NetBuffer;
 class TcpConnection;
 using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
-using TimerCallback = std::function<void()>;
 using ConnectCallback = std::function<void(const TcpConnectionPtr&)>;
 using CloseCallback = std::function<void(const TcpConnectionPtr&)>;
 using WriteCompleteCallback = std::function<void(const TcpConnectionPtr&)>;
 using HighWaterMarkCallback = std::function<void(const TcpConnectionPtr&, size_t)>;
 using MessageCallback = std::function<void(const TcpConnectionPtr&, NetBuffer*, Time)>;
+
+// todo.
+class Timer;
+struct TimerId
+{
+	TimerId(Timer *timer, int64_t seq) 
+		: timer_(timer), sequence_(seq) {}
+
+	Timer* timer_;
+	int64_t sequence_;
+};
+using TimerCallback = std::function<void()>;
 
 // internal ------------------------------------------------------------------
 // default callback handler

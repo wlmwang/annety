@@ -28,8 +28,8 @@ CC_SRC		:= main.cc \
 			   EndPoint.cc SocketsUtil.cc NetBuffer.cc \
 			   SelectableFD.cc SocketFD.cc EventFD.cc TimerFD.cc \
 			   Channel.cc Acceptor.cc TcpServer.cc TcpConnection.cc Connector.cc TcpClient.cc \
-			   EventLoop.cc Poller.cc PollPoller.cc \
-			   EventLoopThread.cc EventLoopThreadPool.cc
+			   Timer.cc TimerPool.cc Poller.cc PollPoller.cc \
+			   EventLoop.cc EventLoopThread.cc EventLoopThreadPool.cc
 
 # 编译文件
 OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))

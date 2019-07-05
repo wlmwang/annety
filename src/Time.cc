@@ -30,6 +30,30 @@ Time TimeNowIgnoreTZ()
 
 }	// namespace anonymous
 
+// TimeDelta --------------------------------------------------------------------
+
+// static
+TimeDelta TimeDelta::from_timespec(const struct timespec& ts)
+{
+	return TimeDelta(ts.tv_sec * Time::kMicrosecondsPerSecond +
+		ts.tv_nsec / Time::kNanosecondsPerMicrosecond);
+}
+
+struct timespec TimeDelta::to_timespec() const
+{
+	int64_t microseconds = in_microseconds();
+	time_t seconds = 0;
+	if (microseconds >= Time::kMicrosecondsPerSecond) {
+		seconds = in_seconds();
+		microseconds -= seconds * Time::kMicrosecondsPerSecond;
+	}
+	struct timespec result = {
+		seconds,
+		static_cast<long>(microseconds * Time::kNanosecondsPerMicrosecond)
+	};
+	return result;
+}
+
 // Time --------------------------------------------------------------------
 
 // static
@@ -46,7 +70,7 @@ Time Time::from_time_t(time_t tt)
 	} else if (tt == std::numeric_limits<time_t>::max()) {
 		return max();
 	}
-	return Time(tt * kMicrosecondsPerSecond);
+	return Time() + TimeDelta::from_seconds(tt);
 }
 
 time_t Time::to_time_t() const
@@ -54,6 +78,11 @@ time_t Time::to_time_t() const
 	if (is_null()) {
 		return 0;
 	} else if (is_max()) {
+		return std::numeric_limits<time_t>::max();
+	}
+	if (std::numeric_limits<int64_t>::max() <= us_) {
+		DLOG(WARNING) << "Overflow when converting annety::Time with internal " <<
+			"value " << us_ << " to time_t";
 		return std::numeric_limits<time_t>::max();
 	}
 	return us_ / kMicrosecondsPerSecond;
@@ -91,15 +120,22 @@ struct timeval Time::to_timeval() const
 }
 
 // static
-Time Time::from_double_ts(double dt)
+Time Time::from_timespec(const struct timespec& ts)
+{
+	return from_double_t(ts.tv_sec + 
+		static_cast<double>(ts.tv_nsec) / Time::kNanosecondsPerSecond);
+}
+
+// static
+Time Time::from_double_t(double dt)
 {
 	if (dt == 0 || std::isnan(dt)) {
 		return Time();
 	}
-	return Time(static_cast<int64_t>(dt * kMicrosecondsPerSecond));
+	return Time() + TimeDelta::from_seconds_d(dt);
 }
 
-double Time::to_double_ts() const
+double Time::to_double_t() const
 {
 	if (is_null()) {
 		return 0;

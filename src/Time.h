@@ -36,6 +36,13 @@ public:
 	static constexpr TimeDelta from_milliseconds_d(double ms);
 	static constexpr TimeDelta from_microseconds_d(double us);
 
+	static TimeDelta from_timespec(const struct timespec& ts);
+	struct timespec to_timespec() const;
+	
+	// static constexpr TimeDelta from_internal_value(int64_t delta) {
+	// 	return TimeDelta(delta);
+	// }
+
 	static constexpr TimeDelta max();
 	static constexpr TimeDelta min();
 
@@ -202,6 +209,7 @@ public:
 	constexpr int64_t internal_value() const { return us_;}
 
 	constexpr bool is_null() const { return us_ == 0;}
+	constexpr bool is_valid() const { return !is_null();}
 	constexpr bool is_max() const
 	{
 		return us_ == std::numeric_limits<int64_t>::max();
@@ -350,10 +358,19 @@ public:
 	static Time from_timeval(struct timeval t);
 	struct timeval to_timeval() const;
 
+	// static Time from_timespec(struct timespec t);
+	// struct timespec to_timespec() const;
+
 	// Converts time to/from a double which is the number of seconds since epoch
 	// (Jan 1, 1970). used this format to represent time.
-	static Time from_double_ts(double dt);
-	double to_double_ts() const;
+	static Time from_double_t(double dt);
+	double to_double_t() const;
+
+	// Converts the timespec structure to time. MacOS X 10.8.3 (and tentatively,
+	// earlier versions) will have the |ts|'s tv_nsec component zeroed out,
+	// having a 1 second resolution, which agrees with
+	// https://developer.apple.com/legacy/library/#technotes/tn/tn1150.html#HFSPlusDates.
+	static Time from_timespec(const struct timespec& ts);
 
 	// Converts an exploded structure representing either the local time or UTC
 	// into a Time class. Returns false on a failure when, for example, a day of
@@ -382,6 +399,10 @@ public:
 	// either UTC or local time. It will represent midnight on that day.
 	Time utc_midnight() const { return midnight(false);}
 	Time local_midnight() const { return midnight(true);}
+
+	// static constexpr Time from_internal_value(int64_t us) {
+	// 	return Time(us);
+	// }
 
 private:
 	friend class internal::TimeBase<Time>;
@@ -560,7 +581,7 @@ constexpr TimeDelta TimeDelta::from_double(double value)
 // static
 constexpr TimeDelta TimeDelta::from_product(int64_t value, int64_t positive_value)
 {
-  // DCHECK(positive_value > 0);
+	// DCHECK(positive_value > 0);
 	return value > std::numeric_limits<int64_t>::max() / positive_value
 				? max()
 				: value < std::numeric_limits<int64_t>::min() / positive_value

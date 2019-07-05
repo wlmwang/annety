@@ -19,6 +19,7 @@ namespace annety
 class ThreadRef;
 class Channel;
 class Poller;
+class TimerPool;
 
 // Reactor, one loop per thread.
 class EventLoop
@@ -33,10 +34,28 @@ public:
 	// Must called in own loop thread
 	void loop();
 
-	// Not 100% thread safe if you call through a raw pointer,
+	// *Not 100% thread safe* if you call through a raw pointer,
 	// better to call through shared_ptr<EventLoop> for 100% safety
 	void quit();
-	
+
+	// Timers -------------------------------------------
+
+	// Runs callback at 'time'
+	// *Thread safe*
+	TimerId run_at(Time time, TimerCallback cb);
+
+	// Runs callback after @c delay seconds.
+	// *Thread safe*
+	TimerId run_after(double delay_s, TimerCallback cb);
+
+	// Runs callback every @c interval seconds.
+	// *Thread safe*
+	TimerId run_every(double interval_s, TimerCallback cb);
+
+	// Cancels the timer.
+	// *Thread safe*
+	void cancel(TimerId timerId);
+
 	// Internal method---------------------------------
 
 	// *Not thread safe* , but run in own loop thread aways.
@@ -59,11 +78,11 @@ public:
 	bool is_in_own_loop() const;
 
 private:
+	void wakeup();
 	// *Not thread safe* , but run in own loop thread aways.
 	void handle_read();
 	void do_calling_wakeup_functors();
-	void wakeup();
-	
+
 	void print_active_channels() const;
 
 private:
@@ -75,6 +94,8 @@ private:
 	std::unique_ptr<ThreadRef> owning_thread_;
 	std::unique_ptr<Poller> poller_;
 	
+	std::unique_ptr<TimerPool> timer_pool_;
+
 	SelectableFDPtr wakeup_socket_;
 	std::unique_ptr<Channel> wakeup_channel_;
 

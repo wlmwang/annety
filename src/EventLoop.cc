@@ -9,6 +9,7 @@
 #include "Poller.h"
 #include "PollPoller.h"
 // #include "EPollPoller.h"
+#include "TimerPool.h"
 
 #include <signal.h>
 
@@ -36,6 +37,7 @@ BEFORE_MAIN_EXECUTOR() {
 EventLoop::EventLoop() 
 	: owning_thread_(new ThreadRef(PlatformThread::current_ref())),
 	  poller_(new PollPoller(this)),
+	  timer_pool_(new TimerPool(this)),
 	  wakeup_socket_(new EventFD(true, true)),
 	  wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {
@@ -106,6 +108,28 @@ void EventLoop::quit()
 	}
 }
 
+TimerId EventLoop::run_at(Time time, TimerCallback cb)
+{
+	return timer_pool_->add_timer(std::move(cb), time, 0.0);
+}
+
+TimerId EventLoop::run_after(double delay_s, TimerCallback cb)
+{
+	TimeDelta delta = TimeDelta::from_seconds_d(delay_s);
+	return run_at(Time::now()+delta, std::move(cb));
+}
+
+TimerId EventLoop::run_every(double interval, TimerCallback cb)
+{
+	TimeDelta delta = TimeDelta::from_seconds_d(interval);
+	return timer_pool_->add_timer(std::move(cb), Time::now()+delta, interval);
+}
+
+void EventLoop::cancel(TimerId timerId)
+{
+	return timer_pool_->cancel_timer(timerId);
+}
+
 void EventLoop::wakeup()
 {
 	uint64_t one = 1;
@@ -118,12 +142,12 @@ void EventLoop::wakeup()
 
 void EventLoop::handle_read()
 {
-	uint64_t one = 1;
+	uint64_t one;
 	ssize_t n = wakeup_socket_->read(&one, sizeof one);
 	if (n != sizeof one) {
 		PLOG(ERROR) << "EventLoop::handle_read reads " << n << " bytes instead of 8";
 	}
-	LOG(TRACE) << "EventLoop::handle_read";
+	LOG(TRACE) << "EventLoop::handle_read " << one;
 }
 
 void EventLoop::update_channel(Channel* channel)

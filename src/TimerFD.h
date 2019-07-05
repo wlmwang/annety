@@ -21,6 +21,8 @@ public:
 	virtual ssize_t read(void *buf, size_t len) override;
 	virtual ssize_t write(const void *buf, size_t len) override;
 
+	void reset(const TimeDelta& delta_ms);
+
 private:
 	DISALLOW_COPY_AND_ASSIGN(TimerFD);
 };

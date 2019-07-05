@@ -10,6 +10,7 @@
 #endif
 
 #include <unistd.h>
+#include <iostream>
 
 namespace annety
 {
@@ -28,15 +29,15 @@ int create_timerfd(bool nonblock, bool cloexec)
 	return ::timerfd_create(CLOCK_MONOTONIC, flags);
 }
 
-int reset_timerfd(int timerfd, Time expired)
+int reset_timerfd(int timerfd, TimeDelta delta_ms)
 {
-	// wake up loop by timerfd_settime()
+	if (delta_ms.is_null()) {
+		return -1;
+	}
+	
 	struct itimerspec it;
 	::memset(&it, 0, sizeof it);
-
-	TimeDelta delta = expired - Time::now();
-	it.it_value.tv_sec = static_cast<time_t>(delta.in_seconds());
-	it.it_value.tv_nsec = static_cast<long long>(delta.in_microseconds_f() * 1000);
+	it.it_value = delta_ms.to_timespec();
 
 	return ::timerfd_settime(timerfd, 0, &it, NULL);
 }
@@ -52,7 +53,7 @@ TimerFD::TimerFD(bool nonblock, bool cloexec)
 	//...
 #endif
 	DPCHECK(fd_ >= 0);
-	LOG(TRACE) << "TimerFD::TimerFD" << " of fd=" << fd_ << " is constructing";
+	LOG(TRACE) << "TimerFD::TimerFD" << " fd=" << fd_ << " is constructing";
 }
 
 int TimerFD::close()
@@ -80,6 +81,18 @@ ssize_t TimerFD::write(const void *buf, size_t len)
 #else
 	//...
 #endif
+}
+
+void TimerFD::reset(const TimeDelta& delta_ms)
+{
+#if defined(OS_LINUX)
+	int rt = internal::reset_timerfd(fd_, delta_ms);
+#else
+	//...
+#endif
+
+	DPCHECK(rt >= 0);
+	LOG(TRACE) << "TimerFD::TimerFD" << " fd=" << fd_ << " is reseting";
 }
 
 }	// namespace annety

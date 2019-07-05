@@ -187,16 +187,16 @@ int main(int argc, char* argv[])
 	// ll.append("test1", strlen("test1"));
 	// ll.append("test2", strlen("test2"));
 
-	// LogFile for Logging
-	char name[256]{0};
-	strncpy(name, argv[0], sizeof name - 1);
-	g_log_file.reset(new LogFile(FilePath("zzz"), 5*1024*1024, 1024));
-	set_log_output_handler(output_func);
-	set_log_fflush_handler(flush_func);
+	// // LogFile for Logging
+	// char name[256]{0};
+	// strncpy(name, argv[0], sizeof name - 1);
+	// g_log_file.reset(new LogFile(FilePath("zzz"), 5*1024*1024, 1024));
+	// set_log_output_handler(output_func);
+	// set_log_fflush_handler(flush_func);
 
-	for (int i = 0; i < 1000000; ++i) {
-		LOG(INFO) << "1234567890 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	}
+	// for (int i = 0; i < 1000000; ++i) {
+	// 	LOG(INFO) << "1234567890 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	// }
 
 	// // PlatformThreadHandle
 	// PlatformThreadHandle handle;
@@ -421,41 +421,47 @@ int main(int argc, char* argv[])
 	// std::cout << "tid:" << threads::tid() << std::endl;
 	// std::cout << "tid:" << threads::tid() << std::endl;
 
-	// // EventLoop
-	// Thread ss([]() {
-	// 	EventLoop loop;
-	// 	TcpServer srv(&loop, EndPoint(11099));
-	// 	// srv.set_thread_num(2);
 
-	// 	// register connect handle
-	// 	srv.set_connect_callback([](const TcpConnectionPtr& conn) {
-	// 		conn->send("\r\n********************\r\n");
-	// 		conn->send("welcome to annety!!!\r\n");
-	// 		conn->send("********************\r\n");
+	// EventLoop
+	Thread ss([]() {
+		EventLoop loop;
+		TcpServer srv(&loop, EndPoint(11099));
+		// srv.set_thread_num(2);
 
-	// 		LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
-	// 			   << conn->peer_addr().to_ip_port() << " s is "
-	// 			   << (conn->connected() ? "UP" : "DOWN");
-	// 	});
+		// register connect handle
+		srv.set_connect_callback([](const TcpConnectionPtr& conn) {
+			conn->send("\r\n********************\r\n");
+			conn->send("welcome to annety!!!\r\n");
+			conn->send("********************\r\n");
+
+			LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
+				   << conn->peer_addr().to_ip_port() << " s is "
+				   << (conn->connected() ? "UP" : "DOWN");
+		});
 		
-	// 	// register message handle
-	// 	srv.set_message_callback([](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
-	// 		// LOG(INFO) << "srv:" << buf->to_string_piece();
-	// 		// buf->has_read_all();
-	// 		LOG(INFO) << "srv:" << buf->taken_as_string();
+		// register message handle
+		srv.set_message_callback([](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
+			// LOG(INFO) << "srv:" << buf->to_string_piece();
+			// buf->has_read_all();
+			LOG(INFO) << "srv:" << buf->taken_as_string();
 
-	// 		// send time
-	// 		std::ostringstream oss;
-	// 		oss << t;
-	// 		conn->send(oss.str());
-	// 	});
+			// send time
+			std::ostringstream oss;
+			oss << t;
+			conn->send(oss.str());
+		});
 
-	// 	srv.start();
+		// register timer
+		loop.run_every(3, []() {
+			LOG(INFO) << "run this";
+		});
+
+		srv.start();
 		
-	// 	loop.loop();
-	// });
-	// ss.start();
-	// //ss.join();
+		loop.loop();
+	});
+	ss.start();
+	ss.join();
 
 	// // TcpClient
 	// Thread cc([]() {
