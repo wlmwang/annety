@@ -9,7 +9,7 @@ namespace annety
 class Timer;
 
 // TimerId is standard layout class, but do not trivial class and pod.
-struct TimerId
+class TimerId
 {
 public:
 	TimerId(Timer *timer, int64_t seq) 

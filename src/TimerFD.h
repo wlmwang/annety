@@ -24,6 +24,10 @@ public:
 	void reset(const TimeDelta& delta_ms);
 
 private:
+#if !defined(OS_LINUX)
+	std::unique_ptr<SelectableFD> ev_;
+#endif
+
 	DISALLOW_COPY_AND_ASSIGN(TimerFD);
 };
 

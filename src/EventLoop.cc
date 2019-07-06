@@ -25,7 +25,6 @@ void clean_tls_event_loop(void *ptr) {
 
 // There is at most one EventLoop object per thread
 ThreadLocal<EventLoop> tls_event_loop{&clean_tls_event_loop};
-const int kPollTimeoutMs = 30000;
 
 // Ignore SIGPIPE signal
 BEFORE_MAIN_EXECUTOR() {
@@ -35,7 +34,8 @@ BEFORE_MAIN_EXECUTOR() {
 }	// namespace anonymous
 
 EventLoop::EventLoop() 
-	: owning_thread_(new ThreadRef(PlatformThread::current_ref())),
+	: poll_timeout_ms_(kPollTimeoutMs),
+	  owning_thread_(new ThreadRef(PlatformThread::current_ref())),
 	  poller_(new PollPoller(this)),
 	  timer_pool_(new TimerPool(this)),
 	  wakeup_socket_(new EventFD(true, true)),
@@ -76,7 +76,7 @@ void EventLoop::loop()
 
 	while (looping_) {
 		active_channels_.clear();
-		poll_tm_ = poller_->poll(kPollTimeoutMs, &active_channels_);
+		poll_tm_ = poller_->poll(poll_timeout_ms_, &active_channels_);
 
 		if (LOG_IS_ON(TRACE)) {
 			print_active_channels();
@@ -91,7 +91,11 @@ void EventLoop::loop()
 		}
 		current_channel_ = nullptr;
 		event_handling_ = false;
-		
+
+#if !defined(OS_LINUX)
+		// for timers
+		timer_pool_->check_timer(Time::now());
+#endif
 		// wakeup and run queue functions
 		do_calling_wakeup_functors();
 	}
@@ -108,6 +112,15 @@ void EventLoop::quit()
 	}
 }
 
+void EventLoop::set_poll_timeout(int64_t ms)
+{
+	poll_timeout_ms_ = ms;
+}
+
+TimerId EventLoop::run_at(double tm_s, TimerCallback cb)
+{
+	return run_at(Time()+TimeDelta::from_seconds_d(tm_s), std::move(cb));
+}
 TimerId EventLoop::run_at(Time time, TimerCallback cb)
 {
 	return timer_pool_->add_timer(std::move(cb), time, 0.0);
@@ -115,14 +128,20 @@ TimerId EventLoop::run_at(Time time, TimerCallback cb)
 
 TimerId EventLoop::run_after(double delay_s, TimerCallback cb)
 {
-	TimeDelta delta = TimeDelta::from_seconds_d(delay_s);
+	return run_after(TimeDelta::from_seconds_d(delay_s), std::move(cb));
+}
+TimerId EventLoop::run_after(TimeDelta delta, TimerCallback cb)
+{
 	return run_at(Time::now()+delta, std::move(cb));
 }
 
-TimerId EventLoop::run_every(double interval, TimerCallback cb)
+TimerId EventLoop::run_every(double interval_s, TimerCallback cb)
 {
-	TimeDelta delta = TimeDelta::from_seconds_d(interval);
-	return timer_pool_->add_timer(std::move(cb), Time::now()+delta, interval);
+	return run_every(TimeDelta::from_seconds_d(interval_s), std::move(cb));
+}
+TimerId EventLoop::run_every(TimeDelta delta, TimerCallback cb)
+{
+	return timer_pool_->add_timer(std::move(cb), Time::now()+delta, delta.in_seconds_f());
 }
 
 void EventLoop::cancel(TimerId timerId)

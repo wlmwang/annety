@@ -28,6 +28,9 @@ TimerPool::TimerPool(EventLoop* loop)
 
 TimerPool::~TimerPool()
 {
+	LOG(TRACE) << "TimerPool::~TimerPool" << " fd=" << 
+		timer_socket_->internal_fd() << " is destructing";
+
 	timer_channel_->disable_all_event();
 	timer_channel_->remove();
 	
@@ -58,9 +61,7 @@ void TimerPool::add_timer_in_own_loop(Timer* timer)
 
 	bool earliest_changed = save(timer);
 	if (earliest_changed) {
-		// FIXME: implicit_cast<>
-		TimerFD* ts = static_cast<TimerFD*>(timer_socket_.get());
-		ts->reset(timer->expired() - Time::now());
+		reset(timer->expired());
 	}
 }
 
@@ -72,20 +73,26 @@ void TimerPool::cancel_timer_in_own_loop(TimerId timer_id)
 	ActiveTimer timer(timer_id.timer_, timer_id.sequence_);
 	ActiveTimerSet::iterator it = active_timers_.find(timer);
 	if (it != active_timers_.end()) {
-		size_t n = timers_.erase(Entry(it->first->expired(), it->first));
-		DCHECK(n == 1);
-
+		{
+			size_t n = timers_.erase(Entry(it->first->expired(), it->first));
+			DCHECK(n == 1);
+		}
 		// FIXME: no delete please
 		delete it->first;
-
-		active_timers_.erase(it);
-		// DCHECK
+		{
+			active_timers_.erase(it);
+		}
 	} else if (calling_expired_timers_) {
 		canceling_timers_.insert(timer);
 	}
 	LOG(TRACE) << "TimerPool::cancel_timer_in_own_loop " << (it != active_timers_.end());
-
 	DCHECK(timers_.size() == active_timers_.size());
+
+	if (!timers_.empty()) {
+		reset(timers_.begin()->second->expired());
+	} else {
+		reset(Time());
+	}
 }
 
 void TimerPool::handle_read()
@@ -99,13 +106,11 @@ void TimerPool::handle_read()
 		if (n != sizeof one) {
 			PLOG(ERROR) << "TimerQueue::handle_read reads " << n << " bytes instead of 8";
 		}
-		LOG(TRACE) << "TimerQueue::handle_read() " << one << " at " ;//<< curr;
+		LOG(TRACE) << "TimerQueue::handle_read() " << one << " at " << curr;
 	}
 
 	{
-		// do_calling...
-		// activing_timers
-		std::vector<Entry> expired_timers;//= get_expired(curr);
+		std::vector<Entry> expired_timers;
 		fill_expired_timers(curr, expired_timers);
 
 		calling_expired_timers_ = true;
@@ -117,8 +122,8 @@ void TimerPool::handle_read()
 		}
 		calling_expired_timers_ = false;
 
-		// delete or update expired
-		reset(curr, expired_timers);
+		// delete or reset expired
+		update(curr, expired_timers);
 	}
 }
 
@@ -142,10 +147,8 @@ void TimerPool::fill_expired_timers(Time tm, std::vector<Entry>& timers)
 	DCHECK(timers_.size() == active_timers_.size());
 }
 
-void TimerPool::reset(Time tm, const std::vector<Entry>& expired_timers)
+void TimerPool::update(Time tm, const std::vector<Entry>& expired_timers)
 {
-	Time next_expired;
-
 	for (const Entry& it : expired_timers) {
 		ActiveTimer timer(it.second, it.second->sequence());
 		if (it.second->repeat() && 
@@ -161,15 +164,65 @@ void TimerPool::reset(Time tm, const std::vector<Entry>& expired_timers)
 	}
 
 	if (!timers_.empty()) {
-		next_expired = timers_.begin()->second->expired();
-	}
-
-	if (next_expired.is_valid()) {
-		// FIXME: implicit_cast<>
-		TimerFD* ts = static_cast<TimerFD*>(timer_socket_.get());
-		ts->reset(next_expired - Time::now());
+		reset(timers_.begin()->second->expired());
+	} else {
+		reset(Time());
 	}
 }
+
+void TimerPool::reset(Time expired)
+{
+	if (expired.is_valid()) {
+		TimeDelta delta = expired - Time::now();
+#if defined(OS_LINUX)
+		// FIXME: implicit_cast<>
+		TimerFD* ts = static_cast<TimerFD*>(timer_socket_.get());
+		ts->reset(delta);
+#else
+		owner_loop_->set_poll_timeout(delta.in_milliseconds());
+#endif
+	} else {
+#if defined(OS_LINUX)
+		NOTREACHED();
+#else
+		owner_loop_->set_poll_timeout();
+#endif
+	}
+}
+
+#if !defined(OS_LINUX)
+void TimerPool::check_timer(Time when)
+{
+	owner_loop_->run_in_own_loop(
+		std::bind(&TimerPool::check_timer_in_own_loop, this, when));
+}
+
+void TimerPool::check_timer_in_own_loop(Time when)
+{
+	owner_loop_->check_in_own_loop();
+	DCHECK(timers_.size() == active_timers_.size());
+
+	bool have_expired_timer = false;
+	if (!timers_.empty() && timers_.begin()->first <= when) {
+		have_expired_timer = true;
+	}
+	LOG(TRACE) << "TimerPool::check_timer_in_own_loop " << have_expired_timer;
+	
+	if (have_expired_timer) {
+		wakeup();
+	}
+}
+
+void TimerPool::wakeup()
+{
+	uint64_t one = 1;
+	ssize_t n = timer_socket_->write(&one, sizeof one);
+	if (n != sizeof one) {
+		PLOG(ERROR) << "TimerPool::wakeup writes " << n << " bytes instead of 8";
+	}
+	LOG(TRACE) << "TimerPool::wakeup";
+}
+#endif
 
 bool TimerPool::save(Timer* timer)
 {

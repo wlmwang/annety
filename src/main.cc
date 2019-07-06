@@ -429,7 +429,7 @@ int main(int argc, char* argv[])
 		// srv.set_thread_num(2);
 
 		// register timer
-		TimerId timer_id = loop.run_every(3, []() {
+		TimerId timer_id = loop.run_every(5, []() {
 			LOG(INFO) << "run this";
 		});
 

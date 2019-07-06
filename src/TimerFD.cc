@@ -7,6 +7,8 @@
 
 #if defined(OS_LINUX)
 #include <sys/timerfd.h>  // timerfd
+#else
+#include "EventFD.h"
 #endif
 
 #include <unistd.h>
@@ -47,9 +49,10 @@ int reset_timerfd(int timerfd, TimeDelta delta_ms)
 TimerFD::TimerFD(bool nonblock, bool cloexec)
 {
 #if defined(OS_LINUX)
-	fd_ = internal::create_timerfd(true, true);
+	fd_ = internal::create_timerfd(nonblock, cloexec);
 #else
-	//...
+	ev_.reset(new EventFD(nonblock, cloexec));
+	fd_ = ev_->internal_fd();
 #endif
 	DPCHECK(fd_ >= 0);
 	LOG(TRACE) << "TimerFD::TimerFD" << " fd=" << fd_ << " is constructing";
@@ -60,7 +63,7 @@ int TimerFD::close()
 #if defined(OS_LINUX)
 	return SelectableFD::close();
 #else
-	//...
+	return ev_->close();
 #endif
 }
 
@@ -69,7 +72,7 @@ ssize_t TimerFD::read(void *buf, size_t len)
 #if defined(OS_LINUX)
 	return SelectableFD::read(buf, len);
 #else
-	//...
+	return ev_->read(buf, len);
 #endif
 }
 
@@ -78,7 +81,7 @@ ssize_t TimerFD::write(const void *buf, size_t len)
 #if defined(OS_LINUX)
 	return SelectableFD::write(buf, len);
 #else
-	//...
+	return ev_->write(buf, len);
 #endif
 }
 
@@ -86,11 +89,10 @@ void TimerFD::reset(const TimeDelta& delta_ms)
 {
 #if defined(OS_LINUX)
 	int rt = internal::reset_timerfd(fd_, delta_ms);
-#else
-	//...
-#endif
-
 	DPCHECK(rt >= 0);
+#else
+	// TimerPool class to set_poll_timeout()
+#endif
 	LOG(TRACE) << "TimerFD::TimerFD" << " fd=" << fd_ << " is reseting";
 }
 

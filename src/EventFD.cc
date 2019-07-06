@@ -61,9 +61,9 @@ bool pipe(int fds[2], bool nonblock, bool cloexec)
 EventFD::EventFD(bool nonblock, bool cloexec)
 {
 #if defined(OS_LINUX)
-	fd_ = internal::eventfd(true, true);
+	fd_ = internal::eventfd(nonblock, cloexec);
 #else
-	DCHECK(internal::pipe(fds_, true, true));
+	DCHECK(internal::pipe(fds_, nonblock, cloexec));
 	fd_ = fds_[0];	// for channel register readable event
 #endif
 	DPCHECK(fd_ >= 0);

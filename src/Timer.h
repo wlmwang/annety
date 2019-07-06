@@ -16,6 +16,7 @@ class Timer
 {
 public:
 	Timer(TimerCallback cb, Time when, double interval);
+	~Timer();
 
 	Time expired() const  { return expired_;}
 	int64_t sequence() const { return sequence_;}

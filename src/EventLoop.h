@@ -28,6 +28,7 @@ class EventLoop
 public:
 	using ChannelList = std::vector<Channel*>;
 	using Functor = std::function<void()>;
+	static const int kPollTimeoutMs = 30000;
 
 	EventLoop();
 	~EventLoop();
@@ -40,18 +41,22 @@ public:
 	void quit();
 
 	// Timers -------------------------------------------
+	void set_poll_timeout(int64_t ms = kPollTimeoutMs);
 
 	// Runs callback at 'time'
 	// *Thread safe*
+	TimerId run_at(double tm_s, TimerCallback cb);
 	TimerId run_at(Time time, TimerCallback cb);
 
 	// Runs callback after @c delay seconds.
 	// *Thread safe*
 	TimerId run_after(double delay_s, TimerCallback cb);
+	TimerId run_after(TimeDelta delta, TimerCallback cb);
 
 	// Runs callback every @c interval seconds.
 	// *Thread safe*
 	TimerId run_every(double interval_s, TimerCallback cb);
+	TimerId run_every(TimeDelta delta, TimerCallback cb);
 
 	// Cancels the timer.
 	// *Thread safe*
@@ -89,10 +94,12 @@ private:
 private:
 	// atomic
 	bool looping_{false};
-	bool event_handling_{false};
 	uint64_t looping_times_{0};
+	bool event_handling_{false};
+	int32_t poll_timeout_ms_{-1};
 
 	std::unique_ptr<ThreadRef> owning_thread_;
+
 	std::unique_ptr<Poller> poller_;
 	
 	std::unique_ptr<TimerPool> timer_pool_;

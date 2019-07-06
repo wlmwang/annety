@@ -31,6 +31,10 @@ public:
 	TimerId add_timer(TimerCallback cb, Time when, double interval);
 	void cancel_timer(TimerId timer_id);
 
+#if !defined(OS_LINUX)
+	void check_timer(Time when);
+#endif
+
 private:
 	using Entry = std::pair<Time, Timer*>;	// <expired:timer*>
 	using TimerList = std::set<Entry>;
@@ -42,8 +46,14 @@ private:
 	void add_timer_in_own_loop(Timer* timer);
 	void cancel_timer_in_own_loop(TimerId timer_id);
 
+#if !defined(OS_LINUX)
+	void wakeup();
+	void check_timer_in_own_loop(Time when);
+#endif
+
 	bool save(Timer* timer);
-	void reset(Time tm, const std::vector<Entry>& expired_timers);
+	void update(Time tm, const std::vector<Entry>& expired_timers);
+	void reset(Time next_expired);
 
 	void fill_expired_timers(Time now, std::vector<Entry>& timers);
 	void handle_read();

@@ -12,6 +12,9 @@
 
 namespace annety
 {
+class Time;
+class TimeDelta;
+
 class LogStream
 {
 	static const int kMaxNumericSize = 32;
@@ -102,6 +105,9 @@ public:
 		buffer_.append("\n", 1);
 		return *this;
 	}
+	
+	LogStream& operator<<(const Time& time);
+	LogStream& operator<<(const TimeDelta& delta);
 
 	// append to buffer
 	void append(const char* data, size_t len)

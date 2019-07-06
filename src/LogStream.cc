@@ -2,9 +2,11 @@
 // Date: May 08 2019
 
 #include "LogStream.h"
+#include "Time.h"
 
 #include <algorithm>
 #include <ostream>
+#include <sstream>
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>	// snprintf
@@ -142,7 +144,21 @@ LogStream& LogStream::operator<<(double v)
 	return format_number(v);
 }
 
-// For testing only
+LogStream& LogStream::operator<<(const Time& time)
+{
+	std::ostringstream oss;
+	oss << time;
+	return operator<<(oss.str());
+}
+
+LogStream& LogStream::operator<<(const TimeDelta& delta)
+{
+	std::ostringstream oss;
+	oss << delta;
+	return operator<<(oss.str());
+}
+
+// for testing only
 std::ostream& operator<<(std::ostream& os, const LogStream& ls)
 {
 	return os << ls.buffer();
