@@ -218,7 +218,8 @@ void TcpConnection::force_close_with_delay(double seconds)
 	if (state_ == kConnected || state_ == kDisconnecting) {
 		state_ = kDisconnecting;
 		// not force_close_in_loop to avoid race condition
-		// owner_loop_->runAfter(seconds, makeWeakCallback(shared_from_this(), &TcpConnection::force_close));
+		// owner_loop_->run_after(TimeDelta::from_seconds_d(seconds), 
+		// 	makeWeakCallback(shared_from_this(), &TcpConnection::force_close));
 	}
 }
 

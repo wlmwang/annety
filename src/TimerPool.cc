@@ -98,6 +98,7 @@ void TimerPool::cancel_timer_in_own_loop(TimerId timer_id)
 void TimerPool::handle_read()
 {
 	owner_loop_->check_in_own_loop();
+	DCHECK(timers_.size() == active_timers_.size());
 
 	Time curr = Time::now();
 	{
@@ -136,9 +137,10 @@ void TimerPool::fill_expired_timers(Time tm, std::vector<Entry>& timers)
 	TimerList::iterator it = timers_.lower_bound(sentry);
 	DCHECK(it == timers_.end() || it->first > tm);
 
+	// get and delete expired-timers from set<> container
 	std::copy(timers_.begin(), it, std::back_inserter(timers));
-	
 	timers_.erase(timers_.begin(), it);
+
 	for (const Entry& it : timers) {
 		ActiveTimer timer(it.second, it.second->sequence());
 		size_t n = active_timers_.erase(timer);
@@ -149,6 +151,8 @@ void TimerPool::fill_expired_timers(Time tm, std::vector<Entry>& timers)
 
 void TimerPool::update(Time tm, const std::vector<Entry>& expired_timers)
 {
+	owner_loop_->check_in_own_loop();
+
 	for (const Entry& it : expired_timers) {
 		ActiveTimer timer(it.second, it.second->sequence());
 		if (it.second->repeat() && 
@@ -167,26 +171,6 @@ void TimerPool::update(Time tm, const std::vector<Entry>& expired_timers)
 		reset(timers_.begin()->second->expired());
 	} else {
 		reset(Time());
-	}
-}
-
-void TimerPool::reset(Time expired)
-{
-	if (expired.is_valid()) {
-		TimeDelta delta = expired - Time::now();
-#if defined(OS_LINUX)
-		// FIXME: implicit_cast<>
-		TimerFD* ts = static_cast<TimerFD*>(timer_socket_.get());
-		ts->reset(delta);
-#else
-		owner_loop_->set_poll_timeout(delta.in_milliseconds());
-#endif
-	} else {
-#if defined(OS_LINUX)
-		NOTREACHED();
-#else
-		owner_loop_->set_poll_timeout();
-#endif
 	}
 }
 
@@ -223,6 +207,28 @@ void TimerPool::wakeup()
 	LOG(TRACE) << "TimerPool::wakeup";
 }
 #endif
+
+void TimerPool::reset(Time expired)
+{
+	owner_loop_->check_in_own_loop();
+	
+	if (expired.is_valid()) {
+		TimeDelta delta = expired - Time::now();
+#if defined(OS_LINUX)
+		// FIXME: implicit_cast<>
+		TimerFD* ts = static_cast<TimerFD*>(timer_socket_.get());
+		ts->reset(delta);
+#else
+		owner_loop_->set_poll_timeout(delta.in_milliseconds());
+#endif
+	} else {
+#if defined(OS_LINUX)
+		NOTREACHED();
+#else
+		owner_loop_->set_poll_timeout();
+#endif
+	}
+}
 
 bool TimerPool::save(Timer* timer)
 {

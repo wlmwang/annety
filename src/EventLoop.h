@@ -25,10 +25,10 @@ class TimerPool;
 // Reactor, one loop per thread.
 class EventLoop
 {
+	static const int kPollTimeoutMs = 30*1000; // -1
 public:
 	using ChannelList = std::vector<Channel*>;
 	using Functor = std::function<void()>;
-	static const int kPollTimeoutMs = 30000;
 
 	EventLoop();
 	~EventLoop();

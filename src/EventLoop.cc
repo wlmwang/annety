@@ -72,7 +72,8 @@ void EventLoop::loop()
 
 	CHECK(!looping_);
 	looping_ = true;
-	LOG(TRACE) << "EventLoop::loop " << this << " is begin looping";
+	LOG(TRACE) << "EventLoop::loop " << this 
+		<< " timeout " << poll_timeout_ms_ << " is begin looping";
 
 	while (looping_) {
 		active_channels_.clear();

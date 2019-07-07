@@ -91,7 +91,7 @@ void TimerFD::reset(const TimeDelta& delta_ms)
 	int rt = internal::reset_timerfd(fd_, delta_ms);
 	DPCHECK(rt >= 0);
 #else
-	// TimerPool class to set_poll_timeout()
+	// In TimerPool class to set_poll_timeout()
 #endif
 	LOG(TRACE) << "TimerFD::TimerFD" << " fd=" << fd_ << " is reseting";
 }

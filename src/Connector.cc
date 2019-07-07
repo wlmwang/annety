@@ -2,6 +2,7 @@
 // Date: Jun 30 2019
 
 #include "Connector.h"
+#include "Time.h"
 #include "Logging.h"
 #include "EndPoint.h"
 #include "SocketFD.h"
@@ -171,11 +172,10 @@ void Connector::retry()
 		LOG(INFO) << "Connector::retry connecting to " << server_addr_.to_ip_port()
 			<< " in " << retry_delay_ms_ << " milliseconds. ";
 
-		// owner_loop_->runAfter(retry_delay_ms_/1000.0,
-		// 	std::bind(&Connector::start_in_own_loop, shared_from_this()));
-		// retry_delay_ms_ = std::min(retry_delay_ms_ * 2, kMaxRetryDelayMs);
-
-		owner_loop_->queue_in_own_loop(std::bind(&Connector::start_in_own_loop, shared_from_this()));
+		// retry after
+		owner_loop_->run_after(TimeDelta::from_milliseconds(retry_delay_ms_),
+			std::bind(&Connector::start_in_own_loop, shared_from_this()));
+		retry_delay_ms_ = std::min(retry_delay_ms_ * 2, kMaxRetryDelayMs);
 	} else {
 		LOG(TRACE) << "Connector::retry do not connect";
 	}
