@@ -73,7 +73,7 @@ void EventLoop::loop()
 	CHECK(!looping_);
 	looping_ = true;
 	LOG(TRACE) << "EventLoop::loop " << this 
-		<< " timeout " << poll_timeout_ms_ << " is begin looping";
+		<< " timeout " << poll_timeout_ms_ << " is beginning loop";
 
 	while (looping_) {
 		active_channels_.clear();
@@ -101,7 +101,8 @@ void EventLoop::loop()
 		do_calling_wakeup_functors();
 	}
 
-	LOG(TRACE) << "EventLoop::loop " << this << " has finish looping";
+	LOG(TRACE) << "EventLoop::loop " << this 
+		<< " timeout " << poll_timeout_ms_ << " has finished loop";
 	looping_ = false;
 }
 

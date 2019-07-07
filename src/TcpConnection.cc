@@ -2,6 +2,8 @@
 // Date: Jun 17 2019
 
 #include "TcpConnection.h"
+#include "WeakCallback.h"
+#include "Logging.h"
 #include "Channel.h"
 #include "NetBuffer.h"
 #include "EndPoint.h"
@@ -9,7 +11,6 @@
 #include "SocketFD.h"
 #include "SocketsUtil.h"
 #include "ScopedClearLastError.h"
-#include "Logging.h"
 
 #include <utility>
 
@@ -213,13 +214,13 @@ void TcpConnection::force_close()
 	}
 }
 
-void TcpConnection::force_close_with_delay(double seconds)
+void TcpConnection::force_close_with_delay(double delay_s)
 {
 	if (state_ == kConnected || state_ == kDisconnecting) {
 		state_ = kDisconnecting;
 		// not force_close_in_loop to avoid race condition
-		// owner_loop_->run_after(TimeDelta::from_seconds_d(seconds), 
-		// 	makeWeakCallback(shared_from_this(), &TcpConnection::force_close));
+		owner_loop_->run_after(TimeDelta::from_seconds_d(delay_s), 
+			make_weak_callback(shared_from_this(), &TcpConnection::force_close));
 	}
 }
 

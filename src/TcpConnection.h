@@ -49,7 +49,7 @@ public:
 	void send(NetBuffer* message);  // this one will swap data
 	void shutdown(); // NOT thread safe, no simultaneous calling
 	void force_close();
-	void force_close_with_delay(double seconds);
+	void force_close_with_delay(double delay_s);
 
 	void set_tcp_nodelay(bool on);
 
