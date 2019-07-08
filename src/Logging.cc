@@ -6,7 +6,7 @@
 // Date: May 08 2019
 
 #include "Logging.h"
-#include "Macros.h"			// arraysize
+#include "Macros.h"	
 #include "SafeStrerror.h"
 #include "StringPrintf.h"
 #include "ThreadForward.h"

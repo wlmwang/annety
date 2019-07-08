@@ -17,10 +17,7 @@
 #include "Logging.h"
 #include "LogFile.h"
 #include "MutexLock.h"
-#include "PlatformThread.h"
-#include "Thread.h"
 #include "Exception.h"
-#include "ThreadPool.h"
 #include "BlockingQueue.h"
 #include "FilePath.h"
 #include "FileEnumerator.h"
@@ -30,6 +27,9 @@
 #include "Singleton.h"
 #include "ThreadLocal.h"
 #include "ThreadLocalSingleton.h"
+#include "PlatformThread.h"
+#include "Thread.h"
+#include "ThreadPool.h"
 
 #include "EventLoop.h"
 #include "EndPoint.h"
@@ -423,53 +423,53 @@ int main(int argc, char* argv[])
 	// std::cout << "tid:" << threads::tid() << std::endl;
 
 
-	// // EventLoop
-	// Thread ss([]() {
-	// 	EventLoop loop;
-	// 	TcpServer srv(&loop, EndPoint(1669));
-	// 	// srv.set_thread_num(2);
+	// EventLoop
+	Thread ss([]() {
+		EventLoop loop;
+		TcpServer srv(&loop, EndPoint(1669));
+		// srv.set_thread_num(2);
 
-	// 	// register timer
-	// 	TimerId timer_id = loop.run_after(5, []() {
-	// 		LOG(INFO) << "run this 5s";
-	// 	});
-	// 	TimerId timer_id1 = loop.run_every(3, []() {
-	// 		LOG(INFO) << "run this 3s";
-	// 	});
+		// register timer
+		TimerId timer_id = loop.run_after(5, []() {
+			LOG(INFO) << "run this 5s";
+		});
+		TimerId timer_id1 = loop.run_every(3, []() {
+			LOG(INFO) << "run this 3s";
+		});
 
-	// 	// register connect handle
-	// 	srv.set_connect_callback([](const TcpConnectionPtr& conn) {
-	// 		conn->send("\r\n********************\r\n");
-	// 		conn->send("welcome to annety!!!\r\n");
-	// 		conn->send("********************\r\n");
+		// register connect handle
+		srv.set_connect_callback([](const TcpConnectionPtr& conn) {
+			conn->send("\r\n********************\r\n");
+			conn->send("welcome to annety!!!\r\n");
+			conn->send("********************\r\n");
 
-	// 		LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
-	// 			   << conn->peer_addr().to_ip_port() << " s is "
-	// 			   << (conn->connected() ? "UP" : "DOWN");
-	// 	});
+			LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
+				   << conn->peer_addr().to_ip_port() << " s is "
+				   << (conn->connected() ? "UP" : "DOWN");
+		});
 		
-	// 	// register message handle
-	// 	srv.set_message_callback([&](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
-	// 		// LOG(INFO) << "srv:" << buf->to_string_piece();
-	// 		// buf->has_read_all();
-	// 		LOG(INFO) << "srv:" << buf->taken_as_string();
+		// register message handle
+		srv.set_message_callback([&](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
+			// LOG(INFO) << "srv:" << buf->to_string_piece();
+			// buf->has_read_all();
+			LOG(INFO) << "srv:" << buf->taken_as_string();
 
-	// 		// timer
-	// 		loop.cancel(timer_id);
-	// 		loop.cancel(timer_id1);
+			// timer
+			loop.cancel(timer_id);
+			loop.cancel(timer_id1);
 
-	// 		// // send time
-	// 		// std::ostringstream oss;
-	// 		// oss << t;
-	// 		// conn->send(oss.str());
-	// 	});
+			// // send time
+			// std::ostringstream oss;
+			// oss << t;
+			// conn->send(oss.str());
+		});
 
-	// 	srv.start();
+		srv.start();
 		
-	// 	loop.loop();
-	// });
-	// ss.start();
-	// ss.join();
+		loop.loop();
+	});
+	ss.start();
+	ss.join();
 
 	// // TcpClient
 	// Thread cc([]() {

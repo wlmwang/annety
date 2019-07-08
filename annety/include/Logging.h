@@ -9,9 +9,9 @@
 #define ANT_LOGGING_H
 
 #include "Macros.h"
+#include "LogStream.h"
 #include "CompilerSpecific.h"
 #include "ScopedClearLastError.h"
-#include "LogStream.h"
 #include "Times.h"
 
 #include <sstream>
@@ -161,8 +161,8 @@ private:
 		void endl();
 
 	public:
-		Time time_{Time::now()};
 		LogStream stream_{};
+		Time time_{Time::now()};
 
 		int line_;
 		Filename file_;
