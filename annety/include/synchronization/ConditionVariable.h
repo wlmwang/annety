@@ -11,7 +11,7 @@
 #include "Macros.h"
 #include "Logging.h"
 #include "Times.h"
-#include "MutexLock.h"
+#include "synchronization/MutexLock.h"
 
 #include <pthread.h>
 

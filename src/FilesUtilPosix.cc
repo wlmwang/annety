@@ -5,9 +5,9 @@
 // Refactoring: Anny Wang
 // Date: Jun 05 2019
 
-#include "FilesUtil.h"
-#include "FilePath.h"
-#include "FileEnumerator.h"
+#include "files/FilesUtil.h"
+#include "files/FilePath.h"
+#include "files/FileEnumerator.h"
 #include "ScopedFile.h"
 #include "EintrWrapper.h"
 

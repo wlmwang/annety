@@ -5,7 +5,7 @@
 // Refactoring: Anny Wang
 // Date: Jun 04 2019
 
-#include "StringUtil.h"
+#include "strings/StringUtil.h"
 #include "Logging.h"
 
 #include <stddef.h>

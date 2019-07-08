@@ -8,7 +8,7 @@
 #ifndef ANT_MACROS_H_
 #define ANT_MACROS_H_
 
-#include "BuildConfig.h"
+#include "build/BuildConfig.h"
 
 #include <stddef.h>
 

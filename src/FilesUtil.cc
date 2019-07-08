@@ -8,12 +8,12 @@
 // Refactoring: Anny Wang
 // Date: Jun 05 2019
 
-#include "FilesUtil.h"
-#include "FilePath.h"
-#include "FileEnumerator.h"
+#include "files/FilesUtil.h"
+#include "files/FilePath.h"
+#include "files/FileEnumerator.h"
+#include "strings/StringPiece.h"
+#include "strings/StringPrintf.h"
 #include "EintrWrapper.h"
-#include "StringPiece.h"
-#include "StringPrintf.h"
 #include "Logging.h"
 
 #include <algorithm>	// std::min

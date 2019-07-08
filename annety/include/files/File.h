@@ -8,8 +8,8 @@
 #ifndef ANT_FILE_H_
 #define ANT_FILE_H_
 
-#include "BuildConfig.h"
-#include "FilePath.h"
+#include "build/BuildConfig.h"
+#include "files/FilePath.h"
 #include "ScopedFile.h"
 #include "Times.h"
 

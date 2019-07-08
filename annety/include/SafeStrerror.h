@@ -8,7 +8,7 @@
 #ifndef ANT_SAFE_STRERROR_H_
 #define ANT_SAFE_STRERROR_H_
 
-#include "StringPiece.h"
+#include "strings/StringPiece.h"
 
 #include <string>
 #include <stddef.h>

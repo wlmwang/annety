@@ -35,7 +35,7 @@ CC_SRC		:= main.cc \
 # 编译文件
 OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))
 
-TARGET	:= annety-test
+TARGET	:= test
 
 .PHONY:all clean install
 

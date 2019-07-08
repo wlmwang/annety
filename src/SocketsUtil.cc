@@ -2,7 +2,7 @@
 // Date: Jun 17 2019
 
 #include "SocketsUtil.h"
-#include "BuildConfig.h"
+#include "build/BuildConfig.h"
 #include "ByteOrder.h"
 #include "Logging.h"
 #include "EintrWrapper.h"

@@ -4,7 +4,7 @@
 #ifndef ANT_BYTE_BUFFER_H
 #define ANT_BYTE_BUFFER_H
 
-#include "StringPiece.h"
+#include "strings/StringPiece.h"
 
 #include <iosfwd>
 #include <algorithm>

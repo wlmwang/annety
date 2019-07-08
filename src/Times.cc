@@ -6,8 +6,8 @@
 // Date: May 08 2019
 
 #include "Times.h"
-#include "StringPrintf.h"
 #include "Logging.h"
+#include "strings/StringPrintf.h"
 
 #include <algorithm>
 #include <cmath>	// isnan

@@ -3,7 +3,6 @@
 
 #include "TcpServer.h"
 #include "Logging.h"
-#include "StringPrintf.h"
 #include "SocketsUtil.h"
 #include "SocketFD.h"
 #include "EndPoint.h"
@@ -11,6 +10,7 @@
 #include "TcpConnection.h"
 #include "EventLoop.h"
 #include "EventLoopThreadPool.h"
+#include "strings/StringPrintf.h"
 
 #include <utility>
 

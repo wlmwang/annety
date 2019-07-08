@@ -5,7 +5,7 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#include "StringPiece.h"
+#include "strings/StringPiece.h"
 #include "Logging.h"
 
 #include <algorithm>	// find,search

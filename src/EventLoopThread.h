@@ -5,9 +5,9 @@
 #define ANT_EVENT_LOOP_THREAD_H_
 
 #include "Macros.h"
-#include "Thread.h"
-#include "MutexLock.h"
-#include "ConditionVariable.h"
+#include "threading/Thread.h"
+#include "synchronization/MutexLock.h"
+#include "synchronization/ConditionVariable.h"
 
 #include <functional>
 #include <string>

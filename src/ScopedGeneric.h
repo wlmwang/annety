@@ -11,8 +11,8 @@
 #include <algorithm>	// std::swap
 #include <stdlib.h>		// abort
 
+#include "build/CompilerSpecific.h"
 #include "Macros.h"
-#include "CompilerSpecific.h"
 
 namespace annety
 {

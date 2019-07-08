@@ -7,10 +7,10 @@
 
 #include "Logging.h"
 #include "Macros.h"	
-#include "SafeStrerror.h"
-#include "StringPrintf.h"
-#include "ThreadForward.h"
 #include "Times.h"
+#include "SafeStrerror.h"
+#include "strings/StringPrintf.h"
+#include "threading/ThreadForward.h"
 
 #include <algorithm>
 #include <functional>

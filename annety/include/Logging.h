@@ -8,9 +8,9 @@
 #ifndef ANT_LOGGING_H
 #define ANT_LOGGING_H
 
+#include "build/CompilerSpecific.h"
 #include "Macros.h"
 #include "LogStream.h"
-#include "CompilerSpecific.h"
 #include "ScopedClearLastError.h"
 #include "Times.h"
 

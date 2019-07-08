@@ -11,10 +11,10 @@
 #ifndef ANT_FILE_UTIL_H_
 #define ANT_FILE_UTIL_H_
 
-#include "BuildConfig.h"
-#include "StringPiece.h"
-#include "File.h"
-#include "FilePath.h"
+#include "build/BuildConfig.h"
+#include "files/File.h"
+#include "files/FilePath.h"
+#include "strings/StringPiece.h"
 
 #include <stddef.h>		// size_t
 #include <inttypes.h>	// gid_t,uid_t,int64_t

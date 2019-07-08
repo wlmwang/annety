@@ -1,13 +1,13 @@
 // Refactoring: Anny Wang
 // Date: May 28 2019
 
-#include "Thread.h"
-#include "CompilerSpecific.h"
+#include "build/CompilerSpecific.h"
+#include "threading/Thread.h"
 #include "PlatformThread.h"
-#include "Logging.h"
-#include "StringPiece.h"
-#include "StringPrintf.h"
+#include "strings/StringPiece.h"
+#include "strings/StringPrintf.h"
 #include "Exception.h"
+#include "Logging.h"
 
 #include <string>
 #include <utility>

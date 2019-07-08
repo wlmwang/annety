@@ -4,8 +4,8 @@
 #ifndef _ANT_END_POINT_H_
 #define _ANT_END_POINT_H_
 
-#include "BuildConfig.h"
-#include "StringPiece.h"
+#include "build/BuildConfig.h"
+#include "strings/StringPiece.h"
 
 #include <string>
 #include <stdint.h>

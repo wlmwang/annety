@@ -5,11 +5,11 @@
 // Refactoring: Anny Wang
 // Date: Jun 04 2019
 
-#include "FilePath.h"
+#include "files/FilePath.h"
 #include "Macros.h"
 #include "Logging.h"
-#include "StringPiece.h"
-#include "StringUtil.h"
+#include "strings/StringPiece.h"
+#include "strings/StringUtil.h"
 
 #include <string.h>		// strcasecmp
 #include <string>

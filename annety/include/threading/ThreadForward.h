@@ -9,6 +9,7 @@
 #define ANT_THREAD_FORWARD_H_
 
 #include "Macros.h"
+#include "strings/StringPiece.h"
 
 #if defined(OS_MACOSX)
 #include <mach/mach_types.h>
@@ -26,7 +27,6 @@ typedef mach_port_t ThreadId;
 typedef pid_t ThreadId;
 #endif
 
-class StringPiece;
 namespace threads
 {
 ThreadId tid();

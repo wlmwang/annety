@@ -9,7 +9,7 @@
 #define ANT_AT_EXIT_H
 
 #include "Macros.h"
-#include "MutexLock.h"
+#include "synchronization/MutexLock.h"
 
 #include <stack>
 #include <functional>

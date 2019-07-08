@@ -4,8 +4,8 @@
 #ifndef ANT_THREAD_H_
 #define ANT_THREAD_H_
 
-#include "ThreadForward.h"
-#include "CountDownLatch.h"
+#include "threading/ThreadForward.h"
+#include "synchronization/CountDownLatch.h"
 
 #include <string>
 #include <functional>

@@ -6,9 +6,9 @@
 
 #include "Macros.h"
 #include "Times.h"
-#include "MutexLock.h"
-#include "StringPiece.h"
-#include "FilePath.h"
+#include "strings/StringPiece.h"
+#include "files/FilePath.h"
+#include "synchronization/MutexLock.h"
 
 #include <atomic>
 #include <memory>

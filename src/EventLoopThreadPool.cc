@@ -5,7 +5,7 @@
 #include "EventLoopThread.h"
 #include "EventLoop.h"
 #include "Logging.h"
-#include "StringPrintf.h"
+#include "strings/StringPrintf.h"
 
 #include <stdio.h>
 

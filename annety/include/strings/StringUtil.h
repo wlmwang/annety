@@ -8,8 +8,8 @@
 #ifndef ANT_STRING_UTIL_H
 #define ANT_STRING_UTIL_H
 
-#include "CompilerSpecific.h"	// PRINTF_FORMAT
-#include "StringPiece.h"
+#include "build/CompilerSpecific.h"	// PRINTF_FORMAT
+#include "strings/StringPiece.h"
 
 #include <stdarg.h>
 #include <stddef.h>

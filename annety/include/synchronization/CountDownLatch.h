@@ -5,8 +5,8 @@
 #define ANT_COUNT_DOWN_LATCH_H
 
 #include "Macros.h"
-#include "MutexLock.h"
-#include "ConditionVariable.h"
+#include "synchronization/MutexLock.h"
+#include "synchronization/ConditionVariable.h"
 
 namespace annety
 {

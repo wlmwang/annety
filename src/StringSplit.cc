@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 04 2019
 
-#include "StringSplit.h"
-#include "StringUtil.h"
+#include "strings/StringSplit.h"
+#include "strings/StringUtil.h"
 #include "Logging.h"
 
 #include <string>

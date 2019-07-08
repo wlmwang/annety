@@ -8,8 +8,8 @@
 #ifndef ANT_FILE_PATH_H_
 #define ANT_FILE_PATH_H_
 
-#include "CompilerSpecific.h"	// WARN_UNUSED_RESULT
-#include "StringPiece.h"
+#include "build/CompilerSpecific.h"	// WARN_UNUSED_RESULT
+#include "strings/StringPiece.h"
 
 #include <iosfwd>
 #include <string>

@@ -8,7 +8,7 @@
 #ifndef ANT_COMPILER_SPECIFIC_H_
 #define ANT_COMPILER_SPECIFIC_H_
 
-#include "BuildConfig.h"
+#include "build/BuildConfig.h"
 
 // Annotate a variable indicating it's ok if the variable is not used.
 // e.g:

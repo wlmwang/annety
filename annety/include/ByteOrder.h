@@ -4,7 +4,7 @@
 #ifndef ANT_BYTE_ORDER_H
 #define ANT_BYTE_ORDER_H
 
-#include "BuildConfig.h"
+#include "build/BuildConfig.h"
 #include "Logging.h"
 
 #include <stdint.h>

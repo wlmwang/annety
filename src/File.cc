@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 05 2019
 
-#include "File.h"
-#include "FilePath.h"
+#include "files/File.h"
+#include "files/FilePath.h"
 #include "Logging.h"
 #include "EintrWrapper.h"
 

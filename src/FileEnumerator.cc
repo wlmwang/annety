@@ -5,7 +5,7 @@
 // Refactoring: Anny Wang
 // Date: Jun 05 2019
 
-#include "FileEnumerator.h"
+#include "files/FileEnumerator.h"
 #include "Logging.h"
 
 #include <dirent.h>		// DIR,dirent,opendir

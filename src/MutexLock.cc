@@ -5,7 +5,7 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#include "MutexLock.h"
+#include "synchronization/MutexLock.h"
 #include "SafeStrerror.h"
 
 #if DCHECK_IS_ON()

@@ -6,8 +6,8 @@
 
 #include "Macros.h"
 #include "Logging.h"
-#include "MutexLock.h"
-#include "ConditionVariable.h"
+#include "synchronization/MutexLock.h"
+#include "synchronization/ConditionVariable.h"
 
 #include <deque>
 #include <utility>

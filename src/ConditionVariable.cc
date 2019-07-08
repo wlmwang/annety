@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#include "ConditionVariable.h"
-#include "MutexLock.h"
+#include "synchronization/ConditionVariable.h"
+#include "synchronization/MutexLock.h"
 #include "Logging.h"
 #include "Times.h"
 

@@ -6,10 +6,9 @@
 
 #include "Macros.h"
 #include "Logging.h"
-#include "ThreadLocal.h"
+#include "threading/ThreadLocal.h"
 
 #include <pthread.h>
-#include <iostream>
 
 namespace annety
 {

@@ -12,7 +12,7 @@
 #include "Logging.h"
 
 #if DCHECK_IS_ON()
-#include "ThreadForward.h"
+#include "threading/ThreadForward.h"
 #endif
 
 #include <pthread.h>

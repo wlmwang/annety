@@ -3,10 +3,10 @@
 
 #include "LogFile.h"
 #include "Times.h"
-#include "File.h"
-#include "FilePath.h"
 #include "Logging.h"
-#include "StringPrintf.h"
+#include "files/File.h"
+#include "files/FilePath.h"
+#include "strings/StringPrintf.h"
 
 #include <assert.h>
 #include <unistd.h>

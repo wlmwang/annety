@@ -8,7 +8,7 @@
 #ifndef ANT_STRING_SPLIT_H
 #define ANT_STRING_SPLIT_H
 
-#include "StringPiece.h"
+#include "strings/StringPiece.h"
 
 #include <utility>	// std::pair
 #include <string>

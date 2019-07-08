@@ -9,8 +9,8 @@
 #define ANT_FILE_ENUMERATOR_H_
 
 #include "Macros.h"
+#include "files/FilePath.h"
 #include "Times.h"
-#include "FilePath.h"
 
 #include <sys/stat.h>		// struct stat
 #include <sys/types.h>		// size_t

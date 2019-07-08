@@ -6,7 +6,7 @@
 // Date: May 28 2019
 
 #include "PlatformThread.h"
-#include "CompilerSpecific.h"
+#include "build/CompilerSpecific.h"
 #include "Logging.h"
 
 #include <unistd.h>		// getpid
