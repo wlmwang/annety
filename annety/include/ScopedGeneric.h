@@ -8,11 +8,11 @@
 #ifndef ANT_SCOPED_GENERIC_H_
 #define ANT_SCOPED_GENERIC_H_
 
-#include <algorithm>	// std::swap
-#include <stdlib.h>		// abort
-
 #include "build/CompilerSpecific.h"
 #include "Macros.h"
+
+#include <algorithm>	// std::swap
+#include <stdlib.h>		// abort
 
 namespace annety
 {

@@ -6,8 +6,8 @@
 
 #include "Macros.h"
 #include "Times.h"
-#include "strings/StringPiece.h"
 #include "files/FilePath.h"
+#include "strings/StringPiece.h"
 #include "synchronization/MutexLock.h"
 
 #include <atomic>
