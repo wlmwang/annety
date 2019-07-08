@@ -9,7 +9,7 @@
 #define ANT_PLATFORM_THREAD_H_
 
 #include "Macros.h"
-#include "Time.h"
+#include "Times.h"
 #include "ThreadForward.h"
 
 #include <functional>

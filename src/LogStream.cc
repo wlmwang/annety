@@ -2,7 +2,7 @@
 // Date: May 08 2019
 
 #include "LogStream.h"
-#include "Time.h"
+#include "Times.h"
 
 #include <algorithm>
 #include <ostream>

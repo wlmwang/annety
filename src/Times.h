@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#ifndef ANT_TIME_H_
-#define ANT_TIME_H_
+#ifndef ANT_TIMES_H_
+#define ANT_TIMES_H_
 
 #include <iosfwd>
 #include <limits>
@@ -591,4 +591,4 @@ constexpr TimeDelta TimeDelta::from_product(int64_t value, int64_t positive_valu
 
 }	// namespace annety
 
-#endif	// ANT_TIME_H_
+#endif	// ANT_TIMES_H_

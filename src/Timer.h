@@ -5,7 +5,7 @@
 #define ANT_TIMER_H_
 
 #include "Macros.h"
-#include "Time.h"
+#include "Times.h"
 #include "CallbackForward.h"
 
 #include <stdint.h>

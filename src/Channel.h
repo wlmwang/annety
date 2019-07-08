@@ -5,7 +5,7 @@
 #define ANT_CHANNEL_H_
 
 #include "Macros.h"
-#include "Time.h"
+#include "Times.h"
 
 #include <string>
 #include <memory>

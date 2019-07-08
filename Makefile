@@ -8,15 +8,16 @@ ARFLAGS	:= -Wl,-dn #-Wl,-Bstatic
 LDFLAGS	:= -Wl,-dy #-Wl,-Bdynamic
 
 # 第三方库
-DIR_INC		:= -I./
+LIB_INC		:= -I./
 DIR_LIB		:= -L./
 LIBFLAGS	:= ${DIR_LIB} -lpthread
 
 # 源文件主目录
-DIR_SRC		:= ./
+SRC_INC		:= ./annety/include
+DIR_SRC		:= ./src
 
 # 头文件
-INCFLAGS	:= ${DIR_INC} -I${DIR_SRC}
+INCFLAGS	:= ${LIB_INC} -I${DIR_SRC} -I${SRC_INC}
 
 # 源文件
 CC_SRC		:= main.cc \
@@ -44,10 +45,10 @@ ${TARGET}: ${OBJ}
 	${CC} ${CCFLAGS} $^ -o $@ ${LIBFLAGS} 
 
 ${DIR_SRC}/%.o:${DIR_SRC}/%.cc
-	${CC} ${CCFLAGS} -c $< -o $@ 
+	${CC} ${CCFLAGS} ${INCFLAGS} -c $< -o $@ 
 
 clean:
-	-rm -f ${TARGET} ${DIR_SRC}*.o
+	-rm -f ${TARGET} ${DIR_SRC}/*.o
 	-rm -rf ./bin ./log
 	
 install:
