@@ -13,12 +13,11 @@ namespace {
 std::atomic<int64_t> globalSequence{0};
 }	// namespace anonymous
 
-Timer::Timer(TimerCallback cb, Time when, double interval)
-	: expired_(when),
-	  cb_(std::move(cb)),
-	  sequence_(globalSequence++),
+Timer::Timer(TimerCallback cb, Time expired, TimeDelta interval)
+	: expired_(expired),
 	  interval_(interval),
-	  repeat_(interval > 0.0)
+	  cb_(std::move(cb)),
+	  sequence_(globalSequence++)
 {
 	LOG(TRACE) << "Timer::Timer [" << "sequence:" << sequence_ 
 		<< ", interval:" << interval_ 
@@ -26,7 +25,7 @@ Timer::Timer(TimerCallback cb, Time when, double interval)
 }
 
 Timer::~Timer()
-{	
+{
 	LOG(TRACE) << "Timer::~Timer [" << "sequence:" << sequence_ 
 		<< ", interval:" << interval_ 
 		<<  ", expired:" << expired_ <<"] is destructing";
@@ -34,10 +33,12 @@ Timer::~Timer()
 
 void Timer::restart(Time tm)
 {
-	if (repeat_) {
-		expired_ = tm + TimeDelta::from_seconds_d(interval_);
+	if (repeat()) {
+		expired_ = tm + interval_;
 	} else {
-		expired_ = Time();
+		// repeat() should be called by user
+		// expired_ = Time();
+		NOTREACHED();
 	}
 }
 

@@ -425,11 +425,11 @@ int main(int argc, char* argv[])
 	// EventLoop
 	Thread ss([]() {
 		EventLoop loop;
-		TcpServer srv(&loop, EndPoint(11099));
+		TcpServer srv(&loop, EndPoint(1669));
 		// srv.set_thread_num(2);
 
 		// register timer
-		TimerId timer_id = loop.run_every(5, []() {
+		TimerId timer_id = loop.run_after(5, []() {
 			LOG(INFO) << "run this 5s";
 		});
 		TimerId timer_id1 = loop.run_every(3, []() {

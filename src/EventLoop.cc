@@ -73,9 +73,11 @@ void EventLoop::loop()
 	CHECK(!looping_);
 	looping_ = true;
 	LOG(TRACE) << "EventLoop::loop " << this 
-		<< " timeout " << poll_timeout_ms_ << " is beginning loop";
+		<< " timeout " << poll_timeout_ms_ << "ms is beginning loop";
 
 	while (looping_) {
+		LOG(TRACE) << "EventLoop::loop timeout " << poll_timeout_ms_ << "ms";
+
 		active_channels_.clear();
 		poll_tm_ = poller_->poll(poll_timeout_ms_, &active_channels_);
 
@@ -246,7 +248,8 @@ void EventLoop::do_calling_wakeup_functors()
 void EventLoop::print_active_channels() const
 {
 	for (const Channel* ch : active_channels_) {
-		LOG(TRACE) << "EventLoop::print_active_channels {" << ch->revents_to_string() << "}";
+		LOG(TRACE) << "EventLoop::print_active_channels {" 
+			<< ch->revents_to_string() << "}";
 	}
 }
 

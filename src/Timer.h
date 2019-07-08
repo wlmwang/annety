@@ -15,22 +15,21 @@ namespace annety
 class Timer
 {
 public:
-	Timer(TimerCallback cb, Time when, double interval);
+	Timer(TimerCallback cb, Time expired, TimeDelta interval);
 	~Timer();
 
 	Time expired() const  { return expired_;}
 	int64_t sequence() const { return sequence_;}
-	bool repeat() const { return repeat_;}
+	bool repeat() const { return !interval_.is_null();}
 
 	void restart(Time tm);
 	void run() const { cb_();}
 
 private:
 	Time expired_;
+	const TimeDelta interval_;
 	const TimerCallback cb_;
 	const int64_t sequence_;
-	const double interval_;	// seconds
-	const bool repeat_;
 
 	DISALLOW_COPY_AND_ASSIGN(Timer);
 };

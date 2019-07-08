@@ -33,16 +33,15 @@ TimerPool::~TimerPool()
 
 	timer_channel_->disable_all_event();
 	timer_channel_->remove();
-	
-	// todo
-	for (const Entry& timer : timers_) {
+	for (const EntryTimer& timer : timers_) {
+		// FIXME: no delete when smart point
 		delete timer.second;
 	}
 }
 
-TimerId TimerPool::add_timer(TimerCallback cb, Time when, double interval)
+TimerId TimerPool::add_timer(TimerCallback cb, Time expired, double interval_s)
 {
-	Timer* timer = new Timer(std::move(cb), when, interval);
+	Timer* timer = new Timer(std::move(cb), expired, TimeDelta::from_seconds_d(interval_s));
 	owner_loop_->run_in_own_loop(
 		std::bind(&TimerPool::add_timer_in_own_loop, this, timer));
 	return TimerId(timer, timer->sequence());
@@ -74,11 +73,11 @@ void TimerPool::cancel_timer_in_own_loop(TimerId timer_id)
 	ActiveTimerSet::iterator it = active_timers_.find(timer);
 	if (it != active_timers_.end()) {
 		{
-			size_t n = timers_.erase(Entry(it->first->expired(), it->first));
+			size_t n = timers_.erase(EntryTimer(it->first->expired(), it->first));
 			DCHECK(n == 1);
+			// FIXME: no delete when smart point
+			delete it->first;
 		}
-		// FIXME: no delete please
-		delete it->first;
 		{
 			active_timers_.erase(it);
 		}
@@ -105,20 +104,20 @@ void TimerPool::handle_read()
 		uint64_t one;
 		ssize_t n = timer_socket_->read(&one, sizeof one);
 		if (n != sizeof one) {
-			PLOG(ERROR) << "TimerQueue::handle_read reads " << n << " bytes instead of 8";
+			PLOG(ERROR) << "TimerPool::handle_read reads " << n << " bytes instead of 8";
 		}
-		LOG(TRACE) << "TimerQueue::handle_read() " << one << " at " << curr;
+		LOG(TRACE) << "TimerPool::handle_read " << one << " at " << curr;
 	}
 
 	{
-		std::vector<Entry> expired_timers;
+		EntryTimerList expired_timers;
 		fill_expired_timers(curr, expired_timers);
 
 		calling_expired_timers_ = true;
 		canceling_timers_.clear();
 
 		// safe to callback outside critical section
-		for (const Entry& it : expired_timers) {
+		for (const EntryTimer& it : expired_timers) {
 			it.second->run();
 		}
 		calling_expired_timers_ = false;
@@ -128,20 +127,20 @@ void TimerPool::handle_read()
 	}
 }
 
-void TimerPool::fill_expired_timers(Time tm, std::vector<Entry>& timers)
+void TimerPool::fill_expired_timers(Time time, EntryTimerList& expired_timers)
 {
 	owner_loop_->check_in_own_loop();
 	DCHECK(timers_.size() == active_timers_.size());
 
-	Entry sentry(tm, reinterpret_cast<Timer*>(UINTPTR_MAX));
-	TimerList::iterator it = timers_.lower_bound(sentry);
-	DCHECK(it == timers_.end() || it->first > tm);
+	EntryTimer sentry(time, reinterpret_cast<Timer*>(UINTPTR_MAX));
+	EntryTimerSet::iterator it = timers_.lower_bound(sentry);
+	DCHECK(it == timers_.end() || it->first > time);
 
 	// get and delete expired-timers from set<> container
-	std::copy(timers_.begin(), it, std::back_inserter(timers));
+	std::copy(timers_.begin(), it, std::back_inserter(expired_timers));
 	timers_.erase(timers_.begin(), it);
 
-	for (const Entry& it : timers) {
+	for (const EntryTimer& it : expired_timers) {
 		ActiveTimer timer(it.second, it.second->sequence());
 		size_t n = active_timers_.erase(timer);
 		DCHECK(n == 1);
@@ -149,20 +148,21 @@ void TimerPool::fill_expired_timers(Time tm, std::vector<Entry>& timers)
 	DCHECK(timers_.size() == active_timers_.size());
 }
 
-void TimerPool::update(Time tm, const std::vector<Entry>& expired_timers)
+void TimerPool::update(Time time, const EntryTimerList& expired_timers)
 {
 	owner_loop_->check_in_own_loop();
+	DCHECK(timers_.size() == active_timers_.size());
 
-	for (const Entry& it : expired_timers) {
+	for (const EntryTimer& it : expired_timers) {
 		ActiveTimer timer(it.second, it.second->sequence());
 		if (it.second->repeat() && 
 			canceling_timers_.find(timer) == canceling_timers_.end())
 		{
-			it.second->restart(tm);
+			it.second->restart(time);
 			save(it.second);
 		} else {
-			// FIXME move to a free list
-			// FIXME: no delete please
+			// FIXME: move to a free list
+			// FIXME: no delete when smart point
 			delete it.second;
 		}
 	}
@@ -175,19 +175,19 @@ void TimerPool::update(Time tm, const std::vector<Entry>& expired_timers)
 }
 
 #if !defined(OS_LINUX)
-void TimerPool::check_timer(Time when)
+void TimerPool::check_timer(Time expired)
 {
 	owner_loop_->run_in_own_loop(
-		std::bind(&TimerPool::check_timer_in_own_loop, this, when));
+		std::bind(&TimerPool::check_timer_in_own_loop, this, expired));
 }
 
-void TimerPool::check_timer_in_own_loop(Time when)
+void TimerPool::check_timer_in_own_loop(Time expired)
 {
 	owner_loop_->check_in_own_loop();
 	DCHECK(timers_.size() == active_timers_.size());
 
 	bool have_expired_timer = false;
-	if (!timers_.empty() && timers_.begin()->first <= when) {
+	if (!timers_.empty() && timers_.begin()->first <= expired) {
 		have_expired_timer = true;
 	}
 	LOG(TRACE) << "TimerPool::check_timer_in_own_loop " << have_expired_timer;
@@ -223,7 +223,7 @@ void TimerPool::reset(Time expired)
 #endif
 	} else {
 #if defined(OS_LINUX)
-		NOTREACHED();
+		// nothing to do
 #else
 		owner_loop_->set_poll_timeout();
 #endif
@@ -235,26 +235,25 @@ bool TimerPool::save(Timer* timer)
 	owner_loop_->check_in_own_loop();
 	DCHECK(timers_.size() == active_timers_.size());
 
-	Time when = timer->expired();
+	Time time = timer->expired();
 
 	bool earliest_changed = false;
-	if (timers_.empty() || timers_.begin()->first > when) {
+	if (timers_.empty() || timers_.begin()->first > time) {
 		earliest_changed = true;
 	}
 
 	{
-		// std::pair<TimerList::iterator, bool> result;
-		auto result = timers_.insert(Entry(when, timer));
+		// std::pair<EntryTimerSet::iterator, bool> result;
+		auto result = timers_.insert(EntryTimer(time, timer));
 		DCHECK(result.second);
 	}
-
 	{
 		// std::pair<ActiveTimerSet::iterator, bool> result;
 		auto result = active_timers_.insert(ActiveTimer(timer, timer->sequence()));
 		DCHECK(result.second);
 	}
-
 	DCHECK(timers_.size() == active_timers_.size());
+
 	return earliest_changed;
 }
 

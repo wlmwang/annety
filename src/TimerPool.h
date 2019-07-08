@@ -22,24 +22,31 @@ class Channel;
 class Timer;
 class TimerId;
 
+// timer pool, sorted by expired.
+// no guarantee that the callback will be emitted on time.
 class TimerPool
 {
 public:
 	explicit TimerPool(EventLoop* loop);
 	~TimerPool();
 
-	TimerId add_timer(TimerCallback cb, Time when, double interval);
+	TimerId add_timer(TimerCallback cb, Time expired, double interval_s);
 	void cancel_timer(TimerId timer_id);
 
 #if !defined(OS_LINUX)
-	void check_timer(Time when);
+	void check_timer(Time expired);
 #endif
 
 private:
-	using Entry = std::pair<Time, Timer*>;	// <expired:timer*>
-	using TimerList = std::set<Entry>;
-	
-	// TimeId. for cancel
+	// FIXME: use unique_ptr<Timer> instead of raw pointers.
+	// This requires heterogeneous comparison lookup (N3465) from C++14
+
+	// Timer list. sorted by expired
+	using EntryTimer = std::pair<Time, Timer*>;
+	using EntryTimerSet = std::set<EntryTimer>;
+	using EntryTimerList = std::vector<EntryTimer>;
+
+	// active timer list, sorted by TimeId. for cancel
 	using ActiveTimer = std::pair<Timer*, int64_t>;
 	using ActiveTimerSet = std::set<ActiveTimer>;
 
@@ -48,14 +55,14 @@ private:
 
 #if !defined(OS_LINUX)
 	void wakeup();
-	void check_timer_in_own_loop(Time when);
+	void check_timer_in_own_loop(Time expired);
 #endif
 
 	bool save(Timer* timer);
-	void update(Time tm, const std::vector<Entry>& expired_timers);
-	void reset(Time next_expired);
+	void update(Time time, const EntryTimerList& expired_timers);
+	void reset(Time expired);
 
-	void fill_expired_timers(Time now, std::vector<Entry>& timers);
+	void fill_expired_timers(Time time, EntryTimerList& expired_timers);
 	void handle_read();
 
 private:
@@ -65,12 +72,13 @@ private:
 	std::unique_ptr<Channel> timer_channel_;
 
 	// Timer list. sorted by expired
-	TimerList timers_;
+	EntryTimerSet timers_;
 
-	// TimeId list. for cancel
 	bool calling_expired_timers_{false};
-	ActiveTimerSet canceling_timers_;
+
+	// active timer list, sorted by TimeId. for cancel
 	ActiveTimerSet active_timers_;
+	ActiveTimerSet canceling_timers_;
 };
 
 }	// namespace annety
