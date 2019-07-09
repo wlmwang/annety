@@ -19,14 +19,14 @@ ThreadPool::ThreadPool(int num_threads, const std::string& name_prefix)
 
 ThreadPool::~ThreadPool()
 {
-	DCHECK(threads_.empty());
-	DCHECK(thread_main_cbs_.empty());
+	CHECK(threads_.empty());
+	CHECK(thread_main_cbs_.empty());
 }
 
 ThreadPool& ThreadPool::start()
 {
-	DCHECK(threads_.empty() && running_ == false) 
-		<< "start() called with outstanding threads.";
+	CHECK(threads_.empty() && running_ == false) 
+		<< "ThreadPool::start is calling with outstanding threads";
 	running_ = true;
 
 	// start all tasker thread
@@ -46,8 +46,8 @@ ThreadPool& ThreadPool::start()
 void ThreadPool::stop()
 {
 	// tell all threads to quit their tasker loop.
-	DCHECK(running_ == true) 
-		<< "stop() called with no outstanding threads.";
+	CHECK(running_ == true) 
+		<< "ThreadPool::stop is calling with no outstanding threads";
 	{
 		AutoLock locked(lock_);
 		running_ = false;
@@ -64,8 +64,8 @@ void ThreadPool::stop()
 
 void ThreadPool::joinall()
 {
-	DCHECK(running_ == true) 
-		<< "join_all() called with no outstanding threads.";
+	CHECK(running_ == true) 
+		<< "ThreadPool::join_all is calling with no outstanding threads.";
 
 	// Tell all our threads to quit their worker loop.
 	run_task(nullptr, num_threads_);
@@ -75,7 +75,8 @@ void ThreadPool::joinall()
 		td->join();
 	}
 	threads_.clear();
-	DCHECK(thread_main_cbs_.empty());
+	
+	CHECK(thread_main_cbs_.empty());
 	running_ = false;
 }
 
@@ -94,7 +95,7 @@ bool ThreadPool::full() const
 void ThreadPool::run_task(const TaskCallback& cb, int repeat_count)
 {
 	DCHECK(running_ == true) << 
-		"run_task() called with no outstanding threads.";
+		"ThreadPool::run_task is calling with no outstanding threads";
 
 	if (threads_.empty()) {
 		while (repeat_count-- > 0) {
@@ -108,7 +109,7 @@ void ThreadPool::run_task(const TaskCallback& cb, int repeat_count)
 			while (full()) {
 				full_cv_.wait();
 			}
-			DCHECK(!full()) << "full the thread_main_cbs_.";
+			DCHECK(!full()) << "ThreadPool::run_task the thread_main_cbs_ is full";
 			// copy to vector
 			thread_main_cbs_.push_back(cb);
 		}
@@ -134,7 +135,7 @@ void ThreadPool::loop()
 				if (!running_) {
 					break;
 				}
-				DCHECK(!thread_main_cbs_.empty()) << "empty the taskers.";
+				DCHECK(!thread_main_cbs_.empty()) << "ThreadPool::loop the taskers is empty";
 
 				task = thread_main_cbs_.front();
 				thread_main_cbs_.pop_front();

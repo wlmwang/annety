@@ -18,9 +18,9 @@ namespace annety
 namespace
 {
 void clean_tls_event_loop(void *ptr) {
-	LOG(TRACE) << "TLS EventLoop has clean by thread " 
+	LOG(DEBUG) << "the tls EventLoop has clean by thread " 
 		<< PlatformThread::current_ref().ref()
-		<< ", Deleted EventLoop " << ptr;
+		<< ", deleted EventLoop is " << ptr;
 }
 
 // There is at most one EventLoop object per thread
@@ -41,19 +41,20 @@ EventLoop::EventLoop()
 	  wakeup_socket_(new EventFD(true, true)),
 	  wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {
-	LOG(INFO) << "EventLoop::EventLoop is creating by thread " 
+	LOG(DEBUG) << "EventLoop::EventLoop is creating by thread " 
 		<< owning_thread_->ref() 
 		<< ", EventLoop " << this;
-	
-	CHECK(tls_event_loop.empty()) << "EventLoop::EventLoop has created by thread " 
-		<< owning_thread_->ref() << ", now current thread is " 
-		<< PlatformThread::current_ref().ref();
 
-	tls_event_loop.set(this);
+	{
+		CHECK(tls_event_loop.empty()) << "EventLoop::EventLoop has created by thread " 
+			<< owning_thread_->ref() << ", now current thread is " 
+			<< PlatformThread::current_ref().ref();
+		
+		tls_event_loop.set(this);
+	}
 
 	wakeup_channel_->set_read_callback(
 		std::bind(&EventLoop::handle_read, this));
-	
 	wakeup_channel_->enable_read_event();
 }
 
@@ -61,9 +62,9 @@ EventLoop::~EventLoop()
 {
 	CHECK(looping_ == false);
 	
-	LOG(TRACE) << "EventLoop::~EventLoop is called by thread " 
+	LOG(DEBUG) << "EventLoop::~EventLoop is called by thread " 
 		<< PlatformThread::current_ref().ref()
-		<< ", deleted EventLoop " << this;
+		<< ", deleted EventLoop is " << this;
 }
 
 void EventLoop::loop()
@@ -72,8 +73,9 @@ void EventLoop::loop()
 
 	CHECK(!looping_);
 	looping_ = true;
+
 	LOG(TRACE) << "EventLoop::loop " << this 
-		<< " timeout " << poll_timeout_ms_ << "ms is beginning loop";
+		<< " timeout " << poll_timeout_ms_ << "ms is beginning";
 
 	while (looping_) {
 		LOG(TRACE) << "EventLoop::loop timeout " << poll_timeout_ms_ << "ms";
@@ -104,7 +106,7 @@ void EventLoop::loop()
 	}
 
 	LOG(TRACE) << "EventLoop::loop " << this 
-		<< " timeout " << poll_timeout_ms_ << " has finished loop";
+		<< " timeout " << poll_timeout_ms_ << " has finished";
 	looping_ = false;
 }
 
@@ -160,7 +162,7 @@ void EventLoop::wakeup()
 	if (n != sizeof one) {
 		PLOG(ERROR) << "EventLoop::wakeup writes " << n << " bytes instead of 8";
 	}
-	LOG(TRACE) << "EventLoop::wakeup";
+	LOG(TRACE) << "EventLoop::wakeup is called";
 }
 
 void EventLoop::handle_read()
@@ -170,7 +172,7 @@ void EventLoop::handle_read()
 	if (n != sizeof one) {
 		PLOG(ERROR) << "EventLoop::handle_read reads " << n << " bytes instead of 8";
 	}
-	LOG(TRACE) << "EventLoop::handle_read " << one;
+	LOG(TRACE) << "EventLoop::handle_read is called";
 }
 
 void EventLoop::update_channel(Channel* channel)
@@ -213,6 +215,7 @@ void EventLoop::queue_in_own_loop(Functor cb)
 		wakeup_functors_.push_back(std::move(cb));
 	}
 
+	// wakeup the own loop thread when poller is finished
 	if (!is_in_own_loop() || calling_wakeup_functors_) {
 		wakeup();
 	}
@@ -221,7 +224,7 @@ void EventLoop::queue_in_own_loop(Functor cb)
 void EventLoop::check_in_own_loop() const
 {
 	CHECK(is_in_own_loop()) << " EventLoop::check_in_own_loop was created by thread " 
-		<< owning_thread_->ref() << ", but current thread is " 
+		<< owning_thread_->ref() << ", but current calling thread is " 
 		<< PlatformThread::current_ref().ref();
 }
 

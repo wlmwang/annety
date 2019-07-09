@@ -71,11 +71,12 @@ namespace annety
 typedef int LogSeverity;
 const LogSeverity LOG_VERBOSE = -1;
 const LogSeverity LOG_TRACE = 0;
-const LogSeverity LOG_INFO = 1;
-const LogSeverity LOG_WARNING = 2;
-const LogSeverity LOG_ERROR = 3;
-const LogSeverity LOG_FATAL = 4;
-const LogSeverity LOG_NUM_SEVERITIES = 5;
+const LogSeverity LOG_DEBUG = 1;
+const LogSeverity LOG_INFO = 2;
+const LogSeverity LOG_WARNING = 3;
+const LogSeverity LOG_ERROR = 4;
+const LogSeverity LOG_FATAL = 5;
+const LogSeverity LOG_NUM_SEVERITIES = 6;
 
 // LOG_DFATAL is LOG_FATAL in debug mode, ERROR in normal mode
 #if defined(NDEBUG)

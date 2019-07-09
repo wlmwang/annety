@@ -40,8 +40,8 @@ TcpClient::TcpClient(EventLoop* loop,
 	  connect_cb_(default_connect_callback),
 	  message_cb_(default_message_callback)
 {
-	LOG(INFO) << "TcpClient::TcpClient " << name_ 
-		<< " is constructing, which is listening on " << ip_port_;
+	LOG(DEBUG) << "TcpClient::TcpClient the " << name_ 
+		<< " client is constructing which connecting to " << ip_port_;
 
 	connector_->set_new_connect_callback(
 		std::bind(&TcpClient::new_connection, this, _1, _2));
@@ -49,7 +49,8 @@ TcpClient::TcpClient(EventLoop* loop,
 
 TcpClient::~TcpClient()
 {
-	LOG(TRACE) << "TcpClient::~TcpClient [" << name_ << "] is destructing";
+	LOG(DEBUG) << "TcpClient::~TcpClient the " << name_ 
+		<< " client is destructing which be connected to " << ip_port_;
 
 	TcpConnectionPtr conn;
 	bool unique = false;
@@ -70,10 +71,8 @@ TcpClient::~TcpClient()
 		}
 	} else {
 		connector_->stop();
-		
 		// FIXME: HACK
-		// owner_loop_->runAfter(1, std::bind(&detail::remove_connector, connector_));
-		owner_loop_->queue_in_own_loop(std::bind(&internal::remove_connector, connector_));
+		owner_loop_->run_after(1, std::bind(&internal::remove_connector, connector_));
 	}
 }
 
@@ -143,7 +142,8 @@ void TcpClient::remove_connection(const TcpConnectionPtr& conn)
 	owner_loop_->queue_in_own_loop(std::bind(&TcpConnection::connect_destroyed, conn));
 	
 	if (retry_ && connect_) {
-		LOG(INFO) << "TcpClient::connect[" << name_ << "] - reconnecting to " << ip_port_;
+		LOG(INFO) << "TcpClient::remove_connection the [" << name_ << "] client is reconnecting to " 
+			<< ip_port_;
 		connector_->restart();
 	}
 }

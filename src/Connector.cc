@@ -194,10 +194,10 @@ void Connector::handle_write()
 
 		errno = internal::get_sock_error(*connect_socket_);
 		if (errno) {
-			PLOG(WARNING) << "Connector::handle_write failed";
+			PLOG(WARNING) << "Connector::handle_write has failed";
 			retry();
 		} else if (internal::is_self_connect(*connect_socket_)) {
-			LOG(WARNING) << "Connector::handle_write - self connect";
+			LOG(WARNING) << "Connector::handle_write is the self connection";
 			retry();
 		} else {
 			state_ = kConnected;
@@ -220,12 +220,12 @@ void Connector::handle_write()
 void Connector::handle_error()
 {
 	DCHECK(connect_socket_);
-	LOG(ERROR) << "Connector::handle_error state=" << state_;
+	LOG(ERROR) << "Connector::handle_error the state=" << state_;
 	
 	if (state_ == kConnecting) {
 		ScopedClearLastError last_error;
 		errno = internal::get_sock_error(*connect_socket_);
-		PLOG(TRACE) << "Connector::handle_error failed";
+		PLOG(TRACE) << "Connector::handle_error has failed";
 
 		remove_and_reset_channel();
 		retry();

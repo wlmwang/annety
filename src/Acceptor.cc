@@ -66,6 +66,9 @@ Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport)
 
 Acceptor::~Acceptor()
 {
+	LOG(TRACE) << "Acceptor::~Acceptor [" <<  addr.to_ip_port() << "] of"
+		<< " fd=" << listen_socket_->internal_fd() << " is destructing";
+	
 	listen_channel_->disable_all_event();
 	listen_channel_->remove();
 }
@@ -96,7 +99,7 @@ void Acceptor::handle_read()
 		}
 		// sockfd is unique_ptr, so no need to delete or close(fd) here
 	} else {
-		PLOG(ERROR) << "Acceptor::handle_read failed";
+		PLOG(ERROR) << "Acceptor::handle_read has failed";
 
 		// Read the section named "The special problem of
 		// accept()ing when you can't" in libev's doc.

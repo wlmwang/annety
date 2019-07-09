@@ -19,17 +19,17 @@ namespace annety
 namespace internal
 {
 // Specific connect socket related function interfaces
-void set_keep_alive(const SelectableFD& sfd, bool on)
+int set_keep_alive(const SelectableFD& sfd, bool on)
 {
-	sockets::set_keep_alive(sfd.internal_fd(), on);
+	return sockets::set_keep_alive(sfd.internal_fd(), on);
 }
-void set_tcp_nodelay(const SelectableFD& sfd, bool on)
+int set_tcp_nodelay(const SelectableFD& sfd, bool on)
 {
-	sockets::set_tcp_nodelay(sfd.internal_fd(), on);
+	return sockets::set_tcp_nodelay(sfd.internal_fd(), on);
 }
-void shutdown(const SelectableFD& sfd, int how = SHUT_WR)
+int shutdown(const SelectableFD& sfd, int how = SHUT_WR)
 {
-	sockets::shutdown(sfd.internal_fd(), how);
+	return sockets::shutdown(sfd.internal_fd(), how);
 }
 
 }	// namespace internal
@@ -62,10 +62,10 @@ TcpConnection::TcpConnection(EventLoop* loop,
     input_buffer_(new NetBuffer()),
     output_buffer_(new NetBuffer())
 {
-	LOG(TRACE) << "TcpConnection::TcpConnection [" <<  name_ << "] of"
+	LOG(DEBUG) << "TcpConnection::TcpConnection the [" <<  name_ << "] connection of"
 		<< " fd=" << connect_socket_->internal_fd() << " is constructing";
 
-	// Cannot use shared_from_this(), Otherwise it forms a circular reference 
+	// cannot use shared_from_this(), otherwise it forms a circular reference 
 	// to the Channel object
 	connect_channel_->set_read_callback(
 		std::bind(&TcpConnection::handle_read, this, _1));
@@ -76,13 +76,13 @@ TcpConnection::TcpConnection(EventLoop* loop,
 	connect_channel_->set_error_callback(
 		std::bind(&TcpConnection::handle_error, this));
 
-	// Setting keepalive sockopt
+	// setting keepalive sockopt
 	internal::set_keep_alive(*connect_socket_, true);
 }
 
 TcpConnection::~TcpConnection()
 {
-	LOG(TRACE) << "TcpConnection::~TcpConnection [" <<  name_ << "] of "
+	LOG(DEBUG) << "TcpConnection::~TcpConnection the [" <<  name_ << "] connecting of "
 		<< " fd=" << connect_socket_->internal_fd()
 		<< " state=" << state_to_string() << " is destructing";
 
@@ -91,7 +91,7 @@ TcpConnection::~TcpConnection()
 
 void TcpConnection::set_tcp_nodelay(bool on)
 {
-	internal::set_tcp_nodelay(*connect_socket_, on);
+	DCHECK_GE(internal::set_tcp_nodelay(*connect_socket_, on), 0);
 }
 
 void TcpConnection::send(const void* data, int len)
@@ -161,7 +161,7 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 		} else {
 			nwrote = 0;
 			if (errno != EWOULDBLOCK) {
-				PLOG(ERROR) << "TcpConnection::send_in_loop";
+				PLOG(ERROR) << "TcpConnection::send_in_loop has failed";
 				if (errno == EPIPE || errno == ECONNRESET) {
 					fault_error = true;
 				}
@@ -171,16 +171,16 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 
 	DCHECK(remaining <= len);
 	if (!fault_error && remaining > 0) {
-		size_t oldLen = output_buffer_->readable_bytes();
+		size_t oldlen = output_buffer_->readable_bytes();
 
-		if (oldLen + remaining >= high_water_mark_ && oldLen < high_water_mark_ 
+		if (oldlen + remaining >= high_water_mark_ && oldlen < high_water_mark_ 
 			&& high_water_mark_cb_)
 		{
 			owner_loop_->queue_in_own_loop(std::bind(high_water_mark_cb_, shared_from_this(), 
-										oldLen + remaining));
+										oldlen + remaining));
 		}
 
-		// Copy data to output_buffer_
+		// copy data to output_buffer_
 		output_buffer_->append(static_cast<const char*>(data) + nwrote, remaining);
 		if (!connect_channel_->is_write_event()) {
 			connect_channel_->enable_write_event();
@@ -220,7 +220,7 @@ void TcpConnection::force_close_with_delay(double delay_s)
 		state_ = kDisconnecting;
 		// not force_close_in_loop to avoid race condition
 		owner_loop_->run_after(TimeDelta::from_seconds_d(delay_s), 
-			make_weak_callback(shared_from_this(), &TcpConnection::force_close));
+							make_weak_callback(shared_from_this(), &TcpConnection::force_close));
 	}
 }
 
@@ -276,7 +276,7 @@ void TcpConnection::connect_established()
 
 	connect_cb_(shared_from_this());
 
-	LOG(TRACE) << "TcpConnection::connect_established";
+	LOG(TRACE) << "TcpConnection::connect_established is called";
 }
 
 void TcpConnection::connect_destroyed()
@@ -291,7 +291,7 @@ void TcpConnection::connect_destroyed()
 	}
 	connect_channel_->remove();
 
-	LOG(TRACE) << "TcpConnection::connect_destroyed";
+	LOG(TRACE) << "TcpConnection::connect_destroyed is called";
 }
 
 void TcpConnection::handle_read(Time recv_tm)
@@ -334,13 +334,10 @@ void TcpConnection::handle_write()
 				}
 			}
 		} else {
-			PLOG(ERROR) << "TcpConnection::handle_write";
-			// if (state_ == kDisconnecting) {
-			// 	shutdown_in_loop();
-			// }
+			PLOG(ERROR) << "TcpConnection::handle_write has failed";
 		}
 	} else {
-		LOG(TRACE) << "TcpConnection::handle_write the conntion fd=" << connect_socket_->internal_fd()
+		LOG(DEBUG) << "TcpConnection::handle_write the conntion fd=" << connect_socket_->internal_fd()
 			<< " is down, no more writing";
 	}
 }
@@ -354,9 +351,9 @@ void TcpConnection::handle_close()
 	DCHECK(state_ == kConnected || state_ == kDisconnecting);
 
 	state_ = kDisconnected;
-
 	connect_channel_->disable_all_event();
 
+	// backup the connection(shared_ptr<>)
 	TcpConnectionPtr backup(shared_from_this());
 	connect_cb_(backup);
 
@@ -365,7 +362,7 @@ void TcpConnection::handle_close()
 
 void TcpConnection::handle_error()
 {
-	PLOG(ERROR) << "TcpConnection::handle_error [" << name_ << "]";
+	PLOG(ERROR) << "TcpConnection::handle_error the connection " << name_ << " has a error";
 }
 
 const char* TcpConnection::state_to_string() const

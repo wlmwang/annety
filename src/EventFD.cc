@@ -67,7 +67,7 @@ EventFD::EventFD(bool nonblock, bool cloexec)
 	fd_ = fds_[0];	// for channel register readable event
 #endif
 	DPCHECK(fd_ >= 0);
-	LOG(TRACE) << "EventFD::EventFD" << " of fd=" << fd_ << " is constructing";
+	LOG(TRACE) << "EventFD::EventFD" << " fd=" << fd_ << " is constructing";
 }
 
 int EventFD::close()

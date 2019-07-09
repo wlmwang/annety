@@ -37,7 +37,7 @@ TcpServer::TcpServer(EventLoop* loop,
 	  connect_cb_(default_connect_callback),
 	  message_cb_(default_message_callback)
 {
-	LOG(INFO) << "TcpServer::TcpServer " << name_ 
+	LOG(DEBUG) << "TcpServer::TcpServer " << name_ 
 		<< " is constructing which is listening on " << ip_port_;
 
 	acceptor_->set_new_connect_callback(
@@ -47,7 +47,8 @@ TcpServer::TcpServer(EventLoop* loop,
 TcpServer::~TcpServer()
 {
 	owner_loop_->check_in_own_loop();
-	LOG(TRACE) << "TcpServer::~TcpServer [" << name_ << "] is destructing";
+	LOG(DEBUG) << "TcpServer::~TcpServer " << name_ 
+		<< " is destructing which is listening on" << ip_port_;
 
 	for (auto& item : connections_) {
 		TcpConnectionPtr conn(item.second);
@@ -55,6 +56,7 @@ TcpServer::~TcpServer()
 		conn->get_owner_loop()->run_in_own_loop(
 			std::bind(&TcpConnection::connect_destroyed, conn));
 	}
+	thread_pool_->join_all();
 }
 
 void TcpServer::set_thread_num(int num_threads)
@@ -115,7 +117,7 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 	owner_loop_->check_in_own_loop();
 
 	LOG(INFO) << "TcpServer::remove_connection_in_loop [" << name_
-		<< "] - connection [" << conn->name() << "]";
+		<< "] remove the connection [" << conn->name() << "]";
 
 	size_t n = connections_.erase(conn->name());
 	DCHECK(n == 1);

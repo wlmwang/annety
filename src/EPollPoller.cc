@@ -44,14 +44,13 @@ Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 {
 	Poller::check_in_own_loop();
 
-	LOG(TRACE) << "EPollPoller::poll is watching " << (long long)channels_.size() 
-			<< " file descriptions";
+	LOG(TRACE) << "EPollPoller::poll is watching " << (long long)channels_.size() << " fd";
 	
 	ScopedClearLastError last_error;
 
 	int num = ::epoll_wait(epollfd_, events_.data(), events_.size(), timeout_ms);
 
-	Time now(Time::now());
+	Time curr(Time::now());
 	if (num > 0) {
 		LOG(TRACE) << "EPollPoller::poll is having " << num << " events happened";
 
@@ -61,14 +60,14 @@ Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 			events_.resize(events_.size()*2);
 		}
 	} else if (num == 0) {
-		LOG(TRACE) << "EPollPoller::poll was nothing happened";
+		LOG(TRACE) << "EPollPoller::poll nothing was happened";
 	} else {
 		// error happens
 		if (errno != EINTR) {
-			PLOG(ERROR) << "EPollPoller::poll a failed happened";
+			PLOG(ERROR) << "EPollPoller::poll a error was happened";
 		}
 	}
-	return now;
+	return curr;
 }
 
 void EPollPoller::fill_active_channels(int num, ChannelList* active_channels) const

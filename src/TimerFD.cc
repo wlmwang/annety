@@ -93,7 +93,6 @@ void TimerFD::reset(const TimeDelta& delta_ms)
 #else
 	// In TimerPool class to set_poll_timeout()
 #endif
-	LOG(TRACE) << "TimerFD::TimerFD" << " fd=" << fd_ << " is reseting";
 }
 
 }	// namespace annety

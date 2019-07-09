@@ -24,7 +24,7 @@ namespace annety
 {
 namespace
 {
-const char* const kLogSeverityNames[5] = {"TRACE", "INFO", "WARNING", "ERROR", "FATAL"};
+const char* const kLogSeverityNames[] = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL"};
 static_assert(LOG_NUM_SEVERITIES == arraysize(kLogSeverityNames),
 			"Incorrect number of kLogSeverityNames");
 
