@@ -22,7 +22,7 @@
 #include "files/FilePath.h"
 #include "files/FileEnumerator.h"
 #include "files/File.h"
-#include "files/FilesUtil.h"
+#include "files/FileUtil.h"
 #include "AtExit.h"
 #include "Singleton.h"
 #include "threading/ThreadLocal.h"
@@ -72,18 +72,21 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+	cout << "System:";
 #if defined(OS_MACOSX)
 	cout << "mac osx" << endl;
 #elif defined(OS_LINUX)
 	cout << "linux os" << endl;
 #endif
 
+	cout << "compiler:" << __cplusplus << endl;
+
 #if defined(NDEBUG)
-	std::cout << "NDEBUG SET:" << NDEBUG << std::endl;
+	std::cout << "NDEBUG is on" << std::endl;
+#else
+	std::cout << "NDEBUG is off" << std::endl;
 #endif
-	
-	cout << __cplusplus << endl;
-    
+	    
     // // AtExitManager
     // {
     //     int a = 15;
@@ -98,31 +101,31 @@ int main(int argc, char* argv[])
 	// std::cout << s << ":" << s1 << '\n' 
 	// 		<< s.rfind("s") << "|" << s.find("c") << "|" << s.substr(2) << std::endl;
 
-	// // StringUtil
-	// StringPiece ts = strings::trim_whitespace(" 12345  ", strings::TrimPositions::TRIM_ALL);
-	// cout << ts << "|" << ts.size() << endl;
+	// StringUtil
+	StringPiece ts = trim_whitespace(" 12345  ", TrimPositions::TRIM_ALL);
+	cout << ts << "|" << ts.size() << endl;
 
-	// std::string ss = "abcd";
-	// cout << strings::write_into(&ss, 2) << endl;
+	std::string ss = "abcd";
+	cout << write_into(&ss, 2) << endl;
 
-	// cout << strings::equals_case_insensitive("ABcD", "AbcD") << endl;
+	cout << equals_case_insensitive("ABcD", "AbcD") << endl;
 
-	// // StringSplit
-	// std::string input = "12,345;67,890";
-	// std::vector<std::string> tokens = split_string(input, ",;", 
-	// 						KEEP_WHITESPACE,
-	// 						SPLIT_WANT_ALL);
-	// for (auto &t : tokens) {
-	// 	cout << t << endl;
-	// }
+	// StringSplit
+	std::string input = "12, 345;67,890";
+	std::vector<std::string> tokens = split_string(input, ",;", 
+							KEEP_WHITESPACE,
+							SPLIT_WANT_ALL);
+	for (auto &t : tokens) {
+		cout << t << endl;
+	}
 
-	// // StringPrintf
-	// string sf = string_printf("printf(%%3.1) %3.1f", 555.33);
-	// cout << sf << endl;
+	// StringPrintf
+	string sf = string_printf("printf(%%3.1) %3.1f", 555.33);
+	cout << sf << endl;
 
-	// // SafeStrerror
-	// std::cout << "errno(10):" << safe_strerror(10) << std::endl;
-	// std::cout << "errno(11):" << fast_safe_strerror(11) << std::endl;
+	// SafeStrerror
+	std::cout << "errno(10):" << safe_strerror(10) << std::endl;
+	std::cout << "errno(11):" << fast_safe_strerror(11) << std::endl;
 
 	// // ByteBuffer/NetBuffer
 	// ByteBuffer bb{10};
@@ -306,16 +309,16 @@ int main(int argc, char* argv[])
 	// std::cout << "read len:"<< f.read(0, buf, sizeof(buf)) << std::endl;
 	// std::cout << "read content:" << buf << std::endl;
 
-	// cout << "delete file:" << files::delete_file(path, false) << endl;
+	// cout << "delete file:" << delete_file(path, false) << endl;
 	
-	// // FilesUtil
+	// // FileUtil
 	// FilePath path1("annety-text-file1.log");
 	// std::string cc;
-	// cout << "write status:" << files::write_file(path1, "1234567890", sizeof("1234567890")) << endl;
-	// cout << "read status:" << files::read_file_to_string(path1, &cc) << endl;
+	// cout << "write status:" << write_file(path1, "1234567890", sizeof("1234567890")) << endl;
+	// cout << "read status:" << read_file_to_string(path1, &cc) << endl;
 	// cout << "read content:" << cc << endl;
 
-	// cout << "delete file:" << files::delete_file(path1, false) << endl;
+	// cout << "delete file:" << delete_file(path1, false) << endl;
 
 	// // Singleton
 	// class singleton_test {
@@ -424,7 +427,7 @@ int main(int argc, char* argv[])
 
 
 	// EventLoop
-	Thread ss([]() {
+	Thread tt([]() {
 		EventLoop loop;
 		TcpServer srv(&loop, EndPoint(1669));
 		// srv.set_thread_num(2);
@@ -468,8 +471,8 @@ int main(int argc, char* argv[])
 		
 		loop.loop();
 	});
-	ss.start();
-	ss.join();
+	tt.start();
+	tt.join();
 
 	// // TcpClient
 	// Thread cc([]() {
@@ -502,6 +505,6 @@ int main(int argc, char* argv[])
 
 	// // join
 	// // cc.join();
-	// ss.join();
+	// tt.join();
 }
 

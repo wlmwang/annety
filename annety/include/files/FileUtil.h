@@ -12,9 +12,9 @@
 #define ANT_FILE_UTIL_H_
 
 #include "build/BuildConfig.h"
+#include "strings/StringPiece.h"
 #include "files/File.h"
 #include "files/FilePath.h"
-#include "strings/StringPiece.h"
 
 #include <stddef.h>		// size_t
 #include <inttypes.h>	// gid_t,uid_t,int64_t
@@ -28,8 +28,6 @@ namespace annety
 {
 class Time;
 
-namespace files
-{
 //-----------------------------------------------------------------------------
 // Functions that involve filesystem access or modification:
 
@@ -380,7 +378,6 @@ bool move_unsafe(const FilePath& from_path,
 
 }  // namespace internal
 
-}	// namespace files
 }	// namespace annety
 
 #endif	// ANT_FILE_UTIL_H_

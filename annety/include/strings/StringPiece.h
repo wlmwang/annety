@@ -13,9 +13,9 @@
 #include <string>
 #include <algorithm>	// std::distance
 
-#include <string.h>	// strlen,memcmp
-#include <assert.h>	// assert
-#include <stddef.h>	// ptrdiff_t
+#include <string.h>		// strlen,memcmp
+#include <stddef.h>		// ptrdiff_t
+#include <assert.h>		// assert
 
 namespace annety
 {

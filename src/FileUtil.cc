@@ -8,7 +8,7 @@
 // Refactoring: Anny Wang
 // Date: Jun 05 2019
 
-#include "files/FilesUtil.h"
+#include "files/FileUtil.h"
 #include "files/FilePath.h"
 #include "files/FileEnumerator.h"
 #include "strings/StringPiece.h"
@@ -26,8 +26,6 @@
 #include <stddef.h>
 
 namespace annety
-{
-namespace files
 {
 namespace
 {
@@ -444,5 +442,4 @@ int get_unique_path_number(const FilePath& path,
 	return -1;
 }
 
-}	// namespace files
 }	// namespace annety

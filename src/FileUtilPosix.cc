@@ -5,7 +5,7 @@
 // Refactoring: Anny Wang
 // Date: Jun 05 2019
 
-#include "files/FilesUtil.h"
+#include "files/FileUtil.h"
 #include "files/FilePath.h"
 #include "files/FileEnumerator.h"
 #include "ScopedFile.h"
@@ -32,8 +32,6 @@
 #include <stddef.h>
 
 namespace annety
-{
-namespace files
 {
 namespace
 {
@@ -899,6 +897,4 @@ bool move_unsafe(const FilePath& from_path, const FilePath& to_path)
 
 }	// namespace internal
 
-}	// namespace files
 }	// namespace annety
-

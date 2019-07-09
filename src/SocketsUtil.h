@@ -9,6 +9,8 @@
 
 namespace annety
 {
+// In order to prevent someone using annety namespace, it will override some 
+// system builtin functions.
 namespace sockets
 {
 bool set_non_blocking(int fd);
