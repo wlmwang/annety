@@ -62,7 +62,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
     input_buffer_(new NetBuffer()),
     output_buffer_(new NetBuffer())
 {
-	LOG(DEBUG) << "TcpConnection::TcpConnection the [" <<  name_ << "] connection of"
+	LOG(TRACE) << "TcpConnection::TcpConnection the [" <<  name_ << "] connection of"
 		<< " fd=" << connect_socket_->internal_fd() << " is constructing";
 
 	// cannot use shared_from_this(), otherwise it forms a circular reference 
@@ -82,7 +82,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
 
 TcpConnection::~TcpConnection()
 {
-	LOG(DEBUG) << "TcpConnection::~TcpConnection the [" <<  name_ << "] connecting of "
+	LOG(TRACE) << "TcpConnection::~TcpConnection the [" <<  name_ << "] connecting of "
 		<< " fd=" << connect_socket_->internal_fd()
 		<< " state=" << state_to_string() << " is destructing";
 

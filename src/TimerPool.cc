@@ -204,7 +204,7 @@ void TimerPool::wakeup()
 	if (n != sizeof one) {
 		PLOG(ERROR) << "TimerPool::wakeup writes " << n << " bytes instead of 8";
 	}
-	LOG(TRACE) << "TimerPool::wakeup";
+	LOG(TRACE) << "TimerPool::wakeup is called";
 }
 #endif
 

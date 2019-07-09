@@ -37,8 +37,8 @@ TcpServer::TcpServer(EventLoop* loop,
 	  connect_cb_(default_connect_callback),
 	  message_cb_(default_message_callback)
 {
-	LOG(DEBUG) << "TcpServer::TcpServer " << name_ 
-		<< " is constructing which is listening on " << ip_port_;
+	LOG(DEBUG) << "TcpServer::TcpServer [" << name_ 
+		<< "] is constructing which listening on " << ip_port_;
 
 	acceptor_->set_new_connect_callback(
 		std::bind(&TcpServer::new_connection, this, _1, _2));
@@ -48,7 +48,7 @@ TcpServer::~TcpServer()
 {
 	owner_loop_->check_in_own_loop();
 	LOG(DEBUG) << "TcpServer::~TcpServer " << name_ 
-		<< " is destructing which is listening on" << ip_port_;
+		<< " is destructing which listening on" << ip_port_;
 
 	for (auto& item : connections_) {
 		TcpConnectionPtr conn(item.second);
@@ -56,7 +56,7 @@ TcpServer::~TcpServer()
 		conn->get_owner_loop()->run_in_own_loop(
 			std::bind(&TcpConnection::connect_destroyed, conn));
 	}
-	thread_pool_->join_all();
+	// FIXME: there should be a join_all() called here
 }
 
 void TcpServer::set_thread_num(int num_threads)
@@ -68,10 +68,10 @@ void TcpServer::set_thread_num(int num_threads)
 void TcpServer::start()
 {
 	if (!started_.test_and_set()) {
-		// starting all thread
+		// 1. starting all thread pool
 		thread_pool_->start(thread_init_cb_);
 
-		// setting current thread listen
+		// 2. setting listen-socket on current thread
 		CHECK(!acceptor_->is_listen());
 		acceptor_->listen();
 	}
