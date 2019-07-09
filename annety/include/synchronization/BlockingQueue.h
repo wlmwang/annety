@@ -25,6 +25,66 @@ namespace annety
 //	bounded.push(2);
 //	auto rt = bounded.pop();
 
+template <typename T> class UnBoundedBlockingTrait;
+template <typename T> class BoundedBlockingTrait;
+
+// {,Un}Boundedblocking queue
+template<typename T, typename Traits = UnBoundedBlockingTrait<T>>
+class BlockingQueue
+{
+private:
+	struct Data : public Traits
+	{
+		Data() : Traits() {}
+		explicit Data(size_t max_size) : Traits(max_size) {}
+	};
+
+public:
+	typedef T element_type;
+	typedef Traits traits_type;
+
+	BlockingQueue() : data_() {}
+	explicit BlockingQueue(size_t max_size) : data_(max_size) {}
+
+	~BlockingQueue() = default;
+
+	void push(const element_type& x)
+	{
+		data_.push(x);
+	}
+	void push(element_type&& x)
+	{
+		data_.push(std::move(x));
+	}
+
+	element_type pop()
+	{
+		return data_.pop();
+	}
+
+	size_t size() const
+	{
+		return data_.size();
+	}
+	size_t empty() const
+	{
+		return data_.empty();
+	}
+	bool full() const
+	{
+		return data_.full();
+	}
+	size_t capacity() const
+	{
+		return data_.capacity();
+	}
+
+private:
+	Data data_;
+
+	DISALLOW_COPY_AND_ASSIGN(BlockingQueue);
+};
+
 // Blocking Trait ----------------------------------------
 // UnBoundedBlockingTrait
 template<typename T>
@@ -216,63 +276,6 @@ private:
 
 	std::deque<T> queue_;
 	size_t max_size_;
-};
-
-// {,Un}Boundedblocking queue
-template<typename T, typename Traits = UnBoundedBlockingTrait<T>>
-class BlockingQueue
-{
-private:
-	struct Data : public Traits
-	{
-		Data() : Traits() {}
-		explicit Data(size_t max_size) : Traits(max_size) {}
-	};
-
-public:
-	typedef T element_type;
-	typedef Traits traits_type;
-
-	BlockingQueue() : data_() {}
-	explicit BlockingQueue(size_t max_size) : data_(max_size) {}
-
-	~BlockingQueue() = default;
-
-	void push(const element_type& x)
-	{
-		data_.push(x);
-	}
-	void push(element_type&& x)
-	{
-		data_.push(std::move(x));
-	}
-
-	element_type pop()
-	{
-		return data_.pop();
-	}
-
-	size_t size() const
-	{
-		return data_.size();
-	}
-	size_t empty() const
-	{
-		return data_.empty();
-	}
-	bool full() const
-	{
-		return data_.full();
-	}
-	size_t capacity() const
-	{
-		return data_.capacity();
-	}
-
-private:
-	Data data_;
-
-	DISALLOW_COPY_AND_ASSIGN(BlockingQueue);
 };
 
 }	// namespace annety

@@ -101,31 +101,31 @@ int main(int argc, char* argv[])
 	// std::cout << s << ":" << s1 << '\n' 
 	// 		<< s.rfind("s") << "|" << s.find("c") << "|" << s.substr(2) << std::endl;
 
-	// StringUtil
-	StringPiece ts = trim_whitespace(" 12345  ", TrimPositions::TRIM_ALL);
-	cout << ts << "|" << ts.size() << endl;
+	// // StringUtil
+	// StringPiece ts = trim_whitespace(" 12345  ", TrimPositions::TRIM_ALL);
+	// cout << ts << "|" << ts.size() << endl;
 
-	std::string ss = "abcd";
-	cout << write_into(&ss, 2) << endl;
+	// std::string ss = "abcd";
+	// cout << write_into(&ss, 2) << endl;
 
-	cout << equals_case_insensitive("ABcD", "AbcD") << endl;
+	// cout << equals_case_insensitive("ABcD", "AbcD") << endl;
 
-	// StringSplit
-	std::string input = "12, 345;67,890";
-	std::vector<std::string> tokens = split_string(input, ",;", 
-							KEEP_WHITESPACE,
-							SPLIT_WANT_ALL);
-	for (auto &t : tokens) {
-		cout << t << endl;
-	}
+	// // StringSplit
+	// std::string input = "12, 345;67,890";
+	// std::vector<std::string> tokens = split_string(input, ",;", 
+	// 						KEEP_WHITESPACE,
+	// 						SPLIT_WANT_ALL);
+	// for (auto &t : tokens) {
+	// 	cout << t << endl;
+	// }
 
-	// StringPrintf
-	string sf = string_printf("printf(%%3.1) %3.1f", 555.33);
-	cout << sf << endl;
+	// // StringPrintf
+	// string sf = string_printf("printf(%%3.1) %3.1f", 555.33);
+	// cout << sf << endl;
 
-	// SafeStrerror
-	std::cout << "errno(10):" << safe_strerror(10) << std::endl;
-	std::cout << "errno(11):" << fast_safe_strerror(11) << std::endl;
+	// // SafeStrerror
+	// std::cout << "errno(10):" << safe_strerror(10) << std::endl;
+	// std::cout << "errno(11):" << fast_safe_strerror(11) << std::endl;
 
 	// // ByteBuffer/NetBuffer
 	// ByteBuffer bb{10};
@@ -240,7 +240,6 @@ int main(int argc, char* argv[])
 	// }, 10);
 	// tp.join_all();
 	// // tp.stop();
-
 
 	// // BlockingQueue
 	// // BlockingQueue<int> bq;
