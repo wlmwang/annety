@@ -65,8 +65,9 @@ TcpConnection::TcpConnection(EventLoop* loop,
 	LOG(TRACE) << "TcpConnection::TcpConnection the [" <<  name_ << "] connection of"
 		<< " fd=" << connect_socket_->internal_fd() << " is constructing";
 
-	// cannot use shared_from_this(), otherwise it forms a circular reference 
-	// to the Channel object
+	// cannot use shared_from_this()
+	// 1. would throw std::bad_weak_ptr when use shared_from_this() in construct
+	// 2. would forms a circular reference to the Channel object
 	connect_channel_->set_read_callback(
 		std::bind(&TcpConnection::handle_read, this, _1));
 	connect_channel_->set_write_callback(
