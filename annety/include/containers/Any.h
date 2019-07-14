@@ -8,9 +8,8 @@
 #ifndef ANT_ANY_H
 #define ANT_ANY_H
 
-#include "Macros.h"
+#include "Logging.h"
 
-#include <string>
 #include <memory>
 #include <utility>
 #include <type_traits>
@@ -19,7 +18,7 @@
 
 namespace annety
 {
-// use std::any<> since C++17. defined in header <any>
+// use std::any since C++17. defined in header <any>
 class Any
 {
 public:
@@ -61,13 +60,15 @@ public:
 	template<typename U>
 	U& any_cast()
 	{
+		// FIXME: use CHECK() macros
 		if (!is<U>()) {
-			// std::cout << "can not cast " << typeid(U).name() 
-			// 	<< " to " << type_.name() << std::endl;
+			LOG(ERROR) << "can not cast " << typeid(U).name() 
+					<< " to " << type_.name();
 			throw std::bad_cast();
 		}
+		// FIXME: use static_cast<>
 		auto derived = dynamic_cast<Derived<U>*>(ptr_.get());
-		return derived->m_value;
+		return derived->value_;
 	}
 
 private:
@@ -84,14 +85,14 @@ private:
 	struct Derived : public Base
 	{
 		template<typename U>
-        Derived(U&& value) : m_value(std::forward<U>(value)) { }
+        Derived(U&& value) : value_(std::forward<U>(value)) { }
 
 		BasePtr clone() const
 		{
-			return BasePtr(new Derived(m_value));
+			return BasePtr(new Derived(value_));
 		}
 
-		T m_value;
+		T value_;
 	};
 
 	BasePtr clone() const
