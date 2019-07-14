@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "Macros.h"
+#include "containers/Any.h"
 #include "strings/StringPrintf.h"
 #include "strings/StringPiece.h"
 #include "strings/StringUtil.h"
@@ -86,7 +87,28 @@ int main(int argc, char* argv[])
 #else
 	std::cout << "NDEBUG is off" << std::endl;
 #endif
-	    
+	// // Any
+	// Any a = 1;
+	// Any b = string("hello, world");
+	// Any c;
+
+	// cout << std::boolalpha;
+	// cout << "a is null:" << a.is_null() << endl;
+	// cout << "b is null:" << b.is_null() << endl;
+	// cout << "c is null:" << c.is_null() << endl;
+
+	// cout << "----------------------" << endl;
+	// cout << "a is int:" << a.is<int>() << endl;
+	// cout << "a is string:" << a.is<string>() << endl;
+	// cout << "a cast to int:" << a.any_cast<int>() << endl;
+	// cout << "----------------------" << endl;
+	
+	// c = a;
+	// cout << "c is int:" << c.is<int>() << endl;
+	// cout << "c is string:" << c.is<string>() << endl;
+	// cout << "c cast to int:" << c.any_cast<int>() << endl;
+	// cout << "c cast to string:" << c.any_cast<string>() << endl;
+
     // // AtExitManager
     // {
     //     int a = 15;
@@ -423,7 +445,6 @@ int main(int argc, char* argv[])
 	
 	// std::cout << "tid:" << threads::tid() << std::endl;
 	// std::cout << "tid:" << threads::tid() << std::endl;
-
 
 	// EventLoop
 	Thread tt([]() {

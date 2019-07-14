@@ -8,6 +8,7 @@
 #include "EndPoint.h"
 #include "Times.h"
 #include "CallbackForward.h"
+#include "containers/Any.h"
 
 #include <string>
 #include <memory>
@@ -57,6 +58,19 @@ public:
 	void start_read();
 	void stop_read();
 	bool is_reading() const { return reading_; };
+
+	void set_context(const Any& context) 
+	{
+		context_ = context;
+	}
+	const Any& get_context() const
+	{
+		return context_;
+	}
+	Any* get_mutable_context()
+	{
+		return &context_;
+	}
 
 	void set_connect_callback(const ConnectCallback& cb)
 	{
@@ -129,6 +143,9 @@ private:
 
 	std::unique_ptr<NetBuffer> input_buffer_;
 	std::unique_ptr<NetBuffer> output_buffer_;
+
+	// a connection's context
+	Any context_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpConnection);
 };
