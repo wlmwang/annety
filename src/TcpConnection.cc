@@ -272,7 +272,7 @@ void TcpConnection::connect_established()
 	DCHECK(state_ == kConnecting);
 	state_ = kConnected;
 
-	// connect_channel_->tie(shared_from_this());
+	connect_channel_->tie(shared_from_this());
 	connect_channel_->enable_read_event();
 
 	connect_cb_(shared_from_this());
