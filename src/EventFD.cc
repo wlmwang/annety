@@ -63,10 +63,10 @@ EventFD::EventFD(bool nonblock, bool cloexec)
 #if defined(OS_LINUX)
 	fd_ = internal::eventfd(nonblock, cloexec);
 #else
-	DCHECK(internal::pipe(fds_, nonblock, cloexec));
+	PCHECK(internal::pipe(fds_, nonblock, cloexec));
 	fd_ = fds_[0];	// for channel register readable event
 #endif
-	DPCHECK(fd_ >= 0);
+	PCHECK(fd_ >= 0);
 	LOG(TRACE) << "EventFD::EventFD" << " fd=" << fd_ << " is constructing";
 }
 

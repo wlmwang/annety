@@ -161,6 +161,7 @@ void EventLoop::wakeup()
 	ssize_t n = wakeup_socket_->write(&one, sizeof one);
 	if (n != sizeof one) {
 		PLOG(ERROR) << "EventLoop::wakeup writes " << n << " bytes instead of 8";
+		return;
 	}
 	LOG(TRACE) << "EventLoop::wakeup is called";
 }
@@ -171,6 +172,7 @@ void EventLoop::handle_read()
 	ssize_t n = wakeup_socket_->read(&one, sizeof one);
 	if (n != sizeof one) {
 		PLOG(ERROR) << "EventLoop::handle_read reads " << n << " bytes instead of 8";
+		return;
 	}
 	LOG(TRACE) << "EventLoop::handle_read is called";
 }

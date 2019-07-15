@@ -3,7 +3,6 @@
 
 #include "TimerFD.h"
 #include "Logging.h"
-#include "Times.h"
 
 #if defined(OS_LINUX)
 #include <sys/timerfd.h>  // timerfd
@@ -54,7 +53,7 @@ TimerFD::TimerFD(bool nonblock, bool cloexec)
 	ev_.reset(new EventFD(nonblock, cloexec));
 	fd_ = ev_->internal_fd();
 #endif
-	DPCHECK(fd_ >= 0);
+	PCHECK(fd_ >= 0);
 	LOG(TRACE) << "TimerFD::TimerFD" << " fd=" << fd_ << " is constructing";
 }
 
@@ -89,7 +88,7 @@ void TimerFD::reset(const TimeDelta& delta_ms)
 {
 #if defined(OS_LINUX)
 	int rt = internal::reset_timerfd(fd_, delta_ms);
-	DPCHECK(rt >= 0);
+	PCHECK(rt >= 0);
 #else
 	// In TimerPool class to set_poll_timeout()
 #endif

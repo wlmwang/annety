@@ -105,6 +105,7 @@ void TimerPool::handle_read()
 		ssize_t n = timer_socket_->read(&one, sizeof one);
 		if (n != sizeof one) {
 			PLOG(ERROR) << "TimerPool::handle_read reads " << n << " bytes instead of 8";
+			return;
 		}
 		LOG(TRACE) << "TimerPool::handle_read " << one << " at " << curr;
 	}
@@ -203,6 +204,7 @@ void TimerPool::wakeup()
 	ssize_t n = timer_socket_->write(&one, sizeof one);
 	if (n != sizeof one) {
 		PLOG(ERROR) << "TimerPool::wakeup writes " << n << " bytes instead of 8";
+		return;
 	}
 	LOG(TRACE) << "TimerPool::wakeup is called";
 }
