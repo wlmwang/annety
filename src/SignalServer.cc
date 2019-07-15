@@ -45,10 +45,13 @@ void SignalServer::add_signal_in_own_loop(int signo, SignalCallback cb)
 {
 	owner_loop_->check_in_own_loop();
 
-	SignalFD* ss = static_cast<SignalFD*>(signal_socket_.get());
-	ss->signal_add(signo);
+	SignalFD* sf = static_cast<SignalFD*>(signal_socket_.get());
+	sf->signal_add(signo);
 
 	signals_[signo] = std::move(cb);
+
+	LOG(TRACE) << "SignalServer::add_signal_in_own_loop add signal " 
+		<< signo << " success";
 }
 
 void SignalServer::handle_read()

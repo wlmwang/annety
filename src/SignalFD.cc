@@ -5,6 +5,7 @@
 #include "Logging.h"
 
 #if defined(OS_LINUX)
+#include <signal.h>
 #include <sys/signalfd.h>  // signalfd
 #else
 // #include "EventFD.h"
@@ -85,10 +86,9 @@ void SignalFD::signal_add(int signo)
 #endif
 }
 
-void SignalFD::signal_del(int signo)
-{
-	//...
-}
-
+// void SignalFD::signal_del(int signo)
+// {
+// 	//...
+// }
 
 }	// namespace annety
