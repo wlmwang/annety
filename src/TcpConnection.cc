@@ -66,8 +66,10 @@ TcpConnection::TcpConnection(EventLoop* loop,
 		<< " fd=" << connect_socket_->internal_fd() << " is constructing";
 
 	// cannot use shared_from_this()
-	// 1. would throw std::bad_weak_ptr when use shared_from_this() in construct
-	// 2. would forms a circular reference to the Channel object
+	// 1. would throw std::bad_weak_ptr when use shared_from_this() in ctor
+	// 2. would forms a circular reference to the connect_channel_ object
+	//
+	// FIXME: use make_weak_callback() please
 	connect_channel_->set_read_callback(
 		std::bind(&TcpConnection::handle_read, this, _1));
 	connect_channel_->set_write_callback(
@@ -108,8 +110,8 @@ void TcpConnection::send(const StringPiece& message)
 			send_in_loop(message);
 		} else {
 			void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::send_in_loop;
+			// move semantics in here, even RVO
 			owner_loop_->run_in_own_loop(std::bind(fp, this, message.as_string()));
-			// std::forward<string>(message)));
 		}
 	}
 }
@@ -128,8 +130,8 @@ void TcpConnection::send(NetBuffer* buf)
 			send_in_loop(buf->taken_as_string());
 		} else {
 			void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::send_in_loop;
+			// move semantics in here, even RVO
 			owner_loop_->run_in_own_loop(std::bind(fp, this, buf->taken_as_string()));
-			//std::forward<string>(message)));
 		}
 	}
 }
