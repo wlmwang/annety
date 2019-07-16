@@ -33,6 +33,19 @@ SignalServer::~SignalServer()
 {
 	LOG(TRACE) << "SignalServer::~SignalServer" << " fd=" << 
 		signal_socket_->internal_fd() << " is destructing";
+
+	signal_channel_->disable_all_event();
+	signal_channel_->remove();
+
+	LOG_IF(ERROR, calling_signal_functor_) << "SignalServer::~SignalServer" 
+		<< " fd=" << signal_socket_->internal_fd() << " is calling";
+}
+
+bool SignalServer::ismember_signal(int signo)
+{
+	owner_loop_->check_in_own_loop();
+
+	return signals_.find(signo) != signals_.end();
 }
 
 void SignalServer::add_signal(int signo, SignalCallback cb)
@@ -41,17 +54,65 @@ void SignalServer::add_signal(int signo, SignalCallback cb)
 		std::bind(&SignalServer::add_signal_in_own_loop, this, signo, std::move(cb)));
 }
 
+void SignalServer::del_signal(int signo)
+{
+	owner_loop_->run_in_own_loop(
+		std::bind(&SignalServer::del_signal_in_own_loop, this, signo));
+}
+
+void SignalServer::reset_signal()
+{
+	owner_loop_->run_in_own_loop(
+		std::bind(&SignalServer::reset_signal_in_own_loop, this));
+}
+
 void SignalServer::add_signal_in_own_loop(int signo, SignalCallback cb) 
 {
 	owner_loop_->check_in_own_loop();
-
-	SignalFD* sf = static_cast<SignalFD*>(signal_socket_.get());
-	sf->signal_add(signo);
-
+	
 	signals_[signo] = std::move(cb);
+	{
+		SignalFD* sf = static_cast<SignalFD*>(signal_socket_.get());
+		sf->signal_add(signo);
+	}
 
-	LOG(TRACE) << "SignalServer::add_signal_in_own_loop add signal " 
+	LOG(TRACE) << "SignalServer::add_signal_in_own_loop signal " 
 		<< signo << " success";
+}
+
+void SignalServer::del_signal_in_own_loop(int signo) 
+{
+	owner_loop_->check_in_own_loop();
+
+	SignalMap::iterator it = signals_.find(signo);
+	if (it == signals_.end()) {
+		return;
+	}
+	signals_.erase(it);
+
+	{
+		SignalFD* sf = static_cast<SignalFD*>(signal_socket_.get());
+		sf->signal_del(signo);
+	}
+
+	LOG(TRACE) << "SignalServer::del_signal_in_own_loop signal " 
+		<< signo << " success";
+}
+
+void SignalServer::reset_signal_in_own_loop() 
+{
+	owner_loop_->check_in_own_loop();
+	if (signals_.empty()) {
+		return;
+	}
+	signals_.clear();
+
+	{
+		SignalFD* sf = static_cast<SignalFD*>(signal_socket_.get());
+		sf->signal_reset();
+	}
+
+	LOG(TRACE) << "SignalServer::reset_signal_in_own_loop signal success";
 }
 
 void SignalServer::handle_read()
@@ -70,10 +131,12 @@ void SignalServer::handle_read()
 	}
 
 	{
+		calling_signal_functor_ = true;
 		auto it = signals_.find(siginfo.ssi_signo);
 		if (it != signals_.end()) {
 		   (it->second)();
 		}
+		calling_signal_functor_ = false;
 	}
 }
 

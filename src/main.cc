@@ -447,59 +447,53 @@ int main(int argc, char* argv[])
 	// std::cout << "tid:" << threads::tid() << std::endl;
 	// std::cout << "tid:" << threads::tid() << std::endl;
 
-	// EventLoop
-	Thread tt([]() {
-		EventLoop loop;
-		// TcpServer srv(&loop, EndPoint(1669));
-		// // srv.set_thread_num(2);
+	// // EventLoop
+	// Thread tt([]() {
+	// 	EventLoop loop;
+	// 	TcpServer srv(&loop, EndPoint(1669));
+	// 	// srv.set_thread_num(2);
 
-		// // register timer
-		// TimerId timer_id = loop.run_after(5, []() {
-		// 	LOG(INFO) << "run this 5s";
-		// });
-		// TimerId timer_id1 = loop.run_every(3, []() {
-		// 	LOG(INFO) << "run this 3s";
-		// });
+	// 	// register timer
+	// 	TimerId timer_id = loop.run_after(5, []() {
+	// 		LOG(INFO) << "run this 5s";
+	// 	});
+	// 	TimerId timer_id1 = loop.run_every(3, []() {
+	// 		LOG(INFO) << "run this 3s";
+	// 	});
 
-		// // register connect handle
-		// srv.set_connect_callback([](const TcpConnectionPtr& conn) {
-		// 	conn->send("\r\n********************\r\n");
-		// 	conn->send("welcome to annety!!!\r\n");
-		// 	conn->send("********************\r\n");
+	// 	// register connect handle
+	// 	srv.set_connect_callback([](const TcpConnectionPtr& conn) {
+	// 		conn->send("\r\n********************\r\n");
+	// 		conn->send("welcome to annety!!!\r\n");
+	// 		conn->send("********************\r\n");
 
-		// 	LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
-		// 		   << conn->peer_addr().to_ip_port() << " s is "
-		// 		   << (conn->connected() ? "UP" : "DOWN");
-		// });
+	// 		LOG(TRACE) << conn->local_addr().to_ip_port() << " <- "
+	// 			   << conn->peer_addr().to_ip_port() << " s is "
+	// 			   << (conn->connected() ? "UP" : "DOWN");
+	// 	});
 		
-		// // register message handle
-		// srv.set_message_callback([&](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
-		// 	// LOG(INFO) << "srv:" << buf->to_string_piece();
-		// 	// buf->has_read_all();
-		// 	LOG(INFO) << "srv:" << buf->taken_as_string();
+	// 	// register message handle
+	// 	srv.set_message_callback([&](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
+	// 		// LOG(INFO) << "srv:" << buf->to_string_piece();
+	// 		// buf->has_read_all();
+	// 		LOG(INFO) << "srv:" << buf->taken_as_string();
 
-		// 	// timer
-		// 	loop.cancel(timer_id);
-		// 	loop.cancel(timer_id1);
+	// 		// timer
+	// 		loop.cancel(timer_id);
+	// 		loop.cancel(timer_id1);
 
-		// 	// // send time
-		// 	// std::ostringstream oss;
-		// 	// oss << t;
-		// 	// conn->send(oss.str());
-		// });
+	// 		// // send time
+	// 		// std::ostringstream oss;
+	// 		// oss << t;
+	// 		// conn->send(oss.str());
+	// 	});
 
-		// srv.start();
-		
-		// SignalServer
-		SignalServer ssrv(&loop);
-		ssrv.add_signal(SIGUSR1, []() {
-			LOG(INFO) << "ssrv:" << SIGUSR1;
-		});
+	// 	srv.start();
 
-		loop.loop();
-	});
-	tt.start();
-	tt.join();
+	// 	loop.loop();
+	// });
+	// tt.start();
+	// tt.join();
 
 	// // TcpClient
 	// Thread cc([]() {
@@ -533,5 +527,14 @@ int main(int argc, char* argv[])
 	// // join
 	// // cc.join();
 	// tt.join();
+
+	// SignalServer
+	EventLoop loop;
+	SignalServer ssrv(&loop);
+	ssrv.add_signal(SIGUSR1, [&ssrv]() {
+		LOG(INFO) << "ssrv:" << SIGUSR1;
+	});
+	loop.loop();
+
 }
 

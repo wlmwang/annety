@@ -38,7 +38,7 @@ SignalFD::SignalFD(bool nonblock, bool cloexec)
 	, cloexec_(cloexec)
 {
 #if defined(OS_LINUX)
-	::sigemptyset(&mask_);
+	PCHECK(::sigemptyset(&mask_) == 0);
 	fd_ = internal::signalfd(&mask_, nonblock_, cloexec_);
 #else
 	// ev_.reset(new EventFD(nonblock, cloexec));
@@ -86,9 +86,26 @@ void SignalFD::signal_add(int signo)
 #endif
 }
 
-// void SignalFD::signal_del(int signo)
-// {
-// 	//...
-// }
+void SignalFD::signal_del(int signo)
+{
+#if defined(OS_LINUX)
+	PCHECK(::sigdelset(&mask_, signo) == 0);
+	PCHECK(::sigprocmask(SIG_BLOCK, &mask_, NULL) == 0);
+	PCHECK(internal::signalfd(&mask_, nonblock_, cloexec_, fd_) >= 0);
+#else
+	// ...
+#endif
+}
+
+void SignalFD::signal_reset()
+{
+#if defined(OS_LINUX)
+	PCHECK(::sigemptyset(&mask_) == 0);
+	PCHECK(::sigprocmask(SIG_BLOCK, &mask_, NULL) == 0);
+	PCHECK(internal::signalfd(&mask_, nonblock_, cloexec_, fd_) >= 0);
+#else
+	// ...
+#endif
+}
 
 }	// namespace annety

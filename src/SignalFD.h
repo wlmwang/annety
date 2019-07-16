@@ -24,8 +24,10 @@ public:
 	virtual ssize_t write(const void *buf, size_t len) override;
 
 	void signal_add(int signo);
-	// void signal_del(int signo);
-	// bool signal_ismember(int signo);
+	void signal_del(int signo);
+	void signal_reset();
+	// void signal_set(int signo);
+	// int signal_ismember(int signo);
 
 private:
 	bool nonblock_;
