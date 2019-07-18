@@ -29,6 +29,9 @@ namespace annety
 {
 namespace
 {
+// default is the main thread
+thread_local bool tls_is_main_thread{true};
+
 struct ThreadParams
 {
 public:
@@ -42,8 +45,9 @@ public:
 // |params| -> ThreadParams
 void* thread_func(void* params)
 {
-	DCHECK(params);
+	tls_is_main_thread = false;
 
+	DCHECK(params);
 	std::unique_ptr<ThreadParams> thread_params(static_cast<ThreadParams*>(params));
 
 	// start enter thread function
@@ -108,6 +112,12 @@ ThreadId PlatformThread::current_id()
 ThreadRef PlatformThread::current_ref()
 {
 	return ThreadRef(::pthread_self());
+}
+
+// static
+bool PlatformThread::is_main_thread()
+{
+	return tls_is_main_thread;
 }
 
 // static

@@ -6,6 +6,7 @@
 #include "EventLoop.h"
 #include "Channel.h"
 #include "SignalFD.h"
+#include "threading/ThreadForward.h"
 
 #if defined(OS_LINUX)
 #include <sys/signalfd.h>  // signalfd_siginfo
@@ -20,6 +21,8 @@ SignalServer::SignalServer(EventLoop* loop)
 	, signal_socket_(new SignalFD(true, true))
 	, signal_channel_(new Channel(owner_loop_, signal_socket_.get()))
 {
+	CHECK(threads::is_main_thread());
+
 	LOG(TRACE) << "SignalServer::SignalServer" << " fd=" << 
 		signal_socket_->internal_fd() << " is constructing";
 

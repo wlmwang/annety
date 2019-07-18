@@ -31,6 +31,7 @@ namespace threads
 {
 ThreadId tid();
 StringPiece tid_string();
+bool is_main_thread();
 }	// namespace threads
 
 const ThreadId kInvalidThreadId{0};

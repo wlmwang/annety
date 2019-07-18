@@ -37,6 +37,11 @@ StringPiece tid_string()
 	return tls_tid_string;
 }
 
+bool is_main_thread()
+{
+	return PlatformThread::is_main_thread();
+}
+
 }	// namespace threads
 
 Thread::Thread(const TaskCallback& cb, const std::string& name_prefix)

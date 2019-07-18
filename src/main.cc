@@ -529,6 +529,15 @@ int main(int argc, char* argv[])
 	// tt.join();
 
 	// SignalServer
+	// Thread([]() {
+	// 	EventLoop loop;
+	// 	SignalServer ssrv(&loop);
+	// 	ssrv.add_signal(SIGUSR1, [&ssrv]() {
+	// 		LOG(INFO) << "ssrv:" << SIGUSR1;
+	// 	});
+	// 	loop.loop();
+	// }).start().join();
+
 	EventLoop loop;
 	SignalServer ssrv(&loop);
 	ssrv.add_signal(SIGUSR1, [&ssrv]() {
