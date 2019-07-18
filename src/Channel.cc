@@ -46,7 +46,8 @@ void Channel::tie(const std::shared_ptr<void>& obj)
 void Channel::handle_event(Time receive_tm)
 {
 	if (tied_) {
-		if (tie_.lock()) {
+		std::shared_ptr<void> backup(tie_.lock());
+		if (backup) {
 			handle_event_with_tie(receive_tm);
 		}
 	} else {
