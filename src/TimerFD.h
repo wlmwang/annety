@@ -8,6 +8,8 @@
 #include "SelectableFD.h"
 #include "Times.h"
 
+#include <memory>
+
 namespace annety
 {
 class TimerFD : public SelectableFD

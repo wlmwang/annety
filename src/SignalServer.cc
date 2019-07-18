@@ -122,20 +122,35 @@ void SignalServer::handle_read()
 {
 	owner_loop_->check_in_own_loop();
 
-	struct signalfd_siginfo siginfo;
+	int signo = -1;
 	Time curr = Time::now();
+#if defined(OS_LINUX)
 	{
+		struct signalfd_siginfo siginfo;
 		ssize_t n = signal_socket_->read(&siginfo, sizeof siginfo);
 		if (n != sizeof siginfo) {
 			PLOG(ERROR) << "SignalServer::handle_read reads " << n << " bytes instead of " << sizeof(siginfo);
 			return;
 		}
+		signo = siginfo.ssi_signo;
 		LOG(TRACE) << "SignalServer::handle_read " << n << " at " << curr;
 	}
-
+#else
 	{
+		int64_t s;
+		ssize_t n = signal_socket_->read(&s, sizeof s);
+		if (n != sizeof s) {
+			PLOG(ERROR) << "SignalServer::handle_read reads " << n << " bytes instead of " << sizeof(s);
+			return;
+		}
+		signo = static_cast<int>(s);
+		LOG(TRACE) << "SignalServer::handle_read " << n << " at " << curr;
+	}
+#endif
+
+	if (signo != -1) {
 		calling_signal_functor_ = true;
-		auto it = signals_.find(siginfo.ssi_signo);
+		auto it = signals_.find(signo);
 		if (it != signals_.end()) {
 		   (it->second)();
 		}

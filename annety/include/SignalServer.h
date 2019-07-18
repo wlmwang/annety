@@ -21,7 +21,7 @@ class Channel;
 
 // Wrapper server with signal handler
 //
-// Notice:It be created only in main loop thread
+// notice:It be created only in main loop thread
 class SignalServer
 {
 public:

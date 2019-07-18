@@ -7,7 +7,8 @@
 #include "Macros.h"
 #include "SelectableFD.h"
 
-#include <signal.h>
+#include <memory>
+#include <signal.h>	// for signal macros
 
 namespace annety
 {
@@ -18,6 +19,7 @@ public:
 
 	SignalFD() = delete;
 	SignalFD(bool nonblock, bool cloexec);
+	virtual ~SignalFD() override;
 
 	virtual int close() override;
 	virtual ssize_t read(void *buf, size_t len) override;
@@ -30,8 +32,13 @@ public:
 	// int signal_ismember(int signo);
 
 private:
+#if defined(OS_LINUX)
 	bool nonblock_;
 	bool cloexec_;
+#else
+	std::unique_ptr<SelectableFD> ev_;
+#endif
+	
 	sigset_t mask_;
 
 	DISALLOW_COPY_AND_ASSIGN(SignalFD);

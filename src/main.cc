@@ -542,6 +542,10 @@ int main(int argc, char* argv[])
 	SignalServer ssrv(&loop);
 	ssrv.add_signal(SIGUSR1, [&ssrv]() {
 		LOG(INFO) << "ssrv:" << SIGUSR1;
+		//ssrv.del_signal(SIGUSR2);
+	});
+	ssrv.add_signal(SIGUSR2, [&ssrv]() {
+		LOG(INFO) << "ssrv:" << SIGUSR2;
 	});
 	loop.loop();
 
