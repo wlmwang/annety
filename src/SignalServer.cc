@@ -137,13 +137,13 @@ void SignalServer::handle_read()
 	}
 #else
 	{
-		int64_t s;
-		ssize_t n = signal_socket_->read(&s, sizeof s);
-		if (n != sizeof s) {
-			PLOG(ERROR) << "SignalServer::handle_read reads " << n << " bytes instead of " << sizeof(s);
+		int64_t so;
+		ssize_t n = signal_socket_->read(&so, sizeof so);
+		if (n != sizeof so) {
+			PLOG(ERROR) << "SignalServer::handle_read reads " << n << " bytes instead of " << sizeof(so);
 			return;
 		}
-		signo = static_cast<int>(s);
+		signo = static_cast<int>(so);
 		LOG(TRACE) << "SignalServer::handle_read " << n << " at " << curr;
 	}
 #endif

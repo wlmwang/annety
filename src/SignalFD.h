@@ -7,7 +7,11 @@
 #include "Macros.h"
 #include "SelectableFD.h"
 
+#if !defined(OS_LINUX)
+#include <set>
 #include <memory>
+#endif
+
 #include <signal.h>	// for signal macros
 
 namespace annety
@@ -35,11 +39,11 @@ private:
 #if defined(OS_LINUX)
 	bool nonblock_;
 	bool cloexec_;
+	sigset_t mask_;
 #else
+	std::set<int> signo_;
 	std::unique_ptr<SelectableFD> ev_;
 #endif
-	
-	sigset_t mask_;
 
 	DISALLOW_COPY_AND_ASSIGN(SignalFD);
 };

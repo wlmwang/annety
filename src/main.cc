@@ -540,12 +540,13 @@ int main(int argc, char* argv[])
 
 	EventLoop loop;
 	SignalServer ssrv(&loop);
-	ssrv.add_signal(SIGUSR1, [&ssrv]() {
-		LOG(INFO) << "ssrv:" << SIGUSR1;
-		//ssrv.del_signal(SIGUSR2);
+	ssrv.add_signal(SIGTERM, [&ssrv]() {
+		LOG(INFO) << "ssrv:" << SIGTERM;
+		// ssrv.del_signal(SIGQUIT);
+		// ssrv.reset_signal();
 	});
-	ssrv.add_signal(SIGUSR2, [&ssrv]() {
-		LOG(INFO) << "ssrv:" << SIGUSR2;
+	ssrv.add_signal(SIGQUIT, [&ssrv]() {
+		LOG(INFO) << "ssrv:" << SIGQUIT;
 	});
 	loop.loop();
 
