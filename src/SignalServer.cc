@@ -26,7 +26,7 @@ namespace {
 // #define SIG_IGN ((__sighandler_t) 1)
 void signal_ignore()
 {
-	LOG(TRACE) << "signal_ignore is calling";
+	LOG(TRACE) << "annety::signal_ignore is calling";
 }
 
 }	// namespace anonymous

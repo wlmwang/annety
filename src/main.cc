@@ -542,12 +542,12 @@ int main(int argc, char* argv[])
 	SignalServer ssrv(&loop);
 	ssrv.add_signal(SIGTERM, [&ssrv]() {
 		LOG(INFO) << "ssrv:" << SIGTERM;
-		// ssrv.del_signal(SIGQUIT);
-		// ssrv.reset_signal();
+		// ssrv.delete_signal(SIGQUIT);
+		// ssrv.default_signal();
 	});
-	ssrv.add_signal(SIGTERM, [&ssrv]() {
-		LOG(INFO) << "ssrv1:" << SIGTERM;
-	});
+	// ssrv.add_signal(SIGTERM, [&ssrv]() {
+	// 	LOG(INFO) << "ssrv1:" << SIGTERM;
+	// });
 
 	ssrv.add_signal(SIGQUIT, [&ssrv]() {
 		LOG(INFO) << "ssrv:" << SIGQUIT;
