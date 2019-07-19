@@ -54,31 +54,35 @@ int signalfd(const sigset_t* mask, bool nonblock, bool cloexec, int fd = -1)
 
 }	// namespace internal
 
-namespace
-{
+#if !defined(OS_LINUX)
+namespace {
+static_assert(sizeof(int64_t) >= sizeof(int), "loss of precision");
+
 // ::sigaction bind handler
 thread_local SignalFD* tls_signal_fd{nullptr};
 void signal_handler(int signo)
 {
-	static_assert(sizeof(int64_t) >= sizeof(int), "loss of precision");
 	if (tls_signal_fd) {
 		int64_t so = static_cast<int64_t>(signo);	// fixed length
 		tls_signal_fd->write(static_cast<void*>(&so), sizeof(int64_t));
 	}
 }
 }	// namespace anonymous
+#endif
 
 SignalFD::SignalFD(bool nonblock, bool cloexec)
 {
+	// sigemptyset is macros at some platform
+	PCHECK(sigemptyset(&sigset_) == 0);
+
 #if defined(OS_LINUX)
 	nonblock_ = nonblock;
 	cloexec_ = cloexec;
-	PCHECK(::sigemptyset(&mask_) == 0);
-	fd_ = internal::signalfd(&mask_, nonblock_, cloexec_);
+	fd_ = internal::signalfd(&sigset_, nonblock_, cloexec_);
 #else
-	tls_signal_fd = this;
 	ev_.reset(new EventFD(nonblock, cloexec));
 	fd_ = ev_->internal_fd();
+	tls_signal_fd = this;
 #endif
 
 	PCHECK(fd_ >= 0);
@@ -121,24 +125,30 @@ ssize_t SignalFD::write(const void *buf, size_t len)
 
 void SignalFD::signal_add(int signo)
 {
-#if defined(OS_LINUX)
-	PCHECK(::sigaddset(&mask_, signo) == 0);
-	PCHECK(::sigprocmask(SIG_BLOCK, &mask_, NULL) == 0);
-	PCHECK(internal::signalfd(&mask_, nonblock_, cloexec_, fd_) >= 0);
-#else
-	std::set<int>::iterator it = signo_.find(signo);
-	if (it != signo_.end()) {
+	if (signal_ismember(signo) == 1) {
 		return;
 	}
+	// sigaddset is macros at some platform
+	PCHECK(sigaddset(&sigset_, signo) == 0);
+
+#if defined(OS_LINUX)
+	PCHECK(::sigprocmask(SIG_BLOCK, &sigset_, NULL) == 0);
+	PCHECK(internal::signalfd(&sigset_, nonblock_, cloexec_, fd_) >= 0);
+#else
+	CHECK(signo_.find(signo) == signo_.end());
+
 	struct sigaction act;
 	act.sa_handler = &signal_handler;
 	// SA_NODEFER:
-	// 	when executing the signal processing handler, the signal can still be received.
+	// 	the signal can still be received when calling the signal handler.
 	// SA_RESTART:
-	// 	restart interrupted system calls
+	// 	restart the interrupted system calls.
+	// SA_RESETHAND:
+	// 	reset the signal's handler to SIG_DFL when calling the signal handler.
 	act.sa_flags = SA_NODEFER | SA_RESTART;
 	PCHECK(sigemptyset(&act.sa_mask) == 0);
 	PCHECK(::sigaction(signo, &act, NULL) == 0);
+	
 	{
 		auto ok = signo_.insert(signo);
 		PCHECK(ok.second);
@@ -148,44 +158,67 @@ void SignalFD::signal_add(int signo)
 
 void SignalFD::signal_del(int signo)
 {
+	if (signal_ismember(signo) == 0) {
+		return;
+	}
+	// sigdelset is macros at some platform
+	PCHECK(sigdelset(&sigset_, signo) == 0);
+
 #if defined(OS_LINUX)
-	PCHECK(::sigdelset(&mask_, signo) == 0);
-	PCHECK(::sigprocmask(SIG_BLOCK, &mask_, NULL) == 0);
-	PCHECK(internal::signalfd(&mask_, nonblock_, cloexec_, fd_) >= 0);
+	PCHECK(::sigprocmask(SIG_SETMASK, &sigset_, NULL) == 0);
+	PCHECK(internal::signalfd(&sigset_, nonblock_, cloexec_, fd_) >= 0);
 #else
-	std::set<int>::iterator it = signo_.find(signo);
-	if (it != signo_.end()) {
-		struct sigaction act;
-		act.sa_handler = SIG_DFL;
-		act.sa_flags = 0;
-		PCHECK(sigemptyset(&act.sa_mask) == 0);
-		PCHECK(::sigaction(signo, &act, NULL) == 0);
-		{
-			size_t n = signo_.erase(signo);
-			PCHECK(n == 1);
-		}
+	CHECK(signo_.find(signo) != signo_.end());
+	
+	struct sigaction act;
+	act.sa_handler = SIG_DFL;
+	act.sa_flags = 0;
+	PCHECK(sigemptyset(&act.sa_mask) == 0);
+	PCHECK(::sigaction(signo, &act, NULL) == 0);
+	
+	{
+		size_t n = signo_.erase(signo);
+		PCHECK(n == 1);
 	}
 #endif
 }
 
 void SignalFD::signal_reset()
 {
+	// sigisemptyset() is GNU platform's interface
+	// FIXME: use signo_.empty()
+
+	// sigemptyset is macros at some platform
+	PCHECK(sigemptyset(&sigset_) == 0);
+
 #if defined(OS_LINUX)
-	PCHECK(::sigemptyset(&mask_) == 0);
-	PCHECK(::sigprocmask(SIG_BLOCK, &mask_, NULL) == 0);
-	PCHECK(internal::signalfd(&mask_, nonblock_, cloexec_, fd_) >= 0);
+	PCHECK(::sigprocmask(SIG_SETMASK, &sigset_, NULL) == 0);
+	PCHECK(internal::signalfd(&sigset_, nonblock_, cloexec_, fd_) >= 0);
 #else
+	if (signo_.empty()) {
+		return;
+	}
 	// reset all signal to default
-	if (!signo_.empty()) {
-		struct sigaction act;
-		act.sa_handler = SIG_DFL;
-		act.sa_flags = 0;
-		PCHECK(sigemptyset(&act.sa_mask) == 0);
-		for (auto it = signo_.begin(); it != signo_.end(); it++) {
-			PCHECK(::sigaction(*it, &act, NULL) == 0);
-		}
+	struct sigaction act;
+	act.sa_handler = SIG_DFL;
+	act.sa_flags = 0;
+	PCHECK(sigemptyset(&act.sa_mask) == 0);
+	for (auto it = signo_.begin(); it != signo_.end(); it++) {
+		PCHECK(::sigaction(*it, &act, NULL) == 0);
+	}
+
+	{
+		signo_.clear();
 	}
 #endif
+}
+
+int SignalFD::signal_ismember(int signo)
+{
+	// sigismember is macros at some platform
+	int rt = sigismember(&sigset_, signo);
+	PCHECK(rt >= 0);
+	return rt;
 }
 
 }	// namespace annety

@@ -7,7 +7,8 @@
 #include "Macros.h"
 #include "CallbackForward.h"
 
-#include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <memory>
 #include <functional>
@@ -19,7 +20,8 @@ namespace annety
 class EventLoop;
 class Channel;
 
-// Wrapper server with signal handler
+// Wrapper server with signal handler.
+// It can specify all signals except SIGKILL and SIGSTOP
 //
 // notice:It be created only in main loop thread
 class SignalServer
@@ -33,17 +35,16 @@ public:
 	void reset_signal();
 
 	// must be called in own loop thread(main thread)
-	// FIXME.
 	bool ismember_signal(int signo);
 
 private:
-	using SignalMap = std::map<int, SignalCallback>;
+	using SignalSet = std::unordered_set<int>;
+	using SignalMap = std::unordered_map<int, SignalCallback>;
 
+	void handle_read();
 	void add_signal_in_own_loop(int signo, SignalCallback cb);
 	void del_signal_in_own_loop(int signo);
 	void reset_signal_in_own_loop();
-
-	void handle_read();
 
 private:
 	EventLoop* owner_loop_{nullptr};

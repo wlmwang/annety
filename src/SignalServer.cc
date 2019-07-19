@@ -72,8 +72,10 @@ void SignalServer::reset_signal()
 void SignalServer::add_signal_in_own_loop(int signo, SignalCallback cb) 
 {
 	owner_loop_->check_in_own_loop();
-	
+
+	// do not use insert() because we could update has added SignalCallback
 	signals_[signo] = std::move(cb);
+	
 	{
 		SignalFD* sf = static_cast<SignalFD*>(signal_socket_.get());
 		sf->signal_add(signo);

@@ -8,7 +8,7 @@
 #include "SelectableFD.h"
 
 #if !defined(OS_LINUX)
-#include <set>
+#include <unordered_set>
 #include <memory>
 #endif
 
@@ -32,16 +32,22 @@ public:
 	void signal_add(int signo);
 	void signal_del(int signo);
 	void signal_reset();
-	// void signal_set(int signo);
-	// int signal_ismember(int signo);
+
+	int signal_ismember(int signo);
+	
+	// ::sigisemptyset() is GNU platform's interface
+	// int signal_isemptyset();
 
 private:
+	sigset_t sigset_;
+
 #if defined(OS_LINUX)
 	bool nonblock_;
 	bool cloexec_;
-	sigset_t mask_;
 #else
-	std::set<int> signo_;
+	using SignalSet = std::unordered_set<int>;
+
+	SignalSet signo_;
 	std::unique_ptr<SelectableFD> ev_;
 #endif
 
