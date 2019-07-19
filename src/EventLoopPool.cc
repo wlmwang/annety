@@ -1,7 +1,7 @@
 // Refactoring: Anny Wang
 // Date: Jun 25 2019
 
-#include "EventLoopThreadPool.h"
+#include "EventLoopPool.h"
 #include "EventLoopThread.h"
 #include "EventLoop.h"
 #include "Logging.h"
@@ -11,12 +11,12 @@
 
 namespace annety
 {
-EventLoopThreadPool::EventLoopThreadPool(EventLoop* loop, const std::string& name)
+EventLoopPool::EventLoopPool(EventLoop* loop, const std::string& name)
 	: owner_loop_(loop), name_(name) {}
 
-EventLoopThreadPool::~EventLoopThreadPool() {}
+EventLoopPool::~EventLoopPool() {}
 
-void EventLoopThreadPool::start(const ThreadInitCallback& cb)
+void EventLoopPool::start(const ThreadInitCallback& cb)
 {
 	owner_loop_->check_in_own_loop();
 
@@ -25,10 +25,11 @@ void EventLoopThreadPool::start(const ThreadInitCallback& cb)
 
 	for (int i = 0; i < num_threads_; ++i) {
 		std::string name = name_ + string_printf("%d", i);
-
-		EventLoopThread* t = new EventLoopThread(cb, name);
-		threads_.push_back(std::unique_ptr<EventLoopThread>(t));
-		loops_.push_back(t->start_loop());
+		
+		EventLoopThread* et = new EventLoopThread(cb, name);
+		
+		threads_.push_back(std::unique_ptr<EventLoopThread>(et));
+		loops_.push_back(et->start_loop());
 	}
 	// no thread pool, reuse current threads
 	if (num_threads_ == 0 && cb) {
@@ -36,7 +37,7 @@ void EventLoopThreadPool::start(const ThreadInitCallback& cb)
 	}
 }
 
-EventLoop* EventLoopThreadPool::get_next_loop()
+EventLoop* EventLoopPool::get_next_loop()
 {
 	owner_loop_->check_in_own_loop();
 
@@ -53,7 +54,7 @@ EventLoop* EventLoopThreadPool::get_next_loop()
 	return loop;
 }
 
-EventLoop* EventLoopThreadPool::get_loop_with_hashcode(size_t hashcode)
+EventLoop* EventLoopPool::get_loop_with_hashcode(size_t hashcode)
 {
 	owner_loop_->check_in_own_loop();
 
@@ -65,7 +66,7 @@ EventLoop* EventLoopThreadPool::get_loop_with_hashcode(size_t hashcode)
 	return loop;
 }
 
-std::vector<EventLoop*> EventLoopThreadPool::get_all_loops()
+std::vector<EventLoop*> EventLoopPool::get_all_loops()
 {
 	owner_loop_->check_in_own_loop();
 	DCHECK(started_);

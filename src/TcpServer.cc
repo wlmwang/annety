@@ -9,7 +9,7 @@
 #include "Acceptor.h"
 #include "TcpConnection.h"
 #include "EventLoop.h"
-#include "EventLoopThreadPool.h"
+#include "EventLoopPool.h"
 #include "strings/StringPrintf.h"
 
 #include <utility>
@@ -33,7 +33,7 @@ TcpServer::TcpServer(EventLoop* loop,
 	  name_(name),
 	  ip_port_(addr.to_ip_port()),
 	  acceptor_(new Acceptor(loop, addr, option == kReusePort)),
-	  thread_pool_(new EventLoopThreadPool(loop, name)),
+	  loop_pool_(new EventLoopPool(loop, name)),
 	  connect_cb_(default_connect_callback),
 	  message_cb_(default_message_callback)
 {
@@ -62,14 +62,14 @@ TcpServer::~TcpServer()
 void TcpServer::set_thread_num(int num_threads)
 {
 	CHECK(0 <= num_threads);
-	thread_pool_->set_thread_num(num_threads);
+	loop_pool_->set_thread_num(num_threads);
 }
 
 void TcpServer::start()
 {
 	if (!started_.test_and_set()) {
 		// 1. starting all thread pool
-		thread_pool_->start(thread_init_cb_);
+		loop_pool_->start(thread_init_cb_);
 
 		// 2. setting listen-socket on current thread
 		CHECK(!acceptor_->is_listen());
@@ -81,7 +81,7 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 {
 	owner_loop_->check_in_own_loop();
 
-	EventLoop* loop = thread_pool_->get_next_loop();
+	EventLoop* loop = loop_pool_->get_next_loop();
   	
 	std::string name = name_ + string_printf("#%s#%d", 
 								ip_port_.c_str(), next_conn_id_++);

@@ -9,7 +9,6 @@
 #include "Connector.h"
 #include "TcpConnection.h"
 #include "EventLoop.h"
-#include "EventLoopThreadPool.h"
 #include "strings/StringPrintf.h"
 
 namespace annety

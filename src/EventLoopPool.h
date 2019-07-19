@@ -16,13 +16,13 @@ namespace annety
 class EventLoop;
 class EventLoopThread;
 
-class EventLoopThreadPool
+class EventLoopPool
 {
 public:
 	using ThreadInitCallback = std::function<void(EventLoop*)>;
 
-	EventLoopThreadPool(EventLoop* loop, const std::string& name);
-	~EventLoopThreadPool();
+	EventLoopPool(EventLoop* loop, const std::string& name);
+	~EventLoopPool();
   
 	void set_thread_num(int num_threads) { num_threads_ = num_threads; }
 	void start(const ThreadInitCallback& cb = ThreadInitCallback());
@@ -50,7 +50,7 @@ private:
 	std::vector<std::unique_ptr<EventLoopThread>> threads_;
 	std::vector<EventLoop*> loops_;
 	
-	DISALLOW_COPY_AND_ASSIGN(EventLoopThreadPool);
+	DISALLOW_COPY_AND_ASSIGN(EventLoopPool);
 };
 
 }	// namespace annety

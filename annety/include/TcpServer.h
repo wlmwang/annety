@@ -19,7 +19,7 @@ class SocketFD;
 class EndPoint;
 class Acceptor;
 class EventLoop;
-class EventLoopThreadPool;
+class EventLoopPool;
 
 // Wrapper server with TCP protocol
 // It supports single-thread and thread-pool models
@@ -91,7 +91,7 @@ private:
 	std::unique_ptr<Acceptor> acceptor_;
 	
 	// worker thread pool
-	std::unique_ptr<EventLoopThreadPool> thread_pool_;
+	std::unique_ptr<EventLoopPool> loop_pool_;
 
 	// user callback functions
 	ConnectCallback connect_cb_;
