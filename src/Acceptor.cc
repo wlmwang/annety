@@ -18,7 +18,7 @@ namespace annety
 {
 namespace internal
 {
-// Specific listen socket related function interfaces
+// specific listen socket related function interfaces
 int bind(const SelectableFD& sfd, const EndPoint& addr)
 {
 	return sockets::bind(sfd.internal_fd(), addr.get_sockaddr());

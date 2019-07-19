@@ -198,7 +198,7 @@ void SignalFD::signal_default()
 	if (signo_.empty()) {
 		return;
 	}
-	// reset all signal to default
+	// reset all signal handler to default
 	struct sigaction act;
 	act.sa_handler = SIG_DFL;
 	act.sa_flags = 0;

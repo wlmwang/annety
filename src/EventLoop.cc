@@ -11,8 +11,6 @@
 #include "PlatformThread.h"
 #include "threading/ThreadLocal.h"
 
-#include <signal.h>
-
 namespace annety
 {
 namespace
@@ -25,12 +23,6 @@ void clean_tls_event_loop(void *ptr) {
 
 // There is at most one EventLoop object per thread
 ThreadLocal<EventLoop> tls_event_loop{&clean_tls_event_loop};
-
-// Ignore SIGPIPE signal
-BEFORE_MAIN_EXECUTOR() {
-	::signal(SIGPIPE, SIG_IGN);
-}
-
 }	// namespace anonymous
 
 EventLoop::EventLoop() 
