@@ -16,6 +16,16 @@
 
 namespace annety
 {
+namespace {
+// similar to SIG_IGN macro, ignoring signal processing
+// #define SIG_IGN ((__sighandler_t) 1)
+void signal_ignore()
+{
+	LOG(TRACE) << "signal_ignore is calling";
+}
+
+}	// namespace anonymous
+
 SignalServer::SignalServer(EventLoop* loop)
 	: owner_loop_(loop)
 	, signal_socket_(new SignalFD(true, true))
@@ -57,23 +67,28 @@ void SignalServer::add_signal(int signo, SignalCallback cb)
 		std::bind(&SignalServer::add_signal_in_own_loop, this, signo, std::move(cb)));
 }
 
-void SignalServer::del_signal(int signo)
+void SignalServer::delete_signal(int signo)
 {
 	owner_loop_->run_in_own_loop(
-		std::bind(&SignalServer::del_signal_in_own_loop, this, signo));
+		std::bind(&SignalServer::delete_signal_in_own_loop, this, signo));
 }
 
-void SignalServer::reset_signal()
+void SignalServer::default_signal()
 {
 	owner_loop_->run_in_own_loop(
-		std::bind(&SignalServer::reset_signal_in_own_loop, this));
+		std::bind(&SignalServer::default_signal_in_own_loop, this));
+}
+
+void SignalServer::ignore_signal(int signo)
+{
+	add_signal(signo, std::bind(&signal_ignore));
 }
 
 void SignalServer::add_signal_in_own_loop(int signo, SignalCallback cb) 
 {
 	owner_loop_->check_in_own_loop();
 
-	// do not use insert() because we could update has added SignalCallback
+	// do not use insert (), because we may change the SignalCallback that has been added
 	signals_[signo] = std::move(cb);
 	
 	{
@@ -85,7 +100,7 @@ void SignalServer::add_signal_in_own_loop(int signo, SignalCallback cb)
 		<< signo << " success";
 }
 
-void SignalServer::del_signal_in_own_loop(int signo) 
+void SignalServer::delete_signal_in_own_loop(int signo) 
 {
 	owner_loop_->check_in_own_loop();
 
@@ -97,14 +112,14 @@ void SignalServer::del_signal_in_own_loop(int signo)
 
 	{
 		SignalFD* sf = static_cast<SignalFD*>(signal_socket_.get());
-		sf->signal_del(signo);
+		sf->signal_delete(signo);
 	}
 
-	LOG(TRACE) << "SignalServer::del_signal_in_own_loop signal " 
+	LOG(TRACE) << "SignalServer::delete_signal_in_own_loop signal " 
 		<< signo << " success";
 }
 
-void SignalServer::reset_signal_in_own_loop() 
+void SignalServer::default_signal_in_own_loop() 
 {
 	owner_loop_->check_in_own_loop();
 	if (signals_.empty()) {
@@ -114,10 +129,10 @@ void SignalServer::reset_signal_in_own_loop()
 
 	{
 		SignalFD* sf = static_cast<SignalFD*>(signal_socket_.get());
-		sf->signal_reset();
+		sf->signal_default();
 	}
 
-	LOG(TRACE) << "SignalServer::reset_signal_in_own_loop signal success";
+	LOG(TRACE) << "SignalServer::default_signal_in_own_loop signal success";
 }
 
 void SignalServer::handle_read()

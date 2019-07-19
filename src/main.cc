@@ -547,12 +547,13 @@ int main(int argc, char* argv[])
 	});
 	ssrv.add_signal(SIGTERM, [&ssrv]() {
 		LOG(INFO) << "ssrv1:" << SIGTERM;
-		// ssrv.del_signal(SIGQUIT);
-		// ssrv.reset_signal();
 	});
+
 	ssrv.add_signal(SIGQUIT, [&ssrv]() {
 		LOG(INFO) << "ssrv:" << SIGQUIT;
 	});
+	ssrv.ignore_signal(SIGQUIT);
+	
 	loop.loop();
 
 }

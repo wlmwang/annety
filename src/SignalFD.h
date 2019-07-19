@@ -30,8 +30,8 @@ public:
 	virtual ssize_t write(const void *buf, size_t len) override;
 
 	void signal_add(int signo);
-	void signal_del(int signo);
-	void signal_reset();
+	void signal_delete(int signo);
+	void signal_default();
 
 	int signal_ismember(int signo);
 	

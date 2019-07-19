@@ -156,7 +156,7 @@ void SignalFD::signal_add(int signo)
 #endif
 }
 
-void SignalFD::signal_del(int signo)
+void SignalFD::signal_delete(int signo)
 {
 	if (signal_ismember(signo) == 0) {
 		return;
@@ -183,7 +183,7 @@ void SignalFD::signal_del(int signo)
 #endif
 }
 
-void SignalFD::signal_reset()
+void SignalFD::signal_default()
 {
 	// sigisemptyset() is GNU platform's interface
 	// FIXME: use signo_.empty()
