@@ -15,8 +15,6 @@ namespace annety
 class Thread
 {
 public:
-	using TaskCallback = std::function<void()>;
-
 	struct Options
 	{
 	public:

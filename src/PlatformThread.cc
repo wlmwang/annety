@@ -35,10 +35,10 @@ thread_local bool tls_is_main_thread{true};
 struct ThreadParams
 {
 public:
-	PlatformThread::TaskCallback thread_main_cb_;
+	TaskCallback thread_main_cb_;
 
 public:
-	ThreadParams(PlatformThread::TaskCallback cb) 
+	ThreadParams(TaskCallback cb) 
 		: thread_main_cb_(std::move(cb)) {}
 };
 
@@ -57,7 +57,7 @@ void* thread_func(void* params)
 	return nullptr;
 }
 
-bool create_thread(bool joinable, PlatformThread::TaskCallback cb, ThreadRef* thread_ref)
+bool create_thread(bool joinable, TaskCallback cb, ThreadRef* thread_ref)
 {
 	DCHECK(thread_ref);
 

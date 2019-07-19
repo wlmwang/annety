@@ -23,8 +23,6 @@ namespace annety
 class PlatformThread
 {
 public:
-	using TaskCallback = std::function<void()>;
-
 	// Gets the current thread id, which may be useful for logging purposes.
 	static ThreadId current_id();
 

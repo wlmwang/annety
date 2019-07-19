@@ -78,10 +78,10 @@ void SignalServer::delete_signal(int signo)
 		std::bind(&SignalServer::delete_signal_in_own_loop, this, signo));
 }
 
-void SignalServer::default_signal()
+void SignalServer::revert_signal()
 {
 	owner_loop_->run_in_own_loop(
-		std::bind(&SignalServer::default_signal_in_own_loop, this));
+		std::bind(&SignalServer::revert_signal_in_own_loop, this));
 }
 
 void SignalServer::ignore_signal(int signo)
@@ -124,7 +124,7 @@ void SignalServer::delete_signal_in_own_loop(int signo)
 		<< signo << " success";
 }
 
-void SignalServer::default_signal_in_own_loop() 
+void SignalServer::revert_signal_in_own_loop() 
 {
 	owner_loop_->check_in_own_loop();
 	if (signals_.empty()) {
@@ -134,10 +134,10 @@ void SignalServer::default_signal_in_own_loop()
 
 	{
 		SignalFD* sf = static_cast<SignalFD*>(signal_socket_.get());
-		sf->signal_default();
+		sf->signal_revert();
 	}
 
-	LOG(TRACE) << "SignalServer::default_signal_in_own_loop signal success";
+	LOG(TRACE) << "SignalServer::revert_signal_in_own_loop signal success";
 }
 
 void SignalServer::handle_read()

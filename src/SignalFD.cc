@@ -183,7 +183,7 @@ void SignalFD::signal_delete(int signo)
 #endif
 }
 
-void SignalFD::signal_default()
+void SignalFD::signal_revert()
 {
 	// sigisemptyset() is GNU platform's interface
 	// FIXME: use signo_.empty()

@@ -542,8 +542,8 @@ int main(int argc, char* argv[])
 	SignalServer ssrv(&loop);
 	ssrv.add_signal(SIGTERM, [&ssrv]() {
 		LOG(INFO) << "ssrv:" << SIGTERM;
-		// ssrv.delete_signal(SIGQUIT);
-		// ssrv.default_signal();
+		ssrv.delete_signal(SIGQUIT);
+		// ssrv.revert_signal();
 	});
 	// ssrv.add_signal(SIGTERM, [&ssrv]() {
 	// 	LOG(INFO) << "ssrv1:" << SIGTERM;

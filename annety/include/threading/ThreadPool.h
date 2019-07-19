@@ -24,8 +24,6 @@ namespace annety
 class ThreadPool
 {
 public:
-	using TaskCallback = std::function<void()>;
-
 	explicit ThreadPool(int num_threads, const std::string& name_prefix);
 	~ThreadPool();
 

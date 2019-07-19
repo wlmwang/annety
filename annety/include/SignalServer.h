@@ -33,7 +33,7 @@ public:
 	void add_signal(int signo, SignalCallback cb);
 	void delete_signal(int signo);
 	void ignore_signal(int signo);
-	void default_signal();
+	void revert_signal();
 
 	// must be called in own loop thread(main thread)
 	bool ismember_signal(int signo);
@@ -45,7 +45,7 @@ private:
 	void handle_read();
 	void add_signal_in_own_loop(int signo, SignalCallback cb);
 	void delete_signal_in_own_loop(int signo);
-	void default_signal_in_own_loop();
+	void revert_signal_in_own_loop();
 
 private:
 	EventLoop* owner_loop_{nullptr};

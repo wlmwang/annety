@@ -20,6 +20,9 @@
 
 namespace annety
 {
+// Thread user entry function
+using TaskCallback = std::function<void()>;
+
 // Used for logging. Always an integer value.
 #if defined(OS_MACOSX)
 typedef mach_port_t ThreadId;

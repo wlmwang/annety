@@ -31,7 +31,7 @@ public:
 
 	void signal_add(int signo);
 	void signal_delete(int signo);
-	void signal_default();
+	void signal_revert();
 
 	int signal_ismember(int signo);
 	
