@@ -3,7 +3,7 @@
 
 #include "threading/ThreadPool.h"
 #include "Logging.h"
-#include "Exception.h"
+#include "Exceptions.h"
 
 #include <string>
 #include <functional>
@@ -156,13 +156,13 @@ void ThreadPool::loop()
 				task();
 			}
 		}
-	} catch (const Exception& e) {
+	} catch (const Exceptions& e) {
 		LOG(FATAL) << "Thread Pool:" << name_prefix_ 
-				   << "Exception:" << e.what() 
+				   << "Exceptions:" << e.what() 
 				   << "Backtrace:" << e.backtrace();
 	} catch (const std::exception& e) {
 		LOG(FATAL) << "Thread Pool:" << name_prefix_ 
-				   << "Exception:" << e.what();
+				   << "Exceptions:" << e.what();
 	} catch (...) {
 		LOG(ERROR) << "Thread:" << name_prefix_;
 		throw;

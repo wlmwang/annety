@@ -19,7 +19,7 @@
 #include "LogFile.h"
 #include "synchronization/MutexLock.h"
 #include "synchronization/BlockingQueue.h"
-#include "Exception.h"
+#include "Exceptions.h"
 #include "files/FilePath.h"
 #include "files/FileEnumerator.h"
 #include "files/File.h"

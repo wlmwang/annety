@@ -38,7 +38,7 @@ EventLoop::EventLoop()
 		<< ", EventLoop " << this;
 
 	{
-		CHECK(tls_event_loop.empty()) << "EventLoop::EventLoop has created by thread " 
+		CHECK(tls_event_loop.empty()) << "EventLoop::EventLoop has been created by thread " 
 			<< owning_thread_->ref() << ", now current thread is " 
 			<< PlatformThread::current_ref().ref();
 		

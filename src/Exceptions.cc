@@ -1,7 +1,7 @@
 // Refactoring: Anny Wang
 // Date: May 28 2019
 
-#include "Exception.h"
+#include "Exceptions.h"
 
 #include <utility>
 #include <cxxabi.h>     // abi::__cxa_demangle
@@ -58,8 +58,8 @@ std::string backtrace_to_string(bool demangle)
 	return stack;
 }
 
-Exception::Exception(std::string msg)
-	: message_(std::move(msg)),
-	  stack_(backtrace_to_string(false)) {}
+Exceptions::Exceptions(std::string msg)
+	: message_(std::move(msg))
+	, stack_(backtrace_to_string(false)) {}
 
 }  // namespace annety

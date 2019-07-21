@@ -19,8 +19,9 @@ public:
 
 	TimerFD() = delete;
 	TimerFD(bool nonblock, bool cloexec);
+	
+	virtual ~TimerFD() override;
 
-	virtual int close() override;
 	virtual ssize_t read(void *buf, size_t len) override;
 	virtual ssize_t write(const void *buf, size_t len) override;
 

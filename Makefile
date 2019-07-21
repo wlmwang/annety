@@ -21,7 +21,7 @@ INCFLAGS	:= ${LIB_INC} -I${DIR_SRC} -I${SRC_INC}
 
 # 源文件
 CC_SRC		:= main.cc \
-			   AtExit.cc Times.cc Exception.cc ByteBuffer.cc LogStream.cc Logging.cc \
+			   AtExit.cc Times.cc Exceptions.cc ByteBuffer.cc LogStream.cc Logging.cc \
 			   StringPiece.cc SafeStrerror.cc StringSplit.cc StringUtil.cc StringPrintf.cc \
 			   File.cc FilePath.cc FileEnumerator.cc FileUtil.cc FileUtilPosix.cc LogFile.cc \
 			   MutexLock.cc ConditionVariable.cc CountDownLatch.cc \

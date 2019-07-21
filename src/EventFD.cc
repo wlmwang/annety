@@ -70,14 +70,10 @@ EventFD::EventFD(bool nonblock, bool cloexec)
 	LOG(TRACE) << "EventFD::EventFD" << " fd=" << fd_ << " is constructing";
 }
 
-int EventFD::close()
+EventFD::~EventFD()
 {
-#if defined(OS_LINUX)
-	return SelectableFD::close();
-#else
-	int r1 = sockets::close(fds_[0]);
-	int r2 = sockets::close(fds_[1]);
-	return r1 != 0? r1: r2;
+#if !defined(OS_LINUX)
+	sockets::close(fds_[1]);
 #endif
 }
 

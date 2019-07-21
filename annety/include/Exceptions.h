@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: May 28 2019
 
-#ifndef ANT_EXCEPTION_H
-#define ANT_EXCEPTION_H
+#ifndef ANT_EXCEPTIONS_H
+#define ANT_EXCEPTIONS_H
 
 #include <exception>
 #include <string>
@@ -11,11 +11,11 @@ namespace annety
 {
 std::string backtrace_to_string(bool demangle);
 
-class Exception : public std::exception
+class Exceptions : public std::exception
 {
 public:
-	Exception(std::string what);
-	~Exception() noexcept override = default;
+	Exceptions(std::string what);
+	~Exceptions() noexcept override = default;
 
 	const char* what() const noexcept override
 	{
@@ -34,4 +34,4 @@ private:
 
 }  // namespace annety
 
-#endif  // ANT_EXCEPTION_H
+#endif  // ANT_EXCEPTIONS_H

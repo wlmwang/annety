@@ -11,9 +11,8 @@
 #endif
 
 #include <unistd.h>
-#include <signal.h>		// SIG_DFL, SIG_IGN
+#include <signal.h>	// SIG_DFL, SIG_IGN
 
-//
 // \file <signal.h>
 // /* Type of a signal handler. */
 // typedef void (*__sighandler_t) (int);
@@ -58,13 +57,13 @@ int signalfd(const sigset_t* mask, bool nonblock, bool cloexec, int fd = -1)
 namespace {
 static_assert(sizeof(int64_t) >= sizeof(int), "loss of precision");
 
-// ::sigaction bind handler
-thread_local SignalFD* tls_signal_fd{nullptr};
+// no need to care about thread-safe, because only one SignalFD instance in main thread.
+SignalFD* g_signal_fd{nullptr};
 void signal_handler(int signo)
 {
-	if (tls_signal_fd) {
+	if (g_signal_fd) {
 		int64_t so = static_cast<int64_t>(signo);	// fixed length
-		tls_signal_fd->write(static_cast<void*>(&so), sizeof(int64_t));
+		g_signal_fd->write(static_cast<void*>(&so), sizeof(int64_t));
 	}
 }
 }	// namespace anonymous
@@ -80,9 +79,12 @@ SignalFD::SignalFD(bool nonblock, bool cloexec)
 	cloexec_ = cloexec;
 	fd_ = internal::signalfd(&sigset_, nonblock_, cloexec_);
 #else
+	{
+		CHECK(!g_signal_fd) << "SignalFD::SignalFD has been created at " << g_signal_fd;
+		g_signal_fd = this;
+	}
 	ev_.reset(new EventFD(nonblock, cloexec));
 	fd_ = ev_->internal_fd();
-	tls_signal_fd = this;
 #endif
 
 	PCHECK(fd_ >= 0);
@@ -92,16 +94,8 @@ SignalFD::SignalFD(bool nonblock, bool cloexec)
 SignalFD::~SignalFD()
 {
 #if !defined(OS_LINUX)
-	tls_signal_fd = nullptr;
-#endif
-}
-
-int SignalFD::close()
-{
-#if defined(OS_LINUX)
-	return SelectableFD::close();
-#else
-	return ev_->close();
+	fd_ = -1;
+	g_signal_fd = nullptr;
 #endif
 }
 
@@ -148,7 +142,6 @@ void SignalFD::signal_add(int signo)
 	act.sa_flags = SA_NODEFER | SA_RESTART;
 	PCHECK(sigemptyset(&act.sa_mask) == 0);
 	PCHECK(::sigaction(signo, &act, NULL) == 0);
-	
 	{
 		auto ok = signo_.insert(signo);
 		PCHECK(ok.second);
@@ -175,7 +168,6 @@ void SignalFD::signal_delete(int signo)
 	act.sa_flags = 0;
 	PCHECK(sigemptyset(&act.sa_mask) == 0);
 	PCHECK(::sigaction(signo, &act, NULL) == 0);
-	
 	{
 		size_t n = signo_.erase(signo);
 		PCHECK(n == 1);
@@ -206,7 +198,6 @@ void SignalFD::signal_revert()
 	for (auto it = signo_.begin(); it != signo_.end(); it++) {
 		PCHECK(::sigaction(*it, &act, NULL) == 0);
 	}
-
 	{
 		signo_.clear();
 	}

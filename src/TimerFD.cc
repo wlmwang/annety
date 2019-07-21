@@ -57,12 +57,10 @@ TimerFD::TimerFD(bool nonblock, bool cloexec)
 	LOG(TRACE) << "TimerFD::TimerFD" << " fd=" << fd_ << " is constructing";
 }
 
-int TimerFD::close()
+TimerFD::~TimerFD()
 {
-#if defined(OS_LINUX)
-	return SelectableFD::close();
-#else
-	return ev_->close();
+#if !defined(OS_LINUX)
+	fd_ = -1;
 #endif
 }
 

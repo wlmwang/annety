@@ -6,7 +6,7 @@
 #include "PlatformThread.h"
 #include "strings/StringPiece.h"
 #include "strings/StringPrintf.h"
-#include "Exception.h"
+#include "Exceptions.h"
 #include "Logging.h"
 
 #include <string>
@@ -126,13 +126,13 @@ void Thread::start_routine()
 	
 	try {
 		thread_main_cb_();
-	} catch (const Exception& e) {
+	} catch (const Exceptions& e) {
 		LOG(FATAL) << "Thread:" << name_ 
-				   << "Exception:" << e.what() 
+				   << "Exceptions:" << e.what() 
 				   << "Backtrace:" << e.backtrace();
 	} catch (const std::exception& e) {
 		LOG(FATAL) << "Thread:" << name_ 
-				   << "Exception:" << e.what();
+				   << "Exceptions:" << e.what();
 	} catch (...) {
 		LOG(ERROR) << "Thread:" << name_;
 		throw;

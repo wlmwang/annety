@@ -344,7 +344,7 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* addr)
 int close(int fd)
 {
 	int ret = ::close(fd);
-	PLOG_IF(ERROR, ret < 0) << "::close failed";
+	PLOG_IF(ERROR, ret < 0) << "::close failed fd=" << fd;
 	return ret;
 }
 

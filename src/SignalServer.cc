@@ -49,8 +49,13 @@ SignalServer::SignalServer(EventLoop* loop)
 
 SignalServer::~SignalServer()
 {
+	owner_loop_->check_in_own_loop();
+
 	LOG(TRACE) << "SignalServer::~SignalServer" << " fd=" << 
 		signal_socket_->internal_fd() << " is destructing";
+
+	// revert signal processor to default system handler
+	revert_signal_in_own_loop();
 
 	signal_channel_->disable_all_event();
 	signal_channel_->remove();

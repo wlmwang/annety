@@ -5,9 +5,8 @@
 #define ANT_SELECTABLE_FD_H_
 
 #include "Macros.h"
-#include "Logging.h"
 
-#include <sys/socket.h>	// sa_family_t,iovec
+#include <sys/types.h>
 
 namespace annety
 {
@@ -19,18 +18,10 @@ class SelectableFD
 {
 public:
 	SelectableFD() = default;
-	explicit SelectableFD(int fd) : fd_(fd)
-	{
-		LOG_IF(ERROR, fd_ < 0) << "fd invaild " << fd_;
-	}
+	explicit SelectableFD(int fd);
 
-	virtual ~SelectableFD()
-	{
-		LOG(TRACE) << "closing fd " << fd_;
-		close();
-	}
-
-	virtual int close();
+	virtual ~SelectableFD();
+	
 	virtual ssize_t read(void *buf, size_t len);
 	virtual ssize_t write(const void *buf, size_t len);
 
