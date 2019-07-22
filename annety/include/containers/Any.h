@@ -22,13 +22,14 @@ namespace annety
 class Any
 {
 public:
-	// default ctor
+	// ctor
 	Any() : type_(std::type_index(typeid(void))) {}
 	Any(const Any& rhs) : ptr_(rhs.clone()), type_(rhs.type_) {}
 	Any(Any&& rhs) : ptr_(std::move(rhs.ptr_)), type_(rhs.type_) {}
 
-	// move ctor
-	template <class U, class = typename std::enable_if<
+	// move ctor.
+	// the std::enable_if<> type-traits is limited to non-Any type
+	template <typename U, typename = typename std::enable_if<
 									!std::is_same<typename std::decay<U>::type, Any>::value
 									, U>::type> 
 	Any(U&& value) 
@@ -60,12 +61,13 @@ public:
 	template<typename U>
 	U& any_cast()
 	{
-		// FIXME: use CHECK() macros
+		// may use CHECK() macros
 		if (!is<U>()) {
 			LOG(ERROR) << "can not cast " << typeid(U).name() 
 					<< " to " << type_.name();
 			throw std::bad_cast();
 		}
+
 		// FIXME: use static_cast<>
 		auto derived = dynamic_cast<Derived<U>*>(ptr_.get());
 		return derived->value_;
@@ -85,7 +87,7 @@ private:
 	struct Derived : public Base
 	{
 		template<typename U>
-        Derived(U&& value) : value_(std::forward<U>(value)) { }
+        Derived(U&& value) : value_(std::forward<U>(value)) {}
 
 		BasePtr clone() const
 		{
