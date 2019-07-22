@@ -18,20 +18,25 @@
 
 namespace annety
 {
+class Any;
+template<typename T> T& any_cast(const Any&);
+
 // use std::any since C++17. defined in header <any>
 class Any
 {
 public:
 	// ctor
 	Any() : type_(std::type_index(typeid(void))) {}
+
+	// FIXME: there is no following 4 method in std::any
+	// please use annety::make_any interface like annety::any_cast
 	Any(const Any& rhs) : ptr_(rhs.clone()), type_(rhs.type_) {}
 	Any(Any&& rhs) : ptr_(std::move(rhs.ptr_)), type_(rhs.type_) {}
 
-	// move ctor.
 	// the std::enable_if<> type-traits is limited to non-Any type
 	template <typename U, typename = typename std::enable_if<
-									!std::is_same<typename std::decay<U>::type, Any>::value
-									, U>::type> 
+							!std::is_same<typename std::decay<U>::type, Any>::value
+							, U>::type> 
 	Any(U&& value) 
 		: ptr_(new Derived<typename std::decay<U>::type>(std::forward<U>(value)))
 		, type_(std::type_index(typeid(typename std::decay<U>::type))) {}
@@ -46,34 +51,45 @@ public:
 		type_ = other.type_;
 		return *this;
 	}
-
-	bool is_null()
+	
+	void reset()
 	{
-		return !bool(ptr_);
+		ptr_.reset();
+		type_ = std::type_index(typeid(void));
 	}
 
-	template<typename U>
-	bool is()
+	bool has_value() const
 	{
-		return type_ == std::type_index(typeid(U));
+		return bool(ptr_);
 	}
-
-	template<typename U>
-	U& any_cast()
+	
+	std::type_index type() const
 	{
-		// may use CHECK() macros
-		if (!is<U>()) {
-			LOG(ERROR) << "can not cast " << typeid(U).name() 
-					<< " to " << type_.name();
-			throw std::bad_cast();
-		}
-
-		// FIXME: use static_cast<>
-		auto derived = dynamic_cast<Derived<U>*>(ptr_.get());
-		return derived->value_;
+		return type_;
 	}
 
 private:
+	template<typename T>
+	T& any_cast() const
+	{
+		// throw std::bad_any_cast in C++17
+		if (!is<T>()) {
+			LOG(ERROR) << "can not cast " << typeid(T).name() 
+					<< " to " << type_.name();
+			throw std::bad_cast();
+		}
+		// FIXME: use dynamic_cast<>
+		auto derived = static_cast<Derived<T>*>(ptr_.get());
+		return derived->value_;
+	}
+
+	template<typename T>
+	bool is() const
+	{
+		return type_ == std::type_index(typeid(T));
+	}
+
+	// impl
 	struct Base;
 	using BasePtr = std::unique_ptr<Base>;
 
@@ -105,10 +121,25 @@ private:
 		return nullptr;
 	}
 
+	// for access private Any::any_cast if we follow std::any interface design
+	template<typename T> friend T& annety::any_cast(const Any&);
+
 private:
 	BasePtr	ptr_;
 	std::type_index	type_;
 };
+
+template<typename T>
+T& any_cast(const Any& value)
+{
+	return value.any_cast<T>();
+}
+
+template<typename T>
+Any make_any(T&& value)
+{
+	return Any(std::forward<T>(value));
+}
 
 }	// namespace annety
 

@@ -88,27 +88,30 @@ int main(int argc, char* argv[])
 #else
 	std::cout << "NDEBUG is off" << std::endl;
 #endif
-	// // Any
+	// Any
 	// Any a = 1;
 	// Any b = string("hello, world");
 	// Any c;
 
+	// Any x = make_any(a);
+
 	// cout << std::boolalpha;
-	// cout << "a is null:" << a.is_null() << endl;
-	// cout << "b is null:" << b.is_null() << endl;
-	// cout << "c is null:" << c.is_null() << endl;
+	// cout << "a has value:" << a.has_value() << endl;
+	// cout << "b has value:" << b.has_value() << endl;
+	// cout << "c has value:" << c.has_value() << endl;
+	// cout << "x has value:" << x.has_value() << endl;
 
 	// cout << "----------------------" << endl;
-	// cout << "a is int:" << a.is<int>() << endl;
-	// cout << "a is string:" << a.is<string>() << endl;
-	// cout << "a cast to int:" << a.any_cast<int>() << endl;
-	// cout << "----------------------" << endl;
+	// cout << "a is int:" << a.type().name() << endl;
+	// cout << "a cast to int:" << any_cast<int>(a) << endl;
 	
+	// any_cast<int>(a) = 2;
+	// cout << "a cast to int:" << any_cast<int>(a) << endl;
+	// cout << "----------------------" << endl;
+
 	// c = a;
-	// cout << "c is int:" << c.is<int>() << endl;
-	// cout << "c is string:" << c.is<string>() << endl;
-	// cout << "c cast to int:" << c.any_cast<int>() << endl;
-	// cout << "c cast to string:" << c.any_cast<string>() << endl;
+	// cout << "c cast to int:" << any_cast<int>(c) << endl;
+	// cout << "c cast to string:" << any_cast<string>(c) << endl;
 
     // // AtExitManager
     // {
