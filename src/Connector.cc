@@ -70,6 +70,7 @@ void Connector::stop()
 
 void Connector::restart()
 {
+	// FIXME: restart() should be become *thread-safe* user interface
 	owner_loop_->check_in_own_loop();
 
 	state_ = kDisconnected;
@@ -105,6 +106,8 @@ void Connector::stop_in_own_loop()
 
 void Connector::connect()
 {
+	owner_loop_->check_in_own_loop();
+
 	DCHECK(!connect_socket_);
 	connect_socket_.reset(new SocketFD(server_addr_.family(), true, true));
 
@@ -149,6 +152,8 @@ void Connector::connect()
 
 void Connector::connecting()
 {
+	owner_loop_->check_in_own_loop();
+
 	DCHECK(connect_socket_);
 	DCHECK(!connect_channel_);
 
@@ -165,6 +170,8 @@ void Connector::connecting()
 
 void Connector::retry()
 {
+	owner_loop_->check_in_own_loop();
+
 	state_ = kDisconnected;
 	connect_socket_.reset();
 
@@ -219,6 +226,8 @@ void Connector::handle_write()
 
 void Connector::handle_error()
 {
+	owner_loop_->check_in_own_loop();
+
 	DCHECK(connect_socket_);
 	LOG(ERROR) << "Connector::handle_error the state=" << state_;
 	
@@ -234,6 +243,8 @@ void Connector::handle_error()
 
 void Connector::remove_and_reset_channel()
 {
+	owner_loop_->check_in_own_loop();
+
 	connect_channel_->disable_all_event();
 	connect_channel_->remove();
 

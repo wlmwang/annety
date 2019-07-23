@@ -543,7 +543,7 @@ int main(int argc, char* argv[])
 
 	EventLoop loop;
 	SignalServer ssrv(&loop);
-	ssrv.add_signal(SIGTERM, [&ssrv]() {
+	ssrv.add_signal(SIGTERM, [&]() {
 		LOG(INFO) << "ssrv:" << SIGTERM;
 		ssrv.delete_signal(SIGQUIT);
 		// ssrv.revert_signal();
@@ -552,7 +552,7 @@ int main(int argc, char* argv[])
 	// 	LOG(INFO) << "ssrv1:" << SIGTERM;
 	// });
 
-	ssrv.add_signal(SIGQUIT, [&ssrv]() {
+	ssrv.add_signal(SIGQUIT, [&]() {
 		LOG(INFO) << "ssrv:" << SIGQUIT;
 	});
 	ssrv.ignore_signal(SIGQUIT);

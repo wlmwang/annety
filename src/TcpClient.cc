@@ -141,8 +141,8 @@ void TcpClient::remove_connection(const TcpConnectionPtr& conn)
 	owner_loop_->queue_in_own_loop(std::bind(&TcpConnection::connect_destroyed, conn));
 	
 	if (retry_ && connect_) {
-		LOG(INFO) << "TcpClient::remove_connection the [" << name_ << "] client is reconnecting to " 
-			<< ip_port_;
+		LOG(INFO) << "TcpClient::remove_connection the [" << name_ 
+			<< "] client is reconnecting to " << ip_port_;
 		connector_->restart();
 	}
 }

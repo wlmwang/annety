@@ -25,11 +25,10 @@ template<typename T> T& any_cast(const Any&);
 class Any
 {
 public:
-	// ctor
 	Any() : type_(std::type_index(typeid(void))) {}
 
-	// FIXME: there is no following 4 method in std::any
-	// please use annety::make_any interface like annety::any_cast
+	// FIXME: the following four methods do not exist in std::any
+	// please use annety::make_any, which is consistent with std::any
 	Any(const Any& rhs) : ptr_(rhs.clone()), type_(rhs.type_) {}
 	Any(Any&& rhs) : ptr_(std::move(rhs.ptr_)), type_(rhs.type_) {}
 
@@ -46,7 +45,6 @@ public:
 		if (ptr_ == other.ptr_) {
 			return *this;
 		}
-
 		ptr_ = other.clone();
 		type_ = other.type_;
 		return *this;
@@ -69,6 +67,9 @@ public:
 	}
 
 private:
+	// for access private Any::any_cast if we following std::any
+	template<typename T> friend T& annety::any_cast(const Any&);
+
 	template<typename T>
 	T& any_cast() const
 	{
@@ -120,9 +121,6 @@ private:
 		}
 		return nullptr;
 	}
-
-	// for access private Any::any_cast if we follow std::any interface design
-	template<typename T> friend T& annety::any_cast(const Any&);
 
 private:
 	BasePtr	ptr_;
