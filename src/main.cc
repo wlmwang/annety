@@ -39,6 +39,8 @@
 #include "TcpClient.h"
 #include "SignalServer.h"
 
+#include "containers/Bind.h"
+
 using namespace annety;
 using namespace std;
 
@@ -71,6 +73,11 @@ using namespace std;
 // {
 // 	g_log_file->flush();
 // }
+
+void TestFun(int a, int b, int c)
+{
+	cout << "~~TestFun~~" << a << b << c << endl;
+}
 
 int main(int argc, char* argv[])
 {
@@ -112,6 +119,9 @@ int main(int argc, char* argv[])
 	// c = a;
 	// cout << "c cast to int:" << any_cast<int>(c) << endl;
 	// cout << "c cast to string:" << any_cast<string>(c) << endl;
+
+	// Bind
+	simple::bind(&TestFun, simple::_2, simple::_1, 3)(1, 2);
 
     // // AtExitManager
     // {
@@ -532,6 +542,7 @@ int main(int argc, char* argv[])
 	// tt.join();
 
 	// SignalServer
+	// error------------------------
 	// Thread([]() {
 	// 	EventLoop loop;
 	// 	SignalServer ssrv(&loop);
@@ -540,24 +551,24 @@ int main(int argc, char* argv[])
 	// 	});
 	// 	loop.loop();
 	// }).start().join();
-
-	EventLoop loop;
-	SignalServer ssrv(&loop);
-	ssrv.add_signal(SIGTERM, [&]() {
-		LOG(INFO) << "ssrv:" << SIGTERM;
-		ssrv.delete_signal(SIGQUIT);
-		// ssrv.revert_signal();
-	});
-	// ssrv.add_signal(SIGTERM, [&ssrv]() {
-	// 	LOG(INFO) << "ssrv1:" << SIGTERM;
+	// ok----------------------------
+	// EventLoop loop;
+	// SignalServer ssrv(&loop);
+	// ssrv.add_signal(SIGTERM, [&]() {
+	// 	LOG(INFO) << "ssrv:" << SIGTERM;
+	// 	ssrv.delete_signal(SIGQUIT);
+	// 	// ssrv.revert_signal();
 	// });
+	// // ssrv.add_signal(SIGTERM, [&ssrv]() {
+	// // 	LOG(INFO) << "ssrv1:" << SIGTERM;
+	// // });
 
-	ssrv.add_signal(SIGQUIT, [&]() {
-		LOG(INFO) << "ssrv:" << SIGQUIT;
-	});
-	ssrv.ignore_signal(SIGQUIT);
+	// ssrv.add_signal(SIGQUIT, [&]() {
+	// 	LOG(INFO) << "ssrv:" << SIGQUIT;
+	// });
+	// ssrv.ignore_signal(SIGQUIT);
 	
-	loop.loop();
+	// loop.loop();
 
 }
 
