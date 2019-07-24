@@ -29,7 +29,7 @@ template <typename T> class UnBoundedBlockingTrait;
 template <typename T> class BoundedBlockingTrait;
 
 // {,Un}Boundedblocking queue
-template<typename T, typename Traits = UnBoundedBlockingTrait<T>>
+template <typename T, typename Traits = UnBoundedBlockingTrait<T>>
 class BlockingQueue
 {
 private:
@@ -87,7 +87,7 @@ private:
 
 // Blocking Trait ----------------------------------------
 // UnBoundedBlockingTrait
-template<typename T>
+template <typename T>
 class UnBoundedBlockingTrait
 {
 public:
@@ -176,7 +176,7 @@ private:
 };
 
 // BoundedBlockingTrait
-template<typename T>
+template <typename T>
 class BoundedBlockingTrait
 {
 public:

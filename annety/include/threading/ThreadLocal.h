@@ -11,10 +11,10 @@
 
 namespace annety
 {
-template<typename Type>
+template <typename Type>
 class ThreadLocalSingleton;
 
-template<typename Type>
+template <typename Type>
 class ThreadLocal
 {
 public:

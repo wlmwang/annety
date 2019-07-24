@@ -19,7 +19,7 @@
 namespace annety
 {
 class Any;
-template<typename T> T& any_cast(const Any&);
+template <typename T> T& any_cast(const Any&);
 
 // use std::any since C++17. defined in header <any>
 class Any
@@ -68,9 +68,9 @@ public:
 
 private:
 	// for access private Any::any_cast if we following std::any
-	template<typename T> friend T& annety::any_cast(const Any&);
+	template <typename T> friend T& annety::any_cast(const Any&);
 
-	template<typename T>
+	template <typename T>
 	T& any_cast() const
 	{
 		// throw std::bad_any_cast in C++17
@@ -84,7 +84,7 @@ private:
 		return derived->value_;
 	}
 
-	template<typename T>
+	template <typename T>
 	bool is() const
 	{
 		return type_ == std::type_index(typeid(T));
@@ -100,7 +100,7 @@ private:
 		virtual BasePtr clone() const = 0;
 	};
 
-	template<typename T>
+	template <typename T>
 	struct Derived : public Base
 	{
 		template<typename U>
@@ -127,13 +127,13 @@ private:
 	std::type_index	type_;
 };
 
-template<typename T>
+template <typename T>
 T& any_cast(const Any& value)
 {
 	return value.any_cast<T>();
 }
 
-template<typename T>
+template <typename T>
 Any make_any(T&& value)
 {
 	return Any(std::forward<T>(value));

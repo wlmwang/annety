@@ -17,7 +17,7 @@ namespace annety
 // Default traits for Singleton<Type>. Calls operator new and operator delete on
 // the object. Registers automatic deletion at process exit.
 // Overload if you need arguments or another memory allocation function.
-template<typename Type>
+template <typename Type>
 struct DefaultSingletonTraits
 {
 	// Set to true to automatically register deletion of the object on process
@@ -42,7 +42,7 @@ struct DefaultSingletonTraits
 // Alternate traits for use with the Singleton<Type>.  Identical to
 // DefaultSingletonTraits except that the Singleton will not be cleaned up
 // at exit.
-template<typename Type>
+template <typename Type>
 struct LeakySingletonTraits : public DefaultSingletonTraits<Type>
 {
 	static const bool kRegisterAtExit = false;
@@ -118,7 +118,7 @@ struct LeakySingletonTraits : public DefaultSingletonTraits<Type>
 // (b) Your factory function must never throw an exception. This class is not
 //     exception-safe.
 
-template<typename Type, typename Traits = DefaultSingletonTraits<Type>>
+template <typename Type, typename Traits = DefaultSingletonTraits<Type>>
 class Singleton
 {
  public:
@@ -167,10 +167,10 @@ private:
 	DISALLOW_IMPLICIT_CONSTRUCTORS(Singleton);
 };
 
-template<typename Type, typename Traits>
+template <typename Type, typename Traits>
 pthread_once_t Singleton<Type, Traits>::once_ = PTHREAD_ONCE_INIT;
 
-template<typename Type, typename Traits>
+template <typename Type, typename Traits>
 Type* Singleton<Type, Traits>::instance_ = nullptr;
 
 }	// namespace annety

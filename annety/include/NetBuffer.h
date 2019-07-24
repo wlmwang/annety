@@ -19,6 +19,7 @@ class NetBuffer : public ByteBuffer
 public:
 	// inheritance of construct
 	using ByteBuffer::ByteBuffer;
+	
 	explicit NetBuffer() : ByteBuffer() {}
 
 	// copy-ctor, move-ctor, dtor and assignment

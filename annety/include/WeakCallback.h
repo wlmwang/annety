@@ -10,7 +10,7 @@
 namespace annety
 {
 // a barely usable weak-callback of class
-template<typename CLASS, typename... ARGS>
+template <typename CLASS, typename... ARGS>
 class WeakCallback
 {
 public:

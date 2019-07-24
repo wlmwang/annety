@@ -12,7 +12,7 @@
 
 namespace annety
 {
-template<typename Type>
+template <typename Type>
 class ThreadLocalSingleton final
 {
 public:
