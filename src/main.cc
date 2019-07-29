@@ -40,6 +40,7 @@
 #include "SignalServer.h"
 
 #include "containers/Bind.h"
+#include "WeakCallback.h"
 
 using namespace annety;
 using namespace std;
@@ -82,7 +83,7 @@ void TestFun(int a, int b, int c)
 class WapperCall
 {
 public:
-	void test() {
+	void test(int) {
 		cout << "WapperCall::test" << endl;
 	}
 private:
@@ -131,12 +132,23 @@ int main(int argc, char* argv[])
 	// cout << "c cast to string:" << any_cast<string>(c) << endl;
 
 	// Bind
-	containers::make_bind(&TestFun, containers::_2, containers::_1, 3)(1, 2);
+	// containers::make_bind(&TestFun, containers::_2, containers::_1, 3)(1, 2);
 
-	// std::function<void()> ff;
+	std::function<void(int)> xx;
+	{
+		// WapperCall* call = new WapperCall();
+		std::shared_ptr<WapperCall> call(new WapperCall());
+		xx = containers::make_bind(&WapperCall::test, call, containers::_1);
+		//cout << call.use_count() << endl;
+	}
+	xx(10);
+	
+
+	// // WeakCallback
 	// {
-	// 	WapperCall call;
-	// 	ff = containers::make_bind(&WapperCall::test, &call);
+	// 	std::shared_ptr<WapperCall> call(new WapperCall());
+	// 	std::function<void(int)> ff = make_weak_callback(&WapperCall::test, call);
+	// 	ff(5);
 	// }
 
     // // AtExitManager

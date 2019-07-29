@@ -1,14 +1,23 @@
+// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Refactoring: Anny Wang
+// Date: Jul 28 2019
+
 #ifndef ANT_BIND_H
 #define ANT_BIND_H
 
 #include <type_traits>
-#include <tuple>
 #include <utility>
+#include <tuple>
 
 namespace annety
 {
 namespace containers
 {
+// FIXME: do not support binding lambda expressions yet
+
 // Placeholder ------------------------------------------------------------------
 template <int N>
 struct Placeholder {};
@@ -37,7 +46,7 @@ struct MakeIndexes<0, indexes...>
     using type = IndexTuple<indexes...>;
 };
 
-// result type ------------------------------------------------------------------
+// return type ------------------------------------------------------------------
 // **std::result_of in C++11 is too limited. That C++17 is become better**
 template <typename T>
 struct ResultOf;
@@ -58,18 +67,30 @@ template <typename F>
 struct ResultOf : ResultOf<decltype(&F::operator())> {};
 
 // Type trait ------------------------------------------------------------------
-template <typename T>
-struct IsWrapper : std::false_type {};
+// --
+template <typename T> struct IsWrapper : std::false_type {};
+template <typename T> struct IsWrapper<std::reference_wrapper<T>> : std::true_type {};
+template <typename T> using IsWrapperNoref = IsWrapper<typename std::remove_reference<T>::type>;
 
-template <typename T>
-struct IsWrapper<std::reference_wrapper<T>> : std::true_type {};
+// --
+template<typename T> struct IsUniquePtr : std::false_type {};
+template<typename T> struct IsUniquePtr<std::unique_ptr<T>> : std::true_type {};
 
-template <typename T>
-using IsWrapperNoref = IsWrapper<typename std::remove_reference<T>::type>;
+template<typename T> struct IsSharedPtr : std::false_type {};
+template<typename T> struct IsSharedPtr<std::shared_ptr<T>> : std::true_type {};
 
-template <typename T>
-using IsPointerNoref = std::is_pointer<typename std::remove_reference<T>::type>;
+template<typename T> struct IsWeakPtr : std::false_type {};
+template<typename T> struct IsWeakPtr<std::weak_ptr<T>> : std::true_type {};
 
+// --
+template <typename T>
+using IsPointerNoref = std::integral_constant<bool, 
+        std::is_pointer<typename std::remove_reference<T>::type>::value ||
+        IsUniquePtr<typename std::remove_reference<T>::type>::value ||
+        IsSharedPtr<typename std::remove_reference<T>::type>::value ||
+        IsWeakPtr<typename std::remove_reference<T>::type>::value>;
+
+// --
 template <typename T>
 using IsMemfuncNoref = std::is_member_function_pointer<typename std::remove_reference<T>::type>;
 
@@ -96,13 +117,22 @@ inline auto invoke(F&& f, P&&... args)
     return (*std::forward<F>(f))(std::forward<P>(args)...);
 }
 
+template <typename F, typename... P>
+inline auto invoke(F&& f, P&&... args)
+    -> typename std::enable_if<!IsPointerNoref<F>::value && !IsMemfuncNoref<F>::value,
+       typename std::result_of<F&&(P&&...)>::type
+    >::type
+{
+    return std::forward<F>(f)(std::forward<P>(args)...);
+}
+
 template <typename F, typename C, typename... P>
 inline auto invoke(F&& f, C&& this_ptr, P&&... args)
     -> typename std::enable_if<IsMemfuncNoref<F>::value && IsPointerNoref<C>::value,
        typename std::result_of<F&&(C&&, P&&...)>::type
     >::type
 {
-    return (std::forward<C>(this_ptr)->*std::forward<F>(f))(std::forward<P>(args)...);
+    return (*std::forward<C>(this_ptr).*std::forward<F>(f))(std::forward<P>(args)...);
 }
 
 template <typename F, typename C, typename... P>
@@ -126,23 +156,13 @@ inline auto invoke(F&& f, C&& this_wrp, P&&... args)
     return (this_obj.*std::forward<F>(f))(std::forward<P>(args)...);
 }
 
-template <typename F, typename... P>
-inline auto invoke(F&& f, P&&... args)
-    -> typename std::enable_if<!IsPointerNoref<F>::value && !IsMemfuncNoref<F>::value,
-       typename std::result_of<F&&(P&&...)>::type
-    >::type
-{
-    return std::forward<F>(f)(std::forward<P>(args)...);
-}
-
-
 // functor for bind callable type and arguments -------------------------------------
-template<typename FuncT, typename... Args>
+template<typename FuncT, typename... ParsT>
 class Bind_t
 {
 private:
     using FucType   = typename std::decay<FuncT>::type;
-    using ArgType   = std::tuple<typename std::decay<Args>::type...>;
+    using ParType   = std::tuple<typename std::decay<ParsT>::type...>;
     using ResType   = typename ResultOf<FucType>::type;
 
     template <class ArgTuple, int... Indexes>
@@ -152,21 +172,20 @@ private:
     }
 
 public:
-    template <typename F, typename... P>
-    Bind_t(F&& f, P&&... pars)
-        : call_(std::forward<F>(f))
-        , args_(std::forward<P>(pars)...) {}
+    Bind_t(FuncT&& f, ParsT&&... pars)
+        : call_(std::forward<FuncT>(f))
+        , args_(std::forward<ParsT>(pars)...) {}
 
-    template <typename... A>
-    auto operator()(A&&... args) -> ResType
+    template <typename... ARGS>
+    auto operator()(ARGS&&... args) -> ResType
     {
-        using IndexType = typename MakeIndexes<std::tuple_size<ArgType>::value>::type;
-        return do_call(std::forward_as_tuple(std::forward<A>(args)...), IndexType());
+        using IndexType = typename MakeIndexes<std::tuple_size<ParType>::value>::type;
+        return do_call(std::forward_as_tuple(std::forward<ARGS>(args)...), IndexType());
     }
 
 private:
     FucType call_;
-    ArgType args_;
+    ParType args_;
 };
 
 
