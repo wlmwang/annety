@@ -186,7 +186,7 @@ private:
 
 // functor for weak bind callable type and arguments
 template <typename FuncT, typename CLASS, typename... ParsT>
-class BindFuctor<FuncT, CLASS, ParsT...>
+class WBindFuctor
 {
 private:
     using FuncType  = typename std::decay<FuncT>::type;
@@ -205,10 +205,13 @@ private:
     }
 
 public:
-    BindFuctor(FuncT&& f, WeakType weak, ParsT&&... pars)
+    WBindFuctor(FuncT&& f, WeakType weak, ParsT&&... pars)
         : call_(std::forward<FuncT>(f))
         , args_(std::forward<ParsT>(pars)...)
         , weak_(weak) {}
+    
+    template <typename = std::enable_if<false>>
+    WBindFuctor(FuncT&&, CLASS, ParsT&&...);
 
     template <typename... ARGS>
     auto operator()(ARGS&&... args) -> ResfType
@@ -232,14 +235,14 @@ inline BindFuctor<F&&, P&&...> make_bind(F&& fuctor, P&&... pars)
 
 // make callable object (weak callback) ------------------------------------------------
 template <typename F, typename C, typename... P>
-inline BindFuctor<F&&, C, P&&...> make_weak_bind(F&& fuctor, std::shared_ptr<C> obj, P&&... pars)
+inline WBindFuctor<F&&, C, P&&...> make_weak_bind(F&& fuctor, std::shared_ptr<C> obj, P&&... pars)
 {
     std::weak_ptr<C> weak{obj};
     return {std::forward<F>(fuctor), weak, std::forward<P>(pars)...};
 }
 
 template <typename F, typename C, typename... P>
-inline BindFuctor<F&&, C, P&&...> make_weak_bind(F&& fuctor, std::weak_ptr<C> obj, P&&... pars)
+inline WBindFuctor<F&&, C, P&&...> make_weak_bind(F&& fuctor, std::weak_ptr<C> obj, P&&... pars)
 {
     return {std::forward<F>(fuctor), obj, std::forward<P>(pars)...};
 }

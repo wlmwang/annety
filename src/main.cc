@@ -131,16 +131,17 @@ int main(int argc, char* argv[])
 	// cout << "c cast to int:" << any_cast<int>(c) << endl;
 	// cout << "c cast to string:" << any_cast<string>(c) << endl;
 
-	// Bind
+	// BindFuctor
 	// containers::make_bind(&TestFun, containers::_2, containers::_1, 3)(1, 2);
 
+	// WBindFuctor
 	std::function<void(int)> xx;
 	{
 		std::shared_ptr<WapperCall> call(new WapperCall());
 		
-		// xx = containers::make_bind(&WapperCall::test, call, containers::_1);
-		// cout << "use cout:" << call.use_count() << endl;
-		// xx(10);
+		xx = containers::make_bind(&WapperCall::test, call, containers::_1);
+		cout << "use cout:" << call.use_count() << endl;
+		xx(10);
 
 		xx = containers::make_weak_bind(&WapperCall::test, call, containers::_1);
 		cout << "use cout:" << call.use_count() << endl;
@@ -151,7 +152,7 @@ int main(int argc, char* argv[])
 		cout << "use cout:" << call.use_count() << endl;
 		xx(12);
 	}
-	xx(20);
+	if (xx) xx(20);
 
 	// // WeakCallback
 	// {
