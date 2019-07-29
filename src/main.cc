@@ -138,8 +138,8 @@ int main(int argc, char* argv[])
 	{
 		// WapperCall* call = new WapperCall();
 		std::shared_ptr<WapperCall> call(new WapperCall());
-		xx = containers::make_bind(&WapperCall::test, call, containers::_1);
-		//cout << call.use_count() << endl;
+		xx = containers::make_weak_bind(&WapperCall::test, call, containers::_1);
+		cout << call.use_count() << endl;
 	}
 	xx(10);
 	

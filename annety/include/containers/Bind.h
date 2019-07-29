@@ -188,12 +188,19 @@ private:
     ParType args_;
 };
 
-
 // Bind function arguments ---------------------------------------------------
 template <typename F, typename... P>
 inline Bind_t<F&&, P&&...> make_bind(F&& f, P&&... pars)
 {
     return {std::forward<F>(f), std::forward<P>(pars)...};
+}
+
+// FIXME:~
+template <typename F, typename C, typename... P>
+inline Bind_t<F&&, P&&...> make_weak_bind(F&& f, std::shared_ptr<C>& obj, P&&... pars)
+{
+    std::weak_ptr<C> weak{obj};
+    return {std::forward<F>(f), weak, std::forward<P>(pars)...};
 }
 
 }   // namespace containers
