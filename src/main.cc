@@ -79,6 +79,16 @@ void TestFun(int a, int b, int c)
 	cout << "~~TestFun~~" << a << b << c << endl;
 }
 
+class WapperCall
+{
+public:
+	void test() {
+		cout << "WapperCall::test" << endl;
+	}
+private:
+	int v_{10};
+};
+
 int main(int argc, char* argv[])
 {
 	cout << "System:";
@@ -121,7 +131,13 @@ int main(int argc, char* argv[])
 	// cout << "c cast to string:" << any_cast<string>(c) << endl;
 
 	// Bind
-	simple::bind(&TestFun, simple::_2, simple::_1, 3)(1, 2);
+	containers::make_bind(&TestFun, containers::_2, containers::_1, 3)(1, 2);
+
+	// std::function<void()> ff;
+	// {
+	// 	WapperCall call;
+	// 	ff = containers::make_bind(&WapperCall::test, &call);
+	// }
 
     // // AtExitManager
     // {

@@ -18,6 +18,8 @@
 
 namespace annety
 {
+namespace containers
+{
 class Any;
 template <typename T> T& any_cast(const Any&);
 
@@ -68,7 +70,7 @@ public:
 
 private:
 	// for access private Any::any_cast if we following std::any
-	template <typename T> friend T& annety::any_cast(const Any&);
+	template <typename T> friend T& any_cast(const Any&);
 
 	template <typename T>
 	T& any_cast() const
@@ -139,6 +141,7 @@ Any make_any(T&& value)
 	return Any(std::forward<T>(value));
 }
 
+}	// namespace containers
 }	// namespace annety
 
 #endif	// ANT_ANY_H
