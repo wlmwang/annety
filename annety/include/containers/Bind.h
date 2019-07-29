@@ -1,12 +1,10 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 // Refactoring: Anny Wang
 // Date: Jul 28 2019
 
 #ifndef ANT_BIND_H
 #define ANT_BIND_H
+
+#include "Logging.h"
 
 #include <type_traits>
 #include <utility>
@@ -18,7 +16,7 @@ namespace containers
 {
 // FIXME: do not support binding lambda expressions yet
 
-// Placeholder ------------------------------------------------------------------
+// Placeholder --------------------------------------------------------------------------
 template <int N>
 struct Placeholder {};
 
@@ -33,21 +31,22 @@ static Placeholder<8> ALLOW_UNUSED_TYPE _8; static Placeholder<18> ALLOW_UNUSED_
 static Placeholder<9> ALLOW_UNUSED_TYPE _9; static Placeholder<19> ALLOW_UNUSED_TYPE _19; 
 static Placeholder<10> ALLOW_UNUSED_TYPE _10; static Placeholder<20> ALLOW_UNUSED_TYPE _20;
 
-// Sequence ------------------------------------------------------------------
+// Sequence --------------------------------------------------------------------------
+// --see: std::integer_sequence/std::make_index_sequence() in C++14
 template <int...>
-struct IndexTuple {};
+struct IndexSequence {};
 
 template <int N, int... Indexes>
-struct MakeIndexes : MakeIndexes<N - 1, N - 1, Indexes...> {};
+struct MakeIndexSequence : MakeIndexSequence<N - 1, N - 1, Indexes...> {};
 
 template <int... indexes>
-struct MakeIndexes<0, indexes...>
+struct MakeIndexSequence<0, indexes...>
 {
-    using type = IndexTuple<indexes...>;
+    using type = IndexSequence<indexes...>;
 };
 
-// return type ------------------------------------------------------------------
-// **std::result_of in C++11 is too limited. That C++17 is become better**
+// return type --------------------------------------------------------------------------
+// --see: std::result_of in C++11 is too limited. That C++17 is become better
 template <typename T>
 struct ResultOf;
 
@@ -66,13 +65,11 @@ struct ResultOf<R(C::*)(P...)> { typedef R type; };
 template <typename F>
 struct ResultOf : ResultOf<decltype(&F::operator())> {};
 
-// Type trait ------------------------------------------------------------------
-// --
+// Type trait --------------------------------------------------------------------------
 template <typename T> struct IsWrapper : std::false_type {};
 template <typename T> struct IsWrapper<std::reference_wrapper<T>> : std::true_type {};
 template <typename T> using IsWrapperNoref = IsWrapper<typename std::remove_reference<T>::type>;
 
-// --
 template<typename T> struct IsUniquePtr : std::false_type {};
 template<typename T> struct IsUniquePtr<std::unique_ptr<T>> : std::true_type {};
 
@@ -82,19 +79,18 @@ template<typename T> struct IsSharedPtr<std::shared_ptr<T>> : std::true_type {};
 template<typename T> struct IsWeakPtr : std::false_type {};
 template<typename T> struct IsWeakPtr<std::weak_ptr<T>> : std::true_type {};
 
-// --
 template <typename T>
 using IsPointerNoref = std::integral_constant<bool, 
-        std::is_pointer<typename std::remove_reference<T>::type>::value ||
-        IsUniquePtr<typename std::remove_reference<T>::type>::value ||
-        IsSharedPtr<typename std::remove_reference<T>::type>::value ||
-        IsWeakPtr<typename std::remove_reference<T>::type>::value>;
+            std::is_pointer<typename std::remove_reference<T>::type>::value ||
+            IsUniquePtr<typename std::remove_reference<T>::type>::value ||
+            IsSharedPtr<typename std::remove_reference<T>::type>::value
+            // || IsWeakPtr<typename std::remove_reference<T>::type>::value>;
+        >;
 
-// --
 template <typename T>
 using IsMemfuncNoref = std::is_member_function_pointer<typename std::remove_reference<T>::type>;
 
-// Select the value of tuple ----------------------------------------------------
+// Select the value of tuple --------------------------------------------------------------
 template <typename T, class Tuple>
 inline auto select(T&& val, Tuple&) -> T&&
 {
@@ -107,7 +103,7 @@ inline auto select(Placeholder<I>&, Tuple& tp) -> decltype(std::get<I - 1>(tp))
     return std::get<I - 1>(tp);
 }
 
-// The invoker for call a callable -----------------------------------------------
+// The invoker for call a callable --------------------------------------------------------
 template <typename F, typename... P>
 inline auto invoke(F&& f, P&&... args)
     -> typename std::enable_if<IsPointerNoref<F>::value,
@@ -156,51 +152,96 @@ inline auto invoke(F&& f, C&& this_wrp, P&&... args)
     return (this_obj.*std::forward<F>(f))(std::forward<P>(args)...);
 }
 
-// functor for bind callable type and arguments -------------------------------------
-template<typename FuncT, typename... ParsT>
-class Bind_t
+// functor for bind callable type and arguments ---------------------------------------------
+template <typename FuncT, typename... ParsT>
+class BindFuctor
 {
 private:
-    using FucType   = typename std::decay<FuncT>::type;
-    using ParType   = std::tuple<typename std::decay<ParsT>::type...>;
-    using ResType   = typename ResultOf<FucType>::type;
+    using FuncType  = typename std::decay<FuncT>::type;
+    using ParsType  = std::tuple<typename std::decay<ParsT>::type...>;
+    using ResfType  = typename ResultOf<FuncType>::type;
 
     template <class ArgTuple, int... Indexes>
-    auto do_call(ArgTuple&& tp, IndexTuple<Indexes...>) -> ResType
+    auto do_call(ArgTuple&& tp, IndexSequence<Indexes...>) -> ResfType
     {
-        return invoke(call_, select(std::get<Indexes>(args_), tp)...);
+        return invoke(std::forward<FuncType>(call_), select(std::get<Indexes>(args_), tp)...);
     }
 
 public:
-    Bind_t(FuncT&& f, ParsT&&... pars)
+    BindFuctor(FuncT&& f, ParsT&&... pars)
         : call_(std::forward<FuncT>(f))
         , args_(std::forward<ParsT>(pars)...) {}
 
     template <typename... ARGS>
-    auto operator()(ARGS&&... args) -> ResType
+    auto operator()(ARGS&&... args) -> ResfType
     {
-        using IndexType = typename MakeIndexes<std::tuple_size<ParType>::value>::type;
+        using IndexType = typename MakeIndexSequence<std::tuple_size<ParsType>::value>::type;
         return do_call(std::forward_as_tuple(std::forward<ARGS>(args)...), IndexType());
     }
 
 private:
-    FucType call_;
-    ParType args_;
+    FuncType call_;
+    ParsType args_;
 };
 
-// Bind function arguments ---------------------------------------------------
-template <typename F, typename... P>
-inline Bind_t<F&&, P&&...> make_bind(F&& f, P&&... pars)
+// functor for weak bind callable type and arguments
+template <typename FuncT, typename CLASS, typename... ParsT>
+class BindFuctor<FuncT, CLASS, ParsT...>
 {
-    return {std::forward<F>(f), std::forward<P>(pars)...};
+private:
+    using FuncType  = typename std::decay<FuncT>::type;
+    using ParsType  = std::tuple<typename std::decay<ParsT>::type...>;
+    using ResfType  = typename ResultOf<FuncType>::type;
+    using WeakType  = std::weak_ptr<CLASS>;
+    
+    template <class ArgTuple, int... Indexes>
+    auto do_call(ArgTuple&& tp, IndexSequence<Indexes...>) -> ResfType
+    {
+        std::shared_ptr<CLASS> locked = weak_.lock();
+        if (locked) {
+            return invoke(call_, locked, select(std::get<Indexes>(args_), tp)...);
+        }
+        LOG(ERROR) << "the shared_ptr has destructed";
+    }
+
+public:
+    BindFuctor(FuncT&& f, WeakType weak, ParsT&&... pars)
+        : call_(std::forward<FuncT>(f))
+        , args_(std::forward<ParsT>(pars)...)
+        , weak_(weak) {}
+
+    template <typename... ARGS>
+    auto operator()(ARGS&&... args) -> ResfType
+    {
+        using IndexType = typename MakeIndexSequence<std::tuple_size<ParsType>::value>::type;
+        return do_call(std::forward_as_tuple(std::forward<ARGS>(args)...), IndexType());
+    }
+
+private:
+    FuncType call_;
+    ParsType args_;
+    WeakType weak_;
+};
+
+// make callable object ----------------------------------------------------------------
+template <typename F, typename... P>
+inline BindFuctor<F&&, P&&...> make_bind(F&& fuctor, P&&... pars)
+{
+    return {std::forward<F>(fuctor), std::forward<P>(pars)...};
 }
 
-// FIXME:~
+// make callable object (weak callback) ------------------------------------------------
 template <typename F, typename C, typename... P>
-inline Bind_t<F&&, P&&...> make_weak_bind(F&& f, std::shared_ptr<C>& obj, P&&... pars)
+inline BindFuctor<F&&, C, P&&...> make_weak_bind(F&& fuctor, std::shared_ptr<C> obj, P&&... pars)
 {
     std::weak_ptr<C> weak{obj};
-    return {std::forward<F>(f), weak, std::forward<P>(pars)...};
+    return {std::forward<F>(fuctor), weak, std::forward<P>(pars)...};
+}
+
+template <typename F, typename C, typename... P>
+inline BindFuctor<F&&, C, P&&...> make_weak_bind(F&& fuctor, std::weak_ptr<C> obj, P&&... pars)
+{
+    return {std::forward<F>(fuctor), obj, std::forward<P>(pars)...};
 }
 
 }   // namespace containers

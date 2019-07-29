@@ -83,11 +83,11 @@ void TestFun(int a, int b, int c)
 class WapperCall
 {
 public:
-	void test(int) {
-		cout << "WapperCall::test" << endl;
+	void test(int c) {
+		cout << "WapperCall::test:" << c << "|" << v_ << endl;
 	}
 private:
-	int v_{10};
+	int v_{1};
 };
 
 int main(int argc, char* argv[])
@@ -136,13 +136,22 @@ int main(int argc, char* argv[])
 
 	std::function<void(int)> xx;
 	{
-		// WapperCall* call = new WapperCall();
 		std::shared_ptr<WapperCall> call(new WapperCall());
+		
+		// xx = containers::make_bind(&WapperCall::test, call, containers::_1);
+		// cout << "use cout:" << call.use_count() << endl;
+		// xx(10);
+
 		xx = containers::make_weak_bind(&WapperCall::test, call, containers::_1);
-		cout << call.use_count() << endl;
+		cout << "use cout:" << call.use_count() << endl;
+		xx(11);
+
+		std::weak_ptr<WapperCall> wcall = call;
+		xx = containers::make_weak_bind(&WapperCall::test, wcall, containers::_1);
+		cout << "use cout:" << call.use_count() << endl;
+		xx(12);
 	}
-	xx(10);
-	
+	xx(20);
 
 	// // WeakCallback
 	// {
