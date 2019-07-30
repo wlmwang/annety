@@ -10,6 +10,7 @@
 #include "Channel.h"
 #include "EventLoop.h"
 #include "ScopedClearLastError.h"
+#include "containers/Bind.h"
 
 namespace annety
 {
@@ -160,10 +161,12 @@ void Connector::connecting()
 	state_ = kConnecting;
 	connect_channel_.reset(new Channel(owner_loop_, connect_socket_.get()));
 
+	// todo
+	using containers::make_weak_bind;
 	connect_channel_->set_write_callback(
-		std::bind(&Connector::handle_write, this));
+		make_weak_bind(&Connector::handle_write, shared_from_this()));
 	connect_channel_->set_error_callback(
-		std::bind(&Connector::handle_error, this));
+		make_weak_bind(&Connector::handle_error, shared_from_this()));
 
 	connect_channel_->enable_write_event();
 }

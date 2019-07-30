@@ -7,6 +7,7 @@
 #include "Macros.h"
 #include "EndPoint.h"
 #include "Times.h"
+#include "Logging.h"
 #include "CallbackForward.h"
 #include "containers/Any.h"
 
@@ -33,6 +34,8 @@ public:
 				const EndPoint& localaddr,
 				const EndPoint& peeraddr);
 	~TcpConnection();
+	
+	void initialize();
 
 	EventLoop* get_owner_loop() const { return owner_loop_; }
 	const std::string& name() const { return name_; }
@@ -74,24 +77,29 @@ public:
 
 	void set_connect_callback(const ConnectCallback& cb)
 	{
+		CHECK(initilize_);
 		connect_cb_ = cb;
 	}
 	void set_message_callback(const MessageCallback& cb)
 	{
+		CHECK(initilize_);
 		message_cb_ = cb;
 	}
 	void set_write_complete_callback(const WriteCompleteCallback& cb)
 	{
+		CHECK(initilize_);
 		write_complete_cb_ = cb;
 	}
 	void set_high_water_mark_callback(const HighWaterMarkCallback& cb, size_t high_water_mark)
 	{
+		CHECK(initilize_);
 		high_water_mark_cb_ = cb;
 		high_water_mark_ = high_water_mark;
 	}
 
 	void set_close_callback(const CloseCallback& cb)
 	{
+		CHECK(initilize_);
 		close_cb_ = cb;
 	}
 	
@@ -109,6 +117,8 @@ private:
 	void handle_close();
 	void handle_error();
 
+	void initialize_in_loop();
+	
 	void send_in_loop(const StringPiece& message);
 	void send_in_loop(const void* message, size_t len);
 	void shutdown_in_loop();
@@ -122,6 +132,7 @@ private:
 private:
 	EventLoop* owner_loop_;
 	const std::string name_;
+	bool initilize_{false};
 	bool reading_{true};
 	StateE state_{kConnecting};
 

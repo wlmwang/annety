@@ -2,8 +2,6 @@
 // Date: Jun 17 2019
 
 #include "TcpConnection.h"
-#include "WeakCallback.h"
-#include "Logging.h"
 #include "Channel.h"
 #include "NetBuffer.h"
 #include "EndPoint.h"
@@ -11,6 +9,7 @@
 #include "SocketFD.h"
 #include "SocketsUtil.h"
 #include "ScopedClearLastError.h"
+#include "containers/Bind.h"
 
 #include <utility>
 
@@ -53,31 +52,17 @@ TcpConnection::TcpConnection(EventLoop* loop,
 							SelectableFDPtr sockfd,
 							const EndPoint& localaddr,
 							const EndPoint& peeraddr)
-  : owner_loop_(loop),
-    name_(name),
-    local_addr_(localaddr),
-    peer_addr_(peeraddr),
-    connect_socket_(std::move(sockfd)),
-    connect_channel_(new Channel(owner_loop_, connect_socket_.get())),
-    input_buffer_(new NetBuffer()),
-    output_buffer_(new NetBuffer())
+	: owner_loop_(loop)
+	, name_(name)
+	, local_addr_(localaddr)
+	, peer_addr_(peeraddr)
+	, connect_socket_(std::move(sockfd))
+	, connect_channel_(new Channel(owner_loop_, connect_socket_.get()))
+	, input_buffer_(new NetBuffer())
+	, output_buffer_(new NetBuffer())
 {
 	LOG(TRACE) << "TcpConnection::TcpConnection the [" <<  name_ << "] connection of"
 		<< " fd=" << connect_socket_->internal_fd() << " is constructing";
-
-	// cannot use shared_from_this()
-	// 1. would throw std::bad_weak_ptr when use shared_from_this() in ctor
-	// 2. would forms a circular reference to the connect_channel_ object
-	//
-	// FIXME: use make_weak_callback() please
-	connect_channel_->set_read_callback(
-		std::bind(&TcpConnection::handle_read, this, _1));
-	connect_channel_->set_write_callback(
-		std::bind(&TcpConnection::handle_write, this));
-	connect_channel_->set_close_callback(
-		std::bind(&TcpConnection::handle_close, this));
-	connect_channel_->set_error_callback(
-		std::bind(&TcpConnection::handle_error, this));
 
 	// setting keepalive sockopt
 	internal::set_keep_alive(*connect_socket_, true);
@@ -89,21 +74,56 @@ TcpConnection::~TcpConnection()
 		<< " fd=" << connect_socket_->internal_fd()
 		<< " state=" << state_to_string() << " is destructing";
 
+	DCHECK(initilize_ == true);
 	DCHECK(state_ == kDisconnected);
+}
+
+void TcpConnection::initialize()
+{
+	CHECK(!initilize_);
+	initilize_ = true;
+
+	using containers::make_weak_bind;
+	owner_loop_->run_in_own_loop(make_weak_bind(&TcpConnection::initialize_in_loop, shared_from_this()));
+}
+
+void TcpConnection::initialize_in_loop()
+{
+	owner_loop_->check_in_own_loop();
+
+	// cannot use std::bind() with shared_from_this()
+	// it would forms a circular reference to the connect_channel_ object
+	using containers::_1;
+	using containers::make_weak_bind;
+
+	connect_channel_->set_read_callback(
+		make_weak_bind(&TcpConnection::handle_read, shared_from_this(), _1));
+	connect_channel_->set_write_callback(
+		make_weak_bind(&TcpConnection::handle_write, shared_from_this()));
+	connect_channel_->set_close_callback(
+		make_weak_bind(&TcpConnection::handle_close, shared_from_this()));
+	connect_channel_->set_error_callback(
+		make_weak_bind(&TcpConnection::handle_error, shared_from_this()));
 }
 
 void TcpConnection::set_tcp_nodelay(bool on)
 {
+	CHECK(initilize_);
+
 	DCHECK_GE(internal::set_tcp_nodelay(*connect_socket_, on), 0);
 }
 
 void TcpConnection::send(const void* data, int len)
 {
+	CHECK(initilize_);
+
 	send(StringPiece(static_cast<const char*>(data), len));
 }
 
 void TcpConnection::send(const StringPiece& message)
 {
+	CHECK(initilize_);
+
 	// FIXME: as string
 	if (state_ == kConnected) {
 		if (owner_loop_->is_in_own_loop()) {
@@ -111,19 +131,24 @@ void TcpConnection::send(const StringPiece& message)
 		} else {
 			void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::send_in_loop;
 			// move semantics in here, even RVO
-			owner_loop_->run_in_own_loop(std::bind(fp, this, message.as_string()));
+			using containers::make_weak_bind;
+			owner_loop_->run_in_own_loop(make_weak_bind(fp, shared_from_this(), message.as_string()));
 		}
 	}
 }
 
 void TcpConnection::send(NetBuffer&& message)
 {
+	CHECK(initilize_);
+
 	NetBuffer msg(std::move(message));
 	send(&msg);
 }
 
 void TcpConnection::send(NetBuffer* buf)
 {
+	CHECK(initilize_);
+
 	// FIXME: as string
 	if (state_ == kConnected) {
 		if (owner_loop_->is_in_own_loop()) {
@@ -131,7 +156,8 @@ void TcpConnection::send(NetBuffer* buf)
 		} else {
 			void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::send_in_loop;
 			// move semantics in here, even RVO
-			owner_loop_->run_in_own_loop(std::bind(fp, this, buf->taken_as_string()));
+			using containers::make_weak_bind;
+			owner_loop_->run_in_own_loop(make_weak_bind(fp, shared_from_this(), buf->taken_as_string()));
 		}
 	}
 }
@@ -193,9 +219,12 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 
 void TcpConnection::shutdown()
 {
+	CHECK(initilize_);
+
 	if (state_ == kConnected) {
 		state_ = kDisconnecting;
-		owner_loop_->run_in_own_loop(std::bind(&TcpConnection::shutdown_in_loop, this));
+		using containers::make_weak_bind;
+		owner_loop_->run_in_own_loop(make_weak_bind(&TcpConnection::shutdown_in_loop, shared_from_this()));
 	}
 }
 
@@ -210,6 +239,8 @@ void TcpConnection::shutdown_in_loop()
 
 void TcpConnection::force_close()
 {
+	CHECK(initilize_);
+
 	// FIXME: use compare and swap
 	if (state_ == kConnected || state_ == kDisconnecting) {
 		state_ = kDisconnecting;
@@ -219,11 +250,14 @@ void TcpConnection::force_close()
 
 void TcpConnection::force_close_with_delay(double delay_s)
 {
+	CHECK(initilize_);
+
 	if (state_ == kConnected || state_ == kDisconnecting) {
 		state_ = kDisconnecting;
 		// not force_close_in_loop to avoid race condition
+		using containers::make_weak_bind;
 		owner_loop_->run_after(TimeDelta::from_seconds_d(delay_s), 
-							make_weak_callback(shared_from_this(), &TcpConnection::force_close));
+							make_weak_bind(&TcpConnection::force_close, shared_from_this()));
 	}
 }
 
@@ -239,7 +273,10 @@ void TcpConnection::force_close_in_loop()
 
 void TcpConnection::start_read()
 {
-	owner_loop_->run_in_own_loop(std::bind(&TcpConnection::start_read_in_loop, this));
+	CHECK(initilize_);
+
+	using containers::make_weak_bind;
+	owner_loop_->run_in_own_loop(make_weak_bind(&TcpConnection::start_read_in_loop, shared_from_this()));
 }
 
 void TcpConnection::start_read_in_loop()
@@ -254,7 +291,10 @@ void TcpConnection::start_read_in_loop()
 
 void TcpConnection::stop_read()
 {
-	owner_loop_->run_in_own_loop(std::bind(&TcpConnection::stop_read_in_loop, this));
+	CHECK(initilize_);
+
+	using containers::make_weak_bind;
+	owner_loop_->run_in_own_loop(make_weak_bind(&TcpConnection::stop_read_in_loop, shared_from_this()));
 }
 
 void TcpConnection::stop_read_in_loop()
@@ -274,7 +314,6 @@ void TcpConnection::connect_established()
 	DCHECK(state_ == kConnecting);
 	state_ = kConnected;
 
-	connect_channel_->tie(shared_from_this());
 	connect_channel_->enable_read_event();
 
 	connect_cb_(shared_from_this());

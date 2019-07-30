@@ -32,12 +32,12 @@ void remove_connector(const ConnectorPtr& connector)
 TcpClient::TcpClient(EventLoop* loop,
 		const EndPoint& addr,
 		const std::string& name)
-	: owner_loop_(loop),
-	  name_(name),
-	  ip_port_(addr.to_ip_port()),
-	  connector_(new Connector(owner_loop_, addr)),
-	  connect_cb_(default_connect_callback),
-	  message_cb_(default_message_callback)
+	: owner_loop_(loop)
+	, name_(name)
+	, ip_port_(addr.to_ip_port())
+	, connector_(new Connector(owner_loop_, addr))
+	, connect_cb_(default_connect_callback)
+	, message_cb_(default_message_callback)
 {
 	LOG(DEBUG) << "TcpClient::TcpClient the " << name_ 
 		<< " client is constructing which connecting to " << ip_port_;
@@ -115,6 +115,7 @@ void TcpClient::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 											localaddr, peeraddr));
 
 	// transfer register user callbacks to TcpConnection
+	conn->initialize();
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);

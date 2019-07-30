@@ -29,13 +29,13 @@ TcpServer::TcpServer(EventLoop* loop,
 					 const EndPoint& addr,
 					 const std::string& name,
 					 Option option)
-	: owner_loop_(loop),
-	  name_(name),
-	  ip_port_(addr.to_ip_port()),
-	  acceptor_(new Acceptor(loop, addr, option == kReusePort)),
-	  loop_pool_(new EventLoopPool(loop, name)),
-	  connect_cb_(default_connect_callback),
-	  message_cb_(default_message_callback)
+	: owner_loop_(loop)
+	, name_(name)
+	, ip_port_(addr.to_ip_port())
+	, acceptor_(new Acceptor(loop, addr, option == kReusePort))
+	, loop_pool_(new EventLoopPool(loop, name))
+	, connect_cb_(default_connect_callback)
+	, message_cb_(default_message_callback)
 {
 	LOG(DEBUG) << "TcpServer::TcpServer [" << name_ 
 		<< "] is constructing which listening on " << ip_port_;
@@ -96,8 +96,9 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 											localaddr, peeraddr));
 
 	connections_[name] = conn;
-	
+
 	// transfer register user callbacks to TcpConnection
+	conn->initialize();
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
