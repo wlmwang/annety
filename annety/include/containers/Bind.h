@@ -201,7 +201,7 @@ private:
         if (locked) {
             return invoke(call_, locked, select(std::get<Indexes>(args_), tp)...);
         }
-        LOG(ERROR) << "the shared_ptr has destructed";
+        LOG(WARNING) << "the shared_ptr has destructed";
     }
 
 public:
