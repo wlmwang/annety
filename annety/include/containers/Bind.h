@@ -209,9 +209,9 @@ public:
         : call_(std::forward<FuncT>(f))
         , args_(std::forward<ParsT>(pars)...)
         , weak_(weak) {}
-    
-    template <typename = std::enable_if<false>>
-    WBindFuctor(FuncT&&, CLASS, ParsT&&...);
+
+    template <typename U>
+    WBindFuctor(FuncT&&, U&&, ParsT&&...) = delete;
 
     template <typename... ARGS>
     auto operator()(ARGS&&... args) -> ResfType

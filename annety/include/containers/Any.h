@@ -67,11 +67,7 @@ public:
 	{
 		return type_;
 	}
-
-private:
-	// for access private Any::any_cast if we following std::any
-	template <typename T> friend T& any_cast(const Any&);
-
+	
 	template <typename T>
 	T& any_cast() const
 	{
@@ -85,6 +81,10 @@ private:
 		auto derived = static_cast<Derived<T>*>(ptr_.get());
 		return derived->value_;
 	}
+
+private:
+	// for access private Any::any_cast if we following std::any
+	template <typename T> friend T& any_cast(const Any&);
 
 	template <typename T>
 	bool is() const
