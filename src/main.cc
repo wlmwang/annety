@@ -6,6 +6,7 @@
 
 #include "Macros.h"
 #include "containers/Any.h"
+#include "containers/Bind.h"
 #include "strings/StringPrintf.h"
 #include "strings/StringPiece.h"
 #include "strings/StringUtil.h"
@@ -38,9 +39,6 @@
 #include "TcpServer.h"
 #include "TcpClient.h"
 #include "SignalServer.h"
-
-#include "containers/Bind.h"
-#include "WeakCallback.h"
 
 using namespace annety;
 using namespace std;

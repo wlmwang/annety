@@ -86,10 +86,6 @@ public:
 		update();
 	}
 
-	// Tie this channel to the owner object managed by shared_ptr,
-	// prevent the owner object being destroyed in handle_event.
-	void tie(const std::shared_ptr<void>&);
-
 	// for Poller
 	int index() { return index_;}
 	void set_index(int idx) { index_ = idx;}
@@ -105,7 +101,6 @@ public:
 	void remove();
 
 private:
-	void handle_event_with_tie(Time receive_tm);
 	void update();
 	static std::string events_to_string(int fd, int ev);
 
@@ -126,9 +121,6 @@ private:
 
 	// update() event type
 	int index_{-1};
-
-	bool tied_{false};
-	std::weak_ptr<void> tie_;
 
 	ReadEventCallback read_cb_;
 	EventCallback write_cb_;

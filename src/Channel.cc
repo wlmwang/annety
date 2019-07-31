@@ -37,42 +37,24 @@ int Channel::fd() const
 	return select_fd_->internal_fd();
 }
 
-void Channel::tie(const std::shared_ptr<void>& obj)
-{
-	tie_ = obj;
-	tied_ = true;
-}
-
 void Channel::handle_event(Time receive_tm)
-{
-	if (tied_) {
-		std::shared_ptr<void> backup(tie_.lock());
-		if (backup) {
-			handle_event_with_tie(receive_tm);
-		}
-	} else {
-		handle_event_with_tie(receive_tm);
-	}
-}
-
-void Channel::handle_event_with_tie(Time receive_tm)
 {
 	owner_loop_->check_in_own_loop();
 	
-	LOG(TRACE) << "Channel::handle_event_with_tie is handling event begin " << revents_to_string();
+	LOG(TRACE) << "Channel::handle_event is handling event begin " << revents_to_string();
 	event_handling_ = true;
 
 	// hup event
 	// FIXME: revents_ & POLLOUT? (::connect could be trigger?)
 	if ((revents_ & POLLHUP) && (!(revents_ & POLLIN) /*|| !(revents_ & POLLOUT)*/)) {
-		LOG_IF(WARNING, logging_hup_) << "Channel::handle_event_with_tie fd = " << fd() 
+		LOG_IF(WARNING, logging_hup_) << "Channel::handle_event fd = " << fd() 
 			<< " POLLHUP event has received";
 		
 		if (close_cb_) close_cb_();
 	}
 	// error
 	if (revents_ & (POLLERR | POLLNVAL)) {
-		LOG_IF(WARNING, revents_ & POLLNVAL) << "Channel::handle_event_with_tie fd = " << fd() 
+		LOG_IF(WARNING, revents_ & POLLNVAL) << "Channel::handle_event fd = " << fd() 
 			<< " POLLNVAL event has received";
 		
 		if (error_cb_) error_cb_();
@@ -87,7 +69,7 @@ void Channel::handle_event_with_tie(Time receive_tm)
 	}
 
 	event_handling_ = false;
-	LOG(TRACE) << "Channel::handle_event_with_tie event was handled finish";
+	LOG(TRACE) << "Channel::handle_event event was handled finish";
 }
 
 void Channel::remove()
