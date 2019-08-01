@@ -138,40 +138,32 @@ void File::Info::from_stat(const stat_wrapper_t& stat_info)
 
 // File ----------------------------------------------------
 
-File::File()
-	: error_details_(FILE_ERROR_FAILED),
-	  created_(false),
-	  async_(false) {}
+File::File() 
+	: error_details_(FILE_ERROR_FAILED), created_(false) {}
+
+File::File(Error error_details) 
+	: error_details_(error_details), created_(false) {}
 
 File::File(const FilePath& path, uint32_t flags)
-	: error_details_(FILE_OK), created_(false), async_(false)
+	: error_details_(FILE_OK), created_(false)
 {
 	initialize(path, flags);
 }
 
-File::File(PlatformFile platform_file) : File(platform_file, false) {}
-
-File::File(PlatformFile platform_file, bool async)
-	: file_(platform_file),
-	  error_details_(FILE_OK),
-	  created_(false),
-	  async_(async)
+File::File(PlatformFile platform_file)
+	: file_(platform_file)
+	, error_details_(FILE_OK)
+	, created_(false)
 {
 #if defined(OS_POSIX)
 	DCHECK_GE(platform_file, -1);
 #endif
 }
 
-File::File(Error error_details)
-	: error_details_(error_details),
-	  created_(false),
-	  async_(false) {}
-
 File::File(File&& other)
-	: file_(other.take_platform_file()),
-	  error_details_(other.error_details()),
-	  created_(other.created()),
-	  async_(other.async_) {}
+	: file_(other.take_platform_file())
+	, error_details_(other.error_details())
+	, created_(other.created()) {}
 
 File::~File()
 {
@@ -184,7 +176,6 @@ File& File::operator=(File&& other)
 	set_platform_file(other.take_platform_file());
 	error_details_ = other.error_details();
 	created_ = other.created();
-	async_ = other.async_;
 	return *this;
 }
 
@@ -420,7 +411,7 @@ File File::duplicate() const
 		return File(File::get_last_file_error());
 	}
 
-	return File(other_fd, async());
+	return File(other_fd);
 }
 
 // Static.
@@ -543,7 +534,6 @@ void File::do_initialize(const FilePath& path, uint32_t flags)
 		::unlink(path.value().c_str());
 	}
 
-	async_ = ((flags & FLAG_ASYNC) == FLAG_ASYNC);
 	error_details_ = FILE_OK;
 	file_.reset(descriptor);
 }

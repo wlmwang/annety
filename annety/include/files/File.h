@@ -33,8 +33,6 @@ typedef struct stat64 stat_wrapper_t;
 #endif
 
 // This wrapper around an OS-level file.
-// Note that this class does not provide any support for asynchronous IO, other
-// than the ability to create asynchronous handles on Windows.
 //
 // Note about const: this class does not attempt to determine if the underlying
 // file system object is affected by a particular method in order to consider
@@ -66,7 +64,6 @@ public:
 		FLAG_APPEND = 1 << 7,
 		FLAG_EXCLUSIVE_READ = 1 << 8,	// EXCLUSIVE is opposite of Windows SHARE.
 		FLAG_EXCLUSIVE_WRITE = 1 << 9,
-		FLAG_ASYNC = 1 << 10,
 		FLAG_DELETE_ON_CLOSE = 1 << 13,
 		FLAG_TERMINAL_DEVICE = 1 << 16,	// Serial port flags.
 
@@ -150,13 +147,8 @@ public:
 	// Creates or opens the given file.
 	File(const FilePath& path, uint32_t flags);
 
-	// Takes ownership of |platform_file| and sets async to false.
+	// Takes ownership of |platform_file|
 	explicit File(PlatformFile platform_file);
-
-	// Takes ownership of |platform_file| and sets async to the given value.
-	// This constructor exists because on Windows you can't check if platform_file
-	// is async or not.
-	File(PlatformFile platform_file, bool async);
 
 	// Creates an object with a specific error_details code.
 	explicit File(Error error_details);
@@ -292,8 +284,6 @@ public:
 	// underlying file is deleted when the last handle to it is closed.
 	File duplicate() const;
 
-	bool async() const { return async_;}
-
 	static Error os_error_to_file_error(int saved_errno);
 
 	// Gets the last global error (errno or GetLastError()) and converts it to the
@@ -316,7 +306,6 @@ private:
 	ScopedFD file_;
 	Error error_details_;
 	bool created_;
-	bool async_;
 };
 
 }	// namespace annety
