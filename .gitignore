@@ -1,0 +1,3 @@
+src/ar/*.o
+src/ld/*.o
+libannety*
