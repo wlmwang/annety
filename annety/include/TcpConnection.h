@@ -5,9 +5,10 @@
 #define ANT_TCP_CONNECTION_H_
 
 #include "Macros.h"
-#include "EndPoint.h"
 #include "Times.h"
 #include "Logging.h"
+#include "EndPoint.h"
+#include "NetBuffer.h"
 #include "CallbackForward.h"
 #include "containers/Any.h"
 

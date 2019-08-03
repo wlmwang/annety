@@ -5,6 +5,7 @@
 #define ANT_TCP_SERVER_H_
 
 #include "Macros.h"
+#include "TcpConnection.h"
 #include "CallbackForward.h"
 
 #include <map>
