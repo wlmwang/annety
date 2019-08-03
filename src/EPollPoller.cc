@@ -6,13 +6,23 @@
 #include "Channel.h"
 #include "ScopedClearLastError.h"
 
+#if defined(OS_LINUX)
 #include <errno.h>
 #include <poll.h>
 #include <sys/epoll.h>
 #include <unistd.h>
+#endif	// OS_LINUX
 
 namespace annety
 {
+#if defined(OS_LINUX)
+namespace
+{
+const int kNew = -1;
+const int kAdded = 1;
+const int kDeleted = 2;
+}
+
 // the constants of poll(2) and epoll(4) are expected to be the same.
 static_assert(EPOLLIN == POLLIN,        "epoll uses same flag values as poll");
 static_assert(EPOLLPRI == POLLPRI,      "epoll uses same flag values as poll");
@@ -20,12 +30,6 @@ static_assert(EPOLLOUT == POLLOUT,      "epoll uses same flag values as poll");
 static_assert(EPOLLRDHUP == POLLRDHUP,  "epoll uses same flag values as poll");
 static_assert(EPOLLERR == POLLERR,      "epoll uses same flag values as poll");
 static_assert(EPOLLHUP == POLLHUP,      "epoll uses same flag values as poll");
-
-namespace {
-const int kNew = -1;
-const int kAdded = 1;
-const int kDeleted = 2;
-}
 
 EPollPoller::EPollPoller(EventLoop* loop)
 	: Poller(loop),
@@ -188,5 +192,13 @@ const char* EPollPoller::operation_to_string(int op)
 		return "Unknown Operation";
 	}
 }
+#else
+// FIXME: suppression may cause "has no symbols" warnings for some compilers.
+// For example, MacOS
+void suppress_no_symbols_warning()
+{
+	NOTREACHED();
+}
+#endif	// OS_LINUX
 
 }	// namespace annety

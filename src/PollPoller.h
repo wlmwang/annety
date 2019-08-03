@@ -4,6 +4,7 @@
 #ifndef ANT_POLL_POLLER_H_
 #define ANT_POLL_POLLER_H_
 
+#include "Macros.h"
 #include "Poller.h"
 #include "Times.h"
 
@@ -24,11 +25,13 @@ public:
 	void remove_channel(Channel* channel) override;
 
 private:
+	using PollFdList = std::vector<struct pollfd>;
 	void fill_active_channels(int num, ChannelList* active_channels) const;
 
-	using PollFdList = std::vector<struct pollfd>;
-	
+private:
 	PollFdList pollfds_;
+
+	DISALLOW_COPY_AND_ASSIGN(PollPoller);
 };
 
 }	// namespace annety

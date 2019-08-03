@@ -4,6 +4,8 @@
 #ifndef ANT_EPOLL_POLLER_H_
 #define ANT_EPOLL_POLLER_H_
 
+#if defined(OS_LINUX)
+#include "Macros.h"
 #include "Poller.h"
 #include "Times.h"
 
@@ -36,8 +38,12 @@ private:
 private:
 	int epollfd_;
 	EventList events_;
+
+	DISALLOW_COPY_AND_ASSIGN(EPollPoller);
 };
 
 }	// namespace annety
+
+#endif	// OS_LINUX
 
 #endif	// ANT_EPOLL_POLLER_H_
