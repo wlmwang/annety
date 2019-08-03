@@ -12,7 +12,7 @@
 
 namespace annety
 {
-class Time;
+class TimeStamp;
 class TimeDelta;
 
 class LogStream
@@ -106,7 +106,7 @@ public:
 		return *this;
 	}
 	
-	LogStream& operator<<(const Time& time);
+	LogStream& operator<<(const TimeStamp& time);
 	LogStream& operator<<(const TimeDelta& delta);
 
 	// append to buffer

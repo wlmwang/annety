@@ -2,7 +2,7 @@
 // Date: May 08 2019
 
 #include "LogStream.h"
-#include "Times.h"
+#include "TimeStamp.h"
 
 #include <algorithm>
 #include <ostream>
@@ -144,7 +144,7 @@ LogStream& LogStream::operator<<(double v)
 	return format_number(v);
 }
 
-LogStream& LogStream::operator<<(const Time& time)
+LogStream& LogStream::operator<<(const TimeStamp& time)
 {
 	std::ostringstream oss;
 	oss << time;

@@ -39,7 +39,7 @@ TimerPool::~TimerPool()
 	}
 }
 
-TimerId TimerPool::add_timer(TimerCallback cb, Time expired, double interval_s)
+TimerId TimerPool::add_timer(TimerCallback cb, TimeStamp expired, double interval_s)
 {
 	Timer* timer = new Timer(std::move(cb), expired, TimeDelta::from_seconds_d(interval_s));
 	owner_loop_->run_in_own_loop(
@@ -90,7 +90,7 @@ void TimerPool::cancel_timer_in_own_loop(TimerId timer_id)
 	if (!timers_.empty()) {
 		reset(timers_.begin()->second->expired());
 	} else {
-		reset(Time());
+		reset(TimeStamp());
 	}
 }
 
@@ -99,7 +99,7 @@ void TimerPool::handle_read()
 	owner_loop_->check_in_own_loop();
 	DCHECK(timers_.size() == active_timers_.size());
 
-	Time curr = Time::now();
+	TimeStamp curr = TimeStamp::now();
 	{
 		uint64_t one;
 		ssize_t n = timer_socket_->read(&one, sizeof one);
@@ -128,7 +128,7 @@ void TimerPool::handle_read()
 	}
 }
 
-void TimerPool::fill_expired_timers(Time time, EntryTimerList& expired_timers)
+void TimerPool::fill_expired_timers(TimeStamp time, EntryTimerList& expired_timers)
 {
 	owner_loop_->check_in_own_loop();
 	DCHECK(timers_.size() == active_timers_.size());
@@ -149,7 +149,7 @@ void TimerPool::fill_expired_timers(Time time, EntryTimerList& expired_timers)
 	DCHECK(timers_.size() == active_timers_.size());
 }
 
-void TimerPool::update(Time time, const EntryTimerList& expired_timers)
+void TimerPool::update(TimeStamp time, const EntryTimerList& expired_timers)
 {
 	owner_loop_->check_in_own_loop();
 	DCHECK(timers_.size() == active_timers_.size());
@@ -171,18 +171,18 @@ void TimerPool::update(Time time, const EntryTimerList& expired_timers)
 	if (!timers_.empty()) {
 		reset(timers_.begin()->second->expired());
 	} else {
-		reset(Time());
+		reset(TimeStamp());
 	}
 }
 
 #if !defined(OS_LINUX)
-void TimerPool::check_timer(Time expired)
+void TimerPool::check_timer(TimeStamp expired)
 {
 	owner_loop_->run_in_own_loop(
 		std::bind(&TimerPool::check_timer_in_own_loop, this, expired));
 }
 
-void TimerPool::check_timer_in_own_loop(Time expired)
+void TimerPool::check_timer_in_own_loop(TimeStamp expired)
 {
 	owner_loop_->check_in_own_loop();
 	DCHECK(timers_.size() == active_timers_.size());
@@ -210,12 +210,12 @@ void TimerPool::wakeup()
 }
 #endif
 
-void TimerPool::reset(Time expired)
+void TimerPool::reset(TimeStamp expired)
 {
 	owner_loop_->check_in_own_loop();
 	
 	if (expired.is_valid()) {
-		TimeDelta delta = expired - Time::now();
+		TimeDelta delta = expired - TimeStamp::now();
 #if defined(OS_LINUX)
 		// FIXME: implicit_cast<>
 		TimerFD* ts = static_cast<TimerFD*>(timer_socket_.get());
@@ -237,7 +237,7 @@ bool TimerPool::save(Timer* timer)
 	owner_loop_->check_in_own_loop();
 	DCHECK(timers_.size() == active_timers_.size());
 
-	Time time = timer->expired();
+	TimeStamp time = timer->expired();
 
 	bool earliest_changed = false;
 	if (timers_.empty() || timers_.begin()->first > time) {

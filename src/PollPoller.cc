@@ -17,7 +17,7 @@ PollPoller::PollPoller(EventLoop* loop) : Poller(loop) {}
 
 PollPoller::~PollPoller() = default;
 
-Time PollPoller::poll(int timeout_ms, ChannelList* active_channels)
+TimeStamp PollPoller::poll(int timeout_ms, ChannelList* active_channels)
 {
 	Poller::check_in_own_loop();
 
@@ -27,7 +27,7 @@ Time PollPoller::poll(int timeout_ms, ChannelList* active_channels)
 
 	int num = ::poll(pollfds_.data(), pollfds_.size(), timeout_ms);
 
-	Time curr(Time::now());
+	TimeStamp curr(TimeStamp::now());
 	if (num > 0) {
 		LOG(TRACE) << "PollPoller::poll is having " << num << " events happened";
 

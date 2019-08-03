@@ -60,9 +60,9 @@ int64_t FileEnumerator::FileInfo::get_size() const
 	return stat_.st_size;
 }
 
-Time FileEnumerator::FileInfo::get_last_modified_time() const
+TimeStamp FileEnumerator::FileInfo::get_last_modified_time() const
 {
-	return Time::from_time_t(stat_.st_mtime);
+	return TimeStamp::from_time_t(stat_.st_mtime);
 }
 
 // FileEnumerator --------------------------------------------------------------

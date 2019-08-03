@@ -91,7 +91,7 @@ void EventLoop::loop()
 
 #if !defined(OS_LINUX)
 		// for timers
-		timer_pool_->check_timer(Time::now());
+		timer_pool_->check_timer(TimeStamp::now());
 #endif
 		// wakeup and run queue functions
 		do_calling_wakeup_functors();
@@ -117,9 +117,9 @@ void EventLoop::set_poll_timeout(int64_t ms)
 
 TimerId EventLoop::run_at(double tm_s, TimerCallback cb)
 {
-	return run_at(Time()+TimeDelta::from_seconds_d(tm_s), std::move(cb));
+	return run_at(TimeStamp()+TimeDelta::from_seconds_d(tm_s), std::move(cb));
 }
-TimerId EventLoop::run_at(Time time, TimerCallback cb)
+TimerId EventLoop::run_at(TimeStamp time, TimerCallback cb)
 {
 	return timer_pool_->add_timer(std::move(cb), time, 0.0);
 }
@@ -130,7 +130,7 @@ TimerId EventLoop::run_after(double delay_s, TimerCallback cb)
 }
 TimerId EventLoop::run_after(TimeDelta delta, TimerCallback cb)
 {
-	return run_at(Time::now()+delta, std::move(cb));
+	return run_at(TimeStamp::now()+delta, std::move(cb));
 }
 
 TimerId EventLoop::run_every(double interval_s, TimerCallback cb)
@@ -139,7 +139,7 @@ TimerId EventLoop::run_every(double interval_s, TimerCallback cb)
 }
 TimerId EventLoop::run_every(TimeDelta delta, TimerCallback cb)
 {
-	return timer_pool_->add_timer(std::move(cb), Time::now()+delta, delta.in_seconds_f());
+	return timer_pool_->add_timer(std::move(cb), TimeStamp::now()+delta, delta.in_seconds_f());
 }
 
 void EventLoop::cancel(TimerId timerId)

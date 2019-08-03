@@ -121,19 +121,19 @@ void File::Info::from_stat(const stat_wrapper_t& stat_info)
 #endif
 
 	last_modified =
-		Time::from_time_t(last_modified_sec) +
+		TimeStamp::from_time_t(last_modified_sec) +
 			TimeDelta::from_microseconds(last_modified_nsec /
-				Time::kNanosecondsPerMicrosecond);
+				TimeStamp::kNanosecondsPerMicrosecond);
 
 	last_accessed =
-		Time::from_time_t(last_accessed_sec) +
+		TimeStamp::from_time_t(last_accessed_sec) +
 			TimeDelta::from_microseconds(last_accessed_nsec /
-				Time::kNanosecondsPerMicrosecond);
+				TimeStamp::kNanosecondsPerMicrosecond);
 
 	creation_time =
-		Time::from_time_t(creation_time_sec) +
+		TimeStamp::from_time_t(creation_time_sec) +
 			TimeDelta::from_microseconds(creation_time_nsec /
-				Time::kNanosecondsPerMicrosecond);
+				TimeStamp::kNanosecondsPerMicrosecond);
 }
 
 // File ----------------------------------------------------
@@ -362,7 +362,7 @@ bool File::set_length(int64_t length)
 	return !call_ftruncate(file_.get(), length);
 }
 
-bool File::set_times(Time last_access_time, Time last_modified_time)
+bool File::set_times(TimeStamp last_access_time, TimeStamp last_modified_time)
 {
 	DCHECK(is_valid());
 

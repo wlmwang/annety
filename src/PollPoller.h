@@ -6,7 +6,7 @@
 
 #include "Macros.h"
 #include "Poller.h"
-#include "Times.h"
+#include "TimeStamp.h"
 
 #include <vector>
 #include <poll.h>
@@ -19,7 +19,7 @@ public:
 	PollPoller(EventLoop* loop);
 	~PollPoller() override;
 	
-	Time poll(int timeout_ms, ChannelList* active_channels) override;
+	TimeStamp poll(int timeout_ms, ChannelList* active_channels) override;
 
 	void update_channel(Channel* channel) override;
 	void remove_channel(Channel* channel) override;

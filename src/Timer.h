@@ -5,7 +5,7 @@
 #define ANT_TIMER_H_
 
 #include "Macros.h"
-#include "Times.h"
+#include "TimeStamp.h"
 #include "CallbackForward.h"
 
 #include <stdint.h>
@@ -15,18 +15,18 @@ namespace annety
 class Timer
 {
 public:
-	Timer(TimerCallback cb, Time expired, TimeDelta interval);
+	Timer(TimerCallback cb, TimeStamp expired, TimeDelta interval);
 	~Timer();
 
-	Time expired() const  { return expired_;}
+	TimeStamp expired() const  { return expired_;}
 	int64_t sequence() const { return sequence_;}
 	bool repeat() const { return !interval_.is_null();}
 
-	void restart(Time tm);
+	void restart(TimeStamp tm);
 	void run() const { cb_();}
 
 private:
-	Time expired_;
+	TimeStamp expired_;
 	const TimeDelta interval_;
 	const TimerCallback cb_;
 	const int64_t sequence_;

@@ -5,7 +5,7 @@
 #define ANT_CHANNEL_H_
 
 #include "Macros.h"
-#include "Times.h"
+#include "TimeStamp.h"
 
 #include <string>
 #include <memory>
@@ -25,7 +25,7 @@ class Channel
 {
 public:
 	using EventCallback = std::function<void()>;
-	using ReadEventCallback = std::function<void(Time)>;
+	using ReadEventCallback = std::function<void(TimeStamp)>;
 
 	void set_read_callback(ReadEventCallback cb)
 	{
@@ -91,7 +91,7 @@ public:
 	void set_index(int idx) { index_ = idx;}
 
 	// for EventLoop
-	void handle_event(Time receive_tm);
+	void handle_event(TimeStamp receive_tm);
 	EventLoop* owner_loop() { return owner_loop_;}
 	
 	// for debug

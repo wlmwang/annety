@@ -42,7 +42,7 @@ void default_connect_callback(const TcpConnectionPtr& conn)
 	// because some users want to register message callback only.
 }
 
-void default_message_callback(const TcpConnectionPtr&, NetBuffer* buf, Time)
+void default_message_callback(const TcpConnectionPtr&, NetBuffer* buf, TimeStamp)
 {
 	buf->has_read_all();
 }
@@ -336,7 +336,7 @@ void TcpConnection::connect_destroyed()
 	LOG(TRACE) << "TcpConnection::connect_destroyed is called";
 }
 
-void TcpConnection::handle_read(Time recv_tm)
+void TcpConnection::handle_read(TimeStamp recv_tm)
 {
 	owner_loop_->check_in_own_loop();
 

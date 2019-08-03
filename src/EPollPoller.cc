@@ -44,7 +44,7 @@ EPollPoller::~EPollPoller()
 	CHECK(::close(epollfd_) == 0);
 }
 
-Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
+TimeStamp EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 {
 	Poller::check_in_own_loop();
 
@@ -54,7 +54,7 @@ Time EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 
 	int num = ::epoll_wait(epollfd_, events_.data(), events_.size(), timeout_ms);
 
-	Time curr(Time::now());
+	TimeStamp curr(TimeStamp::now());
 	if (num > 0) {
 		LOG(TRACE) << "EPollPoller::poll is having " << num << " events happened";
 

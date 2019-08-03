@@ -3,7 +3,6 @@
 
 #include "Channel.h"
 #include "SelectableFD.h"
-#include "Times.h"
 #include "EventLoop.h"
 #include "Logging.h"
 
@@ -37,7 +36,7 @@ int Channel::fd() const
 	return select_fd_->internal_fd();
 }
 
-void Channel::handle_event(Time receive_tm)
+void Channel::handle_event(TimeStamp receive_tm)
 {
 	owner_loop_->check_in_own_loop();
 	

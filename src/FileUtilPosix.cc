@@ -13,7 +13,7 @@
 
 #include "Macros.h"
 #include "Logging.h"
-#include "Times.h"
+#include "TimeStamp.h"
 
 #if defined(OS_MACOSX)
 #include <copyfile.h>
@@ -466,8 +466,8 @@ bool set_current_directory(const FilePath& path)
 }
 
 bool touch_file(const FilePath& path,
-				const Time& last_accessed,
-				const Time& last_modified)
+				const TimeStamp& last_accessed,
+				const TimeStamp& last_modified)
 {
 	int flags = File::FLAG_OPEN;
 

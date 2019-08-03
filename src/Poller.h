@@ -5,7 +5,7 @@
 #define ANT_POLLER_H_
 
 #include "Macros.h"
-#include "Times.h"
+#include "TimeStamp.h"
 #include "EventLoop.h"
 
 #include <vector>
@@ -26,7 +26,7 @@ public:
 
 	// Polls the I/O events.
 	// Must be called in the loop thread.
-	virtual Time poll(int timeout_ms, ChannelList* activeChannels) = 0;
+	virtual TimeStamp poll(int timeout_ms, ChannelList* activeChannels) = 0;
 
 	// Changes the interested I/O events.
 	// Must be called in the loop thread.

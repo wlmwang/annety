@@ -5,7 +5,7 @@
 #define ANT_TCP_CONNECTION_H_
 
 #include "Macros.h"
-#include "Times.h"
+#include "TimeStamp.h"
 #include "Logging.h"
 #include "EndPoint.h"
 #include "NetBuffer.h"
@@ -113,7 +113,7 @@ public:
 private:
 	enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting};
 
-	void handle_read(Time recv_tm);
+	void handle_read(TimeStamp recv_tm);
 	void handle_write();
 	void handle_close();
 	void handle_error();

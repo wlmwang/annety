@@ -15,7 +15,7 @@
 #include "ByteBuffer.h"
 #include "NetBuffer.h"
 #include "LogStream.h"
-#include "Times.h"
+#include "TimeStamp.h"
 #include "Logging.h"
 #include "LogFile.h"
 #include "synchronization/MutexLock.h"
@@ -232,8 +232,8 @@ int main(int argc, char* argv[])
 	
 	// cout << "LogBuffer:" << lb << "|" << lb1 << endl;
 
-	// // Time
-	// Time t = Time::now();
+	// // TimeStamp
+	// TimeStamp t = TimeStamp::now();
 	// cout << "now(utc):" << t << endl;
 
 	// t += TimeDelta::from_hours(8);
@@ -514,7 +514,7 @@ int main(int argc, char* argv[])
 		});
 		
 		// register message handle
-		srv.set_message_callback([&](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
+		srv.set_message_callback([&](const TcpConnectionPtr& conn, NetBuffer* buf, TimeStamp t) {
 			// LOG(INFO) << "srv:" << buf->to_string_piece();
 			// buf->has_read_all();
 			LOG(INFO) << "srv:" << buf->taken_as_string();
@@ -547,7 +547,7 @@ int main(int argc, char* argv[])
 	// 	});
 		
 	// 	// register message handle
-	// 	crv.set_message_callback([](const TcpConnectionPtr& conn, NetBuffer* buf, Time t) {
+	// 	crv.set_message_callback([](const TcpConnectionPtr& conn, NetBuffer* buf, TimeStamp t) {
 	// 		// LOG(INFO) << "crv:" << buf->to_string_piece();
 	// 		// buf->has_read_all();
 	// 		LOG(INFO) << "crv:" << buf->taken_as_string();

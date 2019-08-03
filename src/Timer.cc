@@ -13,7 +13,7 @@ namespace {
 std::atomic<int64_t> globalSequence{0};
 }	// namespace anonymous
 
-Timer::Timer(TimerCallback cb, Time expired, TimeDelta interval)
+Timer::Timer(TimerCallback cb, TimeStamp expired, TimeDelta interval)
 	: expired_(expired),
 	  interval_(interval),
 	  cb_(std::move(cb)),
@@ -31,13 +31,13 @@ Timer::~Timer()
 		<<  ", expired:" << expired_ <<"] is destructing";
 }
 
-void Timer::restart(Time tm)
+void Timer::restart(TimeStamp tm)
 {
 	if (repeat()) {
 		expired_ = tm + interval_;
 	} else {
 		// repeat() should be called by user
-		// expired_ = Time();
+		// expired_ = TimeStamp();
 		NOTREACHED();
 	}
 }

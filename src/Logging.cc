@@ -5,9 +5,9 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
+#include "Macros.h"
 #include "Logging.h"
-#include "Macros.h"	
-#include "Times.h"
+#include "TimeStamp.h"
 #include "SafeStrerror.h"
 #include "strings/StringPrintf.h"
 #include "threading/ThreadForward.h"
@@ -59,7 +59,7 @@ LogSeverity g_min_log_severity = 0;
 
 // For cache colums logging
 // FIXME: destruct not control
-thread_local Time::Exploded tls_local_exploded{};
+thread_local TimeStamp::Exploded tls_local_exploded{};
 thread_local std::string tls_format_ymdhis{};
 thread_local int64_t tls_last_second{};
 
@@ -118,7 +118,7 @@ LogMessage::Impl::Impl(int line, const Filename& file, LogSeverity sev,
 void LogMessage::Impl::begin()
 {
 	// time exploded string
-	TimeDelta td = time_ - Time();
+	TimeDelta td = time_ - TimeStamp();
 	if (td.in_seconds() != tls_last_second) {
 		time_.to_local_explode(&tls_local_exploded);
 		sstring_printf(&tls_format_ymdhis, "%04d-%02d-%02d %02d:%02d:%02d",
@@ -131,7 +131,7 @@ void LogMessage::Impl::begin()
 		tls_last_second = td.in_seconds();
 	}
 	stream_ << string_printf("%s.%06d ", tls_format_ymdhis.c_str(), 
-				static_cast<int>(td.internal_value() % Time::kMicrosecondsPerSecond));
+				static_cast<int>(td.internal_value() % TimeStamp::kMicrosecondsPerSecond));
 	
 	// tid string
 	stream_ << threads::tid_string() << " ";

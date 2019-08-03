@@ -8,7 +8,7 @@
 #include "synchronization/ConditionVariable.h"
 #include "synchronization/MutexLock.h"
 #include "Logging.h"
-#include "Times.h"
+#include "TimeStamp.h"
 
 #include <pthread.h>
 #include <errno.h>
@@ -76,9 +76,9 @@ void ConditionVariable::timed_wait(const TimeDelta& max_time)
 {
 	int64_t usecs = max_time.in_microseconds();
 	struct timespec relative_time;
-	relative_time.tv_sec = usecs / Time::kMicrosecondsPerSecond;
-	relative_time.tv_nsec = (usecs % Time::kMicrosecondsPerSecond) * 
-							Time::kNanosecondsPerMicrosecond;
+	relative_time.tv_sec = usecs / TimeStamp::kMicrosecondsPerSecond;
+	relative_time.tv_nsec = (usecs % TimeStamp::kMicrosecondsPerSecond) * 
+							TimeStamp::kNanosecondsPerMicrosecond;
 
 #if DCHECK_IS_ON()
 	user_lock_.check_held_and_unmark();
@@ -98,8 +98,8 @@ void ConditionVariable::timed_wait(const TimeDelta& max_time)
 
 	absolute_time.tv_sec += relative_time.tv_sec;
 	absolute_time.tv_nsec += relative_time.tv_nsec;
-	absolute_time.tv_sec += absolute_time.tv_nsec / Time::kNanosecondsPerSecond;
-	absolute_time.tv_nsec %= Time::kNanosecondsPerSecond;
+	absolute_time.tv_sec += absolute_time.tv_nsec / TimeStamp::kNanosecondsPerSecond;
+	absolute_time.tv_nsec %= TimeStamp::kNanosecondsPerSecond;
 	DCHECK_GE(absolute_time.tv_sec, now.tv_sec);  // Overflow paranoia
 
 	int rv = ::pthread_cond_timedwait(&condition_, user_mutex_, &absolute_time);

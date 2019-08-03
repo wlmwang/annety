@@ -5,7 +5,7 @@
 #define ANT_LOG_FILE_H_
 
 #include "Macros.h"
-#include "Times.h"
+#include "TimeStamp.h"
 #include "files/FilePath.h"
 #include "strings/StringPiece.h"
 #include "synchronization/MutexLock.h"
@@ -48,7 +48,7 @@ private:
 
 	MutexLock lock_;
 	std::unique_ptr<File> file_;
-	Time last_rotate_;
+	TimeStamp last_rotate_;
 };
 
 }	// namespace annety

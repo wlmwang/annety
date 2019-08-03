@@ -11,7 +11,7 @@
 #include "build/BuildConfig.h"
 #include "files/FilePath.h"
 #include "ScopedFile.h"
-#include "Times.h"
+#include "TimeStamp.h"
 
 #include <string>
 #include <stdint.h>
@@ -133,13 +133,13 @@ public:
 		bool is_symbolic_link;
 
 		// The last modified time of a file.
-		Time last_modified;
+		TimeStamp last_modified;
 
 		// The last accessed time of a file.
-		Time last_accessed;
+		TimeStamp last_accessed;
 
 		// The creation time of a file.
-		Time creation_time;
+		TimeStamp creation_time;
 	};
 
 	File();
@@ -247,7 +247,7 @@ public:
 	bool flush();
 
 	// Updates the file times.
-	bool set_times(Time last_access_time, Time last_modified_time);
+	bool set_times(TimeStamp last_access_time, TimeStamp last_modified_time);
 
 	// Returns some basic information for the given file.
 	bool get_info(Info* info);

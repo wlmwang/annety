@@ -5,7 +5,7 @@
 #define ANT_TIMER_POOL_H_
 
 #include "Macros.h"
-#include "Times.h"
+#include "TimeStamp.h"
 #include "TimerId.h"
 #include "CallbackForward.h"
 
@@ -31,11 +31,11 @@ public:
 	explicit TimerPool(EventLoop* loop);
 	~TimerPool();
 
-	TimerId add_timer(TimerCallback cb, Time expired, double interval_s);
+	TimerId add_timer(TimerCallback cb, TimeStamp expired, double interval_s);
 	void cancel_timer(TimerId timer_id);
 
 #if !defined(OS_LINUX)
-	void check_timer(Time expired);
+	void check_timer(TimeStamp expired);
 #endif
 
 private:
@@ -43,7 +43,7 @@ private:
 	// This requires heterogeneous comparison lookup (N3465) from C++14
 
 	// Timer list. sorted by expired
-	using EntryTimer = std::pair<Time, Timer*>;
+	using EntryTimer = std::pair<TimeStamp, Timer*>;
 	using EntryTimerSet = std::set<EntryTimer>;
 	using EntryTimerList = std::vector<EntryTimer>;
 
@@ -56,14 +56,14 @@ private:
 
 #if !defined(OS_LINUX)
 	void wakeup();
-	void check_timer_in_own_loop(Time expired);
+	void check_timer_in_own_loop(TimeStamp expired);
 #endif
 
 	bool save(Timer* timer);
-	void update(Time time, const EntryTimerList& expired_timers);
-	void reset(Time expired);
+	void update(TimeStamp time, const EntryTimerList& expired_timers);
+	void reset(TimeStamp expired);
 
-	void fill_expired_timers(Time time, EntryTimerList& expired_timers);
+	void fill_expired_timers(TimeStamp time, EntryTimerList& expired_timers);
 	void handle_read();
 
 private:

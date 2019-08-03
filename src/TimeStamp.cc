@@ -5,7 +5,7 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#include "Times.h"
+#include "TimeStamp.h"
 #include "Logging.h"
 #include "strings/StringPrintf.h"
 
@@ -17,14 +17,14 @@ namespace annety
 {
 namespace
 {
-Time TimeNowIgnoreTZ()
+TimeStamp TimeNowIgnoreTZ()
 {
 	struct timeval tv;
 	struct timezone tz = {0, 0};  // UTC
 	CHECK(::gettimeofday(&tv, &tz) == 0);
 	// microseconds since the epoch.
-	return Time() + TimeDelta::from_microseconds(
-					tv.tv_sec * Time::kMicrosecondsPerSecond + 
+	return TimeStamp() + TimeDelta::from_microseconds(
+					tv.tv_sec * TimeStamp::kMicrosecondsPerSecond + 
 					tv.tv_usec);
 }
 
@@ -35,45 +35,45 @@ Time TimeNowIgnoreTZ()
 // static
 TimeDelta TimeDelta::from_timespec(const struct timespec& ts)
 {
-	return TimeDelta(ts.tv_sec * Time::kMicrosecondsPerSecond +
-		ts.tv_nsec / Time::kNanosecondsPerMicrosecond);
+	return TimeDelta(ts.tv_sec * TimeStamp::kMicrosecondsPerSecond +
+		ts.tv_nsec / TimeStamp::kNanosecondsPerMicrosecond);
 }
 
 struct timespec TimeDelta::to_timespec() const
 {
 	int64_t microseconds = in_microseconds();
 	time_t seconds = 0;
-	if (microseconds >= Time::kMicrosecondsPerSecond) {
+	if (microseconds >= TimeStamp::kMicrosecondsPerSecond) {
 		seconds = in_seconds();
-		microseconds -= seconds * Time::kMicrosecondsPerSecond;
+		microseconds -= seconds * TimeStamp::kMicrosecondsPerSecond;
 	}
 	struct timespec result = {
 		seconds,
-		static_cast<long>(microseconds * Time::kNanosecondsPerMicrosecond)
+		static_cast<long>(microseconds * TimeStamp::kNanosecondsPerMicrosecond)
 	};
 	return result;
 }
 
-// Time --------------------------------------------------------------------
+// TimeStamp --------------------------------------------------------------------
 
 // static
-Time Time::now()
+TimeStamp TimeStamp::now()
 {
 	return TimeNowIgnoreTZ();
 }
 
 // static
-Time Time::from_time_t(time_t tt)
+TimeStamp TimeStamp::from_time_t(time_t tt)
 {
 	if (tt == 0) {
-		return Time();
+		return TimeStamp();
 	} else if (tt == std::numeric_limits<time_t>::max()) {
 		return max();
 	}
-	return Time() + TimeDelta::from_seconds(tt);
+	return TimeStamp() + TimeDelta::from_seconds(tt);
 }
 
-time_t Time::to_time_t() const
+time_t TimeStamp::to_time_t() const
 {
 	if (is_null()) {
 		return 0;
@@ -81,7 +81,7 @@ time_t Time::to_time_t() const
 		return std::numeric_limits<time_t>::max();
 	}
 	if (std::numeric_limits<int64_t>::max() <= us_) {
-		DLOG(WARNING) << "Overflow when converting annety::Time with internal " <<
+		DLOG(WARNING) << "Overflow when converting annety::TimeStamp with internal " <<
 			"value " << us_ << " to time_t";
 		return std::numeric_limits<time_t>::max();
 	}
@@ -89,20 +89,20 @@ time_t Time::to_time_t() const
 }
 
 // static
-Time Time::from_timeval(struct timeval t)
+TimeStamp TimeStamp::from_timeval(struct timeval t)
 {
-	DCHECK_LT(t.tv_usec, static_cast<int>(Time::kMicrosecondsPerSecond));
+	DCHECK_LT(t.tv_usec, static_cast<int>(TimeStamp::kMicrosecondsPerSecond));
 	DCHECK_GE(t.tv_usec, 0);
 	if (t.tv_usec == 0 && t.tv_sec == 0) {
-		return Time();
+		return TimeStamp();
 	} else if (t.tv_usec == static_cast<suseconds_t>(kMicrosecondsPerSecond) - 1 
 							&& t.tv_sec == std::numeric_limits<time_t>::max()) {
 		return max();
 	}
-	return Time((static_cast<int64_t>(t.tv_sec) * kMicrosecondsPerSecond) + t.tv_usec);
+	return TimeStamp((static_cast<int64_t>(t.tv_sec) * kMicrosecondsPerSecond) + t.tv_usec);
 }
 
-struct timeval Time::to_timeval() const
+struct timeval TimeStamp::to_timeval() const
 {
 	struct timeval result;
 	if (is_null()) {
@@ -114,28 +114,28 @@ struct timeval Time::to_timeval() const
 		result.tv_usec = static_cast<suseconds_t>(kMicrosecondsPerSecond) - 1;
 		return result;
 	}
-	result.tv_sec = us_ / Time::kMicrosecondsPerSecond;
-	result.tv_usec = us_ % Time::kMicrosecondsPerSecond;
+	result.tv_sec = us_ / TimeStamp::kMicrosecondsPerSecond;
+	result.tv_usec = us_ % TimeStamp::kMicrosecondsPerSecond;
 	return result;
 }
 
 // static
-Time Time::from_timespec(const struct timespec& ts)
+TimeStamp TimeStamp::from_timespec(const struct timespec& ts)
 {
 	return from_double_t(ts.tv_sec + 
-		static_cast<double>(ts.tv_nsec) / Time::kNanosecondsPerSecond);
+		static_cast<double>(ts.tv_nsec) / TimeStamp::kNanosecondsPerSecond);
 }
 
 // static
-Time Time::from_double_t(double dt)
+TimeStamp TimeStamp::from_double_t(double dt)
 {
 	if (dt == 0 || std::isnan(dt)) {
-		return Time();
+		return TimeStamp();
 	}
-	return Time() + TimeDelta::from_seconds_d(dt);
+	return TimeStamp() + TimeDelta::from_seconds_d(dt);
 }
 
-double Time::to_double_t() const
+double TimeStamp::to_double_t() const
 {
 	if (is_null()) {
 		return 0;
@@ -145,7 +145,7 @@ double Time::to_double_t() const
 	return static_cast<double>(us_) / kMicrosecondsPerSecond;
 }
 
-Time Time::midnight(bool is_local) const
+TimeStamp TimeStamp::midnight(bool is_local) const
 {
 	Exploded exploded;
 	to_explode(is_local, &exploded);
@@ -153,18 +153,18 @@ Time Time::midnight(bool is_local) const
 	exploded.minute = 0;
 	exploded.second = 0;
 	exploded.millisecond = 0;
-	Time out_time;
+	TimeStamp out_time;
 	if (from_exploded(is_local, exploded, &out_time)) {
 		return out_time;
 	}
 
 	// This function must not fail.
 	NOTREACHED();
-	return Time();
+	return TimeStamp();
 }
 
 // static
-bool Time::exploded_mostly_equals(const Exploded& lhs, const Exploded& rhs)
+bool TimeStamp::exploded_mostly_equals(const Exploded& lhs, const Exploded& rhs)
 {
 	return lhs.year == rhs.year && lhs.month == rhs.month &&
 		   lhs.day_of_month == rhs.day_of_month && lhs.hour == rhs.hour &&
@@ -177,9 +177,9 @@ std::ostream& operator<<(std::ostream& os, TimeDelta delta)
 	return os << delta.in_seconds_f() << " s";
 }
 
-std::ostream& operator<<(std::ostream& os, Time time)
+std::ostream& operator<<(std::ostream& os, TimeStamp time)
 {
-	Time::Exploded exploded;
+	TimeStamp::Exploded exploded;
 	time.to_utc_explode(&exploded);
 	return os << string_printf("%04d-%02d-%02d %02d:%02d:%02d.%06d UTC",
 								exploded.year,
@@ -191,7 +191,7 @@ std::ostream& operator<<(std::ostream& os, Time time)
 								exploded.millisecond);
 }
 
-// Time::Exploded -------------------------------------------------------------
+// TimeStamp::Exploded -------------------------------------------------------------
 namespace
 {
 // This prevents a crash on traversing the environment global and looking up
@@ -213,7 +213,7 @@ struct tm* time_t_to_tm(time_t t, struct tm* timestruct, bool is_local)
 }	// namespace anonymous
 
 
-Time::Exploded* Time::to_explode(bool is_local, Exploded* exploded) const
+TimeStamp::Exploded* TimeStamp::to_explode(bool is_local, Exploded* exploded) const
 {
 	// The following values are all rounded towards -infinity.
 	int64_t milliseconds;  // Milliseconds since epoch.
@@ -252,7 +252,7 @@ Time::Exploded* Time::to_explode(bool is_local, Exploded* exploded) const
 }
 
 // static
-bool Time::from_exploded(bool is_local, const Exploded& exploded, Time* time)
+bool TimeStamp::from_exploded(bool is_local, const Exploded& exploded, TimeStamp* time)
 {
 	int month = exploded.month - 1;
 	int year = exploded.year - 1900;
@@ -294,7 +294,7 @@ bool Time::from_exploded(bool is_local, const Exploded& exploded, Time* time)
 		int64_t seconds_isdst1 = time_t_from_tm(&timestruct, is_local);
 
 		// seconds_isdst0 or seconds_isdst1 can be -1 for some timezones.
-		// E.g. "CLST" (Chile Summer Time) returns -1 for 'tm_isdt == 1'.
+		// E.g. "CLST" (Chile Summer TimeStamp) returns -1 for 'tm_isdt == 1'.
 		if (seconds_isdst0 < 0) {
 			seconds = seconds_isdst1;
 		} else if (seconds_isdst1 < 0) {
@@ -349,12 +349,12 @@ bool Time::from_exploded(bool is_local, const Exploded& exploded, Time* time)
 	int64_t checked_microseconds = milliseconds;
 	checked_microseconds *= kMicrosecondsPerMillisecond;
 
-	Time converted_time(checked_microseconds);
+	TimeStamp converted_time(checked_microseconds);
 
 	// If |exploded.day_of_month| is set to 31 on a 28-30 day month, it will
 	// return the first day of the next month. Thus round-trip the time and
 	// compare the initial |exploded| with |utc_to_exploded| time.
-	Time::Exploded to_exploded;
+	TimeStamp::Exploded to_exploded;
 	if (!is_local) {
 		converted_time.to_utc_explode(&to_exploded);
 	} else {
@@ -366,7 +366,7 @@ bool Time::from_exploded(bool is_local, const Exploded& exploded, Time* time)
 		return true;
 	}
 
-	*time = Time(0);
+	*time = TimeStamp(0);
 	return false;
 }
 
@@ -375,7 +375,7 @@ inline bool is_in_range(int value, int lo, int hi)
 	return lo <= value && value <= hi;
 }
 
-bool Time::Exploded::is_valid() const
+bool TimeStamp::Exploded::is_valid() const
 {
 	return is_in_range(month, 1, 12) &&
 		   is_in_range(day_of_week, 0, 6) &&

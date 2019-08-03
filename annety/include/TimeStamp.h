@@ -289,24 +289,24 @@ public:
 protected:
 	constexpr explicit TimeBase(int64_t us) : us_(us) {}
 
-	// Time value in a microsecond timebase.
+	// TimeStamp value in a microsecond timebase.
 	int64_t us_;
 };
 
 }	// namespace internal
 
-// operator delta + Time
+// operator delta + TimeStamp
 template<class TimeClass>
 inline TimeClass operator+(TimeDelta delta, TimeClass t)
 {
 	return t + delta;
 }
 
-// Time -----------------------------------------------------------------------
+// TimeStamp -----------------------------------------------------------------------
 
 // Represents a wall clock time in UTC. Values are not guaranteed to be
 // monotonically non-decreasing and are subject to large amounts of skew.
-class Time : public internal::TimeBase<Time>
+class TimeStamp : public internal::TimeBase<TimeStamp>
 {
 public:
 // kExplodedMinYear and kExplodedMaxYear define the platform-specific limits
@@ -339,47 +339,47 @@ public:
 
 		// A cursory test for whether the data members are within their
 		// respective ranges. A 'true' return value does not guarantee the
-		// Exploded value can be successfully converted to a Time value.
+		// Exploded value can be successfully converted to a TimeStamp value.
 		bool is_valid() const;
 	};
 
-	// Contains the NULL time. Use Time::Now() to get the current time.
-	constexpr Time() : TimeBase(0) {}
+	// Contains the NULL time. Use TimeStamp::Now() to get the current time.
+	constexpr TimeStamp() : TimeBase(0) {}
 
 	// Returns the current time. Watch out, the system might adjust its clock
 	// in which case time will actually go backwards. We don't guarantee that
 	// times are increasing, or that two calls to now() won't be the same.
-	static Time now();
+	static TimeStamp now();
 
-	// Converts to/from time_t in UTC and a Time class.
-	static Time from_time_t(time_t tt);
+	// Converts to/from time_t in UTC and a TimeStamp class.
+	static TimeStamp from_time_t(time_t tt);
 	time_t to_time_t() const;
 
-	static Time from_timeval(struct timeval t);
+	static TimeStamp from_timeval(struct timeval t);
 	struct timeval to_timeval() const;
 
-	// static Time from_timespec(struct timespec t);
+	// static TimeStamp from_timespec(struct timespec t);
 	// struct timespec to_timespec() const;
 
 	// Converts time to/from a double which is the number of seconds since epoch
 	// (Jan 1, 1970). used this format to represent time.
-	static Time from_double_t(double dt);
+	static TimeStamp from_double_t(double dt);
 	double to_double_t() const;
 
 	// Converts the timespec structure to time. MacOS X 10.8.3 (and tentatively,
 	// earlier versions) will have the |ts|'s tv_nsec component zeroed out,
 	// having a 1 second resolution, which agrees with
 	// https://developer.apple.com/legacy/library/#technotes/tn/tn1150.html#HFSPlusDates.
-	static Time from_timespec(const struct timespec& ts);
+	static TimeStamp from_timespec(const struct timespec& ts);
 
 	// Converts an exploded structure representing either the local time or UTC
-	// into a Time class. Returns false on a failure when, for example, a day of
-	// month is set to 31 on a 28-30 day month. Returns Time(0) on overflow.
-	static bool from_utc_exploded(const Exploded& exploded, Time* time)
+	// into a TimeStamp class. Returns false on a failure when, for example, a day of
+	// month is set to 31 on a 28-30 day month. Returns TimeStamp(0) on overflow.
+	static bool from_utc_exploded(const Exploded& exploded, TimeStamp* time)
 	{
 		return from_exploded(false, exploded, time);
 	}
-	static bool from_local_exploded(const Exploded& exploded, Time* time)
+	static bool from_local_exploded(const Exploded& exploded, TimeStamp* time)
 	{
 		return from_exploded(true, exploded, time);
 	}
@@ -397,17 +397,17 @@ public:
 
 	// The following two functions round down the time to the nearest day in
 	// either UTC or local time. It will represent midnight on that day.
-	Time utc_midnight() const { return midnight(false);}
-	Time local_midnight() const { return midnight(true);}
+	TimeStamp utc_midnight() const { return midnight(false);}
+	TimeStamp local_midnight() const { return midnight(true);}
 
-	// static constexpr Time from_internal_value(int64_t us) {
-	// 	return Time(us);
+	// static constexpr TimeStamp from_internal_value(int64_t us) {
+	// 	return TimeStamp(us);
 	// }
 
 private:
-	friend class internal::TimeBase<Time>;
+	friend class internal::TimeBase<TimeStamp>;
 
-	constexpr explicit Time(int64_t us) : TimeBase(us) {}
+	constexpr explicit TimeStamp(int64_t us) : TimeBase(us) {}
 
 	// Explodes the given time to either local time |is_local = true| or UTC
 	// |is_local = false|.
@@ -415,23 +415,23 @@ private:
 
 	// Unexplodes a given time assuming the source is either local time
 	// |is_local = true| or UTC |is_local = false|. Function returns false on
-	// failure and sets |time| to Time(0). Otherwise returns true and sets |time|
+	// failure and sets |time| to TimeStamp(0). Otherwise returns true and sets |time|
 	// to non-exploded time.
 	static bool from_exploded(bool is_local,
 							  const Exploded& exploded,
-							  Time* time);
+							  TimeStamp* time);
 
 	// Rounds down the time to the nearest day in either local time
 	// |is_local = true| or UTC |is_local = false|.
-	Time midnight(bool is_local) const;
+	TimeStamp midnight(bool is_local) const;
 
 	// Comparison does not consider |day_of_week| when doing the operation.
 	static bool exploded_mostly_equals(const Exploded& lhs,
 									   const Exploded& rhs);
 };
 
-// Time ostream -----------------------------------------------------------------------
-std::ostream& operator<<(std::ostream& os, Time time);
+// TimeStamp ostream -----------------------------------------------------------------------
+std::ostream& operator<<(std::ostream& os, TimeStamp time);
 
 // TimeDelta ------------------------------------------------------------------
 
@@ -440,7 +440,7 @@ constexpr TimeDelta TimeDelta::from_days(int days)
 {
 	return days == std::numeric_limits<int>::max()
 				? max()
-				: TimeDelta(days * Time::kMicrosecondsPerDay);
+				: TimeDelta(days * TimeStamp::kMicrosecondsPerDay);
 }
 
 // static
@@ -448,7 +448,7 @@ constexpr TimeDelta TimeDelta::from_hours(int hours)
 {
 	return hours == std::numeric_limits<int>::max() 
 					? max()
-					: TimeDelta(hours * Time::kMicrosecondsPerHour);
+					: TimeDelta(hours * TimeStamp::kMicrosecondsPerHour);
 }
 
 // static
@@ -456,19 +456,19 @@ constexpr TimeDelta TimeDelta::from_minutes(int minutes)
 {
 	return minutes == std::numeric_limits<int>::max()
 					? max()
-					: TimeDelta(minutes * Time::kMicrosecondsPerMinute);
+					: TimeDelta(minutes * TimeStamp::kMicrosecondsPerMinute);
 }
 
 // static
 constexpr TimeDelta TimeDelta::from_seconds(int64_t secs)
 {
-	return from_product(secs, Time::kMicrosecondsPerSecond);
+	return from_product(secs, TimeStamp::kMicrosecondsPerSecond);
 }
 
 // static
 constexpr TimeDelta TimeDelta::from_milliseconds(int64_t ms)
 {
-	return from_product(ms, Time::kMicrosecondsPerMillisecond);
+	return from_product(ms, TimeStamp::kMicrosecondsPerMillisecond);
 }
 
 // static
@@ -480,13 +480,13 @@ constexpr TimeDelta TimeDelta::from_microseconds(int64_t us)
 // static
 constexpr TimeDelta TimeDelta::from_seconds_d(double secs)
 {
-	return from_double(secs * Time::kMicrosecondsPerSecond);
+	return from_double(secs * TimeStamp::kMicrosecondsPerSecond);
 }
 
 // static
 constexpr TimeDelta TimeDelta::from_milliseconds_d(double ms)
 {
-	return from_double(ms * Time::kMicrosecondsPerMillisecond);
+	return from_double(ms * TimeStamp::kMicrosecondsPerMillisecond);
 }
 
 // static
@@ -525,37 +525,37 @@ constexpr double TimeDelta::divide_or_max<double>(int64_t divisor) const
 
 constexpr int TimeDelta::in_days() const
 {
-	return divide_or_max<int>(Time::kMicrosecondsPerDay);
+	return divide_or_max<int>(TimeStamp::kMicrosecondsPerDay);
 }
 
 constexpr int TimeDelta::in_hours() const
 {
-	return divide_or_max<int>(Time::kMicrosecondsPerHour);
+	return divide_or_max<int>(TimeStamp::kMicrosecondsPerHour);
 }
 
 constexpr int TimeDelta::in_minutes() const
 {
-	return divide_or_max<int>(Time::kMicrosecondsPerMinute);
+	return divide_or_max<int>(TimeStamp::kMicrosecondsPerMinute);
 }
 
 constexpr double TimeDelta::in_seconds_f() const
 {
-	return divide_or_max<double>(Time::kMicrosecondsPerSecond);
+	return divide_or_max<double>(TimeStamp::kMicrosecondsPerSecond);
 }
 
 constexpr int64_t TimeDelta::in_seconds() const
 {
-	return divide_or_max<int64_t>(Time::kMicrosecondsPerSecond);
+	return divide_or_max<int64_t>(TimeStamp::kMicrosecondsPerSecond);
 }
 
 constexpr double TimeDelta::in_milliseconds_f() const
 {
-	return divide_or_max<double>(Time::kMicrosecondsPerMillisecond);
+	return divide_or_max<double>(TimeStamp::kMicrosecondsPerMillisecond);
 }
 
 constexpr int64_t TimeDelta::in_milliseconds() const
 {
-	return divide_or_max<int64_t>(Time::kMicrosecondsPerMillisecond);
+	return divide_or_max<int64_t>(TimeStamp::kMicrosecondsPerMillisecond);
 }
 
 constexpr int64_t TimeDelta::in_microseconds() const

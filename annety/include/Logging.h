@@ -12,7 +12,7 @@
 #include "Macros.h"
 #include "LogStream.h"
 #include "ScopedClearLastError.h"
-#include "Times.h"
+#include "TimeStamp.h"
 
 #include <sstream>
 #include <string>
@@ -163,7 +163,7 @@ private:
 
 	public:
 		LogStream stream_{};
-		Time time_{Time::now()};
+		TimeStamp time_{TimeStamp::now()};
 
 		int line_;
 		Filename file_;

@@ -150,7 +150,7 @@ void SignalServer::handle_read()
 	owner_loop_->check_in_own_loop();
 
 	int signo = -1;
-	Time curr = Time::now();
+	TimeStamp curr = TimeStamp::now();
 #if defined(OS_LINUX)
 	{
 		struct signalfd_siginfo siginfo;

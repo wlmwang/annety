@@ -5,7 +5,7 @@
 #define ANT_EVENT_LOOP_H_
 
 #include "Macros.h"
-#include "Times.h"
+#include "TimeStamp.h"
 #include "TimerId.h"
 #include "CallbackForward.h"
 #include "synchronization/MutexLock.h"
@@ -46,7 +46,7 @@ public:
 	// Runs callback at 'time'
 	// *Thread safe*
 	TimerId run_at(double tm_s, TimerCallback cb);
-	TimerId run_at(Time time, TimerCallback cb);
+	TimerId run_at(TimeStamp time, TimerCallback cb);
 
 	// Runs callback after @c delay seconds.
 	// *Thread safe*
@@ -107,7 +107,7 @@ private:
 	SelectableFDPtr wakeup_socket_;
 	std::unique_ptr<Channel> wakeup_channel_;
 
-	Time poll_tm_;
+	TimeStamp poll_tm_;
 	ChannelList active_channels_;
 	Channel* current_channel_{nullptr};
 	

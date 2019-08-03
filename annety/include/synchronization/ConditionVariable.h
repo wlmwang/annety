@@ -10,7 +10,7 @@
 
 #include "Macros.h"
 #include "Logging.h"
-#include "Times.h"
+#include "TimeStamp.h"
 #include "synchronization/MutexLock.h"
 
 #include <pthread.h>

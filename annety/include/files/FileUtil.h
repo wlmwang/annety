@@ -26,7 +26,7 @@
 
 namespace annety
 {
-class Time;
+class TimeStamp;
 
 //-----------------------------------------------------------------------------
 // Functions that involve filesystem access or modification:
@@ -52,7 +52,8 @@ bool normalize_filepath(const FilePath& path, FilePath* real_path);
 int64_t compute_directory_size(const FilePath& root_path);
 
 // Sets the time of the last access and the time of the last modification.
-bool touch_file(const FilePath& path, const Time& last_accessed, const Time& last_modified);
+bool touch_file(const FilePath& path, 
+	const TimeStamp& last_accessed, const TimeStamp& last_modified);
 
 // Moves the given path, whether it's a file or a directory.
 // If a simple rename is not possible, such as in the case where the paths are

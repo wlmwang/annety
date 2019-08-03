@@ -2,7 +2,7 @@
 // Date: Jul 02 2019
 
 #include "LogFile.h"
-#include "Times.h"
+#include "TimeStamp.h"
 #include "Logging.h"
 #include "files/File.h"
 #include "files/FilePath.h"
@@ -39,8 +39,8 @@ FilePath get_log_filename(const FilePath& path)
 	std::string filename = path.value();
 
 	// %Y%m%d-%H%M%S
-	Time::Exploded exploded;
-	Time curr = Time::now();
+	TimeStamp::Exploded exploded;
+	TimeStamp curr = TimeStamp::now();
 	curr.to_local_explode(&exploded);
 	string_appendf(&filename, ".%04d%02d%02d-%02d%02d%02d.",
 								exploded.year,
@@ -103,7 +103,7 @@ void LogFile::append_unlocked(const char* message, int len)
 
 void LogFile::rotate(bool force)
 {
-	auto do_rotate_with_locked = [this](const Time& curr) {
+	auto do_rotate_with_locked = [this](const TimeStamp& curr) {
 		lock_.assert_acquired();
 		flush();
 
@@ -117,7 +117,7 @@ void LogFile::rotate(bool force)
 		last_rotate_ = curr;
 	};
 
-	Time curr = Time::now();
+	TimeStamp curr = TimeStamp::now();
 	if (force) {
 		AutoLock locked(lock_);
 		do_rotate_with_locked(curr);

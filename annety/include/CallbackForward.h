@@ -4,7 +4,7 @@
 #ifndef ANT_CALLBACK_FORWARD_H_
 #define ANT_CALLBACK_FORWARD_H_
 
-#include "Times.h"
+#include "TimeStamp.h"
 
 #include <functional>
 #include <memory>
@@ -24,14 +24,14 @@ using ConnectCallback = std::function<void(const TcpConnectionPtr&)>;
 using CloseCallback = std::function<void(const TcpConnectionPtr&)>;
 using WriteCompleteCallback = std::function<void(const TcpConnectionPtr&)>;
 using HighWaterMarkCallback = std::function<void(const TcpConnectionPtr&, size_t)>;
-using MessageCallback = std::function<void(const TcpConnectionPtr&, NetBuffer*, Time)>;
+using MessageCallback = std::function<void(const TcpConnectionPtr&, NetBuffer*, TimeStamp)>;
 using TimerCallback = std::function<void()>;
 using SignalCallback = std::function<void()>;
 
 // internal ------------------------------------------------------------------
 // default callback handler
 void default_connect_callback(const TcpConnectionPtr&);
-void default_message_callback(const TcpConnectionPtr&, NetBuffer*, Time);
+void default_message_callback(const TcpConnectionPtr&, NetBuffer*, TimeStamp);
 
 class SelectableFD;
 using SelectableFDPtr = std::unique_ptr<SelectableFD>;

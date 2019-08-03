@@ -9,7 +9,7 @@
 #define ANT_FILE_ENUMERATOR_H_
 
 #include "Macros.h"
-#include "Times.h"
+#include "TimeStamp.h"
 #include "files/FilePath.h"
 
 #include <sys/stat.h>		// struct stat
@@ -51,7 +51,7 @@ public:
 		FilePath get_name() const;
 
 		int64_t get_size() const;
-		Time get_last_modified_time() const;
+		TimeStamp get_last_modified_time() const;
 
 		const struct stat& stat() const { return stat_;}
 
