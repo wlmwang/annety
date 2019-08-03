@@ -19,7 +19,7 @@ private:
 	void on_connection(const annety::TcpConnectionPtr& conn);
 
 	void on_message(const annety::TcpConnectionPtr& conn,
-			annety::NetBuffer* buf, annety::Time time);
+			annety::NetBuffer* buf, annety::TimeStamp time);
 
 private:
 	annety::TcpServer server_;

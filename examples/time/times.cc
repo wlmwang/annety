@@ -5,8 +5,6 @@
 #include "Logging.h"
 #include "ByteOrder.h"
 
-#include <time.h>
-
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
@@ -32,19 +30,19 @@ void TimeServer::on_connection(const annety::TcpConnectionPtr& conn)
 			<< (conn->connected() ? "UP" : "DOWN");
 
 	if (conn->connected()) {
-		time_t now = ::time(NULL);
-		int32_t be32 = annety::host_to_net32(static_cast<int32_t>(now));
+		annety::TimeStamp curr = annety::TimeStamp::now();
+		int32_t be32 = annety::host_to_net32(static_cast<int32_t>(curr.to_time_t()));
 		conn->send(&be32, sizeof be32);
 		conn->shutdown();
 	}
 }
 
 void TimeServer::on_message(const annety::TcpConnectionPtr& conn,
-		annety::NetBuffer* buf, annety::Time time)
+		annety::NetBuffer* buf, annety::TimeStamp time)
 
 {
 	std::string message(buf->taken_as_string());
 	
-	LOG(INFO) << conn->name() << " time " << (int)message.size() << " bytes, "
+	LOG(INFO) << conn->name() << " times " << (int)message.size() << " bytes, "
 		<< "data received at " << time;
 }

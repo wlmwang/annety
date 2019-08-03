@@ -181,14 +181,7 @@ std::ostream& operator<<(std::ostream& os, TimeStamp time)
 {
 	TimeStamp::Exploded exploded;
 	time.to_utc_explode(&exploded);
-	return os << string_printf("%04d-%02d-%02d %02d:%02d:%02d.%06d UTC",
-								exploded.year,
-								exploded.month,
-								exploded.day_of_month,
-								exploded.hour,
-								exploded.minute,
-								exploded.second,
-								exploded.millisecond);
+	return os << exploded.to_formatted_string() << " UTC";
 }
 
 // TimeStamp::Exploded -------------------------------------------------------------
@@ -384,6 +377,19 @@ bool TimeStamp::Exploded::is_valid() const
 		   is_in_range(minute, 0, 59) &&
 		   is_in_range(second, 0, 60) &&
 		   is_in_range(millisecond, 0, 999);
+}
+
+std::string TimeStamp::Exploded::to_formatted_string(bool show_microseconds) const
+{
+	std::string stime;
+	if (show_microseconds) {
+		string_appendf(&stime, "%4d%02d%02d %02d:%02d:%02d.%06d",
+			year, month, day_of_month, hour, minute, second, millisecond);
+	} else {
+		string_appendf(&stime, "%4d%02d%02d %02d:%02d:%02d",
+			year, month, day_of_month, hour, minute, second);
+	}
+	return stime;
 }
 
 }	// namespace annety

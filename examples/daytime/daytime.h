@@ -7,11 +7,11 @@
 #include "TcpServer.h"
 #include "EventLoop.h"
 
-// RFC 868
-class TimeServer
+// RFC 867
+class DaytimeServer
 {
 public:
-	TimeServer(annety::EventLoop* loop, const annety::EndPoint& addr);
+	DaytimeServer(annety::EventLoop* loop, const annety::EndPoint& addr);
 
 	void start();
 

@@ -5,6 +5,7 @@
 #define ANT_TCP_CLIENT_H_
 
 #include "Macros.h"
+#include "TcpConnection.h"
 #include "CallbackForward.h"
 #include "synchronization/MutexLock.h"
 

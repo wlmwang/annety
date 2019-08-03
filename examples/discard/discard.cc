@@ -30,7 +30,7 @@ void DiscardServer::on_connection(const annety::TcpConnectionPtr& conn)
 }
 
 void DiscardServer::on_message(const annety::TcpConnectionPtr& conn,
-		annety::NetBuffer* buf, annety::Time time)
+		annety::NetBuffer* buf, annety::TimeStamp time)
 
 {
 	std::string message(buf->taken_as_string());

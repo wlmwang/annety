@@ -21,6 +21,7 @@ namespace annety
 class Channel;
 class EventLoop;
 class SocketFD;
+class NetBuffer;
 
 // Wrapper client with TCP protocol
 //

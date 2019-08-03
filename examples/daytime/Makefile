@@ -18,12 +18,12 @@ DIR_SRC		:= ./
 INCFLAGS	:= ${LIB_INC} -I${DIR_SRC} -I${SRC_INC}
 
 # 源文件
-CC_SRC		:= main.cc times.cc
+CC_SRC		:= main.cc daytime.cc
 
 # 编译文件
 OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))
 
-TARGET	:= times
+TARGET	:= daytime
 
 .PHONY:all clean
 

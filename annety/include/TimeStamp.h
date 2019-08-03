@@ -341,6 +341,9 @@ public:
 		// respective ranges. A 'true' return value does not guarantee the
 		// Exploded value can be successfully converted to a TimeStamp value.
 		bool is_valid() const;
+
+		// format time string: %4d%02d%02d %02d:%02d:%02d.%06d
+		std::string to_formatted_string(bool show_microseconds = true) const;
 	};
 
 	// Contains the NULL time. Use TimeStamp::Now() to get the current time.
