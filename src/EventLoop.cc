@@ -6,7 +6,7 @@
 #include "Channel.h"
 #include "Poller.h"
 #include "PollPoller.h"
-// #include "EPollPoller.h"
+#include "EPollPoller.h"
 #include "TimerPool.h"
 #include "PlatformThread.h"
 #include "threading/ThreadLocal.h"
@@ -54,6 +54,9 @@ EventLoop::~EventLoop()
 {
 	CHECK(looping_ == false);
 	
+	wakeup_channel_->disable_all_event();
+	wakeup_channel_->remove();
+
 	LOG(DEBUG) << "EventLoop::~EventLoop is called by thread " 
 		<< PlatformThread::current_ref().ref()
 		<< ", deleted EventLoop is " << this;
