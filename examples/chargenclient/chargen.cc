@@ -19,7 +19,7 @@ ChargenClient::ChargenClient(annety::EventLoop* loop, const annety::EndPoint& ad
 	// client_.enable_retry();
 
 	// 屏蔽日志
-	annety::set_min_log_severity(annety::LOG_WARNING);
+	annety::set_min_log_severity(annety::LOG_INFO);
 }
 
 void ChargenClient::connect()

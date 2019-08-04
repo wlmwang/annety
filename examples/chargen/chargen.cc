@@ -34,7 +34,7 @@ ChargenServer::ChargenServer(annety::EventLoop* loop, const annety::EndPoint& ad
 	}
 
 	// 屏蔽日志
-	annety::set_min_log_severity(annety::LOG_WARNING);
+	annety::set_min_log_severity(annety::LOG_INFO);
 }
 
 void ChargenServer::start()
