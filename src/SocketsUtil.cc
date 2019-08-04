@@ -351,26 +351,26 @@ int close(int fd)
 ssize_t read(int sockfd, void *buf, size_t len)
 {
 	ssize_t ret = ::read(sockfd, buf, len);
-	PLOG_IF(ERROR, ret < 0) << "::read failed";
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::read failed";
 	return ret;
 }
 ssize_t readv(int sockfd, const struct iovec *iov, int iovcnt)
 {
 	ssize_t ret = ::readv(sockfd, iov, iovcnt);
-	PLOG_IF(ERROR, ret < 0) << "::readv failed";
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::readv failed";
 	return ret;
 }
 
 ssize_t write(int sockfd, const void *buf, size_t len)
 {
 	int ret = ::write(sockfd, buf, len);
-	PLOG_IF(ERROR, ret < 0) << "::write failed";
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::write failed";
 	return ret;
 }
 ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt)
 {
 	ssize_t ret = ::writev(sockfd, iov, iovcnt);
-	PLOG_IF(ERROR, ret < 0) << "::writev failed";
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::writev failed";
 	return ret;
 }
 

@@ -189,7 +189,7 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 			}
 		} else {
 			nwrote = 0;
-			if (errno != EWOULDBLOCK) {
+			if (errno != EAGAIN && errno != EWOULDBLOCK) {
 				PLOG(ERROR) << "TcpConnection::send_in_loop has failed";
 				if (errno == EPIPE || errno == ECONNRESET) {
 					fault_error = true;
