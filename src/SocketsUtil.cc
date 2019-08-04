@@ -181,7 +181,7 @@ int connect(int servfd, const struct sockaddr* addr)
 	}
 #endif
 	int ret = ::connect(servfd, addr, addrlen);
-	DPLOG_IF(ERROR, ret < 0) << "::connect failed";
+	DPLOG_IF(ERROR, ret < 0 && errno != EINPROGRESS) << "::connect failed";
 	return ret;
 }
 

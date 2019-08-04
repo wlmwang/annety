@@ -192,6 +192,7 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 			if (errno != EAGAIN && errno != EWOULDBLOCK) {
 				PLOG(ERROR) << "TcpConnection::send_in_loop has failed";
 				if (errno == EPIPE || errno == ECONNRESET) {
+					// the peer endpoint has closed
 					fault_error = true;
 				}
 			}
