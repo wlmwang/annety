@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: Aug 03 2019
 
-#ifndef EXAMPLES_ECHO_ECHO_H
-#define EXAMPLES_ECHO_ECHO_H
+#ifndef EXAMPLES_DAYTIME_DAYTIME_H
+#define EXAMPLES_DAYTIME_DAYTIME_H
 
 #include "TcpServer.h"
 #include "EventLoop.h"
@@ -25,4 +25,4 @@ private:
 	annety::TcpServer server_;
 };
 
-#endif  // EXAMPLES_ECHO_ECHO_H
+#endif  // EXAMPLES_DAYTIME_DAYTIME_H
