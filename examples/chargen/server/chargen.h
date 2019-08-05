@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: Aug 04 2019
 
-#ifndef EXAMPLES_CHARGEN_CHARGEN_H
-#define EXAMPLES_CHARGEN_CHARGEN_H
+#ifndef EXAMPLES_CHARGEN_SERVER_CHARGEN_H
+#define EXAMPLES_CHARGEN_SERVER_CHARGEN_H
 
 #include "TcpServer.h"
 #include "EventLoop.h"
@@ -35,4 +35,4 @@ private:
 	std::string message_;
 };
 
-#endif  // EXAMPLES_CHARGEN_CHARGEN_H
+#endif  // EXAMPLES_CHARGEN_SERVER_CHARGEN_H
