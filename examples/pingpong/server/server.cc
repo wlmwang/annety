@@ -18,6 +18,7 @@ void on_connect(const TcpConnectionPtr& conn)
 
 void on_message(const TcpConnectionPtr& conn, NetBuffer* buf, TimeStamp)
 {
+	// echo back
 	conn->send(buf);
 }
 
@@ -32,8 +33,7 @@ int main(int argc, char* argv[])
 		set_min_log_severity(LOG_WARNING);
 
 		EventLoop loop;
-		TcpServer server(&loop, EndPoint(1669), "PingPong");
-
+		TcpServer server(&loop, EndPoint(1669), "PingPongServer");
 		server.set_connect_callback(on_connect);
 		server.set_message_callback(on_message);
 

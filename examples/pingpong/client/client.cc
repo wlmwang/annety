@@ -62,6 +62,7 @@ private:
 
 		// echo back
 		conn->send(buf);
+		buf->has_read_all();
 	}
 
 private:
@@ -83,25 +84,27 @@ public:
 			int timeout,
 			int threads)
 	    : loop_(loop)
-	    , thread_pool_(loop, "pingpong-client")
+	    , thread_pool_(loop, "PingPongClient")
 	    , session_count_(session_count)
 	    , timeout_(timeout)
 	{
-		loop->run_after(timeout, std::bind(&Client::handle_timeout, this));
+		// pingpong timeout
+		loop_->run_after(timeout, std::bind(&Client::handle_timeout, this));
 		
-		// start thread pool
-		if (threads > 1) {
-			thread_pool_.set_thread_num(threads);
-		}
-		thread_pool_.start();
-
 		// set message block size
 		for (int i = 0; i < block_size; ++i) {
 			message_.push_back(static_cast<char>(i % 128));
 		}
 
+		// start EventLoop thread pool
+		if (threads > 1) {
+			thread_pool_.set_thread_num(threads);
+		}
+		thread_pool_.start();
+
+		// new session add to a loop
 		for (int i = 0; i < session_count; ++i) {
-			std::string name = string_printf("C%05d", i);
+			std::string name = string_printf("SESSION-%05d", i);
 			Session* session = new Session(thread_pool_.get_next_loop(), addr, name, this);
 			session->start();
 			sessions_.emplace_back(session);
@@ -142,16 +145,22 @@ public:
 
 			conn->get_owner_loop()->queue_in_own_loop(std::bind(&Client::quit, this));
 		}
+		// todo
+		// {
+		// 	EventLoop* ioloop = conn->get_owner_loop();
+		// 	ioloop->quit();
+		// }
 	}
 
 private:
 	void quit()
 	{
-		loop_->queue_in_own_loop(std::bind(&EventLoop::quit, loop_));
+		loop_->quit();
 	}
 
 	void handle_timeout()
 	{
+		// called in main thread(main EventLoop)
 		LOG(WARNING) << "stop";
 		for (auto& session : sessions_) {
 			session->stop();
@@ -162,21 +171,24 @@ private:
 	EventLoop* loop_;
 	EventLoopPool thread_pool_;
 
-	int session_count_;
-	int timeout_;
+	std::atomic<int32_t> num_connected_{0};
+	int session_count_{0};
+	int timeout_{0};
 	std::string message_;
 	std::vector<std::unique_ptr<Session>> sessions_;
-
-	std::atomic<int32_t> num_connected_;
 };
 
 void Session::on_connect(const TcpConnectionPtr& conn)
 {
 	if (conn->connected()) {
+		LOG(WARNING) << conn->name() << " has connected";
+
 		conn->set_tcp_nodelay(true);
 		conn->send(owner_->message());
 		owner_->on_connect();
 	} else {
+		LOG(WARNING) << conn->name() << " has disconnected";
+		
 		owner_->on_disconnect(conn);
 	}
 }
@@ -192,18 +204,24 @@ int main(int argc, char* argv[])
 		int session_count = atoi(argv[3]);
 		int timeout = atoi(argv[4]);
 		
+		CHECK(threads <= session_count) 
+			<< "threads should be less than or equal to session_count";
+
 		LOG(INFO) << "PingPong client start."
 			<< "threads=" << threads 
 			<< ",blocksize=" << block_size
 			<< ",session_count=" << session_count
 			<< ",timeout=" << timeout;
 
-		set_min_log_severity(LOG_WARNING);
-
+		// control timeout callback(main EventLoop)
 		EventLoop loop;
 		EndPoint saddr(1669);
 
+		set_min_log_severity(LOG_WARNING);
+
 		Client client(&loop, saddr, block_size, session_count, timeout, threads);
 		loop.loop();
+
+		LOG(WARNING) << "PingPong client finish";
 	}
 }
