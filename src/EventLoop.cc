@@ -18,7 +18,7 @@ namespace
 void clean_tls_event_loop(void *ptr) {
 	LOG(DEBUG) << "the tls EventLoop has clean by thread " 
 		<< PlatformThread::current_ref().ref()
-		<< ", deleted EventLoop is " << ptr;
+		<< ", deleted EventLoop address is " << ptr;
 }
 
 // There is at most one EventLoop object per thread
@@ -33,9 +33,9 @@ EventLoop::EventLoop()
 	  wakeup_socket_(new EventFD(true, true)),
 	  wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {
-	LOG(DEBUG) << "EventLoop::EventLoop is creating by thread " 
+	LOG(TRACE) << "EventLoop::EventLoop is creating by thread " 
 		<< owning_thread_->ref() 
-		<< ", EventLoop " << this;
+		<< ", EventLoop address is " << this;
 
 	{
 		CHECK(tls_event_loop.empty()) << "EventLoop::EventLoop has been created by thread " 
@@ -57,9 +57,9 @@ EventLoop::~EventLoop()
 	wakeup_channel_->disable_all_event();
 	wakeup_channel_->remove();
 
-	LOG(DEBUG) << "EventLoop::~EventLoop is called by thread " 
+	LOG(TRACE) << "EventLoop::~EventLoop is called by thread " 
 		<< PlatformThread::current_ref().ref()
-		<< ", deleted EventLoop is " << this;
+		<< ", deleted EventLoop address is " << this;
 }
 
 void EventLoop::loop()
@@ -222,7 +222,8 @@ void EventLoop::check_in_own_loop() const
 {
 	CHECK(is_in_own_loop()) << " EventLoop::check_in_own_loop was created by thread " 
 		<< owning_thread_->ref() << ", but current calling thread is " 
-		<< PlatformThread::current_ref().ref();
+		<< PlatformThread::current_ref().ref()
+		<< ", EventLoop address is " << this;
 }
 
 bool EventLoop::is_in_own_loop() const

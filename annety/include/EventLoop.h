@@ -36,8 +36,9 @@ public:
 	// Must called in own loop thread
 	void loop();
 
-	// *Not 100% thread safe* if you call through a raw pointer,
-	// better to call through shared_ptr<EventLoop> for 100% safety
+	// *Not 100% thread safe*.
+	// When you call with a native pointer, there may be a segmentation error.
+	// Better to call through shared_ptr<EventLoop> for 100% safety
 	void quit();
 
 	// Timers -------------------------------------------
