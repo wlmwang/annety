@@ -62,7 +62,6 @@ private:
 
 		// echo back
 		conn->send(buf);
-		buf->has_read_all();
 	}
 
 private:

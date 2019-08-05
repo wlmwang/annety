@@ -15,6 +15,8 @@ EchoServer::EchoServer(annety::EventLoop* loop, const annety::EndPoint& addr)
 		std::bind(&EchoServer::on_connection, this, _1));
 	server_.set_message_callback(
 		std::bind(&EchoServer::on_message, this, _1, _2, _3));
+
+	loop->run_every(5.0, std::bind(&EchoServer::print_throughput, this));
 }
 
 void EchoServer::start()
@@ -27,14 +29,34 @@ void EchoServer::on_connection(const annety::TcpConnectionPtr& conn)
 	LOG(INFO) << "EchoServer - " << conn->local_addr().to_ip_port() << " <- "
 			<< conn->peer_addr().to_ip_port() << " s is "
 			<< (conn->connected() ? "UP" : "DOWN");
+	
+	if (conn->connected()) {
+		conn->set_tcp_nodelay(true);
+	}
 }
 
 void EchoServer::on_message(const annety::TcpConnectionPtr& conn,
 		annety::NetBuffer* buf, annety::TimeStamp time)
 
 {
-	std::string message(buf->taken_as_string());
+	received_messages_++;
+	transferred_ += buf->readable_bytes();
 	
-	LOG(INFO) << conn->name() << " echo " << (int)message.size() << " bytes, "
-		<< "data received at " << time;
+	conn->send(buf);
+}
+
+void EchoServer::print_throughput()
+{
+	annety::TimeStamp curr = annety::TimeStamp::now();
+	int64_t newcounter = transferred_;
+	int64_t bytes = newcounter - counter_;
+	int64_t msgs = received_messages_.fetch_and(0);
+	double time = (curr - start_time_).in_seconds_f();
+
+	LOG(WARNING) << static_cast<double>(bytes)/(time*1024*1024) << " MiB/s "
+		<< static_cast<double>(msgs)/(time*1024) << " Ki Msgs/s "
+		<< static_cast<double>(bytes)/msgs << " bytes per msg";
+
+	counter_ = newcounter;
+	start_time_ = curr;
 }
