@@ -32,9 +32,6 @@ ChargenServer::ChargenServer(annety::EventLoop* loop, const annety::EndPoint& ad
 	for (size_t i = 0; i < 127-33; ++i) {
 		message_ += line.substr(i, 72) + '\n';
 	}
-
-	// 屏蔽日志
-	annety::set_min_log_severity(annety::LOG_INFO);
 }
 
 void ChargenServer::start()
