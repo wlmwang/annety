@@ -11,11 +11,9 @@
 #include <poll.h>
 #include <sys/epoll.h>
 #include <unistd.h>
-#endif	// OS_LINUX
 
 namespace annety
 {
-#if defined(OS_LINUX)
 namespace
 {
 const int kNew = -1;
@@ -192,13 +190,19 @@ const char* EPollPoller::operation_to_string(int op)
 		return "Unknown Operation";
 	}
 }
+
+}	// namespace annety
+
 #else
+namespace annety
+{
 // FIXME: suppression may cause "has no symbols" warnings for some compilers.
 // For example, MacOS
-void suppress_no_symbols_warning()
+void ALLOW_UNUSED_TYPE suppress_no_symbols_warning()
 {
 	NOTREACHED();
 }
-#endif	// OS_LINUX
 
 }	// namespace annety
+
+#endif	// OS_LINUX

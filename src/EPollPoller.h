@@ -4,11 +4,11 @@
 #ifndef ANT_EPOLL_POLLER_H_
 #define ANT_EPOLL_POLLER_H_
 
-#if defined(OS_LINUX)
 #include "Macros.h"
 #include "Poller.h"
 #include "TimeStamp.h"
 
+#if defined(OS_LINUX)
 #include <vector>
 #include <poll.h>
 #include <sys/epoll.h>
