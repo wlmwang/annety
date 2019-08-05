@@ -11,8 +11,8 @@
 CC		:= g++
 AR		:= ar
 LD		:= g++
-ARFLAGS := -fpic -pipe -fno-ident  #-fpic 便于其他*.so库可以静态链接 ${LIBNAME}.a 库
-LDFLAGS := -fpic -pipe -fno-ident
+ARFLAGS := -pipe -fpic #-fpic 便于其他*.so库可以静态链接 ${LIBNAME}.a 库
+LDFLAGS := -pipe -fpic
 CCFLAGS	:= -g -Wall -std=c++11 #-DNDEBUG -O3
 
 # install directory
@@ -63,7 +63,7 @@ ${AR_LIB}:${AR_OBJ}
 	
 ${LD_LIB}:$(LD_OBJ)
 	@echo "Compiling $@"
-	${LD} -shared -Wl,-soname,${SN_LIB} ${CCFLAGS} ${LIBFLAGS} -o $@ $^
+	${LD} -shared -Wl,-soname,${SN_LIB} ${CCFLAGS} -o $@ $^ ${LIBFLAGS}
 
 # 编译ar
 ${DIR_AR}/%.o:${DIR_SRC}/%.cc
