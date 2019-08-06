@@ -242,6 +242,8 @@ void EventLoop::do_calling_wakeup_functors()
 
 void EventLoop::print_active_channels() const
 {
+	check_in_own_loop();
+	
 	for (const Channel* ch : active_channels_) {
 		LOG(TRACE) << "EventLoop::print_active_channels {" 
 			<< ch->revents_to_string() << "}";

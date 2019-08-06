@@ -25,10 +25,11 @@ class TimerPool;
 // Reactor, one loop per thread.
 class EventLoop
 {
-	static const int kPollTimeoutMs = 30*1000; // -1
 public:
 	using ChannelList = std::vector<Channel*>;
 	using Functor = std::function<void()>;
+
+	static const int kPollTimeoutMs = 30*1000; // -1
 
 	EventLoop();
 	~EventLoop();
@@ -36,7 +37,7 @@ public:
 	// Must called in own loop thread
 	void loop();
 
-	// *Not 100% thread safe*.
+	// *Not 100% thread safe*
 	// When you call with a native pointer, there may be a segmentation fault.
 	// Better to call through shared_ptr<EventLoop> for 100% safety
 	void quit();
@@ -59,11 +60,12 @@ public:
 	TimerId run_every(double interval_s, TimerCallback cb);
 	TimerId run_every(TimeDelta delta, TimerCallback cb);
 
-	// Cancels the timer.
+	// Cancels the timer
 	// *Thread safe*
 	void cancel(TimerId timerId);
 
-	// Internal method---------------------------------
+
+	// Internal method ---------------------------------
 
 	// *Not thread safe* , but run in own loop thread aways.
 	void update_channel(Channel* channel);
@@ -86,11 +88,13 @@ public:
 	bool is_in_own_loop() const;
 
 private:
+	// *Thread safe*
 	void wakeup();
 	// *Not thread safe*, but run in own loop thread aways.
 	void handle_read();
 	void do_calling_wakeup_functors();
-
+	
+	// *Not thread safe*, but run in own loop thread aways.
 	void print_active_channels() const;
 
 private:
@@ -100,10 +104,10 @@ private:
 	bool event_handling_{false};
 	int32_t poll_timeout_ms_{-1};
 
+	// create EventLoop threadref
 	std::unique_ptr<ThreadRef> owning_thread_;
 
 	std::unique_ptr<Poller> poller_;
-	
 	std::unique_ptr<TimerPool> timer_pool_;
 
 	SelectableFDPtr wakeup_socket_;
