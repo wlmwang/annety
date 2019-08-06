@@ -18,7 +18,7 @@ DIR_SRC		:= ./
 INCFLAGS	:= ${LIB_INC} -I${DIR_SRC} -I${SRC_INC}
 
 # 源文件
-CC_SRC		:= main.cc echo.cc
+CC_SRC	:= $(wildcard ${DIR_SRC}/*.cc)
 
 # 编译文件
 OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))
