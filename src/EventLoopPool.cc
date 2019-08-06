@@ -5,6 +5,7 @@
 #include "EventLoopThread.h"
 #include "EventLoop.h"
 #include "Logging.h"
+#include "PlatformThread.h"
 #include "strings/StringPrintf.h"
 
 #include <stdio.h>
@@ -14,7 +15,12 @@ namespace annety
 EventLoopPool::EventLoopPool(EventLoop* loop, const std::string& name)
 	: owner_loop_(loop), name_(name) {}
 
-EventLoopPool::~EventLoopPool() {}
+EventLoopPool::~EventLoopPool()
+{
+	LOG(TRACE) << "EventLoopPool::~EventLoopPool is called by thread " 
+		<< PlatformThread::current_ref().ref()
+		<< ", num threads of EventLoop is " << num_threads_;
+}
 
 void EventLoopPool::start(const ThreadInitCallback& cb)
 {

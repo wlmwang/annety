@@ -4,6 +4,7 @@
 #include "EventLoopThread.h"
 #include "EventLoop.h"
 #include "Logging.h"
+#include "PlatformThread.h"
 
 namespace annety
 {
@@ -14,6 +15,10 @@ EventLoopThread::EventLoopThread(const ThreadInitCallback& cb,
 
 EventLoopThread::~EventLoopThread()
 {
+	LOG(TRACE) << "EventLoopThread::~EventLoopThread is called by thread " 
+		<< PlatformThread::current_ref().ref()
+		<< ", EventLoop address is " << loop_;
+		
 	exiting_ = true;
 
 	// not 100% race-free

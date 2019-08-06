@@ -9,20 +9,12 @@
 #include "EPollPoller.h"
 #include "TimerPool.h"
 #include "PlatformThread.h"
-#include "threading/ThreadLocal.h"
 
 namespace annety
 {
 namespace
 {
-void clean_tls_event_loop(void *ptr) {
-	LOG(DEBUG) << "the tls EventLoop has clean by thread " 
-		<< PlatformThread::current_ref().ref()
-		<< ", deleted EventLoop address is " << ptr;
-}
-
-// There is at most one EventLoop object per thread
-ThreadLocal<EventLoop> tls_event_loop{&clean_tls_event_loop};
+thread_local EventLoop* tls_event_loop = nullptr;
 }	// namespace anonymous
 
 EventLoop::EventLoop() 
@@ -38,11 +30,11 @@ EventLoop::EventLoop()
 		<< ", EventLoop address is " << this;
 
 	{
-		CHECK(tls_event_loop.empty()) << "EventLoop::EventLoop has been created by thread " 
+		CHECK(!tls_event_loop) << "EventLoop::EventLoop has been created by thread " 
 			<< owning_thread_->ref() << ", now current thread is " 
 			<< PlatformThread::current_ref().ref();
 		
-		tls_event_loop.set(this);
+		tls_event_loop = this;
 	}
 
 	wakeup_channel_->set_read_callback(
@@ -60,6 +52,8 @@ EventLoop::~EventLoop()
 	LOG(TRACE) << "EventLoop::~EventLoop is called by thread " 
 		<< PlatformThread::current_ref().ref()
 		<< ", deleted EventLoop address is " << this;
+
+	tls_event_loop = nullptr;
 }
 
 void EventLoop::loop()

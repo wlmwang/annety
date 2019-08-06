@@ -59,13 +59,19 @@ Connector::~Connector()
 void Connector::start()
 {
 	connect_ = true;
-	owner_loop_->run_in_own_loop(std::bind(&Connector::start_in_own_loop, this));
+
+	using containers::make_weak_bind;
+	owner_loop_->run_in_own_loop(
+		make_weak_bind(&Connector::start_in_own_loop, shared_from_this()));
 }
 
 void Connector::stop()
 {
 	connect_ = false;
-	owner_loop_->queue_in_own_loop(std::bind(&Connector::stop_in_own_loop, this));
+
+	using containers::make_weak_bind;
+	owner_loop_->queue_in_own_loop(
+		make_weak_bind(&Connector::stop_in_own_loop, shared_from_this()));
 	// FIXME: cancel timer
 }
 
@@ -183,8 +189,9 @@ void Connector::retry()
 			<< " in " << retry_delay_ms_ << " milliseconds. ";
 
 		// retry after
+		using containers::make_weak_bind;
 		owner_loop_->run_after(TimeDelta::from_milliseconds(retry_delay_ms_),
-			std::bind(&Connector::start_in_own_loop, shared_from_this()));
+			make_weak_bind(&Connector::start_in_own_loop, shared_from_this()));
 		retry_delay_ms_ = std::min(retry_delay_ms_ * 2, kMaxRetryDelayMs);
 	} else {
 		LOG(TRACE) << "Connector::retry do not connect";
@@ -252,7 +259,9 @@ void Connector::remove_and_reset_channel()
 	connect_channel_->remove();
 
 	// can't reset Channel here, because we are inside Channel::handle_event
-	owner_loop_->queue_in_own_loop(std::bind(&Connector::reset_channel, this));
+	using containers::make_weak_bind;
+	owner_loop_->queue_in_own_loop(
+		make_weak_bind(&Connector::reset_channel, shared_from_this()));
 }
 
 void Connector::reset_channel()
