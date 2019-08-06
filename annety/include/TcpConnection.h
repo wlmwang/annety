@@ -53,7 +53,8 @@ public:
 	void send(const StringPiece& message);
 	void send(NetBuffer&& message);
 	void send(NetBuffer* message);  // this one will swap data
-	void shutdown(); // NOT thread safe, no simultaneous calling
+	// NOT thread safe, no simultaneous calling
+	void shutdown();
 	void force_close();
 	void force_close_with_delay(double delay_s);
 
@@ -62,6 +63,7 @@ public:
 	// reading or not
 	void start_read();
 	void stop_read();
+	// NOT thread safe, may race with start/stopReadInLoop
 	bool is_reading() const { return reading_; };
 
 	void set_context(const containers::Any& context) 
@@ -136,6 +138,7 @@ private:
 	const std::string name_;
 	bool initilize_{false};
 	bool reading_{true};
+	// FIXME: use atomic variable
 	StateE state_{kConnecting};
 
 	const EndPoint local_addr_;

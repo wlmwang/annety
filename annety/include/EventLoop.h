@@ -37,7 +37,7 @@ public:
 	void loop();
 
 	// *Not 100% thread safe*.
-	// When you call with a native pointer, there may be a segmentation error.
+	// When you call with a native pointer, there may be a segmentation fault.
 	// Better to call through shared_ptr<EventLoop> for 100% safety
 	void quit();
 
@@ -81,12 +81,13 @@ public:
 	// *Thread safe*
 	void queue_in_own_loop(Functor cb);
 	
+	// *Thread safe*
 	void check_in_own_loop() const;
 	bool is_in_own_loop() const;
 
 private:
 	void wakeup();
-	// *Not thread safe* , but run in own loop thread aways.
+	// *Not thread safe*, but run in own loop thread aways.
 	void handle_read();
 	void do_calling_wakeup_functors();
 

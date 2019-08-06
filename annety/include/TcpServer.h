@@ -59,23 +59,28 @@ public:
 	}
 
 	// The following interfaces are usually be called before start()
-	// They are all *Not thread safe*
+	// *Not thread safe*
 	void set_connect_callback(const ConnectCallback& cb)
 	{
 		connect_cb_ = cb;
 	}
+	// *Not thread safe*
 	void set_message_callback(const MessageCallback& cb)
 	{
 		message_cb_ = cb;
 	}
+	// *Not thread safe*
 	void set_write_complete_callback(const WriteCompleteCallback& cb)
 	{
 		write_complete_cb_ = cb;
 	}
 
 private:
+	// *Not thread safe*, but in loop
 	void new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr);
+	// *Thread safe*
 	void remove_connection(const TcpConnectionPtr& conn);
+	// *Not thread safe*, but in loop
 	void remove_connection_in_loop(const TcpConnectionPtr& conn);
 
 private:

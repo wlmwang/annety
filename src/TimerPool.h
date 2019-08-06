@@ -30,7 +30,8 @@ class TimerPool
 public:
 	explicit TimerPool(EventLoop* loop);
 	~TimerPool();
-
+	
+	// Must be thread safe. Usually be called from other threads.
 	TimerId add_timer(TimerCallback cb, TimeStamp expired, double interval_s);
 	void cancel_timer(TimerId timer_id);
 

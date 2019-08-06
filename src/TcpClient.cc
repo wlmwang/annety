@@ -77,6 +77,7 @@ TcpClient::~TcpClient()
 
 void TcpClient::connect()
 {
+	// FIXME: check state
 	connect_ = true;
 	connector_->start();
 }
@@ -110,7 +111,9 @@ void TcpClient::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 	LOG(INFO) << "TcpClient::new_connection [" << name_
 		<< "] connect new connection [" << name
 		<< "] from " << localaddr.to_ip_port();
-
+	
+	// FIXME poll with zero timeout to double confirm the new connection
+	// FIXME use make_shared if necessary
 	TcpConnectionPtr conn(new TcpConnection(owner_loop_, name, std::move(sockfd),
 											localaddr, peeraddr));
 
@@ -120,7 +123,7 @@ void TcpClient::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
 	conn->set_close_callback(
-		std::bind(&TcpClient::remove_connection, this, _1));
+		std::bind(&TcpClient::remove_connection, this, _1));	// FIXME: unsafe
 	
 	{
 		AutoLock locked(lock_);

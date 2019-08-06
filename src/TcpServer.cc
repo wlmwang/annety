@@ -103,13 +103,14 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
 	conn->set_close_callback(
-		std::bind(&TcpServer::remove_connection, this, _1));
+		std::bind(&TcpServer::remove_connection, this, _1));	// FIXME: unsafe
 
 	loop->run_in_own_loop(std::bind(&TcpConnection::connect_established, conn));
 }
 
 void TcpServer::remove_connection(const TcpConnectionPtr& conn)
 {
+	// FIXME: unsafe
 	owner_loop_->run_in_own_loop(std::bind(&TcpServer::remove_connection_in_loop, this, conn));
 }
 
