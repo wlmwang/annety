@@ -142,24 +142,21 @@ public:
 			LOG(WARNING) << static_cast<double>(total_bytes_read) / (timeout_ * 1024 * 1024)
 				<< " MiB/s throughput";
 
+			// todo
+			// quit();
 			conn->get_owner_loop()->queue_in_own_loop(std::bind(&Client::quit, this));
 		}
-		// todo
-		// {
-		// 	EventLoop* ioloop = conn->get_owner_loop();
-		// 	ioloop->quit();
-		// }
 	}
 
 private:
 	void quit()
 	{
-		loop_->quit();
+		loop_->queue_in_own_loop(std::bind(&EventLoop::quit, loop_));
 	}
 
 	void handle_timeout()
 	{
-		// called in main thread(main EventLoop)
+		// called in main thread(main EventLoop timer)
 		LOG(WARNING) << "stop";
 		for (auto& session : sessions_) {
 			session->stop();
