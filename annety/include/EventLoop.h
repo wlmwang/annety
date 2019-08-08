@@ -99,11 +99,14 @@ private:
 
 private:
 	// atomic
+	bool quit_{false};
 	bool looping_{false};
 	uint64_t looping_times_{0};
 	bool event_handling_{false};
 	int32_t poll_timeout_ms_{-1};
-
+	// atomic
+	bool calling_wakeup_functors_{false};
+	
 	// create EventLoop threadref
 	std::unique_ptr<ThreadRef> owning_thread_;
 
@@ -116,9 +119,6 @@ private:
 	TimeStamp poll_tm_;
 	ChannelList active_channels_;
 	Channel* current_channel_{nullptr};
-	
-	// atomic
-	bool calling_wakeup_functors_{false};
 
 	mutable MutexLock lock_;
 	std::vector<Functor> wakeup_functors_;

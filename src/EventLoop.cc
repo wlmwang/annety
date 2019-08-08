@@ -18,12 +18,12 @@ thread_local EventLoop* tls_event_loop = nullptr;
 }	// namespace anonymous
 
 EventLoop::EventLoop() 
-	: poll_timeout_ms_(kPollTimeoutMs),
-	  owning_thread_(new ThreadRef(PlatformThread::current_ref())),
-	  poller_(new PollPoller(this)),
-	  timer_pool_(new TimerPool(this)),
-	  wakeup_socket_(new EventFD(true, true)),
-	  wakeup_channel_(new Channel(this, wakeup_socket_.get()))
+	: poll_timeout_ms_(kPollTimeoutMs)
+	, owning_thread_(new ThreadRef(PlatformThread::current_ref()))
+	, poller_(new PollPoller(this))
+	, timer_pool_(new TimerPool(this))
+	, wakeup_socket_(new EventFD(true, true))
+	, wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {
 	LOG(TRACE) << "EventLoop::EventLoop is creating by thread " 
 		<< owning_thread_->ref() 
@@ -66,7 +66,9 @@ void EventLoop::loop()
 	LOG(TRACE) << "EventLoop::loop " << this 
 		<< " timeout " << poll_timeout_ms_ << "ms is beginning";
 
-	while (looping_) {
+	// maybe someone calls quit() before loop()
+	// quit_ = false;
+	while (!quit_) {
 		LOG(TRACE) << "EventLoop::loop timeout " << poll_timeout_ms_ << "ms";
 
 		active_channels_.clear();
@@ -101,7 +103,7 @@ void EventLoop::loop()
 
 void EventLoop::quit()
 {
-	looping_ = false;
+	quit_ = true;
 	if (!is_in_own_loop()) {
 		wakeup();
 	}

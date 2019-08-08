@@ -7,8 +7,9 @@
 #include "Logging.h"
 
 #include <type_traits>
-#include <utility>
 #include <tuple>
+#include <memory>
+#include <utility>
 
 namespace annety
 {
