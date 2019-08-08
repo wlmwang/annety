@@ -38,7 +38,7 @@ TcpServer::TcpServer(EventLoop* loop,
 	, message_cb_(default_message_callback)
 {
 	LOG(DEBUG) << "TcpServer::TcpServer [" << name_ 
-		<< "] is constructing which listening on " << ip_port_;
+		<< "] server is constructing which listening on " << ip_port_;
 
 	acceptor_->set_new_connect_callback(
 		std::bind(&TcpServer::new_connection, this, _1, _2));
@@ -47,8 +47,8 @@ TcpServer::TcpServer(EventLoop* loop,
 TcpServer::~TcpServer()
 {
 	owner_loop_->check_in_own_loop();
-	LOG(DEBUG) << "TcpServer::~TcpServer " << name_ 
-		<< " is destructing which listening on" << ip_port_;
+	LOG(DEBUG) << "TcpServer::~TcpServer [" << name_ 
+		<< "] server is destructing which listening on" << ip_port_;
 
 	for (auto& item : connections_) {
 		TcpConnectionPtr conn(item.second);
@@ -56,7 +56,6 @@ TcpServer::~TcpServer()
 		conn->get_owner_loop()->run_in_own_loop(
 			std::bind(&TcpConnection::connect_destroyed, conn));
 	}
-	// FIXME: there should be a join_all() called here
 }
 
 void TcpServer::set_thread_num(int num_threads)
@@ -68,10 +67,10 @@ void TcpServer::set_thread_num(int num_threads)
 void TcpServer::start()
 {
 	if (!started_.test_and_set()) {
-		// 1. starting all thread pool
+		// starting all thread pool
 		loop_pool_->start(thread_init_cb_);
 
-		// 2. setting listen-socket on current thread
+		// setting listening socket in current thread
 		CHECK(!acceptor_->is_listen());
 		acceptor_->listen();
 	}
@@ -81,6 +80,7 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 {
 	owner_loop_->check_in_own_loop();
 
+	// Get one EventLoop thread for NIO
 	EventLoop* loop = loop_pool_->get_next_loop();
   	
 	std::string name = name_ + string_printf("#%s#%d", 
@@ -124,7 +124,7 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 	size_t n = connections_.erase(conn->name());
 	DCHECK(n == 1);
 
-	// Can't remove conn here, because we are inside Channel::handle_event
+	// can't remove conn here immediately, because we are inside Channel::handle_event
 	conn->get_owner_loop()->queue_in_own_loop(
 		std::bind(&TcpConnection::connect_destroyed, conn));
 }

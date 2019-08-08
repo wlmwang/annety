@@ -30,10 +30,12 @@ public:
 	TcpClient(EventLoop* loop,
 			const EndPoint& addr,
 			const std::string& name = "a-crv");
+	
 	~TcpClient();  // force out-line dtor, for std::unique_ptr members.
 
 	EventLoop* get_own_loop() const { return owner_loop_;}
 	const std::string& name() const { return name_;}
+	
 	bool retry() const { return retry_;}
 	void enable_retry() { retry_ = true;}
 

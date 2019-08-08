@@ -13,7 +13,8 @@
 namespace annety
 {
 EventLoopPool::EventLoopPool(EventLoop* loop, const std::string& name)
-	: owner_loop_(loop), name_(name) {}
+	: owner_loop_(loop)
+	, name_(name) {}
 
 EventLoopPool::~EventLoopPool()
 {
@@ -25,19 +26,20 @@ EventLoopPool::~EventLoopPool()
 void EventLoopPool::start(const ThreadInitCallback& cb)
 {
 	owner_loop_->check_in_own_loop();
-
 	DCHECK(!started_);
+
 	started_ = true;
 
 	for (int i = 0; i < num_threads_; ++i) {
 		std::string name = name_ + string_printf("%d", i);
-		
 		EventLoopThread* et = new EventLoopThread(cb, name);
 		
 		threads_.push_back(std::unique_ptr<EventLoopThread>(et));
 		loops_.push_back(et->start_loop());
 	}
-	// no thread pool, reuse current threads
+
+	// no thread pool, reuse current threads.
+	// Typically, it's the main thread
 	if (num_threads_ == 0 && cb) {
 		cb(owner_loop_);
 	}
@@ -46,8 +48,8 @@ void EventLoopPool::start(const ThreadInitCallback& cb)
 EventLoop* EventLoopPool::get_next_loop()
 {
 	owner_loop_->check_in_own_loop();
-
 	DCHECK(started_);
+
 	EventLoop* loop = owner_loop_;
 
 	// round-robin
@@ -63,9 +65,11 @@ EventLoop* EventLoopPool::get_next_loop()
 EventLoop* EventLoopPool::get_loop_with_hashcode(size_t hashcode)
 {
 	owner_loop_->check_in_own_loop();
+	DCHECK(started_);
 
 	EventLoop* loop = owner_loop_;
 
+	// consistent
 	if (!loops_.empty()) {
 		loop = loops_[hashcode % loops_.size()];
 	}

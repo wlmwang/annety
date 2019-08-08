@@ -27,9 +27,15 @@ public:
 	Connector(EventLoop* loop, const EndPoint& addr);
 	~Connector();
 
-	void start();  // can be called in any thread
-	void stop();  // can be called in any thread
-	void restart();  // must be called in loop thread
+	// *Thread safe*
+	void start();
+
+	// *Thread safe*
+	void stop();
+	
+	// FIXME: *Not thread safe*
+	// you must be call this in loop thread
+	void restart();  
 
 	void set_new_connect_callback(const NewConnectCallback& cb)
 	{

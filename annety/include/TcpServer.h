@@ -96,7 +96,7 @@ private:
 	// accept connect socket
 	std::unique_ptr<Acceptor> acceptor_;
 	
-	// worker thread pool
+	// thread pool for NIO
 	std::unique_ptr<EventLoopPool> loop_pool_;
 
 	// user callback functions

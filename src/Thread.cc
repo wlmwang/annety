@@ -52,19 +52,20 @@ Thread::Thread(TaskCallback&& cb, const std::string& name_prefix)
 
 Thread::Thread(const TaskCallback& cb, const std::string& name_prefix,
 			   const Options& options)
-	: name_prefix_(name_prefix),
-	  options_(options),
-	  thread_main_cb_(cb),
-	  latch_(1) {}
+	: name_prefix_(name_prefix)
+	, options_(options)
+	, thread_main_cb_(cb)
+	, latch_(1) {}
 
 Thread::Thread(TaskCallback&& cb, const std::string& name_prefix,
 			   const Options& options)
-	: name_prefix_(name_prefix),
-	  options_(options),
-	  thread_main_cb_(std::move(cb)),
-	  latch_(1) {}
+	: name_prefix_(name_prefix)
+	, options_(options)
+	, thread_main_cb_(std::move(cb))
+	, latch_(1) {}
 
-Thread::~Thread() {
+Thread::~Thread()
+{
 	DCHECK(has_been_started()) << "Thread was never started.";
 	DCHECK(!options_.joinable || has_been_joined())
 		<< "Joinable Thread destroyed without being Join()ed.";

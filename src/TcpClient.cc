@@ -39,20 +39,23 @@ TcpClient::TcpClient(EventLoop* loop,
 	, connect_cb_(default_connect_callback)
 	, message_cb_(default_message_callback)
 {
-	LOG(DEBUG) << "TcpClient::TcpClient the " << name_ 
-		<< " client is constructing which connecting to " << ip_port_;
+	LOG(DEBUG) << "TcpClient::TcpClient [" << name_ 
+		<< "] client is constructing which connecting to " << ip_port_;
 
+	// FIXME: unsafe
 	connector_->set_new_connect_callback(
 		std::bind(&TcpClient::new_connection, this, _1, _2));
+
+	// FIXME: set_connect_failed_callback()???
 }
 
 TcpClient::~TcpClient()
 {
-	LOG(DEBUG) << "TcpClient::~TcpClient the " << name_ 
-		<< " client is destructing which be connected to " << ip_port_;
+	LOG(DEBUG) << "TcpClient::~TcpClient [" << name_ 
+		<< "] client is destructing which be connected to " << ip_port_;
 
-	TcpConnectionPtr conn;
 	bool unique = false;
+	TcpConnectionPtr conn;
 	{
 		AutoLock locked(lock_);
 		unique = connection_.unique();
@@ -62,9 +65,10 @@ TcpClient::~TcpClient()
 	if (conn) {
 		DCHECK(owner_loop_ == conn->get_owner_loop());
 
-		// FIXME: not 100% safe, if we are in different thread
+		// *Not 100% safe*, if we are in different thread
 		CloseCallback cb = std::bind(&internal::remove_connection, owner_loop_, _1);
 		owner_loop_->run_in_own_loop(std::bind(&TcpConnection::set_close_callback, conn, cb));
+		
 		if (unique) {
 			conn->force_close();
 		}

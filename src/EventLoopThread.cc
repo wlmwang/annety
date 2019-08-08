@@ -10,8 +10,8 @@ namespace annety
 {
 EventLoopThread::EventLoopThread(const ThreadInitCallback& cb,
 								 const std::string& name)
-	: thread_(std::bind(&EventLoopThread::thread_func, this), name),
-	  thread_init_cb_(cb) {}
+	: thread_(std::bind(&EventLoopThread::thread_func, this), name)
+	, thread_init_cb_(cb) {}
 
 EventLoopThread::~EventLoopThread()
 {
@@ -21,9 +21,9 @@ EventLoopThread::~EventLoopThread()
 		
 	exiting_ = true;
 
-	// not 100% race-free
-	// eg. thread_func could be running thread_init_cb_.
-	if (loop_ != nullptr) {
+	// *Not 100% thread safe*
+	// e.g. thread_func could be running thread_init_cb_
+	if (loop_) {
 		// still a tiny chance to call destructed object, if thread_func exits just now.
 		// but when EventLoopThread destructs, usually programming is exiting anyway.
 		loop_->quit();
@@ -39,7 +39,7 @@ EventLoop* EventLoopThread::start_loop()
 	EventLoop* loop = nullptr;
 	{
 		AutoLock locked(lock_);
-		while (loop_ == nullptr) {
+		while (!loop_) {
 			cv_.wait();
 		}
 		loop = loop_;
@@ -63,8 +63,8 @@ void EventLoopThread::thread_func()
 	}
 
 	loop.loop();
+	DCHECK(exiting_);
 
-	// DCHECK(exiting_);
 	{
 		AutoLock locked(lock_);
 		loop_ = nullptr;	
