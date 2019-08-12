@@ -25,7 +25,7 @@ EventLoop::EventLoop()
 	, wakeup_socket_(new EventFD(true, true))
 	, wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {
-	LOG(TRACE) << "EventLoop::EventLoop is creating by thread " 
+	LOG(DEBUG) << "EventLoop::EventLoop is creating by thread " 
 		<< owning_thread_->ref() 
 		<< ", EventLoop address is " << this;
 
@@ -46,12 +46,12 @@ EventLoop::~EventLoop()
 {
 	CHECK(looping_ == false);
 	
-	wakeup_channel_->disable_all_event();
-	wakeup_channel_->remove();
-
-	LOG(TRACE) << "EventLoop::~EventLoop is called by thread " 
+	LOG(DEBUG) << "EventLoop::~EventLoop is called by thread " 
 		<< PlatformThread::current_ref().ref()
 		<< ", deleted EventLoop address is " << this;
+
+	wakeup_channel_->disable_all_event();
+	wakeup_channel_->remove();
 
 	tls_event_loop = nullptr;
 }

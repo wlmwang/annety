@@ -22,7 +22,7 @@ class SocketFD;
 class EndPoint;
 class EventLoop;
 class Connector;
-typedef std::shared_ptr<Connector> ConnectorPtr;
+using ConnectorPtr = std::shared_ptr<Connector>;
 
 class TcpClient
 {

@@ -43,13 +43,13 @@ Connector::Connector(EventLoop* loop, const EndPoint& addr)
 	, server_addr_(addr)
 	, retry_delay_ms_(kInitRetryDelayMs)
 {
-	LOG(TRACE) << "Connector::Connector [" << server_addr_.to_ip_port() 
+	LOG(DEBUG) << "Connector::Connector [" << server_addr_.to_ip_port() 
 		<< "] Connector is constructing and retry is " << retry_delay_ms_;
 }
 
 Connector::~Connector()
 {
-	LOG(TRACE) << "Connector::~Connector [" << server_addr_.to_ip_port() 
+	LOG(DEBUG) << "Connector::~Connector [" << server_addr_.to_ip_port() 
 		<< "] Connector is destructing and retry is " << retry_delay_ms_;
 
 	DCHECK(!connect_socket_);

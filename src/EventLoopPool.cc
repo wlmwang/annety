@@ -12,11 +12,17 @@ namespace annety
 {
 EventLoopPool::EventLoopPool(EventLoop* loop, const std::string& name)
 	: owner_loop_(loop)
-	, name_(name) {}
+	, name_(name)
+{
+	LOG(DEBUG) << "EventLoopPool::EventLoopPool is called by thread " 
+		<< PlatformThread::current_ref().ref()
+		<< ", name is " << name_
+		<< ", num threads of EventLoop is " << num_threads_;
+}
 
 EventLoopPool::~EventLoopPool()
 {
-	LOG(TRACE) << "EventLoopPool::~EventLoopPool is called by thread " 
+	LOG(DEBUG) << "EventLoopPool::~EventLoopPool is called by thread " 
 		<< PlatformThread::current_ref().ref()
 		<< ", num threads of EventLoop is " << num_threads_;
 }

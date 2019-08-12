@@ -11,11 +11,16 @@ namespace annety
 EventLoopThread::EventLoopThread(const ThreadInitCallback& cb,
 								 const std::string& name)
 	: thread_(std::bind(&EventLoopThread::thread_func, this), name)
-	, thread_init_cb_(cb) {}
+	, thread_init_cb_(cb)
+{
+	LOG(DEBUG) << "EventLoopThread::EventLoopThread is called by thread " 
+		<< PlatformThread::current_ref().ref()
+		<< ", name is " << name;
+}
 
 EventLoopThread::~EventLoopThread()
 {
-	LOG(TRACE) << "EventLoopThread::~EventLoopThread is called by thread " 
+	LOG(DEBUG) << "EventLoopThread::~EventLoopThread is called by thread " 
 		<< PlatformThread::current_ref().ref()
 		<< ", EventLoop address is " << owning_loop_;
 		

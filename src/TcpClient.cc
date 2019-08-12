@@ -51,16 +51,18 @@ TcpClient::TcpClient(EventLoop* loop,
 
 TcpClient::~TcpClient()
 {
-	LOG(DEBUG) << "TcpClient::~TcpClient [" << name_ 
-		<< "] client is destructing which be connected to " << ip_port_;
-
 	bool unique = false;
 	TcpConnectionPtr conn;
 	{
 		AutoLock locked(lock_);
-		unique = connection_.unique();
 		conn = connection_;
+		unique = connection_.unique();
 	}
+
+	LOG(DEBUG) << "TcpClient::~TcpClient [" << name_ 
+		<< "] client is destructing which be connected to " << ip_port_
+		<< ", conn address is " << conn.get()
+		<< ", unique is " << unique;
 
 	if (conn) {
 		DCHECK(owner_loop_ == conn->get_owner_loop());
