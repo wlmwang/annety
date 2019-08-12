@@ -32,7 +32,7 @@ private:
 	void thread_func();
 
 private:
-	EventLoop* loop_{nullptr};
+	EventLoop* owning_loop_{nullptr};
 	bool exiting_{false};
 
 	MutexLock lock_;

@@ -17,16 +17,16 @@ EventLoopThread::~EventLoopThread()
 {
 	LOG(TRACE) << "EventLoopThread::~EventLoopThread is called by thread " 
 		<< PlatformThread::current_ref().ref()
-		<< ", EventLoop address is " << loop_;
+		<< ", EventLoop address is " << owning_loop_;
 		
 	exiting_ = true;
 
 	// *Not 100% thread safe*
 	// e.g. thread_func could be running thread_init_cb_
-	if (loop_) {
+	if (owning_loop_) {
 		// still a tiny chance to call destructed object, if thread_func exits just now.
 		// but when EventLoopThread destructs, usually programming is exiting anyway.
-		loop_->quit();
+		owning_loop_->quit();
 		thread_.join();
 	}
 }
@@ -39,10 +39,10 @@ EventLoop* EventLoopThread::start_loop()
 	EventLoop* loop = nullptr;
 	{
 		AutoLock locked(lock_);
-		while (!loop_) {
+		while (!owning_loop_) {
 			cv_.wait();
 		}
-		loop = loop_;
+		loop = owning_loop_;
 	}
 
 	return loop;
@@ -58,7 +58,7 @@ void EventLoopThread::thread_func()
 
 	{
 		AutoLock locked(lock_);
-		loop_ = &loop;
+		owning_loop_ = &loop;
 		cv_.signal();
 	}
 
@@ -67,7 +67,7 @@ void EventLoopThread::thread_func()
 
 	{
 		AutoLock locked(lock_);
-		loop_ = nullptr;	
+		owning_loop_ = nullptr;	
 	}
 }
 

@@ -8,8 +8,6 @@
 #include "PlatformThread.h"
 #include "strings/StringPrintf.h"
 
-#include <stdio.h>
-
 namespace annety
 {
 EventLoopPool::EventLoopPool(EventLoop* loop, const std::string& name)
@@ -34,7 +32,8 @@ void EventLoopPool::start(const ThreadInitCallback& cb)
 		std::string name = name_ + string_printf("%d", i);
 		EventLoopThread* et = new EventLoopThread(cb, name);
 		
-		threads_.push_back(std::unique_ptr<EventLoopThread>(et));
+		// threads_.push_back(std::make_unique(et)); // C++14
+		threads_.emplace_back(et);
 		loops_.push_back(et->start_loop());
 	}
 

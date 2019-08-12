@@ -146,6 +146,8 @@ void TcpClient::remove_connection(const TcpConnectionPtr& conn)
 		DCHECK(connection_ == conn);
 		connection_.reset();
 	}
+
+	// can't remove conn here immediately, because we are inside Channel::handle_event
 	owner_loop_->queue_in_own_loop(std::bind(&TcpConnection::connect_destroyed, conn));
 	
 	if (retry_ && connect_) {
