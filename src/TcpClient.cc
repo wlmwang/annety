@@ -77,9 +77,15 @@ TcpClient::~TcpClient()
 
 void TcpClient::initialize()
 {
-	// FIXME: cycle reference with connector_	!!!important
+	// FIXME: unsafe
 	connector_->set_new_connect_callback(
-		std::bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
+		std::bind(&TcpClient::new_connection, this, _1, _2));
+	
+	// using containers::_1;
+	// using containers::_2;
+	// using containers::make_weak_bind;
+	// connector_->set_new_connect_callback(
+	// 	make_weak_bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
 	
 	// FIXME: add set_connect_failed_callback()
 }
@@ -133,7 +139,7 @@ void TcpClient::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
-	// must be manually release conn object (@see ::remove_connection())
+	// must be manually release conn object (@see TcpClient::remove_connection())
 	conn->set_close_callback(
 			containers::make_bind(
 				&TcpClient::remove_connection, shared_from_this(), containers::_1)

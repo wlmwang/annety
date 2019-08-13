@@ -84,7 +84,8 @@ void TcpConnection::initialize()
 	initilize_ = true;
 
 	using containers::make_weak_bind;
-	owner_loop_->run_in_own_loop(make_weak_bind(&TcpConnection::initialize_in_loop, shared_from_this()));
+	owner_loop_->run_in_own_loop(
+		make_weak_bind(&TcpConnection::initialize_in_loop, shared_from_this()));
 }
 
 void TcpConnection::initialize_in_loop()
@@ -132,7 +133,8 @@ void TcpConnection::send(const StringPiece& message)
 			void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::send_in_loop;
 			// move semantics in here, even RVO
 			using containers::make_weak_bind;
-			owner_loop_->run_in_own_loop(make_weak_bind(fp, shared_from_this(), message.as_string()));
+			owner_loop_->run_in_own_loop(
+				make_weak_bind(fp, shared_from_this(), message.as_string()));
 		}
 	}
 }
@@ -157,7 +159,8 @@ void TcpConnection::send(NetBuffer* buf)
 			void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::send_in_loop;
 			// move semantics in here, even RVO
 			using containers::make_weak_bind;
-			owner_loop_->run_in_own_loop(make_weak_bind(fp, shared_from_this(), buf->taken_as_string()));
+			owner_loop_->run_in_own_loop(
+				make_weak_bind(fp, shared_from_this(), buf->taken_as_string()));
 		}
 	}
 }
@@ -185,7 +188,8 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 		if (nwrote >= 0) {
 			remaining = len - nwrote;
 			if (remaining == 0 && write_complete_cb_) {
-				owner_loop_->queue_in_own_loop(std::bind(write_complete_cb_, shared_from_this()));
+				owner_loop_->queue_in_own_loop(
+					std::bind(write_complete_cb_, shared_from_this()));
 			}
 		} else {
 			nwrote = 0;
@@ -206,8 +210,8 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 		if (oldlen + remaining >= high_water_mark_ && oldlen < high_water_mark_ 
 			&& high_water_mark_cb_)
 		{
-			owner_loop_->queue_in_own_loop(std::bind(high_water_mark_cb_, shared_from_this(), 
-										oldlen + remaining));
+			owner_loop_->queue_in_own_loop(
+				std::bind(high_water_mark_cb_, shared_from_this(), oldlen + remaining));
 		}
 
 		// copy data to output_buffer_
@@ -225,7 +229,8 @@ void TcpConnection::shutdown()
 	if (state_ == kConnected) {
 		state_ = kDisconnecting;
 		using containers::make_weak_bind;
-		owner_loop_->run_in_own_loop(make_weak_bind(&TcpConnection::shutdown_in_loop, shared_from_this()));
+		owner_loop_->run_in_own_loop(
+			make_weak_bind(&TcpConnection::shutdown_in_loop, shared_from_this()));
 	}
 }
 
@@ -245,7 +250,8 @@ void TcpConnection::force_close()
 	// FIXME: use compare and swap
 	if (state_ == kConnected || state_ == kDisconnecting) {
 		state_ = kDisconnecting;
-		owner_loop_->queue_in_own_loop(std::bind(&TcpConnection::force_close_in_loop, shared_from_this()));
+		owner_loop_->queue_in_own_loop(
+			std::bind(&TcpConnection::force_close_in_loop, shared_from_this()));
 	}
 }
 
@@ -257,8 +263,9 @@ void TcpConnection::force_close_with_delay(double delay_s)
 		state_ = kDisconnecting;
 		// not force_close_in_loop to avoid race condition
 		using containers::make_weak_bind;
-		owner_loop_->run_after(TimeDelta::from_seconds_d(delay_s), 
-							make_weak_bind(&TcpConnection::force_close, shared_from_this()));
+		owner_loop_->run_after(
+			TimeDelta::from_seconds_d(delay_s), 
+			make_weak_bind(&TcpConnection::force_close, shared_from_this()));
 	}
 }
 
@@ -277,7 +284,8 @@ void TcpConnection::start_read()
 	CHECK(initilize_);
 
 	using containers::make_weak_bind;
-	owner_loop_->run_in_own_loop(make_weak_bind(&TcpConnection::start_read_in_loop, shared_from_this()));
+	owner_loop_->run_in_own_loop(
+		make_weak_bind(&TcpConnection::start_read_in_loop, shared_from_this()));
 }
 
 void TcpConnection::start_read_in_loop()
@@ -295,7 +303,8 @@ void TcpConnection::stop_read()
 	CHECK(initilize_);
 
 	using containers::make_weak_bind;
-	owner_loop_->run_in_own_loop(make_weak_bind(&TcpConnection::stop_read_in_loop, shared_from_this()));
+	owner_loop_->run_in_own_loop(
+		make_weak_bind(&TcpConnection::stop_read_in_loop, shared_from_this()));
 }
 
 void TcpConnection::stop_read_in_loop()
@@ -348,12 +357,14 @@ void TcpConnection::handle_read(TimeStamp recv_tm)
 	if (n > 0) {
 		message_cb_(shared_from_this(), input_buffer_.get(), recv_tm);
 	} else if (n == 0) {
-		LOG(TRACE) << "TcpConnection::handle_read the conntion fd=" << connect_socket_->internal_fd() 
-				<< " is going to closing";
+		LOG(TRACE) << "TcpConnection::handle_read the conntion fd=" 
+			<< connect_socket_->internal_fd() 
+			<< " is going to closing";
 		handle_close();
 	} else {
-		PLOG(ERROR) << "TcpConnection::handle_read the conntion fd=" << connect_socket_->internal_fd() 
-				<< " has been occurred error";
+		PLOG(ERROR) << "TcpConnection::handle_read the conntion fd=" 
+			<< connect_socket_->internal_fd() 
+			<< " has been occurred error";
 		handle_error();
 	}
 }
@@ -370,7 +381,8 @@ void TcpConnection::handle_write()
 			if (output_buffer_->readable_bytes() == 0) {
 				connect_channel_->disable_write_event();
 				if (write_complete_cb_) {
-					owner_loop_->queue_in_own_loop(std::bind(write_complete_cb_, shared_from_this()));
+					owner_loop_->queue_in_own_loop(
+						std::bind(write_complete_cb_, shared_from_this()));
 				}
 				if (state_ == kDisconnecting) {
 					shutdown_in_loop();
@@ -380,7 +392,8 @@ void TcpConnection::handle_write()
 			PLOG(ERROR) << "TcpConnection::handle_write has failed";
 		}
 	} else {
-		LOG(DEBUG) << "TcpConnection::handle_write the conntion fd=" << connect_socket_->internal_fd()
+		LOG(DEBUG) << "TcpConnection::handle_write the conntion fd=" 
+			<< connect_socket_->internal_fd()
 			<< " is down, no more writing";
 	}
 }
@@ -389,8 +402,9 @@ void TcpConnection::handle_close()
 {
 	owner_loop_->check_in_own_loop();
 
-	LOG(TRACE) << "TcpConnection::handle_close the fd = " << connect_socket_->internal_fd() 
-			<< " state = " << state_to_string() << " is closing";
+	LOG(TRACE) << "TcpConnection::handle_close the fd = " 
+		<< connect_socket_->internal_fd() 
+		<< " state = " << state_to_string() << " is closing";
 	DCHECK(state_ == kConnected || state_ == kDisconnecting);
 
 	state_ = kDisconnected;
@@ -405,7 +419,8 @@ void TcpConnection::handle_close()
 
 void TcpConnection::handle_error()
 {
-	PLOG(ERROR) << "TcpConnection::handle_error the connection " << name_ << " has a error";
+	PLOG(ERROR) << "TcpConnection::handle_error the connection " 
+		<< name_ << " has a error";
 }
 
 const char* TcpConnection::state_to_string() const
