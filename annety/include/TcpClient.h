@@ -79,7 +79,8 @@ private:
 	EventLoop* owner_loop_;
 	const std::string name_;
 	const std::string ip_port_;
-
+	bool initilize_{false};
+	
 	ConnectorPtr connector_;	// avoid revealing Connector
 
 	ConnectCallback connect_cb_;

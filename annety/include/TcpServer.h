@@ -91,7 +91,8 @@ private:
 	EventLoop* owner_loop_{nullptr};
 	const std::string name_;
 	const std::string ip_port_;
-
+	bool initilize_{false};
+	
 	// ATOMIC_FLAG_INIT is macros
 	std::atomic_flag started_ = ATOMIC_FLAG_INIT;
 

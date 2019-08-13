@@ -44,6 +44,8 @@ TcpServer::TcpServer(EventLoop* loop,
 
 TcpServer::~TcpServer()
 {
+	DCHECK(initilize_);
+
 	owner_loop_->check_in_own_loop();
 	LOG(DEBUG) << "TcpServer::~TcpServer [" << name_ 
 		<< "] server is destructing which listening on" << ip_port_;
@@ -58,18 +60,25 @@ TcpServer::~TcpServer()
 
 void TcpServer::initialize()
 {
+	CHECK(!initilize_);
+	initilize_ = true;
+
 	acceptor_->set_new_connect_callback(
 		std::bind(&TcpServer::new_connection, shared_from_this(), _1, _2));
 }
 
 void TcpServer::set_thread_num(int num_threads)
 {
+	CHECK(initilize_);
+
 	CHECK(0 <= num_threads);
 	loop_pool_->set_thread_num(num_threads);
 }
 
 void TcpServer::start()
 {
+	CHECK(initilize_);
+	
 	if (!started_.test_and_set()) {
 		// starting all thread pool
 		loop_pool_->start(thread_init_cb_);

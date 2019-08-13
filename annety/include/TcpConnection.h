@@ -81,29 +81,24 @@ public:
 
 	void set_connect_callback(const ConnectCallback& cb)
 	{
-		CHECK(initilize_);
 		connect_cb_ = cb;
 	}
 	void set_message_callback(const MessageCallback& cb)
 	{
-		CHECK(initilize_);
 		message_cb_ = cb;
 	}
 	void set_write_complete_callback(const WriteCompleteCallback& cb)
 	{
-		CHECK(initilize_);
 		write_complete_cb_ = cb;
 	}
 	void set_high_water_mark_callback(const HighWaterMarkCallback& cb, size_t high_water_mark)
 	{
-		CHECK(initilize_);
 		high_water_mark_cb_ = cb;
 		high_water_mark_ = high_water_mark;
 	}
 
 	void set_close_callback(const CloseCallback& cb)
 	{
-		CHECK(initilize_);
 		close_cb_ = cb;
 	}
 	

@@ -70,12 +70,12 @@ TcpConnection::TcpConnection(EventLoop* loop,
 
 TcpConnection::~TcpConnection()
 {
+	DCHECK(initilize_ == true);
+	DCHECK(state_ == kDisconnected);
+	
 	LOG(DEBUG) << "TcpConnection::~TcpConnection the [" <<  name_ << "] connecting of "
 		<< " fd=" << connect_socket_->internal_fd()
 		<< " state=" << state_to_string() << " is destructing";
-
-	DCHECK(initilize_ == true);
-	DCHECK(state_ == kDisconnected);
 }
 
 void TcpConnection::initialize()

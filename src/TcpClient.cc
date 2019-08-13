@@ -46,6 +46,8 @@ TcpClient::TcpClient(EventLoop* loop,
 
 TcpClient::~TcpClient()
 {
+	DCHECK(initilize_);
+
 	bool unique = false;
 	TcpConnectionPtr conn;
 	{
@@ -77,6 +79,9 @@ TcpClient::~TcpClient()
 
 void TcpClient::initialize()
 {
+	CHECK(!initilize_);
+	initilize_ = true;
+
 	// FIXME: unsafe
 	connector_->set_new_connect_callback(
 		std::bind(&TcpClient::new_connection, this, _1, _2));
@@ -92,6 +97,8 @@ void TcpClient::initialize()
 
 void TcpClient::connect()
 {
+	CHECK(initilize_);
+
 	// FIXME: check state
 	connect_ = true;
 	connector_->start();
@@ -99,6 +106,8 @@ void TcpClient::connect()
 
 void TcpClient::disconnect()
 {
+	CHECK(initilize_);
+
 	connect_ = false;
 	{
 		AutoLock locked(lock_);
@@ -110,6 +119,8 @@ void TcpClient::disconnect()
 
 void TcpClient::stop()
 {
+	CHECK(initilize_);
+
 	connect_ = false;
 	connector_->stop();
 }
