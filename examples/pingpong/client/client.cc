@@ -22,23 +22,24 @@ public:
 			const EndPoint& addr,
 			const std::string& name,
 			Client* owner)
-		: client_(loop, addr, name)
-		, owner_(owner)
+		: owner_(owner)
 	{
-		client_.set_connect_callback(
+		client_ = make_tcp_client(loop, addr, name);
+
+		client_->set_connect_callback(
 			std::bind(&Session::on_connect, this, _1));
-		client_.set_message_callback(
+		client_->set_message_callback(
 			std::bind(&Session::on_message, this, _1, _2, _3));
 	}
 
 	void start()
 	{
-		client_.connect();
+		client_->connect();
 	}
 
 	void stop()
 	{
-		client_.disconnect();
+		client_->disconnect();
 	}
 
 	int64_t bytes_read() const
@@ -65,7 +66,7 @@ private:
 	}
 
 private:
-	TcpClient client_;
+	TcpClientPtr client_;
 	Client* owner_;
 
 	int64_t bytes_read_{0};
@@ -143,8 +144,8 @@ public:
 				<< " MiB/s throughput";
 
 			// todo
-			// quit();
-			conn->get_owner_loop()->queue_in_own_loop(std::bind(&Client::quit, this));
+			loop_->quit();
+			//conn->get_owner_loop()->queue_in_own_loop(std::bind(&Client::quit, this));
 		}
 	}
 
@@ -157,7 +158,7 @@ private:
 	void handle_timeout()
 	{
 		// called in main thread(main EventLoop timer)
-		LOG(WARNING) << "stop";
+		LOG(WARNING) << "stop all sessions";
 		for (auto& session : sessions_) {
 			session->stop();
 		}
@@ -213,7 +214,7 @@ int main(int argc, char* argv[])
 		EventLoop loop;
 		EndPoint saddr(1669);
 
-		set_min_log_severity(LOG_WARNING);
+		set_min_log_severity(LOG_DEBUG);
 
 		Client client(&loop, saddr, block_size, session_count, timeout, threads);
 		loop.loop();
