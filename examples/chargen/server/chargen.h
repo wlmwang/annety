@@ -28,7 +28,7 @@ private:
 	void print_throughput();
 
 private:
-	annety::TcpServer server_;
+	annety::TcpServerPtr server_;
 
 	annety::TimeStamp start_time_{annety::TimeStamp::now()};
 	int64_t transferred_{0};

@@ -22,7 +22,7 @@ private:
 
 private:
 	annety::EventLoop* loop_;
-	annety::TcpClient client_;
+	annety::TcpClientPtr client_;
 
 	std::string message_;
 };

@@ -9,13 +9,14 @@ using std::placeholders::_2;
 using std::placeholders::_3;
 
 ChargenServer::ChargenServer(annety::EventLoop* loop, const annety::EndPoint& addr, bool print)
-	: server_(loop, addr, "ChargenServer")
 {
-	server_.set_connect_callback(
+	server_ = make_tcp_server(loop, addr, "ChargenServer");
+
+	server_->set_connect_callback(
 		std::bind(&ChargenServer::on_connection, this, _1));
-	server_.set_message_callback(
+	server_->set_message_callback(
 		std::bind(&ChargenServer::on_message, this, _1, _2, _3));
-	server_.set_write_complete_callback(
+	server_->set_write_complete_callback(
 		std::bind(&ChargenServer::on_write_complete, this, _1));
 
 	if (print) {
@@ -36,7 +37,7 @@ ChargenServer::ChargenServer(annety::EventLoop* loop, const annety::EndPoint& ad
 
 void ChargenServer::start()
 {
-	server_.start();
+	server_->start();
 }
 
 void ChargenServer::on_connection(const annety::TcpConnectionPtr& conn)

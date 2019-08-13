@@ -22,7 +22,7 @@ private:
 			annety::NetBuffer* buf, annety::TimeStamp time);
 
 private:
-	annety::TcpServer server_;
+	annety::TcpServerPtr server_;
 };
 
 #endif  // EXAMPLES_TIME_SERVER_TIMES_H

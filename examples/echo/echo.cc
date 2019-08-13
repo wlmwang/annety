@@ -9,17 +9,18 @@ using std::placeholders::_2;
 using std::placeholders::_3;
 
 EchoServer::EchoServer(annety::EventLoop* loop, const annety::EndPoint& addr)
-	: server_(loop, addr, "EchoServer")
 {
-	server_.set_connect_callback(
+	server_ = make_tcp_server(loop, addr, "EchoServer");
+
+	server_->set_connect_callback(
 		std::bind(&EchoServer::on_connection, this, _1));
-	server_.set_message_callback(
+	server_->set_message_callback(
 		std::bind(&EchoServer::on_message, this, _1, _2, _3));
 }
 
 void EchoServer::start()
 {
-	server_.start();
+	server_->start();
 }
 
 void EchoServer::on_connection(const annety::TcpConnectionPtr& conn)
@@ -37,4 +38,6 @@ void EchoServer::on_message(const annety::TcpConnectionPtr& conn,
 	
 	LOG(INFO) << conn->name() << " echo " << (int)message.size() << " bytes, "
 		<< "data received at " << time;
+
+	conn->send(message);
 }

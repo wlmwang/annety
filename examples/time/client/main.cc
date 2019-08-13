@@ -7,7 +7,7 @@
 int main(int argc, char* argv[])
 {
 	// 屏蔽日志
-	annety::set_min_log_severity(annety::LOG_INFO);
+	annety::set_min_log_severity(annety::LOG_DEBUG);
 	
 	annety::EventLoop loop;
 	TimeClient client(&loop, annety::EndPoint(1669));

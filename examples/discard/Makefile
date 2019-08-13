@@ -23,7 +23,7 @@ CC_SRC	:= $(wildcard ${DIR_SRC}/*.cc)
 # 编译文件
 OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))
 
-TARGET	:= discard
+TARGET	:= server
 
 .PHONY:all clean
 

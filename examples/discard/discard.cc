@@ -9,17 +9,18 @@ using std::placeholders::_2;
 using std::placeholders::_3;
 
 DiscardServer::DiscardServer(annety::EventLoop* loop, const annety::EndPoint& addr)
-	: server_(loop, addr, "DiscardServer")
 {
-	server_.set_connect_callback(
+	server_ = make_tcp_server(loop, addr, "DiscardServer");
+
+	server_->set_connect_callback(
 		std::bind(&DiscardServer::on_connection, this, _1));
-	server_.set_message_callback(
+	server_->set_message_callback(
 		std::bind(&DiscardServer::on_message, this, _1, _2, _3));
 }
 
 void DiscardServer::start()
 {
-	server_.start();
+	server_->start();
 }
 
 void DiscardServer::on_connection(const annety::TcpConnectionPtr& conn)

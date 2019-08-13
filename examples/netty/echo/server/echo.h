@@ -16,7 +16,8 @@ public:
 
 	void start();
 	
-	annety::TcpServer& server() 
+	// for main() to set_thread_num 
+	annety::TcpServerPtr server() 
 	{
 		return server_;
 	}
@@ -30,7 +31,7 @@ private:
 	void print_throughput();
 
 private:
-	annety::TcpServer server_;
+	annety::TcpServerPtr server_;
 
 	annety::TimeStamp start_time_{annety::TimeStamp::now()};
 	std::atomic<int64_t> received_messages_{0};

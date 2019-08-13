@@ -23,7 +23,7 @@ private:
 
 private:
 	annety::EventLoop* loop_;
-	annety::TcpClient client_;
+	annety::TcpClientPtr client_;
 };
 
 #endif  // EXAMPLES_CHARGEN_CLIENT_CHARGEN_H

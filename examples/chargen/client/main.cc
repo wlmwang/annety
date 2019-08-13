@@ -9,6 +9,8 @@ int main(int argc, char* argv[])
 	annety::EventLoop loop;
 	ChargenClient client(&loop, annety::EndPoint(1669));
 	
+	annety::set_min_log_severity(annety::LOG_DEBUG);
+
 	client.connect();
 	loop.loop();
 }

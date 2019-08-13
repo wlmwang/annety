@@ -10,17 +10,18 @@ using std::placeholders::_2;
 using std::placeholders::_3;
 
 DaytimeServer::DaytimeServer(annety::EventLoop* loop, const annety::EndPoint& addr)
-	: server_(loop, addr, "DaytimeServer")
 {
-	server_.set_connect_callback(
+	server_ = make_tcp_server(loop, addr, "DaytimeServer");
+
+	server_->set_connect_callback(
 		std::bind(&DaytimeServer::on_connection, this, _1));
-	server_.set_message_callback(
+	server_->set_message_callback(
 		std::bind(&DaytimeServer::on_message, this, _1, _2, _3));
 }
 
 void DaytimeServer::start()
 {
-	server_.start();
+	server_->start();
 }
 
 void DaytimeServer::on_connection(const annety::TcpConnectionPtr& conn)

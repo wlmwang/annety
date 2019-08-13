@@ -10,18 +10,19 @@ using std::placeholders::_3;
 
 TimeClient::TimeClient(annety::EventLoop* loop, const annety::EndPoint& addr)
 	: loop_(loop)
-	, client_(loop, addr, "TimeClient")
 {
-	client_.set_connect_callback(
+	client_ = make_tcp_client(loop, addr, "TimeClient");
+
+	client_->set_connect_callback(
 		std::bind(&TimeClient::on_connect, this, _1));
-	client_.set_message_callback(
+	client_->set_message_callback(
 		std::bind(&TimeClient::on_message, this, _1, _2, _3));
-	// client_.enable_retry();
+	// client_->enable_retry();
 }
 
 void TimeClient::connect()
 {
-	client_.connect();
+	client_->connect();
 }
 
 void TimeClient::on_connect(const annety::TcpConnectionPtr& conn)

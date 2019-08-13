@@ -10,21 +10,19 @@ using std::placeholders::_3;
 
 ChargenClient::ChargenClient(annety::EventLoop* loop, const annety::EndPoint& addr)
 	: loop_(loop)
-	, client_(loop, addr, "ChargenClient")
 {
-	client_.set_connect_callback(
-		std::bind(&ChargenClient::on_connect, this, _1));
-	client_.set_message_callback(
-		std::bind(&ChargenClient::on_message, this, _1, _2, _3));
-	// client_.enable_retry();
+	client_ = make_tcp_client(loop, addr, "ChargenClient");
 
-	// 屏蔽日志
-	annety::set_min_log_severity(annety::LOG_INFO);
+	client_->set_connect_callback(
+		std::bind(&ChargenClient::on_connect, this, _1));
+	client_->set_message_callback(
+		std::bind(&ChargenClient::on_message, this, _1, _2, _3));
+	// client_->enable_retry();
 }
 
 void ChargenClient::connect()
 {
-	client_.connect();
+	client_->connect();
 }
 
 void ChargenClient::on_connect(const annety::TcpConnectionPtr& conn)
@@ -43,7 +41,4 @@ void ChargenClient::on_message(const annety::TcpConnectionPtr& conn,
 
 {
 	buf->has_read_all();
-	// std::string message(buf->taken_as_string());
-	// LOG(INFO) << conn->name() << " echo " << (int)message.size() << " bytes, "
-	// 	<< "data received at " << time;
 }

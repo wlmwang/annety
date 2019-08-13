@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 	ChargenServer server(&loop, annety::EndPoint(1669));
 	
 	// 屏蔽日志
-	annety::set_min_log_severity(annety::LOG_INFO);
+	annety::set_min_log_severity(annety::LOG_DEBUG);
 
 	server.start();
 	loop.loop();
