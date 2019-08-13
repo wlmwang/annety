@@ -61,7 +61,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
 	, input_buffer_(new NetBuffer())
 	, output_buffer_(new NetBuffer())
 {
-	LOG(TRACE) << "TcpConnection::TcpConnection the [" <<  name_ << "] connection of"
+	LOG(DEBUG) << "TcpConnection::TcpConnection the [" <<  name_ << "] connection of"
 		<< " fd=" << connect_socket_->internal_fd() << " is constructing";
 
 	// setting keepalive sockopt
@@ -70,7 +70,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
 
 TcpConnection::~TcpConnection()
 {
-	LOG(TRACE) << "TcpConnection::~TcpConnection the [" <<  name_ << "] connecting of "
+	LOG(DEBUG) << "TcpConnection::~TcpConnection the [" <<  name_ << "] connecting of "
 		<< " fd=" << connect_socket_->internal_fd()
 		<< " state=" << state_to_string() << " is destructing";
 

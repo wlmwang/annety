@@ -59,7 +59,7 @@ TcpClient::~TcpClient()
 		<< ", conn address is " << conn.get()
 		<< ", unique is " << unique;
 
-	if (connect_ && conn) {
+	if (conn) {
 		DCHECK(owner_loop_ == conn->get_owner_loop());
 
 		// *Not 100% safe*, if we are in different thread
@@ -78,13 +78,13 @@ TcpClient::~TcpClient()
 
 void TcpClient::initialize()
 {
-	// FIXME: set_connect_failed_callback()???
-
 	using containers::_1;
 	using containers::_2;
 	using containers::make_weak_bind;
 	connector_->set_new_connect_callback(
 		make_weak_bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
+	
+	// FIXME: set_connect_failed_callback()???
 }
 
 void TcpClient::connect()
@@ -111,6 +111,7 @@ void TcpClient::stop()
 	connector_->stop();
 }
 
+// FIXME: bug with make_weak_bind
 void TcpClient::new_connection(SelectableFDPtr& sockfd, const EndPoint& peeraddr)
 {
 	owner_loop_->check_in_own_loop();
@@ -137,7 +138,7 @@ void TcpClient::new_connection(SelectableFDPtr& sockfd, const EndPoint& peeraddr
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
 	conn->set_close_callback(
-		containers::make_weak_bind(&TcpClient::remove_connection, shared_from_this(), containers::_1));
+		containers::make_bind(&TcpClient::remove_connection, shared_from_this(), containers::_1));
 
 	{
 		AutoLock locked(lock_);
