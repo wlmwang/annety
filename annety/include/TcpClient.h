@@ -70,8 +70,7 @@ public:
 
 private:
 	// *Not thread safe*, but in loop
-	// FIXME: bug with make_weak_bind
-	void new_connection(SelectableFDPtr& sockfd, const EndPoint& peeraddr);
+	void new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeraddr);
 
 	// *Not thread safe*, but in loop
 	void remove_connection(const TcpConnectionPtr& conn);

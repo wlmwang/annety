@@ -21,8 +21,6 @@ using std::placeholders::_3;
 class NetBuffer;
 class TcpConnection;
 using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
-
-
 using ConnectCallback = std::function<void(const TcpConnectionPtr&)>;
 using CloseCallback = std::function<void(const TcpConnectionPtr&)>;
 using WriteCompleteCallback = std::function<void(const TcpConnectionPtr&)>;
@@ -41,9 +39,9 @@ using TcpClientPtr = std::shared_ptr<TcpClient>;
 using TcpServerPtr = std::shared_ptr<TcpServer>;
 using SelectableFDPtr = std::unique_ptr<SelectableFD>;
 
-TcpClientPtr make_tcp_client(EventLoop*, const EndPoint&, const std::string&);
 TcpServerPtr make_tcp_server(EventLoop*, const EndPoint&, const std::string&);
-TcpConnectionPtr make_tcp_connection(EventLoop*, const std::string&, SelectableFDPtr, 
+TcpClientPtr make_tcp_client(EventLoop*, const EndPoint&, const std::string&);
+TcpConnectionPtr make_tcp_connection(EventLoop*, const std::string&, SelectableFDPtr&&, 
 		const EndPoint&, const EndPoint&);
 
 // internal ------------------------------------------------------------------

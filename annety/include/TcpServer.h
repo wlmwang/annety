@@ -27,7 +27,7 @@ class EventLoopPool;
 //
 // This class owns life-time of Acceptor, and also storage all TcpConnections 
 // which has been connected itself.
-class TcpServer
+class TcpServer : public std::enable_shared_from_this<TcpServer>
 {
 public:
 	using ThreadInitCallback = std::function<void(EventLoop*)>;
@@ -45,6 +45,8 @@ public:
 
 	~TcpServer();
 	
+	void initialize();
+
 	const std::string& ip_port() const { return ip_port_; }
 	const std::string& name() const { return name_; }
 	EventLoop* get_owner_loop() const { return owner_loop_; }
@@ -77,7 +79,7 @@ public:
 
 private:
 	// *Not thread safe*, but in loop
-	void new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr);
+	void new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeraddr);
 	// *Thread safe*
 	void remove_connection(const TcpConnectionPtr& conn);
 	// *Not thread safe*, but in loop

@@ -33,15 +33,15 @@ int main(int argc, char* argv[])
 		set_min_log_severity(LOG_WARNING);
 
 		EventLoop loop;
-		TcpServer server(&loop, EndPoint(1669), "PingPongServer");
-		server.set_connect_callback(on_connect);
-		server.set_message_callback(on_message);
+		TcpServerPtr server = make_tcp_server(&loop, EndPoint(1669), "PingPongServer");
+		server->set_connect_callback(on_connect);
+		server->set_message_callback(on_message);
 
 		if (threads > 1) {
-			server.set_thread_num(threads);
+			server->set_thread_num(threads);
 		}
-
-		server.start();
+		server->start();
+		
 		loop.loop();
 	}
 }

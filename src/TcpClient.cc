@@ -23,9 +23,9 @@ void remove_connection(EventLoop* loop, const TcpConnectionPtr& conn)
 {
 	loop->queue_in_own_loop(std::bind(&TcpConnection::connect_destroyed, conn));
 }
-void remove_connector(const ConnectorPtr& connector)
+void remove_connector(ConnectorPtr& connector)
 {
-	// ...
+	connector.reset();
 }
 
 }	// namespace internal
@@ -69,22 +69,19 @@ TcpClient::~TcpClient()
 		if (unique) {
 			conn->force_close();
 		}
-	} else {
+	} else if (connector_) {
 		connector_->stop();
-		// FIXME: HACK
-		owner_loop_->run_after(1, std::bind(&internal::remove_connector, connector_));
+		owner_loop_->queue_in_own_loop(std::bind(&internal::remove_connector, connector_));
 	}
 }
 
 void TcpClient::initialize()
 {
-	using containers::_1;
-	using containers::_2;
-	using containers::make_weak_bind;
+	// FIXME: cycle reference with connector_	!!!important
 	connector_->set_new_connect_callback(
-		make_weak_bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
+		std::bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
 	
-	// FIXME: set_connect_failed_callback()???
+	// FIXME: add set_connect_failed_callback()
 }
 
 void TcpClient::connect()
@@ -111,8 +108,7 @@ void TcpClient::stop()
 	connector_->stop();
 }
 
-// FIXME: bug with make_weak_bind
-void TcpClient::new_connection(SelectableFDPtr& sockfd, const EndPoint& peeraddr)
+void TcpClient::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeraddr)
 {
 	owner_loop_->check_in_own_loop();
 
@@ -137,9 +133,12 @@ void TcpClient::new_connection(SelectableFDPtr& sockfd, const EndPoint& peeraddr
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
+	// must be manually release conn object (@see ::remove_connection())
 	conn->set_close_callback(
-		containers::make_bind(&TcpClient::remove_connection, shared_from_this(), containers::_1));
-
+			containers::make_bind(
+				&TcpClient::remove_connection, shared_from_this(), containers::_1)
+		);
+	
 	{
 		AutoLock locked(lock_);
 		connection_ = conn;
@@ -164,7 +163,9 @@ void TcpClient::remove_connection(const TcpConnectionPtr& conn)
 	if (retry_ && connect_) {
 		LOG(INFO) << "TcpClient::remove_connection the [" << name_ 
 			<< "] client is reconnecting to " << ip_port_;
-		connector_->restart();
+		if (connector_) {
+			connector_->restart();
+		}
 	}
 }
 

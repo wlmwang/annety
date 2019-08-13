@@ -11,6 +11,7 @@
 #include "EventLoop.h"
 #include "EventLoopPool.h"
 #include "strings/StringPrintf.h"
+#include "containers/Bind.h"
 
 #include <utility>
 
@@ -39,9 +40,6 @@ TcpServer::TcpServer(EventLoop* loop,
 {
 	LOG(DEBUG) << "TcpServer::TcpServer [" << name_ 
 		<< "] server is constructing which listening on " << ip_port_;
-
-	acceptor_->set_new_connect_callback(
-		std::bind(&TcpServer::new_connection, this, _1, _2));
 }
 
 TcpServer::~TcpServer()
@@ -56,6 +54,12 @@ TcpServer::~TcpServer()
 		conn->get_owner_loop()->run_in_own_loop(
 			std::bind(&TcpConnection::connect_destroyed, conn));
 	}
+}
+
+void TcpServer::initialize()
+{
+	acceptor_->set_new_connect_callback(
+		std::bind(&TcpServer::new_connection, shared_from_this(), _1, _2));
 }
 
 void TcpServer::set_thread_num(int num_threads)
@@ -76,7 +80,7 @@ void TcpServer::start()
 	}
 }
 
-void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
+void TcpServer::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeraddr)
 {
 	owner_loop_->check_in_own_loop();
 
@@ -97,15 +101,15 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 								name,
 								std::move(sockfd),
 								localaddr,
-								peeraddr
-							);
+								peeraddr);
 	// transfer register user callbacks to TcpConnection
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
 	conn->set_close_callback(
-		std::bind(&TcpServer::remove_connection, this, _1));	// FIXME: unsafe
-	
+			containers::make_weak_bind(
+				&TcpServer::remove_connection, shared_from_this(), containers::_1)
+			);
 	connections_[name] = conn;
 
 	loop->run_in_own_loop(std::bind(&TcpConnection::connect_established, conn));
@@ -113,8 +117,9 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 
 void TcpServer::remove_connection(const TcpConnectionPtr& conn)
 {
-	// FIXME: unsafe
-	owner_loop_->run_in_own_loop(std::bind(&TcpServer::remove_connection_in_loop, this, conn));
+	using containers::make_weak_bind;
+	owner_loop_->run_in_own_loop(
+		make_weak_bind(&TcpServer::remove_connection_in_loop, shared_from_this(), conn));
 }
 
 void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
@@ -130,6 +135,16 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 	// can't remove conn here immediately, because we are inside Channel::handle_event
 	conn->get_owner_loop()->queue_in_own_loop(
 		std::bind(&TcpConnection::connect_destroyed, conn));
+}
+
+// constructs an object of type TcpServerPtr and wraps it
+TcpServerPtr make_tcp_server(EventLoop* loop, const EndPoint& addr, const std::string& name)
+{
+	CHECK(loop);
+
+	TcpServerPtr srv(new TcpServer(loop, addr, name));
+	srv->initialize();
+	return srv;
 }
 
 }	// namespace annety
