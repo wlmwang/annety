@@ -99,9 +99,9 @@ inline auto select(T&& val, Tuple&) -> T&&
 }
 
 template <int I, class Tuple>
-inline auto select(Placeholder<I>&, Tuple& tp) -> decltype(std::get<I - 1>(tp))
+inline auto select(Placeholder<I>&, Tuple& tp) -> decltype(std::get<I-1>(tp))
 {
-	return std::get<I - 1>(tp);
+	return std::get<I-1>(tp);
 }
 
 // The invoker for call a callable --------------------------------------------------------

@@ -6,6 +6,7 @@
 
 #include "TimeStamp.h"
 
+#include <string>
 #include <functional>
 #include <memory>
 #include <stddef.h>
@@ -20,6 +21,8 @@ using std::placeholders::_3;
 class NetBuffer;
 class TcpConnection;
 using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
+
+
 using ConnectCallback = std::function<void(const TcpConnectionPtr&)>;
 using CloseCallback = std::function<void(const TcpConnectionPtr&)>;
 using WriteCompleteCallback = std::function<void(const TcpConnectionPtr&)>;
@@ -28,13 +31,25 @@ using MessageCallback = std::function<void(const TcpConnectionPtr&, NetBuffer*, 
 using TimerCallback = std::function<void()>;
 using SignalCallback = std::function<void()>;
 
+// declare client/server/connection object ptr
+class EventLoop;
+class EndPoint;
+class TcpClient;
+class TcpServer;
+class SelectableFD;
+using TcpClientPtr = std::shared_ptr<TcpClient>;
+using TcpServerPtr = std::shared_ptr<TcpServer>;
+using SelectableFDPtr = std::unique_ptr<SelectableFD>;
+
+TcpClientPtr make_tcp_client(EventLoop*, const EndPoint&, const std::string&);
+TcpServerPtr make_tcp_server(EventLoop*, const EndPoint&, const std::string&);
+TcpConnectionPtr make_tcp_connection(EventLoop*, const std::string&, SelectableFDPtr, 
+		const EndPoint&, const EndPoint&);
+
 // internal ------------------------------------------------------------------
 // default callback handler
 void default_connect_callback(const TcpConnectionPtr&);
 void default_message_callback(const TcpConnectionPtr&, NetBuffer*, TimeStamp);
-
-class SelectableFD;
-using SelectableFDPtr = std::unique_ptr<SelectableFD>;
 
 }	// namespace annety
 

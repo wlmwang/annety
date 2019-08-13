@@ -24,7 +24,7 @@ class EventLoop;
 class Connector;
 using ConnectorPtr = std::shared_ptr<Connector>;
 
-class TcpClient
+class TcpClient : public std::enable_shared_from_this<TcpClient>
 {
 public:
 	TcpClient(EventLoop* loop,
@@ -32,6 +32,8 @@ public:
 			const std::string& name = "a-crv");
 	
 	~TcpClient();  // force out-line dtor, for std::unique_ptr members.
+
+	void initialize();
 
 	EventLoop* get_own_loop() const { return owner_loop_;}
 	const std::string& name() const { return name_;}
@@ -68,7 +70,7 @@ public:
 
 private:
 	// *Not thread safe*, but in loop
-	void new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr);
+	void new_connection(SelectableFDPtr& sockfd, const EndPoint& peeraddr);
 
 	// *Not thread safe*, but in loop
 	void remove_connection(const TcpConnectionPtr& conn);

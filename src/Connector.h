@@ -11,6 +11,7 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include <utility>
 
 namespace annety
 {
@@ -37,9 +38,9 @@ public:
 	// you must be call this in loop thread
 	void restart();  
 
-	void set_new_connect_callback(const NewConnectCallback& cb)
+	void set_new_connect_callback(NewConnectCallback cb)
 	{
-		new_connect_cb_ = cb;
+		new_connect_cb_ = std::move(cb);
 	}
 
 	const EndPoint& server_addr() const

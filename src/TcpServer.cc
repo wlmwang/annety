@@ -92,18 +92,21 @@ void TcpServer::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 		<< "] accept new connection [" << name
 		<< "] from " << peeraddr.to_ip_port();
 
-	TcpConnectionPtr conn(new TcpConnection(loop, name, std::move(sockfd),
-											localaddr, peeraddr));
-
-	connections_[name] = conn;
-
+	TcpConnectionPtr conn = make_tcp_connection(
+								loop, 
+								name,
+								std::move(sockfd),
+								localaddr,
+								peeraddr
+							);
 	// transfer register user callbacks to TcpConnection
-	conn->initialize();
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
 	conn->set_close_callback(
 		std::bind(&TcpServer::remove_connection, this, _1));	// FIXME: unsafe
+	
+	connections_[name] = conn;
 
 	loop->run_in_own_loop(std::bind(&TcpConnection::connect_established, conn));
 }

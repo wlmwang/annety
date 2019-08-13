@@ -10,6 +10,7 @@
 #include "TcpConnection.h"
 #include "EventLoop.h"
 #include "strings/StringPrintf.h"
+#include "containers/Bind.h"
 
 namespace annety
 {
@@ -41,12 +42,6 @@ TcpClient::TcpClient(EventLoop* loop,
 {
 	LOG(DEBUG) << "TcpClient::TcpClient [" << name_ 
 		<< "] client is constructing which connecting to " << ip_port_;
-
-	// FIXME: unsafe
-	connector_->set_new_connect_callback(
-		std::bind(&TcpClient::new_connection, this, _1, _2));
-
-	// FIXME: set_connect_failed_callback()???
 }
 
 TcpClient::~TcpClient()
@@ -64,7 +59,7 @@ TcpClient::~TcpClient()
 		<< ", conn address is " << conn.get()
 		<< ", unique is " << unique;
 
-	if (conn) {
+	if (connect_ && conn) {
 		DCHECK(owner_loop_ == conn->get_owner_loop());
 
 		// *Not 100% safe*, if we are in different thread
@@ -79,6 +74,17 @@ TcpClient::~TcpClient()
 		// FIXME: HACK
 		owner_loop_->run_after(1, std::bind(&internal::remove_connector, connector_));
 	}
+}
+
+void TcpClient::initialize()
+{
+	// FIXME: set_connect_failed_callback()???
+
+	using containers::_1;
+	using containers::_2;
+	using containers::make_weak_bind;
+	connector_->set_new_connect_callback(
+		make_weak_bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
 }
 
 void TcpClient::connect()
@@ -105,7 +111,7 @@ void TcpClient::stop()
 	connector_->stop();
 }
 
-void TcpClient::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
+void TcpClient::new_connection(SelectableFDPtr& sockfd, const EndPoint& peeraddr)
 {
 	owner_loop_->check_in_own_loop();
 
@@ -119,18 +125,20 @@ void TcpClient::new_connection(SelectableFDPtr sockfd, const EndPoint& peeraddr)
 		<< "] from " << localaddr.to_ip_port();
 	
 	// FIXME poll with zero timeout to double confirm the new connection
-	// FIXME use make_shared if necessary
-	TcpConnectionPtr conn(new TcpConnection(owner_loop_, name, std::move(sockfd),
-											localaddr, peeraddr));
-
+	TcpConnectionPtr conn = make_tcp_connection(
+								owner_loop_, 
+								name,
+								std::move(sockfd),
+								localaddr,
+								peeraddr
+							);
 	// transfer register user callbacks to TcpConnection
-	conn->initialize();
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
 	conn->set_close_callback(
-		std::bind(&TcpClient::remove_connection, this, _1));	// FIXME: unsafe
-	
+		containers::make_weak_bind(&TcpClient::remove_connection, shared_from_this(), containers::_1));
+
 	{
 		AutoLock locked(lock_);
 		connection_ = conn;
@@ -157,6 +165,16 @@ void TcpClient::remove_connection(const TcpConnectionPtr& conn)
 			<< "] client is reconnecting to " << ip_port_;
 		connector_->restart();
 	}
+}
+
+// constructs an object of type TcpClientPtr and wraps it
+TcpClientPtr make_tcp_client(EventLoop* loop, const EndPoint& addr, const std::string& name)
+{
+	CHECK(loop);
+
+	TcpClientPtr crv(new TcpClient(loop, addr, name));
+	crv->initialize();
+	return crv;
 }
 
 }	// namespace annety
