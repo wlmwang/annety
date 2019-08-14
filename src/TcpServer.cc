@@ -19,7 +19,9 @@ namespace annety
 {
 namespace internal
 {
-struct sockaddr_in6 get_local_addr(const SelectableFD& sfd)
+// Consistent with the function of the same name in the TcpServer.cc file.
+// Redefining the reduction of dependencies here
+static struct sockaddr_in6 get_local_addr(const SelectableFD& sfd)
 {
 	return sockets::get_local_addr(sfd.internal_fd());
 }
