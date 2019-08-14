@@ -21,8 +21,11 @@ ANT_DIR		:= ../../
 INCFLAGS	:= ${LIB_INC} -I${DIR_SRC} -I${ANT_INC} -I${ANT_DIR}
 
 # 源文件
-CC_SRC	:= $(wildcard ${DIR_SRC}/*.cc)
-CC_ANT	:= $(wildcard ${ANT_DIR}/*.cc)
+CC_SRC	:=	$(wildcard ${DIR_SRC}/*.cc)
+CC_ANT	:=	Logging.cc LogStream.cc TimeStamp.cc ByteBuffer.cc \
+			StringPiece.cc SafeStrerror.cc StringSplit.cc StringPrintf.cc StringUtil.cc \
+			MutexLock.cc ConditionVariable.cc CountDownLatch.cc \
+			PlatformThread.cc Thread.cc
 
 # 编译文件
 OBJ	:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC})) $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_ANT}))

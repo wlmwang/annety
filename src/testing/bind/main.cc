@@ -21,6 +21,11 @@ private:
 	int v_{1};
 };
 
+void testReference(string&& a)
+{
+	//...
+}
+
 int main(int argc, char* argv[])
 {
 	// WBindFuctor
@@ -44,4 +49,13 @@ int main(int argc, char* argv[])
 		xx(12);
 	}
 	if (xx) xx(20);
+
+
+	// // FIXME: Please let make_bind support right-value references
+	// std::string a("init");
+	// // auto ff = containers::make_bind(testReference, containers::_1);
+	// auto ff = std::bind(testReference, std::placeholders::_1);
+
+	// ff(std::move(a));
+	// cout << "reference:" << a << endl;
 }

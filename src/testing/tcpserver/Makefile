@@ -25,7 +25,13 @@ CC_SRC	:=	$(wildcard ${DIR_SRC}/*.cc)
 CC_ANT	:=	Logging.cc LogStream.cc TimeStamp.cc ByteBuffer.cc \
 			StringPiece.cc SafeStrerror.cc StringSplit.cc StringPrintf.cc StringUtil.cc \
 			MutexLock.cc ConditionVariable.cc CountDownLatch.cc \
-			PlatformThread.cc Thread.cc ThreadPool.cc
+			PlatformThread.cc Thread.cc ThreadPool.cc \
+			SocketsUtil.cc EndPoint.cc NetBuffer.cc \
+			SelectableFD.cc SocketFD.cc EventFD.cc TimerFD.cc SignalFD.cc \
+			Channel.cc Timer.cc Acceptor.cc \
+			TcpConnection.cc TcpServer.cc \
+			TimerPool.cc Poller.cc PollPoller.cc EPollPoller.cc \
+			EventLoop.cc EventLoopThread.cc EventLoopPool.cc
 
 # 编译文件
 OBJ	:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC})) $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_ANT}))
