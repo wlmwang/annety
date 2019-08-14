@@ -12,9 +12,21 @@
 #include <algorithm>
 #include <cmath>	// isnan
 #include <ostream>
+#include <stdlib.h> // putenv
+
+// TZ ------------------------------------------------------------------
+// \file <time.h>
+// extern char *tzname[2];
+// extern int daylight;
+// extern long timezone;
 
 namespace annety
 {
+// set time zone
+BEFORE_MAIN_EXECUTOR() {
+	TimeZone::set_time_zone();
+}
+
 namespace
 {
 TimeStamp TimeNowIgnoreTZ()
@@ -27,8 +39,30 @@ TimeStamp TimeNowIgnoreTZ()
 					tv.tv_sec * TimeStamp::kMicrosecondsPerSecond + 
 					tv.tv_usec);
 }
-
 }	// namespace anonymous
+
+// TimeZone ------------------------------------------------------------------
+
+// static
+void TimeZone::set_time_zone(int tzhour)
+{
+	set_time_zone(string_printf("GMT%+02d", -tzhour));
+}
+
+// static
+void TimeZone::set_time_zone(const std::string& tzstr)
+{
+	// TZ=Asia/Shanghai
+	int rt = ::setenv("TZ", tzstr.c_str(), 1);
+	CHECK(rt == 0);
+	::tzset();
+}
+
+// static
+int TimeZone::get_time_zone()
+{
+	return timezone;
+}
 
 // TimeDelta --------------------------------------------------------------------
 
@@ -181,7 +215,7 @@ std::ostream& operator<<(std::ostream& os, TimeStamp time)
 {
 	TimeStamp::Exploded exploded;
 	time.to_utc_explode(&exploded);
-	return os << exploded.to_formatted_string() << " UTC";
+	return os << exploded.to_formatted_string();
 }
 
 // TimeStamp::Exploded -------------------------------------------------------------

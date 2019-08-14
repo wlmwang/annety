@@ -18,6 +18,17 @@
 
 namespace annety
 {
+
+// TimeZone ------------------------------------------------------------------
+
+class TimeZone
+{
+public:
+	static void set_time_zone(int tzhour = 8);
+	static void set_time_zone(const std::string& tzstr/*Asia/Shanghai*/);
+	static int get_time_zone();
+};
+
 // TimeDelta ------------------------------------------------------------------
 
 class TimeDelta
