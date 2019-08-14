@@ -27,13 +27,15 @@ public:
 	{
 		// kHeaderLen == 4
 		while (buf->readable_bytes() >= kHeaderLen) {
-			const int32_t len = buf->read_int32();
+			const int32_t len = buf->peek_int32();
 			if (len > 65536 || len < 0) {
 				LOG(ERROR) << "Invalid length " << len;
-				// FIXME: disable reading
-				conn->shutdown();
+				conn->shutdown();	// FIXME: disable reading
 				break;
 			} else if (buf->readable_bytes() >= len + kHeaderLen) {
+				buf->has_read_int32();
+
+				// message body
 				std::string message{buf->taken_as_string()};
 				if (packet_message_callback_) {
 					packet_message_callback_(conn, message, time);
