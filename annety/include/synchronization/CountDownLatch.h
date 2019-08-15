@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: May 28 2019
 
-#ifndef ANT_COUNT_DOWN_LATCH_H
-#define ANT_COUNT_DOWN_LATCH_H
+#ifndef ANT_SYNCHRONIZATION_COUNT_DOWN_LATCH_H
+#define ANT_SYNCHRONIZATION_COUNT_DOWN_LATCH_H
 
 #include "Macros.h"
 #include "synchronization/MutexLock.h"
@@ -34,4 +34,4 @@ private:
 
 }	// namespace annety
 
-#endif  // ANT_COUNT_DOWN_LATCH_H
+#endif  // ANT_SYNCHRONIZATION_COUNT_DOWN_LATCH_H

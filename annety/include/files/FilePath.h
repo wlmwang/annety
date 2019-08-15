@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 04 2019
 
-#ifndef ANT_FILE_PATH_H_
-#define ANT_FILE_PATH_H_
+#ifndef ANT_FILES_FILE_PATH_H_
+#define ANT_FILES_FILE_PATH_H_
 
 #include "build/CompilerSpecific.h"	// WARN_UNUSED_RESULT
 #include "strings/StringPiece.h"
@@ -263,4 +263,4 @@ struct hash<annety::FilePath>
 
 }	// namespace std
 
-#endif	// ANT_FILE_PATH_H_
+#endif	// ANT_FILES_FILE_PATH_H_

@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 05 2019
 
-#ifndef ANT_FILE_ENUMERATOR_H_
-#define ANT_FILE_ENUMERATOR_H_
+#ifndef ANT_FILES_FILE_ENUMERATOR_H_
+#define ANT_FILES_FILE_ENUMERATOR_H_
 
 #include "Macros.h"
 #include "TimeStamp.h"
@@ -157,4 +157,4 @@ private:
 
 }	// namespace annety
 
-#endif  // ANT_FILE_ENUMERATOR_H_
+#endif  // ANT_FILES_FILE_ENUMERATOR_H_

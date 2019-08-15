@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 04 2019
 
-#ifndef ANT_STRING_SPLIT_H
-#define ANT_STRING_SPLIT_H
+#ifndef ANT_STRINGS_STRING_SPLIT_H
+#define ANT_STRINGS_STRING_SPLIT_H
 
 #include "strings/StringPiece.h"
 
@@ -106,4 +106,4 @@ std::vector<StringPiece> split_string_piece_using_substr(StringPiece input,
 
 }	// namespace annety
 
-#endif	// ANT_STRING_SPLIT_H
+#endif	// ANT_STRINGS_STRING_SPLIT_H

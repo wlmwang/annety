@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 05 2019
 
-#ifndef ANT_FILE_H_
-#define ANT_FILE_H_
+#ifndef ANT_FILES_FILE_H_
+#define ANT_FILES_FILE_H_
 
 #include "build/BuildConfig.h"
 #include "files/FilePath.h"
@@ -310,4 +310,4 @@ private:
 
 }	// namespace annety
 
-#endif
+#endif	// ANT_FILES_FILE_H_

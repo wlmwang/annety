@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#ifndef ANT_CONDITION_VARIABLE_H_
-#define ANT_CONDITION_VARIABLE_H_
+#ifndef ANT_SYNCHRONIZATION_CONDITION_VARIABLE_H_
+#define ANT_SYNCHRONIZATION_CONDITION_VARIABLE_H_
 
 #include "Macros.h"
 #include "Logging.h"
@@ -59,4 +59,4 @@ private:
 
 }	// namespace annety
 
-#endif  // ANT_CONDITION_VARIABLE_H_
+#endif  // ANT_SYNCHRONIZATION_CONDITION_VARIABLE_H_

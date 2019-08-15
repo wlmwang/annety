@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 09 2019
 
-#ifndef ANT_THREAD_LOCAL_SINGLETON_H
-#define ANT_THREAD_LOCAL_SINGLETON_H
+#ifndef ANT_THREADING_THREAD_LOCAL_SINGLETON_H
+#define ANT_THREADING_THREAD_LOCAL_SINGLETON_H
 
 #include "Macros.h"
 #include "Logging.h"
@@ -72,4 +72,4 @@ typename ThreadLocalSingleton<Type>::ThreadLocalData ThreadLocalSingleton<Type>:
 
 }	// namespace annety
 
-#endif	// ANT_THREAD_LOCAL_SINGLETON_H
+#endif	// ANT_THREADING_THREAD_LOCAL_SINGLETON_H

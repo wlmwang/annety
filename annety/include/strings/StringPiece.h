@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#ifndef ANT_STRING_PIECE_H_
-#define ANT_STRING_PIECE_H_
+#ifndef ANT_STRINGS_STRING_PIECE_H_
+#define ANT_STRINGS_STRING_PIECE_H_
 
 #include <iterator>		// const_iterator
 #include <iosfwd>
@@ -367,4 +367,4 @@ struct StringPieceHash
 
 }  // namespace annety
 
-#endif	// ANT_STRING_PIECE_H_
+#endif	// ANT_STRINGS_STRING_PIECE_H_

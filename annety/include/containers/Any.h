@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: Jul 14 2019
 
-#ifndef ANT_ANY_H
-#define ANT_ANY_H
+#ifndef ANT_CONTAINERS_ANY_H
+#define ANT_CONTAINERS_ANY_H
 
 #include "Logging.h"
 
@@ -144,4 +144,4 @@ Any make_any(T&& value)
 }	// namespace containers
 }	// namespace annety
 
-#endif	// ANT_ANY_H
+#endif	// ANT_CONTAINERS_ANY_H

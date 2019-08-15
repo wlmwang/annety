@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 02 2019
 
-#ifndef ANT_BLOCKING_QUEUE_H
-#define ANT_BLOCKING_QUEUE_H
+#ifndef ANT_SYNCHRONIZATION_BLOCKING_QUEUE_H
+#define ANT_SYNCHRONIZATION_BLOCKING_QUEUE_H
 
 #include "Macros.h"
 #include "Logging.h"
@@ -280,4 +280,4 @@ private:
 
 }	// namespace annety
 
-#endif  // ANT_BLOCKING_QUEUE_H
+#endif  // ANT_SYNCHRONIZATION_BLOCKING_QUEUE_H

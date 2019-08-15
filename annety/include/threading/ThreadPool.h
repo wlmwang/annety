@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: May 29 2019
 
-#ifndef ANT_THREAD_POOL_H_
-#define ANT_THREAD_POOL_H_
+#ifndef ANT_THREADING_THREAD_POOL_H_
+#define ANT_THREADING_THREAD_POOL_H_
 
 #include "threading/Thread.h"
 #include "synchronization/MutexLock.h"
@@ -75,4 +75,4 @@ private:
 
 }	// namespace annety
 
-#endif	// ANT_THREAD_POOL_H_
+#endif	// ANT_THREADING_THREAD_POOL_H_

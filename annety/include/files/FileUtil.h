@@ -8,8 +8,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 05 2019
 
-#ifndef ANT_FILE_UTIL_H_
-#define ANT_FILE_UTIL_H_
+#ifndef ANT_FILES_FILE_UTIL_H_
+#define ANT_FILES_FILE_UTIL_H_
 
 #include "build/BuildConfig.h"
 #include "strings/StringPiece.h"
@@ -381,4 +381,4 @@ bool move_unsafe(const FilePath& from_path,
 
 }	// namespace annety
 
-#endif	// ANT_FILE_UTIL_H_
+#endif	// ANT_FILES_FILE_UTIL_H_

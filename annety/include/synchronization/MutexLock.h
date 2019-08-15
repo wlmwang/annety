@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#ifndef ANT_MUTEX_LOCK_H_
-#define ANT_MUTEX_LOCK_H_
+#ifndef ANT_SYNCHRONIZATION_MUTEX_LOCK_H_
+#define ANT_SYNCHRONIZATION_MUTEX_LOCK_H_
 
 #include "Macros.h"
 #include "Logging.h"
@@ -190,4 +190,4 @@ private:
 
 }  // namespace annety
 
-#endif  // ANT_MUTEX_LOCK_H_
+#endif  // ANT_SYNCHRONIZATION_MUTEX_LOCK_H_

@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: May 28 2019
 
-#ifndef ANT_THREAD_H_
-#define ANT_THREAD_H_
+#ifndef ANT_THREADING_THREAD_H_
+#define ANT_THREADING_THREAD_H_
 
 #include "threading/ThreadForward.h"
 #include "synchronization/CountDownLatch.h"
@@ -99,4 +99,4 @@ private:
 
 }	// namespace annety
 
-#endif	// ANT_THREAD_H_
+#endif	// ANT_THREADING_THREAD_H_

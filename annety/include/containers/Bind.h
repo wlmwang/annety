@@ -1,8 +1,8 @@
 // Refactoring: Anny Wang
 // Date: Jul 28 2019
 
-#ifndef ANT_BIND_H
-#define ANT_BIND_H
+#ifndef ANT_CONTAINERS_BIND_H
+#define ANT_CONTAINERS_BIND_H
 
 #include "Logging.h"
 
@@ -252,4 +252,4 @@ inline WBindFuctor<F&&, C, P&&...> make_weak_bind(F&& fuctor, std::weak_ptr<C> p
 }   // namespace containers
 }	// namespace annety
 
-#endif  // ANT_BIND_H
+#endif  // ANT_CONTAINERS_BIND_H

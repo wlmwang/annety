@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 04 2019
 
-#ifndef ANT_STRING_UTIL_H
-#define ANT_STRING_UTIL_H
+#ifndef ANT_STRINGS_STRING_UTIL_H
+#define ANT_STRINGS_STRING_UTIL_H
 
 #include "build/CompilerSpecific.h"	// PRINTF_FORMAT
 #include "strings/StringPiece.h"
@@ -305,4 +305,4 @@ void replace_substrings_after_offset(std::string* str,
 
 }	// namespace annety
 
-#endif	// ANT_STRING_UTIL_H
+#endif	// ANT_STRINGS_STRING_UTIL_H

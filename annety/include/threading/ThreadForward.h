@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: Jun 16 2019
 
-#ifndef ANT_THREAD_FORWARD_H_
-#define ANT_THREAD_FORWARD_H_
+#ifndef ANT_THREADING_THREAD_FORWARD_H_
+#define ANT_THREADING_THREAD_FORWARD_H_
 
 #include "Macros.h"
 #include "strings/StringPiece.h"
@@ -83,4 +83,4 @@ private:
 
 }	// namespace annety
 
-#endif	// ANT_THREAD_FORWARD_H_
+#endif	// ANT_THREADING_THREAD_FORWARD_H_

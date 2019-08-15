@@ -5,8 +5,8 @@
 // Refactoring: Anny Wang
 // Date: May 08 2019
 
-#ifndef ANT_COMPILER_SPECIFIC_H_
-#define ANT_COMPILER_SPECIFIC_H_
+#ifndef ANT_BUILD_COMPILER_SPECIFIC_H_
+#define ANT_BUILD_COMPILER_SPECIFIC_H_
 
 #include "build/BuildConfig.h"
 
@@ -80,4 +80,4 @@ inline void ignore_result(const T&) {}
 #endif	// defined(COMPILER_GCC)
 #endif	// !defined(LIKELY)
 
-#endif	// ANT_COMPILER_SPECIFIC_H_
+#endif	// ANT_BUILD_COMPILER_SPECIFIC_H_
