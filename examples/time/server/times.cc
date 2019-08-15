@@ -35,6 +35,9 @@ void TimeServer::on_connection(const annety::TcpConnectionPtr& conn)
 		int32_t be32 = annety::host_to_net32(static_cast<int32_t>(curr.to_time_t()));
 		conn->send(&be32, sizeof be32);
 		conn->shutdown();
+
+		// test for FIN_WAIT2
+		// exit(0);
 	}
 }
 
