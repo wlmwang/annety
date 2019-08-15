@@ -43,10 +43,10 @@ public:
 	
 	// move 
 	ByteBuffer(ByteBuffer&& rhs) 
-		: max_size_(rhs.max_size_),
-		  reader_index_(rhs.reader_index_),
-		  writer_index_(rhs.writer_index_),
-		  buffer_(std::move(rhs.buffer_))
+		: max_size_(rhs.max_size_)
+		, reader_index_(rhs.reader_index_)
+		, writer_index_(rhs.writer_index_)
+		, buffer_(std::move(rhs.buffer_))
 	{
 		rhs.reset();
 	}
