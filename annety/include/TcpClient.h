@@ -41,8 +41,11 @@ public:
 	bool retry() const { return retry_;}
 	void enable_retry() { retry_ = true;}
 
+	// for connection
 	void connect();
 	void disconnect();
+
+	// for connector_ quit, and wait Four-Way Wavehand to disconnect()
 	void stop();
 
 	TcpConnectionPtr connection() const

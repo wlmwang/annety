@@ -72,7 +72,11 @@ void Connector::stop()
 	using containers::make_weak_bind;
 	owner_loop_->queue_in_own_loop(
 		make_weak_bind(&Connector::stop_in_own_loop, shared_from_this()));
-	// FIXME: cancel timer
+	
+	// cancel timer
+	if (time_id_.is_valid()) {
+		owner_loop_->cancel(time_id_);
+	}
 }
 
 void Connector::restart()
@@ -107,7 +111,7 @@ void Connector::stop_in_own_loop()
 		state_ = kDisconnected;
 
 		remove_and_reset_channel();
-		retry();
+		// retry();	// FIXME: is retry() here???
 	}
 }
 
@@ -191,7 +195,8 @@ void Connector::retry()
 
 		// retry after
 		using containers::make_weak_bind;
-		owner_loop_->run_after(TimeDelta::from_milliseconds(retry_delay_ms_),
+		time_id_ = owner_loop_->run_after(
+			TimeDelta::from_milliseconds(retry_delay_ms_),
 			make_weak_bind(&Connector::start_in_own_loop, shared_from_this()));
 
 		// double delay
@@ -256,7 +261,7 @@ void Connector::handle_error()
 		PLOG(TRACE) << "Connector::handle_error has failed";
 
 		remove_and_reset_channel();
-		retry();
+		// retry();	// FIXME: is retry() here???
 	}
 }
 
@@ -276,7 +281,7 @@ void Connector::remove_and_reset_channel()
 void Connector::reset_channel()
 {
 	owner_loop_->check_in_own_loop();
-	
+
 	connect_channel_.reset();
 }
 

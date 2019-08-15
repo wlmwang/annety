@@ -6,6 +6,7 @@
 
 #include "Macros.h"
 #include "EndPoint.h"
+#include "TimerId.h"
 #include "CallbackForward.h"
 
 #include <string>
@@ -70,6 +71,7 @@ private:
 	bool connect_{false}; // atomic
 	States state_{kDisconnected};  // FIXME: use atomic variable
 	int retry_delay_ms_;
+	TimerId time_id_;
 
 	SelectableFDPtr connect_socket_;
 	std::unique_ptr<Channel> connect_channel_;

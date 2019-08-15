@@ -12,12 +12,17 @@ class Timer;
 class TimerId
 {
 public:
+	TimerId() {}
+
 	TimerId(Timer *timer, int64_t seq) 
-		: timer_(timer), sequence_(seq) {}
+		: timer_(timer)
+		, sequence_(seq) {}
+
+	bool is_valid() { return !!timer_; }
 
 public:
-	Timer* timer_;
-	int64_t sequence_;
+	Timer* timer_ {nullptr};
+	int64_t sequence_ {0};
 };
 
 }	// namespace annety

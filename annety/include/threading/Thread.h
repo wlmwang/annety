@@ -32,8 +32,8 @@ public:
 		bool joinable = true;
 	};
 
-	explicit Thread(const TaskCallback& cb, const std::string& name_prefix = "");
-	explicit Thread(TaskCallback&& cb, const std::string& name_prefix = "");
+	explicit Thread(const TaskCallback& cb, const std::string& name_prefix = "T");
+	explicit Thread(TaskCallback&& cb, const std::string& name_prefix = "T");
 	
   	Thread(const TaskCallback& cb, const std::string& name_prefix, const Options& options);
   	Thread(TaskCallback&& cb, const std::string& name_prefix, const Options& options);

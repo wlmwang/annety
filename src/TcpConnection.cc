@@ -237,7 +237,7 @@ void TcpConnection::shutdown()
 void TcpConnection::shutdown_in_loop()
 {
 	owner_loop_->check_in_own_loop();
-
+	
 	if (!connect_channel_->is_write_event()) {
 		internal::shutdown(*connect_socket_);
 	}

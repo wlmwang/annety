@@ -12,6 +12,8 @@
 #include "strings/StringPrintf.h"
 #include "containers/Bind.h"
 
+#include <unistd.h>	// usleep
+
 namespace annety
 {
 namespace internal
@@ -65,19 +67,25 @@ TcpClient::~TcpClient()
 		<< ", conn address is " << conn.get()
 		<< ", unique is " << unique;
 
+	// FIXME: do not work, because conn has own the shared_ptr of TcpClient,
+	// so the stop() method will usleep to remove_connection() be called.
 	if (conn) {
 		DCHECK(owner_loop_ == conn->get_owner_loop());
 
 		// *Not 100% safe*, if we are in different thread
 		CloseCallback cb = std::bind(&internal::remove_connection, owner_loop_, _1);
-		owner_loop_->run_in_own_loop(std::bind(&TcpConnection::set_close_callback, conn, cb));
+		owner_loop_->run_in_own_loop(
+			std::bind(&TcpConnection::set_close_callback, conn, cb));
 		
 		if (unique) {
 			conn->force_close();
 		}
-	} else if (connector_) {
+	}
+
+	if (connector_) {
 		connector_->stop();
-		owner_loop_->queue_in_own_loop(std::bind(&internal::remove_connector, connector_));
+		owner_loop_->queue_in_own_loop(
+			std::bind(&internal::remove_connector, connector_));
 	}
 }
 
@@ -89,7 +97,6 @@ void TcpClient::initialize()
 	// FIXME: unsafe
 	connector_->set_new_connect_callback(
 		std::bind(&TcpClient::new_connection, this, _1, _2));
-	
 	// using containers::_1;
 	// using containers::_2;
 	// using containers::make_weak_bind;
@@ -125,8 +132,17 @@ void TcpClient::stop()
 {
 	CHECK(initilize_);
 
-	connect_ = false;
+	if (connect_) {
+		disconnect();
+	}
 	connector_->stop();
+
+	// FIXME: HACK (For disconnect())
+	// Waiting for TCP wavehand protocol(Four-Way Wavehand) to complete,
+	// so that we can have a chance to call connect_cb_
+	if (!owner_loop_->is_in_own_loop()) {
+		usleep(100 * 1000);
+	}
 }
 
 void TcpClient::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeraddr)
@@ -142,7 +158,7 @@ void TcpClient::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 		<< "] connect new connection [" << name
 		<< "] from " << localaddr.to_ip_port();
 	
-	// FIXME poll with zero timeout to double confirm the new connection
+	// FIXME: poll with zero timeout to double confirm the new connection
 	TcpConnectionPtr conn = make_tcp_connection(
 								owner_loop_, 
 								name,
@@ -154,9 +170,13 @@ void TcpClient::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
+	
 	// must be manually release conn object (@see TcpClient::remove_connection())
+	using containers::_1;
+	using containers::make_bind;
+	using containers::make_weak_bind;
 	conn->set_close_callback(
-			std::bind(
+			make_bind(
 				&TcpClient::remove_connection, shared_from_this(), _1)
 		);
 	
