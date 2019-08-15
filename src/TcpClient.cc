@@ -67,8 +67,9 @@ TcpClient::~TcpClient()
 		<< ", conn address is " << conn.get()
 		<< ", unique is " << unique;
 
-	// FIXME: do not work, because conn has own the shared_ptr of TcpClient,
-	// so the stop() method will usleep to remove_connection() be called.
+	// FIXME: Never run the code, because the conn have circular reference with 
+	// TcpClient. --- share_from_this
+	// So the stop() method use usleep to wait remove_connection() finish.
 	if (conn) {
 		DCHECK(owner_loop_ == conn->get_owner_loop());
 
@@ -84,8 +85,7 @@ TcpClient::~TcpClient()
 
 	if (connector_) {
 		connector_->stop();
-		owner_loop_->queue_in_own_loop(
-			std::bind(&internal::remove_connector, connector_));
+		owner_loop_->queue_in_own_loop(std::bind(&internal::remove_connector, connector_));
 	}
 }
 
@@ -94,15 +94,17 @@ void TcpClient::initialize()
 	CHECK(!initilize_);
 	initilize_ = true;
 
-	// FIXME: unsafe
-	connector_->set_new_connect_callback(
-		std::bind(&TcpClient::new_connection, this, _1, _2));
+	// FIXME: make_weak_bind() have a bug with right reference
 	// using containers::_1;
 	// using containers::_2;
 	// using containers::make_weak_bind;
 	// connector_->set_new_connect_callback(
 	// 	make_weak_bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
 	
+	// FIXME: unsafe
+	connector_->set_new_connect_callback(
+		std::bind(&TcpClient::new_connection, this, _1, _2));
+
 	// FIXME: add set_connect_failed_callback()
 }
 
@@ -137,7 +139,7 @@ void TcpClient::stop()
 	}
 	connector_->stop();
 
-	// FIXME: HACK (For disconnect())
+	// FIXME: HACK FOR disconnect() FINISH
 	// Waiting for TCP wavehand protocol(Four-Way Wavehand) to complete,
 	// so that we can have a chance to call connect_cb_
 	if (!owner_loop_->is_in_own_loop()) {
@@ -176,9 +178,7 @@ void TcpClient::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 	using containers::make_bind;
 	using containers::make_weak_bind;
 	conn->set_close_callback(
-			make_bind(
-				&TcpClient::remove_connection, shared_from_this(), _1)
-		);
+			make_bind(&TcpClient::remove_connection, shared_from_this(), _1));
 	
 	{
 		AutoLock locked(lock_);

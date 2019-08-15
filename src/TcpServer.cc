@@ -117,10 +117,13 @@ void TcpServer::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
+
+	// must be weak bind
+	using containers::_1;
+	using containers::make_weak_bind;
 	conn->set_close_callback(
-			containers::make_weak_bind(
-				&TcpServer::remove_connection, shared_from_this(), containers::_1)
-			);
+			make_weak_bind(&TcpServer::remove_connection, shared_from_this(), _1));
+
 	connections_[name] = conn;
 
 	loop->run_in_own_loop(std::bind(&TcpConnection::connect_established, conn));
