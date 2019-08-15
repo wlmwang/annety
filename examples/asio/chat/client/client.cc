@@ -39,6 +39,11 @@ public:
 	{
 		client_->disconnect();
 	}
+	
+	void stop()
+	{
+		client_->stop();
+	}
 
 	void write(const std::string& message)
 	{
@@ -97,6 +102,5 @@ int main(int argc, char* argv[])
 		client.write(line);
 	}
 	client.disconnect();
-
-	// sleep(3); // wait ioloop thread for disconnect
+	client.stop();
 }

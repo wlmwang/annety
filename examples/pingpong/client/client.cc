@@ -40,6 +40,7 @@ public:
 	void stop()
 	{
 		client_->disconnect();
+		client_->stop();
 	}
 
 	int64_t bytes_read() const
@@ -186,12 +187,12 @@ void Session::on_connect(const TcpConnectionPtr& conn)
 int main(int argc, char* argv[])
 {
 	if (argc < 5) {
-		fprintf(stderr, "Usage: client <threads> <blocksize>");
-		fprintf(stderr, " <sessions> <time>\n");
+		fprintf(stderr, "Usage: client <threads> <sessions>");
+		fprintf(stderr, " <blocksize> <time>\n");
 	} else {
 		int threads = atoi(argv[1]);
-		int block_size = atoi(argv[2]);
-		int session_count = atoi(argv[3]);
+		int session_count = atoi(argv[2]);
+		int block_size = atoi(argv[3]);
 		int timeout = atoi(argv[4]);
 		
 		CHECK(threads <= session_count) 
@@ -199,8 +200,8 @@ int main(int argc, char* argv[])
 
 		LOG(INFO) << "PingPong client start."
 			<< "threads=" << threads 
-			<< ",blocksize=" << block_size
 			<< ",session_count=" << session_count
+			<< ",blocksize=" << block_size
 			<< ",timeout=" << timeout;
 
 		// control timeout callback(main EventLoop)
