@@ -156,8 +156,8 @@ void TcpClient::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 	conn->set_write_complete_callback(write_complete_cb_);
 	// must be manually release conn object (@see TcpClient::remove_connection())
 	conn->set_close_callback(
-			containers::make_bind(
-				&TcpClient::remove_connection, shared_from_this(), containers::_1)
+			std::bind(
+				&TcpClient::remove_connection, shared_from_this(), _1)
 		);
 	
 	{

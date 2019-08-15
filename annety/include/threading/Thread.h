@@ -74,6 +74,11 @@ public:
 	// Returns true if start() or start_async() has been called.
 	bool has_start_been_attempted() const { return start_called_;}
 
+	// Must be called after the thread has started and returned correctly,
+	// otherwise the name_ is empty.
+	std::string name() { return name_;}
+	std::string name_prefix() { return name_prefix_;}
+	
 private:
 	void start_routine();
 

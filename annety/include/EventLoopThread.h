@@ -26,6 +26,8 @@ public:
 
 	~EventLoopThread();
 
+	void quit_loop();
+	
 	EventLoop* start_loop();
 
 private:

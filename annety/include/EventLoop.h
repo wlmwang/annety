@@ -40,6 +40,7 @@ public:
 	// *Not 100% thread safe*
 	// When you call with a native pointer, there may be a segmentation fault.
 	// Better to call through shared_ptr<EventLoop> for 100% safety
+	void terminate();
 	void quit();
 
 	// Timers -------------------------------------------
@@ -63,7 +64,6 @@ public:
 	// Cancels the timer
 	// *Thread safe*
 	void cancel(TimerId timerId);
-
 
 	// Internal method ---------------------------------
 

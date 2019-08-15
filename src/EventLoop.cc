@@ -66,7 +66,7 @@ void EventLoop::loop()
 	LOG(TRACE) << "EventLoop::loop " << this 
 		<< " timeout " << poll_timeout_ms_ << "ms is beginning";
 
-	// maybe someone calls quit() before loop()
+	// maybe someone calls terminate() before loop()
 	// quit_ = false;
 	while (!quit_) {
 		LOG(TRACE) << "EventLoop::loop timeout " << poll_timeout_ms_ << "ms";
@@ -102,6 +102,13 @@ void EventLoop::loop()
 }
 
 void EventLoop::quit()
+{
+	// Forced to enter the event queue, so that it does not immediately exit 
+	// when called by current EventLoop thread
+	queue_in_own_loop(std::bind(&EventLoop::terminate, this));
+}
+
+void EventLoop::terminate()
 {
 	quit_ = true;
 	if (!is_in_own_loop()) {
