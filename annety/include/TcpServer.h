@@ -11,6 +11,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <utility>
 #include <atomic>
 #include <functional>
 
@@ -55,26 +56,26 @@ public:
 
 	void set_thread_num(int num_threads);
 	
-	void set_thread_init_callback(const ThreadInitCallback& cb)
+	void set_thread_init_callback(ThreadInitCallback cb)
 	{
-		thread_init_cb_ = cb;
+		thread_init_cb_ = std::move(cb);
 	}
 
 	// The following interfaces are usually be called before start()
 	// *Not thread safe*
-	void set_connect_callback(const ConnectCallback& cb)
+	void set_connect_callback(ConnectCallback cb)
 	{
-		connect_cb_ = cb;
+		connect_cb_ = std::move(cb);
 	}
 	// *Not thread safe*
-	void set_message_callback(const MessageCallback& cb)
+	void set_message_callback(MessageCallback cb)
 	{
-		message_cb_ = cb;
+		message_cb_ = std::move(cb);
 	}
 	// *Not thread safe*
-	void set_write_complete_callback(const WriteCompleteCallback& cb)
+	void set_write_complete_callback(WriteCompleteCallback cb)
 	{
-		write_complete_cb_ = cb;
+		write_complete_cb_ = std::move(cb);
 	}
 
 private:

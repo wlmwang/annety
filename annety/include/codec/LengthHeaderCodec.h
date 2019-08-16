@@ -11,6 +11,7 @@
 #include "strings/StringPiece.h"
 
 #include <functional>
+#include <utility>
 
 namespace annety
 {
@@ -21,29 +22,58 @@ namespace annety
 // 	char body[0];
 // }
 
-// using PackageMessageCallback = std::function<
-// 		void(const TcpConnectionPtr& conn, const StringPiece& mesg, TimeStamp time)>;
-			
-// const static size_t kHeaderLen = sizeof(int32_t);
-
 class LengthHeaderCodec
 {
 public:
-	enum LENGTH_TYPE
+	enum PACKAGE_LENGTH_TYPE
 	{
-		_8,
-		_16,
-		_32,
-		_64,
+		_8	= 8,
+		_16	= 16,
+		_32	= 32,
+		_64	= 64,
 	};
 
-	explicit LengthHeaderCodec(LENGTH_TYPE length_type, int64_t max_length = 0) 
+	explicit LengthHeaderCodec(PACKAGE_LENGTH_TYPE length_type, int64_t max_length = 0) 
 		: package_length_type_(length_type)
-		, package_max_length_(max_length) {}
+		, package_max_length_(max_length)
+	{
+		// CHECK(length_type >= _8 && length_type < _64);
+	}
+
+	void set_message_callback(MessageCallback cb)
+	{
+		message_cb_ = std::move(cb);
+	}
+
+	void message_callback(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp time)
+	{
+		int rt = decode(buff);
+		switch (rt) {
+		case 1:
+			if (message_cb_) {
+				message_cb_(conn, input_package_buff_, time);
+			}
+			break;
+		case -1:
+			conn->shutdown();	// FIXME: disable reading
+		}
+	}
+
+	void send_callback(const TcpConnectionPtr& conn, const NetBuffer* buff)
+	{
+		int rt = encode(buff);
+		switch (rt) {
+		case 1:
+			conn->send(output_package_buff_);
+			break;
+		case -1:
+			LOG(ERROR) << "LengthHeaderCodec::send_callback Invalid buff " << rt;
+		}
+	}
 
 	virtual int decode(NetBuffer* buff)
 	{
-		auto get_package_length = [] (const NetBuffer* buff) {
+		auto get_package_length = [this] (const NetBuffer* buff) {
 			int64_t length = -1;
 			
 			switch (package_length_type_) {
@@ -70,11 +100,12 @@ public:
 		while (buff->readable_bytes() >= package_length_type_) {
 			const int64_t length = get_package_length(buff);
 			if (length < 0 || (package_max_length_ > 0 && length > package_max_length_)) {
-				// LOG(ERROR) << "LengthHeaderCodec::decode Invalid length " << length;
+				LOG(ERROR) << "LengthHeaderCodec::decode Invalid length=" << length;
 				return -1;
 			} else if (buff->readable_bytes() >= length + package_length_type_) {
 				buff->has_read(package_length_type_);
-				input_package_mesg_.set(buff->begin_read(), length);
+				
+				// input_package_buff_.append(buff->begin_read(), length);
 				return 1;
 			} else {
 				break;
@@ -118,39 +149,14 @@ public:
 		return 1;
 	}
 
-	void message_callback(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp time)
-	{
-		int rt = decode(buff);
-		switch (rt) {
-		case 1:
-			// package_message_callback_(conn, input_package_mesg_, time)
-			break;
-		case -1:
-			// LOG(ERROR) << "LengthHeaderCodec::message_callback Invalid length " << rt;
-			// conn->shutdown();	// FIXME: disable reading
-		}
-	}
-
-	void send_callback(const TcpConnectionPtr& conn, const StringPiece& mesg)
-	{
-		int rt = encode(mesg);
-		switch (rt) {
-		case 1:
-			// conn->send(output_package_buff_);
-			break;
-		case -1:
-			// LOG(ERROR) << "LengthHeaderCodec::send_callback Invalid mesg " << rt;
-		}
-	}
-
 private:
-	// PacketMessageCallback package_message_callback_;
-
-	LENGTH_TYPE package_length_type_;
+	PACKAGE_LENGTH_TYPE package_length_type_;
 	int64_t package_max_length_;
 	
-	StringPiece input_package_mesg_;
+	NetBuffer input_package_buff_;
 	NetBuffer output_package_buff_;
+	
+	MessageCallback message_cb_;
 
 	DISALLOW_COPY_AND_ASSIGN(LengthHeaderCodec);
 };
