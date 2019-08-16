@@ -3,11 +3,13 @@
 
 #include "TcpServer.h"
 #include "EventLoop.h"
-#include "../LengthHeaderCodec.h"
+#include "codec/LengthHeaderCodec.h"
 
 #include <iostream>
 #include <string>
 #include <set>
+
+using namespace annety;
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -17,15 +19,18 @@ using ConnectionList = std::set<annety::TcpConnectionPtr>;
 class ChatServer
 {
 public:
-	ChatServer(annety::EventLoop* loop, const annety::EndPoint& addr)
-		: codec_(std::bind(&ChatServer::on_packet_message, this, _1, _2, _3))
+	ChatServer(EventLoop* loop, const EndPoint& addr)
+		: codec_(LengthHeaderCodec::_32, 136)
 	{
 		server_ = make_tcp_server(loop, addr, "ChatServer");
 
 		server_->set_connect_callback(
 			std::bind(&ChatServer::on_connect, this, _1));
 		server_->set_message_callback(
-			std::bind(&LengthHeaderCodec::on_message, &codec_, _1, _2, _3));
+			std::bind(&LengthHeaderCodec::message_callback, &codec_, _1, _2, _3));
+		
+		codec_.set_message_callback(
+			std::bind(&ChatServer::on_message, this, _1, _2, _3));
 	}
 
 	void start()
@@ -34,13 +39,11 @@ public:
 	}
 
 private:
-	void on_connect(const annety::TcpConnectionPtr& conn);
-
-	void on_packet_message(const annety::TcpConnectionPtr& conn,
-		const std::string& message, annety::TimeStamp time);
+	void on_connect(const TcpConnectionPtr& conn);
+	void on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp time);
 
 private:
-	annety::TcpServerPtr server_;
+	TcpServerPtr server_;
 	LengthHeaderCodec codec_;
 
 	ConnectionList connections_;
@@ -59,23 +62,21 @@ void ChatServer::on_connect(const annety::TcpConnectionPtr& conn)
 	}
 }
 
-void ChatServer::on_packet_message(const annety::TcpConnectionPtr& conn,
-		const std::string& message, annety::TimeStamp time)
-
+void ChatServer::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp time)
 {
 	// broadcast
 	ConnectionList::iterator it = connections_.begin();
 	for (; it != connections_.end(); ++it) {
-		codec_.send(*it, message);
+		codec_.send_callback(*it, mesg);
 	}
 }
 
 int main(int argc, char* argv[])
 {
-	annety::set_min_log_severity(annety::LOG_TRACE);
+	set_min_log_severity(LOG_DEBUG);
 	
-	annety::EventLoop loop;
-	ChatServer server(&loop, annety::EndPoint(1669));
+	EventLoop loop;
+	ChatServer server(&loop, EndPoint(1669));
 
 	server.start();
 	loop.loop();

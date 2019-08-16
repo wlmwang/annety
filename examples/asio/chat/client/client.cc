@@ -5,11 +5,13 @@
 #include "EventLoop.h"
 #include "EventLoopThread.h"
 #include "synchronization/MutexLock.h"
-#include "../LengthHeaderCodec.h"
+#include "codec/LengthHeaderCodec.h"
 
 #include <iostream>	// std::cin
 #include <string>	// std::getline
 #include <stdio.h>
+
+using namespace annety;
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -18,15 +20,19 @@ using std::placeholders::_3;
 class ChatClient
 {
 public:
-	ChatClient(annety::EventLoop* loop, const annety::EndPoint& addr)
-		: codec_(std::bind(&ChatClient::on_packet_message, this, _1, _2, _3))
+	ChatClient(EventLoop* loop, const EndPoint& addr)
+		: codec_(LengthHeaderCodec::_32, 10)
 	{
 		client_ = make_tcp_client(loop, addr, "ChatClient");
 
 		client_->set_connect_callback(
 			std::bind(&ChatClient::on_connect, this, _1));
 		client_->set_message_callback(
-			std::bind(&LengthHeaderCodec::on_message, &codec_, _1, _2, _3));
+			std::bind(&LengthHeaderCodec::message_callback, &codec_, _1, _2, _3));
+
+		codec_.set_message_callback(
+			std::bind(&ChatClient::on_message, this, _1, _2, _3));
+
 		client_->enable_retry();
 	}
 
@@ -45,35 +51,38 @@ public:
 		client_->stop();
 	}
 
-	void write(const std::string& message)
+	void write(const std::string& mesg)
 	{
-		annety::AutoLock locked(lock_);
+		// FIXME: no copy
+		NetBuffer buff;
+		buff.append(mesg.data(), mesg.size());
+
+		AutoLock locked(lock_);
 		if (connection_) {
-			codec_.send(connection_, message);
+			codec_.send_callback(connection_, &buff);
 		}
 	}
 
 private:
-	void on_connect(const annety::TcpConnectionPtr& conn);
+	void on_connect(const TcpConnectionPtr& conn);
 
-	void on_packet_message(const annety::TcpConnectionPtr& conn,
-		const std::string& message, annety::TimeStamp time);
+	void on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp time);
 
 private:
-	annety::TcpClientPtr client_;
+	TcpClientPtr client_;
 	LengthHeaderCodec codec_;
 	
-	annety::MutexLock lock_;
-	annety::TcpConnectionPtr connection_;
+	MutexLock lock_;
+	TcpConnectionPtr connection_;
 };
 
-void ChatClient::on_connect(const annety::TcpConnectionPtr& conn)
+void ChatClient::on_connect(const TcpConnectionPtr& conn)
 {
 	LOG(INFO) << "ChatClient - " << conn->local_addr().to_ip_port() << " <- "
 			<< conn->peer_addr().to_ip_port() << " s is "
 			<< (conn->connected() ? "UP" : "DOWN");
 
-	annety::AutoLock locked(lock_);
+	AutoLock locked(lock_);
 	if (conn->connected()) {
 		connection_ = conn;
 	} else {
@@ -81,20 +90,18 @@ void ChatClient::on_connect(const annety::TcpConnectionPtr& conn)
 	}
 }
 
-void ChatClient::on_packet_message(const annety::TcpConnectionPtr& conn,
-		const std::string& message, annety::TimeStamp time)
-
+void ChatClient::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp time)
 {
-	::printf("<<< %s\n", message.c_str());
+	::printf("<<< %s\n", mesg->to_string().c_str());
 }
 
 int main(int argc, char* argv[])
 {
-	annety::set_min_log_severity(annety::LOG_DEBUG);
+	set_min_log_severity(annety::LOG_DEBUG);
 
-	annety::EventLoopThread ioloop;
-
-	ChatClient client(ioloop.start_loop(), annety::EndPoint(1669));
+	EventLoopThread ioloop;
+	ChatClient client(ioloop.start_loop(), EndPoint(1669));
+	
 	client.connect();
 	
 	std::string line;
