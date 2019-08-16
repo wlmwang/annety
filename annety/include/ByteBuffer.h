@@ -186,12 +186,13 @@ public:
 	}
 
 protected:
+	// The following interfaces are not recommended. Please use them carefully
+	size_t capacity() const { return buffer_.capacity();}
+	size_t size() const { return buffer_.size();}
+
 	char* data() { return buffer_.data();}
 	const char* data() const { return buffer_.data();}
 
-	size_t capacity() const { return buffer_.capacity();}
-	size_t size() const { return buffer_.size();}
-  
 	void make_writable_bytes(size_t len);
 
 private:
