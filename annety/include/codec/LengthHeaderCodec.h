@@ -5,120 +5,68 @@
 #define ANT_CODEC_LENGTH_HEADER_CODEC_H_
 
 #include "Macros.h"
-#include "Logging.h"
-#include "TimeStamp.h"
-#include "TcpConnection.h"
-#include "CallbackForward.h"
-#include "strings/StringPiece.h"
-
-#include <functional>
-#include <utility>
+#include "codec/Codec.h"
 
 namespace annety
-{
-// Like stream protocol:
-// 
-// struct byte_stream
+{ 
+// A codec that handle bytes of the following struct's streams:
+// struct streams
 // {
 // 	uint32_t length;
 // 	char body[0];
 // }
 
-class LengthHeaderCodec
+// A Simple Fixed Head Codec with Length
+class LengthHeaderCodec : public Codec
 {
 public:
-	enum PACKAGE_LENGTH_TYPE
+	enum LENGTH_TYPE
 	{
-		_8	= 1,
-		_16	= 2,
-		_32	= 4,
-		_64	= 8,
+		kLengthType8	= 1,
+		kLengthType16	= 2,
+		kLengthType32	= 4,
+		kLengthType64	= 8,
 	};
 
-	explicit LengthHeaderCodec(PACKAGE_LENGTH_TYPE length_type, int64_t max_length = 0) 
-		: package_length_type_(length_type)
-		, package_max_length_(max_length)
+	explicit LengthHeaderCodec(LENGTH_TYPE length_type, int64_t max_payload = 0) 
+		: length_type_(length_type)
+		, max_payload_(max_payload)
 	{
-		// DCHECK(length_type >= _8 && length_type < _64);
+		DCHECK(length_type == kLengthType8 || 
+			length_type == kLengthType16 || 
+			length_type == kLengthType32 || 
+			length_type == kLengthType64);
 	}
 
-	virtual ~LengthHeaderCodec() {}
-
-	void set_message_callback(MessageCallback cb)
+	LENGTH_TYPE length_type()
 	{
-		message_cb_ = std::move(cb);
-	}
-
-	PACKAGE_LENGTH_TYPE package_length_type()
-	{
-		return package_length_type_;
+		return length_type_;
 	}
 	
-	int64_t package_max_length()
+	int64_t max_payload()
 	{
-		return package_max_length_;
+		return max_payload_;
 	}
 
-	void message_callback(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp time)
+	// Decode payload from |buff| to |payload|
+	virtual int decode(NetBuffer* buff, NetBuffer* payload) override
 	{
-		int rt = 0;
-		do {
-			input_package_mesg_.reset();
-			rt = decode(buff, &input_package_mesg_);
-
-			if (rt == 1) {
-				// remove read messages
-				buff->has_read(package_length_type() + input_package_mesg_.readable_bytes());
-
-				if (message_cb_) {
-					message_cb_(conn, &input_package_mesg_, time);
-				} else {
-					LOG(WARNING) << "LengthHeaderCodec::message_callback no message callback";
-				}
-			} else if (rt == -1) {
-				conn->shutdown();
-				LOG(ERROR) << "LengthHeaderCodec::message_callback Invalid buff, rt=" << rt;
-			}
-		} while (rt == 1);
-	}
-
-	void send_callback(const TcpConnectionPtr& conn, NetBuffer* buff)
-	{
-		int rt = 0;
-		do {
-			output_package_mesg_.reset();
-			rt = encode(buff, &output_package_mesg_);
-
-			if (rt == 1) {
-				conn->send(&output_package_mesg_);
-				// remove read messages
-				buff->has_read_all();
-			} else if (rt == -1) {
-				conn->shutdown();
-				LOG(ERROR) << "LengthHeaderCodec::send_callback Invalid buff, rt=" << rt;
-			}
-		} while (0);
-	}
-
-	// decode |buff| bytes to |package_mesg|
-	virtual int decode(const NetBuffer* buff, NetBuffer* package_mesg)
-	{
-		auto get_package_length = [this] (const NetBuffer* buff) {
+		auto get_payload_length = [this] (const NetBuffer* buff) {
 			int64_t length = -1;
-			switch (package_length_type()) {
-			case _8:
+			switch (length_type()) {
+			case kLengthType8:
 				length = buff->peek_int8();
 				break;
 
-			case _16:
+			case kLengthType16:
 				length = buff->peek_int16();
 				break;
 
-			case _32:
+			case kLengthType32:
 				length = buff->peek_int32();
 				break;
 
-			case _64:
+			case kLengthType64:
 				length = buff->peek_int64();
 				break;
 			}
@@ -127,70 +75,66 @@ public:
 		};
 
 		int rt = 0;
-		if (buff->readable_bytes() >= package_length_type()) {
-			const int64_t length = get_package_length(buff);
-			if (length < 0 || (package_max_length() > 0 && length > package_max_length())) {
+		if (buff->readable_bytes() >= length_type()) {
+			const int64_t length = get_payload_length(buff);
+			if (length < 0 || (max_payload() > 0 && length > max_payload())) {
 				LOG(ERROR) << "LengthHeaderCodec::decode Invalid length=" << length
-					<< ", package_max_length = " << package_max_length();
+					<< ", max_payload=" << max_payload();
 				rt = -1;
-			} else if (buff->readable_bytes() >= length + package_length_type()) {
-				// FIXME: only copy offset, but *Not thread safe*
-				// copy body
-				package_mesg->append(buff->begin_read() + package_length_type(), length);
+			} else if (buff->readable_bytes() >= length + length_type()) {
+				// FIXME: move bytes from |buff| to |payload|.
+				payload->append(buff->begin_read() + length_type(), length);
+				buff->has_read(length_type() + length);
 				rt = 1;
 			}
 		}
 		return rt;
 	}
 	
-	// encode |buff| bytes to |package_mesg|
-	virtual int encode(const NetBuffer* buff, NetBuffer* package_mesg)
+	// Encode stream bytes from |payload| to |buff|
+	virtual int encode(NetBuffer* payload, NetBuffer* buff) override
 	{
-		auto set_package_length = [this] (const NetBuffer* buff, NetBuffer* package_mesg) {
-			switch (package_length_type()) {
-			case _8:
-				package_mesg->append_int8(buff->readable_bytes());
+		auto set_buff_length = [this] (const NetBuffer* payload, NetBuffer* buff) {
+			switch (length_type()) {
+			case kLengthType8:
+				buff->append_int8(payload->readable_bytes());
 				break;
 
-			case _16:
-				package_mesg->append_int16(buff->readable_bytes());
+			case kLengthType16:
+				buff->append_int16(payload->readable_bytes());
 				break;
 
-			case _32:
-				package_mesg->append_int32(buff->readable_bytes());
+			case kLengthType32:
+				buff->append_int32(payload->readable_bytes());
 				break;
 
-			case _64:
-				package_mesg->append_int64(buff->readable_bytes());
+			case kLengthType64:
+				buff->append_int64(payload->readable_bytes());
 				break;
 			}
 		};
 
-		const int64_t length = buff->readable_bytes();
+		const int64_t length = payload->readable_bytes();
 		if (length == 0) {
-			LOG(WARNING) << "LengthHeaderCodec::encode Invalid length=" << 0;
+			LOG(WARNING) << "LengthHeaderCodec::encode Invalid length=0";
 			return 0;
-		} else if (length < 0 || (package_max_length() > 0 && length > package_max_length())) {
+		} else if (length < 0 || (max_payload() > 0 && length > max_payload())) {
 			LOG(ERROR) << "LengthHeaderCodec::encode Invalid length=" << length
-				<< ", package_max_length = " << package_max_length();
+				<< ", max_payload=" << max_payload();
 			return -1;
 		}
 
-		// copy buff
-		set_package_length(buff, package_mesg);
-		package_mesg->append(buff->begin_read(), length);
+		// FIXME: move bytes from |payload| to |buff|
+		set_buff_length(payload, buff);
+		buff->append(payload->begin_read(), length);
+		payload->has_read_all();
 		return 1;
 	}
 
 private:
-	PACKAGE_LENGTH_TYPE package_length_type_;
-	int64_t package_max_length_;
+	LENGTH_TYPE length_type_;
+	int64_t max_payload_;
 	
-	NetBuffer input_package_mesg_;
-	NetBuffer output_package_mesg_;
-	
-	MessageCallback message_cb_;
-
 	DISALLOW_COPY_AND_ASSIGN(LengthHeaderCodec);
 };
 
