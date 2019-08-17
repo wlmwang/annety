@@ -20,15 +20,16 @@ using std::placeholders::_3;
 class ChatClient
 {
 public:
+	// MSS = 136. MTU = 140
 	ChatClient(EventLoop* loop, const EndPoint& addr)
-		: codec_(LengthHeaderCodec::_32, 10)
+		: codec_(LengthHeaderCodec::kLengthType32, 136)
 	{
 		client_ = make_tcp_client(loop, addr, "ChatClient");
 
 		client_->set_connect_callback(
 			std::bind(&ChatClient::on_connect, this, _1));
 		client_->set_message_callback(
-			std::bind(&LengthHeaderCodec::message_callback, &codec_, _1, _2, _3));
+			std::bind(&LengthHeaderCodec::decode_read, &codec_, _1, _2, _3));
 
 		codec_.set_message_callback(
 			std::bind(&ChatClient::on_message, this, _1, _2, _3));
@@ -53,13 +54,12 @@ public:
 
 	void write(const std::string& mesg)
 	{
-		// FIXME: no copy
 		NetBuffer buff;
 		buff.append(mesg.data(), mesg.size());
 
 		AutoLock locked(lock_);
 		if (connection_) {
-			codec_.send_callback(connection_, &buff);
+			codec_.endcode_send(connection_, &buff);
 		}
 	}
 
@@ -97,7 +97,7 @@ void ChatClient::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeS
 
 int main(int argc, char* argv[])
 {
-	set_min_log_severity(annety::LOG_DEBUG);
+	// set_min_log_severity(annety::LOG_DEBUG);
 
 	EventLoopThread ioloop;
 	ChatClient client(ioloop.start_loop(), EndPoint(1669));

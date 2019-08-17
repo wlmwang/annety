@@ -19,15 +19,16 @@ using ConnectionList = std::set<annety::TcpConnectionPtr>;
 class ChatServer
 {
 public:
+	// MSS = 136. MTU = 140
 	ChatServer(EventLoop* loop, const EndPoint& addr)
-		: codec_(LengthHeaderCodec::_32, 136)
+		: codec_(LengthHeaderCodec::kLengthType32, 136)
 	{
 		server_ = make_tcp_server(loop, addr, "ChatServer");
 
 		server_->set_connect_callback(
 			std::bind(&ChatServer::on_connect, this, _1));
 		server_->set_message_callback(
-			std::bind(&LengthHeaderCodec::message_callback, &codec_, _1, _2, _3));
+			std::bind(&LengthHeaderCodec::decode_read, &codec_, _1, _2, _3));
 		
 		codec_.set_message_callback(
 			std::bind(&ChatServer::on_message, this, _1, _2, _3));
@@ -67,7 +68,7 @@ void ChatServer::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeS
 	// broadcast
 	ConnectionList::iterator it = connections_.begin();
 	for (; it != connections_.end(); ++it) {
-		codec_.send_callback(*it, mesg);
+		codec_.endcode_send(*it, mesg);
 	}
 }
 
