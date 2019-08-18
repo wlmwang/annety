@@ -294,10 +294,10 @@ void Connector::handle_error()
 		{
 			ScopedClearLastError last_error;
 			errno = err;
-			PLOG(DEBUG) << "Connector::handle_error has failed";
+			PLOG(ERROR) << "Connector::handle_error has failed";
 		}
 		ALLOW_UNUSED_LOCAL(err);
-		
+
 		remove_and_reset_channel();
 		// retry();     // FIXME: is retry() here???
 	}
@@ -307,8 +307,10 @@ void Connector::remove_and_reset_channel()
 {
 	owner_loop_->check_in_own_loop();
 
-	connect_channel_->disable_all_event();
-	connect_channel_->remove();
+	if (connect_channel_ && !connect_channel_->is_none_event()) {
+		connect_channel_->disable_all_event();
+		connect_channel_->remove();
+	}
 
 	// can't reset Channel here, because we are inside Channel::handle_event
 	using containers::make_weak_bind;
