@@ -54,34 +54,13 @@ TcpClient::~TcpClient()
 {
 	DCHECK(initilize_);
 
-	bool unique = false;
-	TcpConnectionPtr conn;
-	{
-		AutoLock locked(lock_);
-		conn = connection_;
-		unique = connection_.unique();
-	}
-
 	LOG(DEBUG) << "TcpClient::~TcpClient [" << name_ 
-		<< "] client is destructing which be connected to " << ip_port_
-		<< ", conn address is " << conn.get()
-		<< ", unique is " << unique;
+		<< "] client is destructing which be connected to " << ip_port_;
 
 	// FIXME: Never run the code, because the conn have circular reference with 
-	// TcpClient. --- share_from_this() by bind() in initialize
+	// TcpClient. --- shared_from_this() by bind() in initialize
 	// So the stop() method use usleep to wait remove_connection() finish.
-	if (conn) {
-		DCHECK(owner_loop_ == conn->get_owner_loop());
-
-		// *Not 100% safe*, if we are in different thread
-		CloseCallback cb = std::bind(&internal::remove_connection, owner_loop_, _1);
-		owner_loop_->run_in_own_loop(
-			std::bind(&TcpConnection::set_close_callback, conn, cb));
-		
-		if (unique) {
-			conn->force_close();
-		}
-	}
+	close_connection();
 
 	if (connector_) {
 		connector_->stop();
@@ -136,11 +115,17 @@ void TcpClient::error_connect()
 {
 	CHECK(initilize_);
 
-	connect_ = false;
-	if (error_cb_) {
-		error_cb_();
+	close_connection();
+
+	if (retry_ && connect_) {
+		LOG(DEBUG) << "TcpClient::error_connect the [" << name_ 
+			<< "] client on " << ip_port_ << ", wait for reconnect now";
+
+		if (connector_) {
+			owner_loop_->queue_in_own_loop(
+				std::bind(&Connector::restart, connector_));
+		}
 	}
-	connector_->stop();
 }
 
 void TcpClient::stop()
@@ -216,9 +201,38 @@ void TcpClient::remove_connection(const TcpConnectionPtr& conn)
 	
 	if (retry_ && connect_) {
 		LOG(INFO) << "TcpClient::remove_connection the [" << name_ 
-			<< "] client is reconnecting to " << ip_port_;
+			<< "] client on " << ip_port_ << ", wait for reconnect now";
 		if (connector_) {
 			connector_->restart();
+		}
+	}
+}
+
+void TcpClient::close_connection()
+{
+	CHECK(initilize_);
+	
+	bool unique = false;
+	TcpConnectionPtr conn;
+	{
+		AutoLock locked(lock_);
+		conn = connection_;
+		unique = connection_.unique();
+	}
+	
+	LOG(DEBUG) << "TcpClient::close_connection the conn address is " 
+		<< conn.get() << ", unique is " << unique;
+
+	if (conn) {
+		DCHECK(owner_loop_ == conn->get_owner_loop());
+
+		// *Not 100% safe*, if we are in different thread
+		CloseCallback cb = std::bind(&internal::remove_connection, owner_loop_, _1);
+		owner_loop_->run_in_own_loop(
+			std::bind(&TcpConnection::set_close_callback, conn, cb));
+		
+		if (unique) {
+			conn->force_close();
 		}
 	}
 }

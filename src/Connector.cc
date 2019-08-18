@@ -107,14 +107,17 @@ void Connector::start_in_own_loop()
 
 void Connector::stop_in_own_loop()
 {
+	LOG(TRACE) << "Connector::stop_in_own_loop~~~";
+
 	owner_loop_->check_in_own_loop();
 
 	if (state_ == kConnecting) {
 		state_ = kDisconnected;
-
 		remove_and_reset_channel();
-		// retry();	// FIXME: is retry() here???
 	}
+	connect_socket_.reset();
+	
+	// retry();	// FIXME: is retry() here???
 }
 
 void Connector::connect()
@@ -178,11 +181,11 @@ void Connector::connecting()
 	using containers::make_weak_bind;
 	connect_channel_->set_write_callback(
 		make_weak_bind(&Connector::handle_write, shared_from_this()));
-	connect_channel_->set_read_callback(
-		make_weak_bind(&Connector::handle_read, shared_from_this()));
 	connect_channel_->set_error_callback(
 		make_weak_bind(&Connector::handle_error, shared_from_this()));
-
+	connect_channel_->set_read_callback(
+		make_weak_bind(&Connector::handle_read, shared_from_this()));
+	
 	connect_channel_->enable_read_event();
 	connect_channel_->enable_write_event();
 }
@@ -228,10 +231,10 @@ void Connector::handle_write()
 		errno = internal::get_sock_error(*connect_socket_);
 		if (errno) {
 			PLOG(WARNING) << "Connector::handle_write connect has failed";
-			retry();
+			// retry();
 		} else if (internal::is_self_connect(*connect_socket_)) {
 			LOG(WARNING) << "Connector::handle_write connect self socket";
-			retry();
+			// retry();
 		} else {
 			state_ = kConnected;
 			if (connect_) {
@@ -279,6 +282,8 @@ void Connector::handle_read()
 				error_connect_cb_();
 			}
 		}
+
+		// retry();	// FIXME: is retry() here???
 	}
 }
 

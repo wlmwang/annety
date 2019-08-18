@@ -86,6 +86,8 @@ private:
 	// *Not thread safe*, but in loop
 	void error_connect();
 
+	void close_connection();
+
 private:
 	EventLoop* owner_loop_;
 	const std::string name_;
