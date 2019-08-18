@@ -180,6 +180,9 @@ LogMessage::~LogMessage()
 		}
 		::abort();
 	}
+
+	// recovery errno
+	errno = impl_.errno_;
 }
 
 // Explicit instantiations for commonly used comparisons.

@@ -79,27 +79,27 @@ public:
 		return &context_;
 	}
 
-	void set_connect_callback(const ConnectCallback& cb)
+	void set_connect_callback(ConnectCallback cb)
 	{
-		connect_cb_ = cb;
+		connect_cb_ = std::move(cb);
 	}
-	void set_message_callback(const MessageCallback& cb)
+	void set_message_callback(MessageCallback cb)
 	{
-		message_cb_ = cb;
+		message_cb_ = std::move(cb);
 	}
-	void set_write_complete_callback(const WriteCompleteCallback& cb)
+	void set_write_complete_callback(WriteCompleteCallback cb)
 	{
-		write_complete_cb_ = cb;
+		write_complete_cb_ = std::move(cb);
 	}
-	void set_high_water_mark_callback(const HighWaterMarkCallback& cb, size_t high_water_mark)
+	void set_high_water_mark_callback(HighWaterMarkCallback& cb, size_t high_water_mark)
 	{
-		high_water_mark_cb_ = cb;
+		high_water_mark_cb_ = std::move(cb);
 		high_water_mark_ = high_water_mark;
 	}
 
-	void set_close_callback(const CloseCallback& cb)
+	void set_close_callback(CloseCallback cb)
 	{
-		close_cb_ = cb;
+		close_cb_ = std::move(cb);
 	}
 	
 	NetBuffer* input_buffer();

@@ -165,12 +165,11 @@ private:
 		LogStream stream_{};
 		TimeStamp time_{TimeStamp::now()};
 
-		int line_;
+		int line_{0};
 		Filename file_;
 		LogSeverity severity_;
 
-		int errno_;
-		ScopedClearLastError last_error_;
+		int errno_{0};
 	};
 
 private:

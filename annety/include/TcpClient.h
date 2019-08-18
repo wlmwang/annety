@@ -61,6 +61,11 @@ public:
 		connect_cb_ = std::move(cb);
 	}
 	// *Not thread safe*
+	void set_error_callback(ErrorCallback cb)
+	{
+		error_cb_ = std::move(cb);
+	}
+	// *Not thread safe*
 	void set_message_callback(MessageCallback cb)
 	{
 		message_cb_ = std::move(cb);
@@ -73,10 +78,13 @@ public:
 
 private:
 	// *Not thread safe*, but in loop
+	void remove_connection(const TcpConnectionPtr& conn);
+
+	// *Not thread safe*, but in loop
 	void new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeraddr);
 
 	// *Not thread safe*, but in loop
-	void remove_connection(const TcpConnectionPtr& conn);
+	void error_connect();
 
 private:
 	EventLoop* owner_loop_;
@@ -86,6 +94,7 @@ private:
 	
 	ConnectorPtr connector_;	// avoid revealing Connector
 
+	ErrorCallback error_cb_;
 	ConnectCallback connect_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;

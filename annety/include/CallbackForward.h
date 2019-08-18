@@ -26,6 +26,7 @@ using CloseCallback = std::function<void(const TcpConnectionPtr&)>;
 using WriteCompleteCallback = std::function<void(const TcpConnectionPtr&)>;
 using HighWaterMarkCallback = std::function<void(const TcpConnectionPtr&, size_t)>;
 using MessageCallback = std::function<void(const TcpConnectionPtr&, NetBuffer*, TimeStamp)>;
+using ErrorCallback = std::function<void()>;
 using TimerCallback = std::function<void()>;
 using SignalCallback = std::function<void()>;
 

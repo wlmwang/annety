@@ -68,7 +68,7 @@ TcpClient::~TcpClient()
 		<< ", unique is " << unique;
 
 	// FIXME: Never run the code, because the conn have circular reference with 
-	// TcpClient. --- share_from_this
+	// TcpClient. --- share_from_this() by bind() in initialize
 	// So the stop() method use usleep to wait remove_connection() finish.
 	if (conn) {
 		DCHECK(owner_loop_ == conn->get_owner_loop());
@@ -85,7 +85,8 @@ TcpClient::~TcpClient()
 
 	if (connector_) {
 		connector_->stop();
-		owner_loop_->queue_in_own_loop(std::bind(&internal::remove_connector, connector_));
+		owner_loop_->queue_in_own_loop(
+			std::bind(&internal::remove_connector, connector_));
 	}
 }
 
@@ -105,7 +106,8 @@ void TcpClient::initialize()
 	connector_->set_new_connect_callback(
 		std::bind(&TcpClient::new_connection, this, _1, _2));
 
-	// FIXME: add set_connect_failed_callback()
+	connector_->set_error_connect_callback(
+			std::bind(&TcpClient::error_connect, this));
 }
 
 void TcpClient::connect()
@@ -128,6 +130,17 @@ void TcpClient::disconnect()
 			connection_->shutdown();
 		}
 	}
+}
+
+void TcpClient::error_connect()
+{
+	CHECK(initilize_);
+
+	connect_ = false;
+	if (error_cb_) {
+		error_cb_();
+	}
+	connector_->stop();
 }
 
 void TcpClient::stop()

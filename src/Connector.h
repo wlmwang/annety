@@ -43,6 +43,10 @@ public:
 	{
 		new_connect_cb_ = std::move(cb);
 	}
+	void set_error_connect_callback(ErrorCallback cb)
+	{
+		error_connect_cb_ = std::move(cb);
+	}
 
 	const EndPoint& server_addr() const
 	{
@@ -58,11 +62,12 @@ private:
 	void connecting();
 	void retry();
 
+	void handle_read();
 	void handle_write();
 	void handle_error();
 
-	void remove_and_reset_channel();
 	void reset_channel();
+	void remove_and_reset_channel();
 
 private:
 	EventLoop* owner_loop_{nullptr};
@@ -77,6 +82,7 @@ private:
 	std::unique_ptr<Channel> connect_channel_;
 
 	NewConnectCallback new_connect_cb_;
+	ErrorCallback error_connect_cb_;
 
 	DISALLOW_COPY_AND_ASSIGN(Connector);
 };

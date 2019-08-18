@@ -12,6 +12,8 @@
 #include "ScopedClearLastError.h"
 #include "containers/Bind.h"
 
+#include <errno.h>
+
 namespace annety
 {
 namespace internal
@@ -138,7 +140,7 @@ void Connector::connect()
 	case EAGAIN:
 	case EADDRINUSE:
 	case EADDRNOTAVAIL:
-	case ECONNREFUSED:
+	case ECONNREFUSED:	// Connection refused
 	case ENETUNREACH:
 		retry();
 		break;
@@ -171,14 +173,17 @@ void Connector::connecting()
 	state_ = kConnecting;
 	connect_channel_.reset(new Channel(owner_loop_, connect_socket_.get()));
 
+	// When the socket becomes writable, the connection is successfully established
+	// But if the socket becomes readable or readable & writable, the connection fails
 	using containers::make_weak_bind;
 	connect_channel_->set_write_callback(
 		make_weak_bind(&Connector::handle_write, shared_from_this()));
+	connect_channel_->set_read_callback(
+		make_weak_bind(&Connector::handle_read, shared_from_this()));
 	connect_channel_->set_error_callback(
 		make_weak_bind(&Connector::handle_error, shared_from_this()));
 
-	// When the socket becomes writable, the connection is successfully established
-	// But if the socket becomes writable and readable, the connection fails
+	connect_channel_->enable_read_event();
 	connect_channel_->enable_write_event();
 }
 
@@ -209,12 +214,13 @@ void Connector::retry()
 void Connector::handle_write()
 {
 	owner_loop_->check_in_own_loop();
-	LOG(TRACE) << "Connector::handle_write " << state_;
-
+	
 	ScopedClearLastError last_error;
 
+	LOG(TRACE) << "Connector::handle_write " << state_;
+
 	// When the socket becomes writable, the connection is successfully established
-	// But if the socket becomes writable and readable, the connection fails
+	// But if the socket becomes readable or readable & writable, the connection fails
 	if (state_ == kConnecting) {
 		DCHECK(connect_socket_);
 		remove_and_reset_channel();
@@ -248,6 +254,34 @@ void Connector::handle_write()
 	}
 }
 
+void Connector::handle_read()
+{
+	owner_loop_->check_in_own_loop();
+
+	DCHECK(connect_socket_);
+	LOG(ERROR) << "Connector::handle_read the state=" << state_;
+	
+	if (state_ == kConnecting) {
+		int err = internal::get_sock_error(*connect_socket_);
+
+		{
+			ScopedClearLastError last_error;
+			errno = err;
+			PLOG(DEBUG) << "Connector::handle_read has failed";
+			
+			remove_and_reset_channel();
+			connect_socket_.reset();
+		}
+
+		// Connection refused(kernel will emit RST)
+		if (err == ECONNREFUSED) {
+			if (error_connect_cb_) {
+				error_connect_cb_();
+			}
+		}
+	}
+}
+
 void Connector::handle_error()
 {
 	owner_loop_->check_in_own_loop();
@@ -256,12 +290,16 @@ void Connector::handle_error()
 	LOG(ERROR) << "Connector::handle_error the state=" << state_;
 	
 	if (state_ == kConnecting) {
-		ScopedClearLastError last_error;
-		errno = internal::get_sock_error(*connect_socket_);
-		PLOG(TRACE) << "Connector::handle_error has failed";
-
+		int err = internal::get_sock_error(*connect_socket_);
+		{
+			ScopedClearLastError last_error;
+			errno = err;
+			PLOG(DEBUG) << "Connector::handle_error has failed";
+		}
+		ALLOW_UNUSED_LOCAL(err);
+		
 		remove_and_reset_channel();
-		// retry();	// FIXME: is retry() here???
+		// retry();     // FIXME: is retry() here???
 	}
 }
 
