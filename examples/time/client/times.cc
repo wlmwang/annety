@@ -15,6 +15,8 @@ TimeClient::TimeClient(annety::EventLoop* loop, const annety::EndPoint& addr)
 
 	client_->set_connect_callback(
 		std::bind(&TimeClient::on_connect, this, _1));
+	client_->set_error_callback(
+			std::bind(&TimeClient::on_error, this));
 	client_->set_message_callback(
 		std::bind(&TimeClient::on_message, this, _1, _2, _3));
 	// client_->enable_retry();
@@ -23,6 +25,12 @@ TimeClient::TimeClient(annety::EventLoop* loop, const annety::EndPoint& addr)
 void TimeClient::connect()
 {
 	client_->connect();
+}
+
+void TimeClient::on_error()
+{
+	client_->stop();
+	loop_->quit();
 }
 
 void TimeClient::on_connect(const annety::TcpConnectionPtr& conn)

@@ -22,12 +22,15 @@ class ChatClient
 public:
 	// MSS = 136. MTU = 140
 	ChatClient(EventLoop* loop, const EndPoint& addr)
-		: codec_(LengthHeaderCodec::kLengthType32, 136)
+		: loop_(loop)
+		, codec_(LengthHeaderCodec::kLengthType32, 136)
 	{
 		client_ = make_tcp_client(loop, addr, "ChatClient");
 
 		client_->set_connect_callback(
 			std::bind(&ChatClient::on_connect, this, _1));
+		client_->set_error_callback(
+			std::bind(&ChatClient::error, this));
 		client_->set_message_callback(
 			std::bind(&LengthHeaderCodec::decode_read, &codec_, _1, _2, _3));
 
@@ -51,6 +54,13 @@ public:
 	{
 		client_->stop();
 	}
+	
+	void error()
+	{
+		client_->stop();
+		loop_->quit();
+		exit(0);
+	}
 
 	void write(const std::string& mesg)
 	{
@@ -69,6 +79,8 @@ private:
 	void on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp time);
 
 private:
+	EventLoop* loop_;
+
 	TcpClientPtr client_;
 	LengthHeaderCodec codec_;
 	
