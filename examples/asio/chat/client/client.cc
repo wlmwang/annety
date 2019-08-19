@@ -22,8 +22,7 @@ class ChatClient
 public:
 	// MSS = 136. MTU = 140
 	ChatClient(EventLoop* loop, const EndPoint& addr)
-		: loop_(loop)
-		, codec_(LengthHeaderCodec::kLengthType32, 136)
+		: codec_(LengthHeaderCodec::kLengthType32, 136)
 	{
 		client_ = make_tcp_client(loop, addr, "ChatClient");
 
@@ -70,8 +69,6 @@ private:
 	void on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp time);
 
 private:
-	EventLoop* loop_;
-
 	TcpClientPtr client_;
 	LengthHeaderCodec codec_;
 	
