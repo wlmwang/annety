@@ -35,9 +35,12 @@ public:
 	// *Thread safe*
 	void stop();
 	
+	// *Thread safe*
+	void retry();
+
 	// FIXME: *Not thread safe*
 	// you must be call this in loop thread
-	void restart();  
+	void restart();
 
 	void set_new_connect_callback(NewConnectCallback cb)
 	{
@@ -56,11 +59,11 @@ public:
 private:
 	enum States {kDisconnected, kConnecting, kConnected};
 
-	void start_in_own_loop();
-	void stop_in_own_loop();
 	void connect();
 	void connecting();
-	void retry();
+	void start_in_own_loop();
+	void stop_in_own_loop();
+	void retry_in_own_loop();
 
 	void handle_read();
 	void handle_write();

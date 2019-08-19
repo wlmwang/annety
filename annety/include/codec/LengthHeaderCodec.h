@@ -81,7 +81,7 @@ public:
 				LOG(ERROR) << "LengthHeaderCodec::decode Invalid length=" << length
 					<< ", max_payload=" << max_payload();
 				rt = -1;
-			} else if (buff->readable_bytes() >= length + length_type()) {
+			} else if (buff->readable_bytes() >= static_cast<size_t>(length + length_type())) {
 				// FIXME: move bytes from |buff| to |payload|.
 				payload->append(buff->begin_read() + length_type(), length);
 				buff->has_read(length_type() + length);

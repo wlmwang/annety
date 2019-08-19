@@ -46,13 +46,13 @@ Connector::Connector(EventLoop* loop, const EndPoint& addr)
 	, retry_delay_ms_(kInitRetryDelayMs)
 {
 	LOG(DEBUG) << "Connector::Connector [" << server_addr_.to_ip_port() 
-		<< "] Connector is constructing and retry is " << retry_delay_ms_;
+		<< "] Connector is constructing and the retry is " << retry_delay_ms_;
 }
 
 Connector::~Connector()
 {
 	LOG(DEBUG) << "Connector::~Connector [" << server_addr_.to_ip_port() 
-		<< "] Connector is destructing and retry is " << retry_delay_ms_;
+		<< "] Connector is destructing and the retry is " << retry_delay_ms_;
 
 	DCHECK(!connect_socket_);
 	DCHECK(!connect_channel_);
@@ -72,7 +72,7 @@ void Connector::stop()
 	connect_ = false;
 
 	using containers::make_weak_bind;
-	owner_loop_->queue_in_own_loop(
+	owner_loop_->run_in_own_loop(
 		make_weak_bind(&Connector::stop_in_own_loop, shared_from_this()));
 	
 	// cancel timer
@@ -81,16 +81,24 @@ void Connector::stop()
 	}
 }
 
+void Connector::retry()
+{
+	connect_ = true;
+
+	using containers::make_weak_bind;
+	owner_loop_->run_in_own_loop(
+		make_weak_bind(&Connector::retry_in_own_loop, shared_from_this()));
+}
+
 void Connector::restart()
 {
-	// FIXME: restart() should be become *thread-safe* for user interface
-	owner_loop_->check_in_own_loop();
-
 	state_ = kDisconnected;
 	retry_delay_ms_ = kInitRetryDelayMs;
 
 	connect_ = true;
-	start_in_own_loop();
+	using containers::make_weak_bind;
+	owner_loop_->run_in_own_loop(
+		make_weak_bind(&Connector::start_in_own_loop, shared_from_this()));
 }
 
 void Connector::start_in_own_loop()
@@ -107,17 +115,12 @@ void Connector::start_in_own_loop()
 
 void Connector::stop_in_own_loop()
 {
-	LOG(TRACE) << "Connector::stop_in_own_loop~~~";
-
 	owner_loop_->check_in_own_loop();
 
-	if (state_ == kConnecting) {
-		state_ = kDisconnected;
-		remove_and_reset_channel();
-	}
-	connect_socket_.reset();
+	state_ = kDisconnected;
 	
-	// retry();	// FIXME: is retry() here???
+	remove_and_reset_channel();
+	connect_socket_.reset();
 }
 
 void Connector::connect()
@@ -145,7 +148,7 @@ void Connector::connect()
 	case EADDRNOTAVAIL:
 	case ECONNREFUSED:	// Connection refused
 	case ENETUNREACH:
-		retry();
+		retry_in_own_loop();
 		break;
 
 	case EACCES:
@@ -178,19 +181,21 @@ void Connector::connecting()
 
 	// When the socket becomes writable, the connection is successfully established
 	// But if the socket becomes readable or readable & writable, the connection fails
+	// ON LINUX, connect() failure, I/O select event is [IN OUT HUP ERR]
 	using containers::make_weak_bind;
 	connect_channel_->set_write_callback(
 		make_weak_bind(&Connector::handle_write, shared_from_this()));
 	connect_channel_->set_error_callback(
 		make_weak_bind(&Connector::handle_error, shared_from_this()));
-	connect_channel_->set_read_callback(
-		make_weak_bind(&Connector::handle_read, shared_from_this()));
 	
-	connect_channel_->enable_read_event();
+	// connect_channel_->set_read_callback(
+	// 	make_weak_bind(&Connector::handle_read, shared_from_this()));
+	// connect_channel_->enable_read_event();
+
 	connect_channel_->enable_write_event();
 }
 
-void Connector::retry()
+void Connector::retry_in_own_loop()
 {
 	owner_loop_->check_in_own_loop();
 
@@ -198,7 +203,7 @@ void Connector::retry()
 	connect_socket_.reset();
 
 	if (connect_) {
-		LOG(INFO) << "Connector::retry connecting to " << server_addr_.to_ip_port()
+		LOG(DEBUG) << "Connector::retry connecting to " << server_addr_.to_ip_port()
 			<< " in " << retry_delay_ms_ << " milliseconds";
 
 		// retry after
@@ -220,7 +225,7 @@ void Connector::handle_write()
 	
 	ScopedClearLastError last_error;
 
-	LOG(TRACE) << "Connector::handle_write " << state_;
+	LOG(TRACE) << "Connector::handle_write the state=" << state_;
 
 	// When the socket becomes writable, the connection is successfully established
 	// But if the socket becomes readable or readable & writable, the connection fails
@@ -228,13 +233,17 @@ void Connector::handle_write()
 		DCHECK(connect_socket_);
 		remove_and_reset_channel();
 
-		errno = internal::get_sock_error(*connect_socket_);
-		if (errno) {
+		int err = internal::get_sock_error(*connect_socket_);
+		if (err) {
+			ScopedClearLastError last_error;
+			errno = err;
 			PLOG(WARNING) << "Connector::handle_write connect has failed";
-			// retry();
+
+			// retry_in_own_loop();	// FIXME: is retry_in_own_loop() here???
 		} else if (internal::is_self_connect(*connect_socket_)) {
 			LOG(WARNING) << "Connector::handle_write connect self socket";
-			// retry();
+			
+			// retry_in_own_loop();	// FIXME: is retry_in_own_loop() here???
 		} else {
 			state_ = kConnected;
 			if (connect_) {
@@ -250,9 +259,8 @@ void Connector::handle_write()
 			}
 		}
 	} else {
-		// FIXME:
-		// connect failure, the multiplexer will trigger event: POLLOUT POLLHUP POLLERR
-		// so the connect channel will call handle_error() and handle_write() sequentially!
+		// connect failure, the multiplexer will trigger event: POLLIN POLLOUT POLLHUP POLLERR
+		// so the connect channel will call handle_error, handle_read, handle_write sequentially!
 		DCHECK(state_ == kDisconnected);
 	}
 }
@@ -261,29 +269,21 @@ void Connector::handle_read()
 {
 	owner_loop_->check_in_own_loop();
 
-	DCHECK(connect_socket_);
 	LOG(ERROR) << "Connector::handle_read the state=" << state_;
 	
 	if (state_ == kConnecting) {
-		int err = internal::get_sock_error(*connect_socket_);
+		DCHECK(connect_socket_);
+		remove_and_reset_channel();
 
+		int err = internal::get_sock_error(*connect_socket_);
 		{
 			ScopedClearLastError last_error;
 			errno = err;
 			PLOG(DEBUG) << "Connector::handle_read has failed";
-			
-			remove_and_reset_channel();
-			connect_socket_.reset();
 		}
 
-		// Connection refused(kernel will emit RST)
-		if (err == ECONNREFUSED) {
-			if (error_connect_cb_) {
-				error_connect_cb_();
-			}
-		}
-
-		// retry();	// FIXME: is retry() here???
+		connect_socket_.reset();
+		state_ = kDisconnected;
 	}
 }
 
@@ -291,20 +291,28 @@ void Connector::handle_error()
 {
 	owner_loop_->check_in_own_loop();
 
-	DCHECK(connect_socket_);
 	LOG(ERROR) << "Connector::handle_error the state=" << state_;
 	
 	if (state_ == kConnecting) {
+		DCHECK(connect_socket_);
+		remove_and_reset_channel();
+
 		int err = internal::get_sock_error(*connect_socket_);
 		{
 			ScopedClearLastError last_error;
 			errno = err;
 			PLOG(ERROR) << "Connector::handle_error has failed";
 		}
-		ALLOW_UNUSED_LOCAL(err);
+		
+		connect_socket_.reset();
+		state_ = kDisconnected;
 
-		remove_and_reset_channel();
-		// retry();     // FIXME: is retry() here???
+		// connect failure
+		if (err) {
+			if (error_connect_cb_) {
+				error_connect_cb_();
+			}
+		}
 	}
 }
 
@@ -318,9 +326,9 @@ void Connector::remove_and_reset_channel()
 	}
 
 	// can't reset Channel here, because we are inside Channel::handle_event
-	using containers::make_weak_bind;
+	using containers::make_bind;
 	owner_loop_->queue_in_own_loop(
-		make_weak_bind(&Connector::reset_channel, shared_from_this()));
+		make_bind(&Connector::reset_channel, shared_from_this()));
 }
 
 void Connector::reset_channel()

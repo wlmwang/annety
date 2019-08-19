@@ -58,11 +58,14 @@ TcpClient::~TcpClient()
 		<< "] client is destructing which be connected to " << ip_port_;
 
 	// FIXME: Never run the code, because the conn have circular reference with 
-	// TcpClient. --- shared_from_this() by bind() in initialize
-	// So the stop() method use usleep to wait remove_connection() finish.
+	// TcpClient. --- shared_from_this() by bind() in initialize()
+	// And the stop() method use usleep to wait remove_connection() finish.
 	close_connection();
 
 	if (connector_) {
+		LOG(DEBUG) << "TcpClient::~TcpClient [" << name_ 
+			<< "] connector is destructing which address is " << connector_.get();
+
 		connector_->stop();
 		owner_loop_->queue_in_own_loop(
 			std::bind(&internal::remove_connector, connector_));
@@ -80,11 +83,11 @@ void TcpClient::initialize()
 	// using containers::make_weak_bind;
 	// connector_->set_new_connect_callback(
 	// 	make_weak_bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
-	
+
 	// FIXME: unsafe
+	// It is best to manually manage the lifecycle of connector_
 	connector_->set_new_connect_callback(
 		std::bind(&TcpClient::new_connection, this, _1, _2));
-
 	connector_->set_error_connect_callback(
 			std::bind(&TcpClient::error_connect, this));
 }
@@ -115,6 +118,10 @@ void TcpClient::error_connect()
 {
 	CHECK(initilize_);
 
+	if (error_cb_) {
+		error_cb_();
+	}
+
 	close_connection();
 
 	if (retry_ && connect_) {
@@ -123,8 +130,10 @@ void TcpClient::error_connect()
 
 		if (connector_) {
 			owner_loop_->queue_in_own_loop(
-				std::bind(&Connector::restart, connector_));
+				std::bind(&Connector::retry, connector_));
 		}
+	} else {
+		// FIXME: exit program when connect failure??
 	}
 }
 
@@ -200,8 +209,9 @@ void TcpClient::remove_connection(const TcpConnectionPtr& conn)
 	owner_loop_->queue_in_own_loop(std::bind(&TcpConnection::connect_destroyed, conn));
 	
 	if (retry_ && connect_) {
-		LOG(INFO) << "TcpClient::remove_connection the [" << name_ 
+		LOG(DEBUG) << "TcpClient::remove_connection the [" << name_ 
 			<< "] client on " << ip_port_ << ", wait for reconnect now";
+		
 		if (connector_) {
 			connector_->restart();
 		}
