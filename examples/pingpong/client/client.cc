@@ -39,7 +39,6 @@ public:
 
 	void stop()
 	{
-		client_->disconnect();
 		client_->stop();
 	}
 
@@ -143,8 +142,6 @@ public:
 				<< " average message size";
 			LOG(WARNING) << static_cast<double>(total_bytes_read) / (timeout_ * 1024 * 1024)
 				<< " MiB/s throughput";
-
-			loop_->quit();
 		}
 	}
 
@@ -156,6 +153,8 @@ private:
 		for (auto& session : sessions_) {
 			session->stop();
 		}
+
+		loop_->quit();
 	}
 
 private:

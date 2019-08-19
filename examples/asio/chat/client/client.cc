@@ -100,7 +100,7 @@ void ChatClient::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeS
 
 int main(int argc, char* argv[])
 {
-	// set_min_log_severity(annety::LOG_DEBUG);
+	set_min_log_severity(annety::LOG_DEBUG);
 
 	EventLoopThread ioloop;
 	ChatClient client(ioloop.start_loop(), EndPoint(1669));

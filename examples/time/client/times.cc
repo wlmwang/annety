@@ -22,6 +22,11 @@ TimeClient::TimeClient(annety::EventLoop* loop, const annety::EndPoint& addr)
 	client_->enable_retry();
 }
 
+TimeClient::~TimeClient()
+{
+	client_->stop();
+}
+
 void TimeClient::connect()
 {
 	client_->connect();
@@ -34,7 +39,7 @@ void TimeClient::on_connect(const annety::TcpConnectionPtr& conn)
 			<< (conn->connected() ? "UP" : "DOWN");
 
 	if (!conn->connected()) {
-		client_->stop();
+		client_->disable_retry();
     	loop_->quit();
 	}
 }

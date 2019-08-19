@@ -13,6 +13,8 @@ class TimeClient
 public:
 	TimeClient(annety::EventLoop* loop, const annety::EndPoint& addr);
 
+	~TimeClient();
+
 	void connect();
 
 private:

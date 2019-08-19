@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[])
 {
-	annety::set_min_log_severity(annety::LOG_DEBUG);
+	// annety::set_min_log_severity(annety::LOG_DEBUG);
 	
 	annety::EventLoop loop;
 	TimeClient client(&loop, annety::EndPoint(1669));
