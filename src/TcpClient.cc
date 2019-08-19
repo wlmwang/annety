@@ -31,7 +31,7 @@ void remove_connection(EventLoop* loop, const TcpConnectionPtr& conn)
 }
 void remove_connector(ConnectorPtr& connector)
 {
-	connector.reset();
+	// connector.reset();
 }
 
 }	// namespace internal
@@ -134,6 +134,7 @@ void TcpClient::error_connect()
 		}
 	} else {
 		// FIXME: exit program when connect failure??
+		// exit(0);
 	}
 }
 

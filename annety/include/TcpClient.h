@@ -40,6 +40,7 @@ public:
 	
 	bool retry() const { return retry_;}
 	void enable_retry() { retry_ = true;}
+	void disable_retry() { retry_ = false;}
 
 	// for connection
 	void connect();

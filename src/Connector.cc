@@ -54,8 +54,8 @@ Connector::~Connector()
 	LOG(DEBUG) << "Connector::~Connector [" << server_addr_.to_ip_port() 
 		<< "] Connector is destructing and the retry is " << retry_delay_ms_;
 
-	DCHECK(!connect_socket_);
-	DCHECK(!connect_channel_);
+	DCHECK(!connect_socket_) << " Please stop() the Connector before destruct";
+	DCHECK(!connect_channel_) << " Please stop() the Connector before destruct";
 }
 
 void Connector::start()
@@ -109,7 +109,7 @@ void Connector::start_in_own_loop()
 	if (connect_) {
 		connect();
 	} else {
-		LOG(TRACE) << "Connector::start_in_own_loop do not connect, maybe has connected";
+		LOG(DEBUG) << "Connector::start_in_own_loop do not connect, maybe has connected";
 	}
 }
 
@@ -325,15 +325,27 @@ void Connector::remove_and_reset_channel()
 		connect_channel_->remove();
 	}
 
+	LOG(ERROR) << "Connector::remove_and_reset_channel ###";
+
 	// can't reset Channel here, because we are inside Channel::handle_event
-	using containers::make_bind;
+	using containers::make_weak_bind;
 	owner_loop_->queue_in_own_loop(
-		make_bind(&Connector::reset_channel, shared_from_this()));
+		make_weak_bind(&Connector::reset_channel, shared_from_this()));
 }
 
 void Connector::reset_channel()
 {
 	owner_loop_->check_in_own_loop();
+	
+	LOG(ERROR) << "Connector::remove_and_reset_channel @@@";
+
+	// FIXME: HACK FOR stop_in_own_loop()
+	// because the owner_loop_ could be delete, then queue_in_own_loop() is 
+	// do not work in remove_and_reset_channel()
+	if (connect_channel_ && !connect_channel_->is_none_event()) {
+		connect_channel_->disable_all_event();
+		connect_channel_->remove();
+	}
 
 	connect_channel_.reset();
 }
