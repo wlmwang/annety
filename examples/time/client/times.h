@@ -16,8 +16,6 @@ public:
 	void connect();
 
 private:
-	void on_error();
-	
 	void on_connect(const annety::TcpConnectionPtr& conn);
 
 	void on_message(const annety::TcpConnectionPtr& conn,
