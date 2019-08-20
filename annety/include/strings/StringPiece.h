@@ -28,7 +28,7 @@ void copy_to_string(const StringPiece& self, std::string* target);
 void append_to_string(const StringPiece& self, std::string* target);
 
 size_t copy(const StringPiece& self,
-			char* buf,
+			char* target,
 			size_t n,
 			size_t pos);
 
@@ -237,9 +237,9 @@ public:
 		internal::append_to_string(*this, target);
 	}
   
-	size_type copy(value_type* buf, size_type n, size_type pos = 0) const
+	size_type copy(value_type* target, size_type n, size_type pos = 0) const
 	{
-		return internal::copy(*this, buf, n, pos);
+		return internal::copy(*this, target, n, pos);
 	}
 
   	// find: Search for a character or substring at a given offset.

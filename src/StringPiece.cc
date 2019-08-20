@@ -66,17 +66,17 @@ void append_to_string(const StringPiece& self, std::string* target)
 }
 
 size_t copy_T(const StringPiece& self,
-			  typename std::string::value_type* buf,
+			  typename std::string::value_type* target,
 			  size_t n, size_t pos)
 {
 	size_t ret = std::min(self.size() - pos, n);
-	memcpy(buf, self.data() + pos, ret * sizeof(typename std::string::value_type));
+	::memcpy(target, self.data() + pos, ret * sizeof(typename std::string::value_type));
 	return ret;
 }
 
-size_t copy(const StringPiece& self, char* buf, size_t n, size_t pos)
+size_t copy(const StringPiece& self, char* target, size_t n, size_t pos)
 {
-	return copy_T(self, buf, n, pos);
+	return copy_T(self, target, n, pos);
 }
 
 size_t find_T(const StringPiece& self,
