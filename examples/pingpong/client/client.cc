@@ -154,7 +154,8 @@ public:
 	void quit()
 	{
 		if (--num_connected_ <= 0) {
-			loop_->quit();
+			// FIXME
+			// loop_->quit();
 		}
 	}
 
