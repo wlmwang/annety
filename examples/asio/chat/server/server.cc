@@ -4,6 +4,7 @@
 #include "TcpServer.h"
 #include "EventLoop.h"
 #include "codec/LengthHeaderCodec.h"
+#include "codec/StringEofCodec.h"
 
 #include <iostream>
 #include <string>
@@ -21,7 +22,8 @@ class ChatServer
 public:
 	// MSS = 136. MTU = 140
 	ChatServer(EventLoop* loop, const EndPoint& addr)
-		: codec_(LengthHeaderCodec::kLengthType32, 136)
+		// : codec_(LengthHeaderCodec::kLengthType32, 136)
+		: codec_("\r\n", 136)
 	{
 		server_ = make_tcp_server(loop, addr, "ChatServer");
 
@@ -45,7 +47,9 @@ private:
 
 private:
 	TcpServerPtr server_;
-	LengthHeaderCodec codec_;
+
+	// LengthHeaderCodec codec_;
+	StringEofCodec codec_;
 
 	ConnectionList connections_;
 };

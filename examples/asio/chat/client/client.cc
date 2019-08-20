@@ -6,6 +6,7 @@
 #include "EventLoopThread.h"
 #include "synchronization/MutexLock.h"
 #include "codec/LengthHeaderCodec.h"
+#include "codec/StringEofCodec.h"
 
 #include <iostream>	// std::cin
 #include <string>	// std::getline
@@ -22,7 +23,8 @@ class ChatClient
 public:
 	// MSS = 136. MTU = 140
 	ChatClient(EventLoop* loop, const EndPoint& addr)
-		: codec_(LengthHeaderCodec::kLengthType32, 136)
+		// : codec_(LengthHeaderCodec::kLengthType32, 136)
+		: codec_("\r\n", 136)
 	{
 		client_ = make_tcp_client(loop, addr, "ChatClient");
 
@@ -70,7 +72,9 @@ private:
 
 private:
 	TcpClientPtr client_;
-	LengthHeaderCodec codec_;
+
+	// LengthHeaderCodec codec_;
+	StringEofCodec codec_;
 	
 	MutexLock lock_;
 	TcpConnectionPtr connection_;
