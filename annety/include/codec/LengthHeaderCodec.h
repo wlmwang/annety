@@ -28,7 +28,7 @@ public:
 		kLengthType64	= 8,
 	};
 
-	explicit LengthHeaderCodec(LENGTH_TYPE length_type, int64_t max_payload = 0) 
+	explicit LengthHeaderCodec(LENGTH_TYPE length_type, ssize_t max_payload = 0) 
 		: length_type_(length_type)
 		, max_payload_(max_payload)
 	{
@@ -43,7 +43,7 @@ public:
 		return length_type_;
 	}
 	
-	int64_t max_payload()
+	ssize_t max_payload()
 	{
 		return max_payload_;
 	}
@@ -81,12 +81,12 @@ public:
 
 		int rt = 0;
 		if (buff->readable_bytes() >= length_type()) {
-			const int64_t length = get_payload_length(buff);
+			const ssize_t length = get_payload_length(buff);
 			if (length < 0 || (max_payload() > 0 && length > max_payload())) {
 				LOG(ERROR) << "LengthHeaderCodec::decode Invalid length=" << length
 					<< ", max_payload=" << max_payload();
 				rt = -1;
-			} else if (buff->readable_bytes() >= static_cast<size_t>(length + length_type())) {
+			} else if (buff->readable_bytes() >= length + length_type()) {
 				// FIXME: move bytes from |buff| to |payload|.
 				payload->append(buff->begin_read() + length_type(), length);
 				buff->has_read(length_type() + length);
@@ -124,7 +124,7 @@ public:
 			}
 		};
 
-		const int64_t length = payload->readable_bytes();
+		const ssize_t length = payload->readable_bytes();
 		if (length == 0) {
 			LOG(WARNING) << "LengthHeaderCodec::encode Invalid length=0";
 			return 0;
@@ -143,7 +143,7 @@ public:
 
 private:
 	LENGTH_TYPE length_type_;
-	int64_t max_payload_;
+	ssize_t max_payload_;
 	
 	DISALLOW_COPY_AND_ASSIGN(LengthHeaderCodec);
 };
