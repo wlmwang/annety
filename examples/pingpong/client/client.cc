@@ -30,6 +30,8 @@ public:
 			std::bind(&Session::on_connect, this, _1));
 		client_->set_message_callback(
 			std::bind(&Session::on_message, this, _1, _2, _3));
+		client_->set_error_callback(
+			std::bind(&Session::on_error, this));
 	}
 
 	void start()
@@ -54,6 +56,8 @@ public:
 
 private:
 	void on_connect(const TcpConnectionPtr& conn);
+	
+	void on_error();
 
 	void on_message(const TcpConnectionPtr& conn, NetBuffer* buf, TimeStamp)
 	{
@@ -66,8 +70,8 @@ private:
 	}
 
 private:
-	TcpClientPtr client_;
 	Client* owner_;
+	TcpClientPtr client_;
 
 	int64_t bytes_read_{0};
 	int64_t bytes_written_{0};
@@ -142,6 +146,15 @@ public:
 				<< " average message size";
 			LOG(WARNING) << static_cast<double>(total_bytes_read) / (timeout_ * 1024 * 1024)
 				<< " MiB/s throughput";
+			
+			loop_->quit();
+		}
+	}
+
+	void quit()
+	{
+		if (--num_connected_ <= 0) {
+			loop_->quit();
 		}
 	}
 
@@ -153,8 +166,6 @@ private:
 		for (auto& session : sessions_) {
 			session->stop();
 		}
-
-		loop_->quit();
 	}
 
 private:
@@ -167,6 +178,11 @@ private:
 	std::string message_;
 	std::vector<std::unique_ptr<Session>> sessions_;
 };
+
+void Session::on_error()
+{
+	owner_->quit();
+}
 
 void Session::on_connect(const TcpConnectionPtr& conn)
 {
