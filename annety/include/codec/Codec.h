@@ -24,10 +24,18 @@ public:
 
 	// Decode payload from |buff| to |payload|
 	// NOTE: You must be remove the read bytes from |buff|
+	// Returns:
+	//   -1  decode error, going to close connection
+	//    1  decode success, going to call message callback
+	//    0  decode incomplete, continues to read more data
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) = 0;
 
 	// Encode stream bytes from |payload| to |buff|
 	// NOTE: You must be remove the sent bytes from |payload|
+	// Returns:
+	//   -1  encode error, going to close connection
+	//    1  encode success, going to send data to peer
+	//    0  encode incomplete, continues to send more data
 	virtual int encode(NetBuffer* payload, NetBuffer* buff) = 0;
 	
 	// *Not thread safe*

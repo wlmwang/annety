@@ -18,8 +18,6 @@ namespace annety
 class StringEofCodec : public Codec
 {
 public:
-	static const ssize_t kLimitSize = 1*1024*1024*1024;
-
 	explicit StringEofCodec(const std::string& string_eof, ssize_t max_payload = 512*1024) 
 		: inner_string_eof_(string_eof)
 		, string_eof_(inner_string_eof_.data(), inner_string_eof_.size())
@@ -27,7 +25,7 @@ public:
 		, curr_offset_(0)
 	{
 		CHECK(string_eof.size() > 0);
-		CHECK(max_payload <= kLimitSize);
+		CHECK(max_payload > 0);
 	}
 
 	StringPiece string_eof()
@@ -41,20 +39,33 @@ public:
 	}
 
 	// Decode payload from |buff| to |payload|
+	// NOTE: You must be remove the read bytes from |buff|
+	// Returns:
+	//   -1  decode error, going to close connection
+	//    1  decode success, going to call message callback
+	//    0  decode incomplete, continues to read more data
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) override
 	{
 		int rt = 0;
 		if (buff->readable_bytes() >= string_eof().size()) {
-			// FIXME: Save each decode offset
-			const StringPiece::size_type n = buff->to_string_piece().find(string_eof(), 0);
+			StringPiece::size_type n = StringPiece::npos;
+			if (string_eof().size() == 1) {
+				// high performance
+				n = buff->to_string_piece().find(*string_eof().data(), curr_offset_);
+			} else {
+				n = buff->to_string_piece().find(string_eof(), curr_offset_);
+			}
+			curr_offset_ += buff->readable_bytes() - string_eof().size() - 1;
+
 			if (n == StringPiece::npos && 
 				max_payload() > 0 && buff->readable_bytes() > max_payload() + string_eof().size()) {
-				LOG(WARNING) << "StringEofCodec::decode Invalid buffer bytes=" << buff->readable_bytes()
+				LOG(ERROR) << "StringEofCodec::decode Invalid buffer bytes=" << buff->readable_bytes()
 					<< ", max_payload=" << max_payload();
 				rt = -1;
 			} else if (n != StringPiece::npos) {
 				payload->append(buff->begin_read(), n);
 				buff->has_read(n + string_eof().size());
+				curr_offset_ = 0;
 				rt = 1;
 			}
 		}
@@ -62,6 +73,11 @@ public:
 	}
 	
 	// Encode stream bytes from |payload| to |buff|
+	// NOTE: You must be remove the sent bytes from |payload|
+	// Returns:
+	//   -1  encode error, going to close connection
+	//    1  encode success, going to send data to peer
+	//    0  encode incomplete, continues to send more data
 	virtual int encode(NetBuffer* payload, NetBuffer* buff) override
 	{
 		const ssize_t length = payload->readable_bytes();
@@ -69,7 +85,7 @@ public:
 			LOG(WARNING) << "StringEofCodec::encode Invalid length=0";
 			return 0;
 		} else if (max_payload() > 0 && length > max_payload()) {
-			LOG(WARNING) << "StringEofCodec::encode Invalid length=" << length
+			LOG(ERROR) << "StringEofCodec::encode Invalid length=" << length
 				<< ", max_payload=" << max_payload();
 			return -1;
 		}
@@ -86,7 +102,7 @@ private:
 
 	StringPiece string_eof_;
 	ssize_t max_payload_;
-	
+
 	size_t curr_offset_;
 
 	DISALLOW_COPY_AND_ASSIGN(StringEofCodec);
