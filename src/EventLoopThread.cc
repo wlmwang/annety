@@ -45,8 +45,9 @@ void EventLoopThread::quit_loop()
 		// still a tiny chance to call destructed object, if thread_func exits just now.
 		// but when EventLoopThread destructs, usually programming is exiting anyway.
 		loop->quit();
-		thread_.join();
 	}
+	thread_.join();
+
 	exiting_ = true;
 }
 
