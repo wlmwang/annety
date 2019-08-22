@@ -33,16 +33,10 @@ class TcpServer : public std::enable_shared_from_this<TcpServer>
 public:
 	using ThreadInitCallback = std::function<void(EventLoop*)>;
 
-	enum Option
-	{
-		kNoReusePort,
-		kReusePort,
-	};
-
 	TcpServer(EventLoop* loop,
 			  const EndPoint& addr,
 			  const std::string& name = "a-srv",
-			  Option option = kNoReusePort);
+			  bool reuse_port = false);
 
 	~TcpServer();
 	

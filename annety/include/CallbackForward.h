@@ -40,10 +40,9 @@ using TcpClientPtr = std::shared_ptr<TcpClient>;
 using TcpServerPtr = std::shared_ptr<TcpServer>;
 using SelectableFDPtr = std::unique_ptr<SelectableFD>;
 
-TcpServerPtr make_tcp_server(EventLoop*, const EndPoint&, const std::string&);
+TcpServerPtr make_tcp_server(EventLoop*, const EndPoint&, const std::string&, bool reuse_port = false);
 TcpClientPtr make_tcp_client(EventLoop*, const EndPoint&, const std::string&);
-TcpConnectionPtr make_tcp_connection(EventLoop*, const std::string&, SelectableFDPtr&&, 
-		const EndPoint&, const EndPoint&);
+TcpConnectionPtr make_tcp_connection(EventLoop*, const std::string&, SelectableFDPtr&&, const EndPoint&, const EndPoint&);
 
 // internal ------------------------------------------------------------------
 // default callback handler

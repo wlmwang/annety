@@ -31,11 +31,11 @@ static struct sockaddr_in6 get_local_addr(const SelectableFD& sfd)
 TcpServer::TcpServer(EventLoop* loop,
 					 const EndPoint& addr,
 					 const std::string& name,
-					 Option option)
+					 bool reuse_port)
 	: owner_loop_(loop)
 	, name_(name)
 	, ip_port_(addr.to_ip_port())
-	, acceptor_(new Acceptor(loop, addr, option == kReusePort))
+	, acceptor_(new Acceptor(loop, addr, reuse_port))
 	, loop_pool_(new EventLoopPool(loop, name))
 	, connect_cb_(default_connect_callback)
 	, message_cb_(default_message_callback)
@@ -152,11 +152,11 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 }
 
 // constructs an object of type TcpServerPtr and wraps it
-TcpServerPtr make_tcp_server(EventLoop* loop, const EndPoint& addr, const std::string& name)
+TcpServerPtr make_tcp_server(EventLoop* loop, const EndPoint& addr, const std::string& name, bool reuse_port)
 {
 	CHECK(loop);
-
-	TcpServerPtr srv(new TcpServer(loop, addr, name));
+	
+	TcpServerPtr srv(new TcpServer(loop, addr, name, reuse_port));
 	srv->initialize();
 	return srv;
 }
