@@ -22,8 +22,8 @@ class ChatServer
 public:
 	// MSS = 136. MTU = 140
 	ChatServer(EventLoop* loop, const EndPoint& addr)
-		// : codec_(LengthHeaderCodec::kLengthType32, 136)
-		: codec_("\r\n", 136)
+		// : codec_(loop, LengthHeaderCodec::kLengthType32, 136)
+		: codec_(loop, "\r\n", 136)
 	{
 		server_ = make_tcp_server(loop, addr, "ChatServer");
 

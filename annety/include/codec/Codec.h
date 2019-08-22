@@ -9,6 +9,7 @@
 #include "TimeStamp.h"
 #include "TcpConnection.h"
 #include "CallbackForward.h"
+#include "EventLoop.h"
 
 #include <functional>
 #include <utility>
@@ -18,7 +19,10 @@ namespace annety
 class Codec
 {
 public:
-	Codec() {}
+	explicit Codec(EventLoop* loop) : owner_loop_(loop)
+	{
+		CHECK(loop);
+	}
 
 	virtual ~Codec() {}
 
@@ -48,6 +52,8 @@ public:
 	// Make sure run in own loop
 	void decode_read(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp time)
 	{
+		owner_loop_->check_in_own_loop();
+
 		int rt = 0;
 		do {
 			NetBuffer payload;
@@ -84,6 +90,8 @@ public:
 	}
 
 protected:
+	EventLoop* owner_loop_;
+
 	MessageCallback message_cb_;
 
 	DISALLOW_COPY_AND_ASSIGN(Codec);

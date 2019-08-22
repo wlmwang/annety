@@ -18,8 +18,11 @@ namespace annety
 class StringEofCodec : public Codec
 {
 public:
-	explicit StringEofCodec(const std::string& string_eof, ssize_t max_payload = 512*1024) 
-		: inner_string_eof_(string_eof)
+	StringEofCodec(EventLoop* loop, 
+				   const std::string& string_eof, 
+				   ssize_t max_payload = 512*1024) 
+		: Codec(loop)
+		, inner_string_eof_(string_eof)
 		, string_eof_(inner_string_eof_.data(), inner_string_eof_.size())
 		, max_payload_(max_payload)
 		, curr_offset_(0)

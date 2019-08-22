@@ -28,8 +28,11 @@ public:
 		kLengthType64	= 8,
 	};
 
-	explicit LengthHeaderCodec(LENGTH_TYPE length_type, ssize_t max_payload = 0) 
-		: length_type_(length_type)
+	explicit LengthHeaderCodec(EventLoop* loop, 
+							   LENGTH_TYPE length_type, 
+							   ssize_t max_payload = 0) 
+		: Codec(loop)
+		, length_type_(length_type)
 		, max_payload_(max_payload)
 	{
 		DCHECK(length_type == kLengthType8 || 
