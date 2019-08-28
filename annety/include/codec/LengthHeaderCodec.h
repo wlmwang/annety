@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Aug 15 2019
 
 #ifndef ANT_CODEC_LENGTH_HEADER_CODEC_H_

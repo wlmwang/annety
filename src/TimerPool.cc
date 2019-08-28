@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jul 05 2019
 
 #include "TimerPool.h"

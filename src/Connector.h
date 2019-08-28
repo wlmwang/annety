@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 30 2019
 
 #ifndef ANT_CONNECTOR_H_

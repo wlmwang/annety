@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 17 2019
 
 #ifndef _ANT_END_POINT_H_

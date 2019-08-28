@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: May 08 2019
 
 #ifndef ANT_SYNCHRONIZATION_MUTEX_LOCK_H_

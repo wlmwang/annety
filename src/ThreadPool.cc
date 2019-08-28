@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: May 29 2019
 
 #include "threading/ThreadPool.h"

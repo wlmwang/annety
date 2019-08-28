@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jul 04 2019
 
 #include "Timer.h"

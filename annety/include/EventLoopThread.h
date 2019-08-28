@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 25 2019
 
 #ifndef ANT_EVENT_LOOP_THREAD_H_

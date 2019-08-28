@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jul 02 2019
 
 #include "LogFile.h"

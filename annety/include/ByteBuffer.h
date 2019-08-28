@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: May 08 2019
 
 #ifndef ANT_BYTE_BUFFER_H

@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 02 2019
 
 #ifndef ANT_SYNCHRONIZATION_BLOCKING_QUEUE_H

@@ -5,7 +5,7 @@
 // This file contains utility functions for dealing with the local
 // filesystem.
 
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 05 2019
 
 #include "files/FileUtil.h"

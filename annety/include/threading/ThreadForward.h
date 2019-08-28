@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 16 2019
 
 #ifndef ANT_THREADING_THREAD_FORWARD_H_

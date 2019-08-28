@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jul 28 2019
 
 #ifndef ANT_CONTAINERS_BIND_H

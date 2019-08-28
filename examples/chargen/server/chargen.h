@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Aug 04 2019
 
 #ifndef EXAMPLES_CHARGEN_SERVER_CHARGEN_H

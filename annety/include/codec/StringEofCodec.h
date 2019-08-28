@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Aug 20 2019
 
 #ifndef ANT_CODEC_STRING_EOF_CODEC_H_
