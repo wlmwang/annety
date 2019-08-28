@@ -28,10 +28,7 @@ static struct sockaddr_in6 get_local_addr(const SelectableFD& sfd)
 
 }	// namespace internal
 
-TcpServer::TcpServer(EventLoop* loop,
-					 const EndPoint& addr,
-					 const std::string& name,
-					 bool reuse_port)
+TcpServer::TcpServer(EventLoop* loop, const EndPoint& addr, const std::string& name, bool reuse_port)
 	: owner_loop_(loop)
 	, name_(name)
 	, ip_port_(addr.to_ip_port())

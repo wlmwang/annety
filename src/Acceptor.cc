@@ -49,10 +49,10 @@ void set_reuse_port(const SelectableFD& sfd, bool on)
 }	// namespace internal
 
 Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport)
-	: owner_loop_(loop),
-	  listen_socket_(new SocketFD(addr.family(), true, true)),
-	  listen_channel_(new Channel(owner_loop_, listen_socket_.get())),
-	  idle_fd_(::open("/dev/null", O_RDONLY | O_CLOEXEC))
+	: owner_loop_(loop)
+	, listen_socket_(new SocketFD(addr.family(), true, true))
+	, listen_channel_(new Channel(owner_loop_, listen_socket_.get()))
+	, idle_fd_(::open("/dev/null", O_RDONLY | O_CLOEXEC))
 {
 	LOG(TRACE) << "Acceptor::Acceptor the [" <<  addr.to_ip_port() << "] of"
 		<< " fd=" << listen_socket_->internal_fd() << " is constructing";
@@ -66,7 +66,8 @@ Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport)
 
 Acceptor::~Acceptor()
 {
-	LOG(TRACE) << "Acceptor::~Acceptor" << " fd=" << listen_socket_->internal_fd() << " is destructing";
+	LOG(TRACE) << "Acceptor::~Acceptor" << " fd=" 
+		<< listen_socket_->internal_fd() << " is destructing";
 	
 	listen_channel_->disable_all_event();
 	listen_channel_->remove();

@@ -11,11 +11,11 @@
 namespace annety
 {
 ThreadPool::ThreadPool(int num_threads, const std::string& name_prefix) 
-	: name_prefix_(name_prefix),
-	  num_threads_(num_threads),
-	  lock_(),
-	  empty_cv_(lock_),
-	  full_cv_(lock_) {}
+	: name_prefix_(name_prefix)
+	, num_threads_(num_threads)
+	, lock_()
+	, empty_cv_(lock_)
+	, full_cv_(lock_) {}
 
 ThreadPool::~ThreadPool()
 {

@@ -61,9 +61,9 @@ FilePath get_log_filename(const FilePath& path)
 LogFile::LogFile(const FilePath& path,
 				off_t rotate_size_b,
 				int check_every_n)
-	: path_(path),
-	  rotate_size_b_(rotate_size_b),
-	  check_every_n_(check_every_n)
+	: path_(path)
+	, rotate_size_b_(rotate_size_b)
+	, check_every_n_(check_every_n)
 {
 	assert(!path_.ends_with_separator());
 	rotate(true);

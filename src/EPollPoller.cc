@@ -30,9 +30,9 @@ static_assert(EPOLLERR == POLLERR,      "epoll uses same flag values as poll");
 static_assert(EPOLLHUP == POLLHUP,      "epoll uses same flag values as poll");
 
 EPollPoller::EPollPoller(EventLoop* loop)
-	: Poller(loop),
-	  epollfd_(::epoll_create1(EPOLL_CLOEXEC)),
-	  events_(kInitEventListSize)
+	: Poller(loop)
+	, epollfd_(::epoll_create1(EPOLL_CLOEXEC))
+	, events_(kInitEventListSize)
 {
 	CHECK(epollfd_ >= 0) << "epoll_create1 failed";
 }

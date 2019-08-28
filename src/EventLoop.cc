@@ -10,8 +10,15 @@
 #include "TimerPool.h"
 #include "PlatformThread.h"
 
+#include <signal.h>	// for signal
+
 namespace annety
 {
+// as a network library, it is important to ignore SIGPIPE signal.
+BEFORE_MAIN_EXECUTOR() {
+	::signal(SIGPIPE, SIG_IGN);
+}
+
 namespace
 {
 thread_local EventLoop* tls_event_loop = nullptr;
