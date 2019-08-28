@@ -20,7 +20,7 @@ class StringEofCodec : public Codec
 public:
 	StringEofCodec(EventLoop* loop, 
 				   const std::string& string_eof, 
-				   ssize_t max_payload = 512*1024) 
+				   ssize_t max_payload = 64*1024*1024) 
 		: Codec(loop)
 		, inner_string_eof_(string_eof)
 		, string_eof_(inner_string_eof_.data(), inner_string_eof_.size())
