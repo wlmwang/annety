@@ -38,7 +38,7 @@
 #define OS_POSIX 1
 #endif
 
-// Use tcmalloc
+// Use tcmalloc.
 #if defined(OS_LINUX) && !defined(NO_TCMALLOC)
 #define USE_TCMALLOC 1
 #endif
@@ -50,7 +50,7 @@
 #error Do not support your compiler in BuildConfig.h
 #endif
 
-// Compiler detection for cxx0x
+// Compiler detection for cxx0x.
 #if __cplusplus < 201103L
 #error Your compiler do not support C++0x in BuildConfig.h
 #endif

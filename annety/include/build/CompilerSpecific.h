@@ -55,7 +55,7 @@ inline void ignore_result(const T&) {}
 // For v*printf functions (which take a va_list), pass 0 for dots_param.
 // (This is undocumented but matches what the system C headers do.)
 #define _Printf_format_string_
-
+// ---
 #if defined(COMPILER_GCC) || defined(__clang__)
 #define PRINTF_FORMAT(format_param, dots_param) \
 	__attribute__((format(printf, format_param, dots_param)))
@@ -64,6 +64,8 @@ inline void ignore_result(const T&) {}
 #endif
 
 // Macro for hinting that an expression is likely to be false.
+// e.g:
+// 	if (UNLIKELY(tls_tid == 0)) {}
 #if !defined(UNLIKELY)
 #if defined(COMPILER_GCC) || defined(__clang__)
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
