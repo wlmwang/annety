@@ -15,7 +15,8 @@ namespace annety
 {
 namespace containers
 {
-// FIXME: do not support binding lambda expressions yet
+// FIXME: do not support binding lambda expressions yet, and it’s 
+// not good for right-value support.
 
 // Placeholder --------------------------------------------------------------------------
 template <int N>

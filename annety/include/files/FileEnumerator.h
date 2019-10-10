@@ -29,8 +29,7 @@ namespace annety
 //
 // Example:
 //
-//   FileEnumerator enums(FilePath("."), false, FileEnumerator::FILES,
-//                             "*.txt");
+//   FileEnumerator enums(FilePath("."), false, FileEnumerator::FILES, "*.txt");
 //   for (FilePath name = enums.next(); !name.empty(); name = enums.next())
 //     ...
 class FileEnumerator

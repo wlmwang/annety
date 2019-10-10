@@ -23,7 +23,7 @@ void CountDownLatch::count_down()
 	}
 }
 
-void CountDownLatch::await()
+void CountDownLatch::wait()
 {
 	AutoLock locked(lock_);
 	while (count_ > 0) {
@@ -31,7 +31,7 @@ void CountDownLatch::await()
 	}
 }
 
-void CountDownLatch::await(const TimeDelta& max_time)
+void CountDownLatch::wait(const TimeDelta& max_time)
 {
 	AutoLock locked(lock_);
 	while (count_ > 0) {

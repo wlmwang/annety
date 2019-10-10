@@ -13,7 +13,7 @@ namespace annety
 // A codec that handle bytes of the following struct's streams:
 // hello\r\n
 // world\r\n
-
+//
 // A Simple Fixed Tail Codec with Special Characters
 class StringEofCodec : public Codec
 {

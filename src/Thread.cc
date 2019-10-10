@@ -75,7 +75,7 @@ Thread& Thread::start()
 {
 	start_async();
 	// Wait for the thread to complete initialization.
-	latch_.await();
+	latch_.wait();
 	started_ = true;
 	return *this;
 }

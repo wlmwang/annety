@@ -20,8 +20,8 @@ public:
 	void count_down();
 	int get_count() const;
 
-  	void await();
-  	void await(const TimeDelta& max_time);
+  	void wait();
+  	void wait(const TimeDelta& max_time);
 
 private:
 	mutable MutexLock lock_;

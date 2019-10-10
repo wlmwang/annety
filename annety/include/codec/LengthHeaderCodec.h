@@ -15,7 +15,7 @@ namespace annety
 // 	uint32_t length;
 // 	char body[0];
 // }
-
+//
 // A Simple Fixed Head Codec with Length
 class LengthHeaderCodec : public Codec
 {

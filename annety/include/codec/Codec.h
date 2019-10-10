@@ -9,13 +9,14 @@
 #include "TimeStamp.h"
 #include "TcpConnection.h"
 #include "CallbackForward.h"
-#include "EventLoop.h"
+#include "EventLoop.h"	// check_in_own_loop
 
 #include <functional>
 #include <utility>
 
 namespace annety
 {
+// Base class of codec
 class Codec
 {
 public:
