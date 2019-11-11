@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jul 15 2019
 
 #ifndef ANT_SIGNAL_SERVER_H_

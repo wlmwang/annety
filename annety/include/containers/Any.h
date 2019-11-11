@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jul 14 2019
 
 #ifndef ANT_CONTAINERS_ANY_H

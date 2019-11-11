@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 05 2019
 
 #include "files/FileEnumerator.h"
@@ -91,12 +91,12 @@ FileEnumerator::FileEnumerator(const FilePath& root_path,
 							   int file_type,
 							   const FilePath::StringType& pattern,
 							   FolderSearchPolicy folder_search_policy)
-	: current_directory_entry_(0),
-	  root_path_(root_path),
-	  recursive_(recursive),
-	  file_type_(file_type),
-	  pattern_(pattern),
-	  folder_search_policy_(folder_search_policy)
+	: current_directory_entry_(0)
+	, root_path_(root_path)
+	, recursive_(recursive)
+	, file_type_(file_type)
+	, pattern_(pattern)
+	, folder_search_policy_(folder_search_policy)
 {
 	// INCLUDE_DOT_DOT must not be specified if recursive.
 	DCHECK(!(recursive && (INCLUDE_DOT_DOT & file_type_)));

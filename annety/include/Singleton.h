@@ -1,5 +1,5 @@
 
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 03 2019
 
 #ifndef ANT_SINGLETON_H

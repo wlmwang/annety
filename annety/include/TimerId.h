@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jul 05 2019
 
 #ifndef ANT_TIMER_ID_H_

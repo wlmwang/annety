@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 09 2019
 
 #ifndef ANT_THREADING_THREAD_LOCAL_H

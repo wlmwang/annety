@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Aug 04 2019
 
 #ifndef EXAMPLES_NETTY_ECHO_CLIENT_ECHO_H

@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Aug 20 2019
 
 #ifndef ANT_CODEC_STRING_EOF_CODEC_H_
@@ -13,14 +13,14 @@ namespace annety
 // A codec that handle bytes of the following struct's streams:
 // hello\r\n
 // world\r\n
-
+//
 // A Simple Fixed Tail Codec with Special Characters
 class StringEofCodec : public Codec
 {
 public:
 	StringEofCodec(EventLoop* loop, 
 				   const std::string& string_eof, 
-				   ssize_t max_payload = 512*1024) 
+				   ssize_t max_payload = 64*1024*1024) 
 		: Codec(loop)
 		, inner_string_eof_(string_eof)
 		, string_eof_(inner_string_eof_.data(), inner_string_eof_.size())
@@ -42,7 +42,7 @@ public:
 	}
 
 	// Decode payload from |buff| to |payload|
-	// NOTE: You must be remove the read bytes from |buff|
+	// NOTE: You must be remove the read bytes from |buff| when decode success
 	// Returns:
 	//   -1  decode error, going to close connection
 	//    1  decode success, going to call message callback
@@ -76,7 +76,7 @@ public:
 	}
 	
 	// Encode stream bytes from |payload| to |buff|
-	// NOTE: You must be remove the sent bytes from |payload|
+	// NOTE: You must be remove the sent bytes from |payload| when encode success
 	// Returns:
 	//   -1  encode error, going to close connection
 	//    1  encode success, going to send data to peer

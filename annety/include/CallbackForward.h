@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 17 2019
 
 #ifndef ANT_CALLBACK_FORWARD_H_

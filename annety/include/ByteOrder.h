@@ -1,4 +1,4 @@
-// Modify: Anny Wang
+// By: Anny Wang
 // Date: May 08 2019
 
 #ifndef ANT_BYTE_ORDER_H

@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Aug 15 2019
 
 #ifndef ANT_CODEC_CODEC_H_
@@ -9,13 +9,14 @@
 #include "TimeStamp.h"
 #include "TcpConnection.h"
 #include "CallbackForward.h"
-#include "EventLoop.h"
+#include "EventLoop.h"	// check_in_own_loop
 
 #include <functional>
 #include <utility>
 
 namespace annety
 {
+// Base class of codec
 class Codec
 {
 public:
@@ -27,7 +28,7 @@ public:
 	virtual ~Codec() {}
 
 	// Decode payload from |buff| to |payload|
-	// NOTE: You must be remove the read bytes from |buff|
+	// NOTE: You must be remove the read bytes from |buff| when decode success
 	// Returns:
 	//   -1  decode error, going to close connection
 	//    1  decode success, going to call message callback
@@ -35,7 +36,7 @@ public:
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) = 0;
 
 	// Encode stream bytes from |payload| to |buff|
-	// NOTE: You must be remove the sent bytes from |payload|
+	// NOTE: You must be remove the sent bytes from |payload| when encode success
 	// Returns:
 	//   -1  encode error, going to close connection
 	//    1  encode success, going to send data to peer

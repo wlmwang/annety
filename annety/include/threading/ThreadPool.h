@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: May 29 2019
 
 #ifndef ANT_THREADING_THREAD_POOL_H_

@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: May 28 2019
 
 #ifndef ANT_EXCEPTIONS_H

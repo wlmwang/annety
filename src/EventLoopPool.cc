@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 25 2019
 
 #include "EventLoopPool.h"

@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: May 28 2019
 
 #ifndef ANT_SYNCHRONIZATION_COUNT_DOWN_LATCH_H
@@ -20,8 +20,8 @@ public:
 	void count_down();
 	int get_count() const;
 
-  	void await();
-  	void await(const TimeDelta& max_time);
+  	void wait();
+  	void wait(const TimeDelta& max_time);
 
 private:
 	mutable MutexLock lock_;

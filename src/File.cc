@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 05 2019
 
 #include "files/File.h"
@@ -85,9 +85,9 @@ File::Error call_fcntl_flock(PlatformFile file, bool do_lock)
 // File::Info ----------------------------------------------------
 
 File::Info::Info()
-	: size(0),
-	  is_directory(false),
-	  is_symbolic_link(false) {}
+	: size(0)
+	, is_directory(false)
+	, is_symbolic_link(false) {}
 
 File::Info::~Info() = default;
 
@@ -139,13 +139,16 @@ void File::Info::from_stat(const stat_wrapper_t& stat_info)
 // File ----------------------------------------------------
 
 File::File() 
-	: error_details_(FILE_ERROR_FAILED), created_(false) {}
+	: error_details_(FILE_ERROR_FAILED)
+	, created_(false) {}
 
 File::File(Error error_details) 
-	: error_details_(error_details), created_(false) {}
+	: error_details_(error_details)
+	, created_(false) {}
 
 File::File(const FilePath& path, uint32_t flags)
-	: error_details_(FILE_OK), created_(false)
+	: error_details_(FILE_OK)
+	, created_(false)
 {
 	initialize(path, flags);
 }

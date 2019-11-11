@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: May 08 2019
 
 #ifndef ANT_BUILD_BUILD_CONFIG_H_
@@ -38,7 +38,7 @@
 #define OS_POSIX 1
 #endif
 
-// Use tcmalloc
+// Use tcmalloc.
 #if defined(OS_LINUX) && !defined(NO_TCMALLOC)
 #define USE_TCMALLOC 1
 #endif
@@ -50,7 +50,7 @@
 #error Do not support your compiler in BuildConfig.h
 #endif
 
-// Compiler detection for cxx0x
+// Compiler detection for cxx0x.
 #if __cplusplus < 201103L
 #error Your compiler do not support C++0x in BuildConfig.h
 #endif

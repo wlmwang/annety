@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Aug 15 2019
 
 #ifndef ANT_CODEC_LENGTH_HEADER_CODEC_H_
@@ -15,7 +15,7 @@ namespace annety
 // 	uint32_t length;
 // 	char body[0];
 // }
-
+//
 // A Simple Fixed Head Codec with Length
 class LengthHeaderCodec : public Codec
 {
@@ -30,7 +30,7 @@ public:
 
 	explicit LengthHeaderCodec(EventLoop* loop, 
 							   LENGTH_TYPE length_type, 
-							   ssize_t max_payload = 0) 
+							   ssize_t max_payload = 64*1024*1024) 
 		: Codec(loop)
 		, length_type_(length_type)
 		, max_payload_(max_payload)
@@ -55,7 +55,7 @@ public:
 	// NOTE: You must be remove the read bytes from |buff|
 	// Returns:
 	//   -1  decode error, going to close connection
-	//    1  decode success, going to call message callback
+	//    1  decode success, going to call message callback when decode success
 	//    0  decode incomplete, continues to read more data
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) override
 	{
@@ -100,7 +100,7 @@ public:
 	}
 	
 	// Encode stream bytes from |payload| to |buff|
-	// NOTE: You must be remove the sent bytes from |payload|
+	// NOTE: You must be remove the sent bytes from |payload| when encode success
 	// Returns:
 	//   -1  encode error, going to close connection
 	//    1  encode success, going to send data to peer

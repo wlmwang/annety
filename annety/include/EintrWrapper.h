@@ -11,7 +11,7 @@
 // Don't wrap close calls in HANDLE_EINTR. Use IGNORE_EINTR if the return
 // value of close is significant. See http://crbug.com/269623.
 
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 02 2019
 
 #ifndef ANT_EINTR_WRAPPER_H_

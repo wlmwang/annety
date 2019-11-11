@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: May 08 2019
 
 #ifndef ANT_BYTE_BUFFER_H
@@ -16,7 +16,7 @@
 namespace annety
 {
 // cannot use LOG/CHECK macros, because LOG/CHECK Low-level implementation
-// is ByteBuffer. so we use assert() macros here.
+// is dependent ByteBuffer. so we use assert() macros here.
 
 // @coding
 // +-------------------+------------------+------------------+

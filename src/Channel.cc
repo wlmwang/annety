@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 17 2019
 
 #include "Channel.h"
@@ -17,8 +17,8 @@ const int Channel::kReadEvent = POLLIN | POLLPRI;
 const int Channel::kWriteEvent = POLLOUT;
 
 Channel::Channel(EventLoop* loop, SelectableFD* sfd)
-	: owner_loop_(loop),
-	  select_fd_(sfd) {}
+	: owner_loop_(loop)
+	, select_fd_(sfd) {}
 
 Channel::~Channel()
 {

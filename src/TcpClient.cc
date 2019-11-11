@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 30 2019
 
 #include "TcpClient.h"
@@ -36,9 +36,7 @@ void remove_connector(ConnectorPtr& connector)
 
 }	// namespace internal
 
-TcpClient::TcpClient(EventLoop* loop,
-		const EndPoint& addr,
-		const std::string& name)
+TcpClient::TcpClient(EventLoop* loop, const EndPoint& addr, const std::string& name)
 	: owner_loop_(loop)
 	, name_(name)
 	, ip_port_(addr.to_ip_port())

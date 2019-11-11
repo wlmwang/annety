@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jul 04 2019
 
 #include "Timer.h"
@@ -14,10 +14,10 @@ std::atomic<int64_t> globalSequence{0};
 }	// namespace anonymous
 
 Timer::Timer(TimerCallback cb, TimeStamp expired, TimeDelta interval)
-	: expired_(expired),
-	  interval_(interval),
-	  cb_(std::move(cb)),
-	  sequence_(globalSequence++)
+	: expired_(expired)
+	, interval_(interval)
+	, cb_(std::move(cb))
+	, sequence_(globalSequence++)
 {
 	LOG(TRACE) << "Timer::Timer [" << "sequence:" << sequence_ 
 		<< ", interval:" << interval_ 

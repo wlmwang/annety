@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: May 08 2019
 
 #ifndef ANT_STRINGS_STRING_PIECE_H_
@@ -100,17 +100,21 @@ public:
 	static const size_type npos = -1;
 
 public:
-	constexpr StringPiece() : ptr_(nullptr), length_(0) {}
+	constexpr StringPiece() 
+		: ptr_(nullptr)
+		, length_(0) {}
 
 	constexpr StringPiece(const value_type* str)
-		: ptr_(str), 
-		  length_(!str ?0 : ::strlen(reinterpret_cast<const char*>(str))) {}
+		: ptr_(str)
+		, length_(!str ?0 : ::strlen(reinterpret_cast<const char*>(str))) {}
 
 	StringPiece(const std::string& str)
-		: ptr_(str.data()), length_(str.size()) {}
+		: ptr_(str.data())
+		, length_(str.size()) {}
 
 	constexpr StringPiece(const value_type* offset, size_type len)
-		: ptr_(offset), length_(len) {}
+		: ptr_(offset)
+		, length_(len) {}
 
 	StringPiece(const typename std::string::const_iterator& begin,
 				const typename std::string::const_iterator& end)

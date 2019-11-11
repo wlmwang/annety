@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Jun 17 2019
 
 #include "SignalServer.h"
@@ -16,11 +16,6 @@
 
 namespace annety
 {
-// as a network library, it is important to ignore SIGPIPE signal.
-BEFORE_MAIN_EXECUTOR() {
-	::signal(SIGPIPE, SIG_IGN);
-}
-
 namespace {
 // similar to SIG_IGN macro, ignoring signal processing
 // #define SIG_IGN ((__sighandler_t) 1)

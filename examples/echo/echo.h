@@ -1,4 +1,4 @@
-// Refactoring: Anny Wang
+// By: wlmwang
 // Date: Aug 03 2019
 
 #ifndef EXAMPLES_ECHO_ECHO_H
