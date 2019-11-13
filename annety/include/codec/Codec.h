@@ -51,7 +51,7 @@ public:
 
 	// *Not thread safe*
 	// Make sure run in own loop
-	void decode_read(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp time)
+	void decode_read(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
 	{
 		owner_loop_->check_in_own_loop();
 
@@ -62,7 +62,7 @@ public:
 
 			if (rt == 1) {
 				if (message_cb_) {
-					message_cb_(conn, &payload, time);
+					message_cb_(conn, &payload, receive);
 				} else {
 					LOG(WARNING) << "LengthHeaderCodec::message_callback no message callback";
 				}

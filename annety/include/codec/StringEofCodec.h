@@ -11,6 +11,12 @@
 namespace annety
 { 
 // A codec that handle bytes of the following struct's streams:
+// struct streams __attribute__ ((__packed__))
+// {
+// 	char payload[N];
+// }
+//
+// Like as:
 // hello\r\n
 // world\r\n
 //
@@ -72,6 +78,7 @@ public:
 				rt = 1;
 			}
 		}
+
 		return rt;
 	}
 	
@@ -97,6 +104,7 @@ public:
 		buff->append(payload->begin_read(), length);
 		buff->append(string_eof().data(), string_eof().size());
 		payload->has_read_all();
+		
 		return 1;
 	}
 

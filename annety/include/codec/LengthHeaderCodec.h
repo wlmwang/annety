@@ -10,11 +10,14 @@
 namespace annety
 { 
 // A codec that handle bytes of the following struct's streams:
-// struct streams
+// struct streams __attribute__ ((__packed__))
 // {
 // 	uint32_t length;
-// 	char body[0];
+// 	char payload[N];
 // }
+//
+// Like as:
+// | 11 | hello-world |
 //
 // A Simple Fixed Head Codec with Length
 class LengthHeaderCodec : public Codec
@@ -96,6 +99,7 @@ public:
 				rt = 1;
 			}
 		}
+
 		return rt;
 	}
 	
@@ -141,6 +145,7 @@ public:
 		set_buff_length(payload, buff);
 		buff->append(payload->begin_read(), length);
 		payload->has_read_all();
+		
 		return 1;
 	}
 
