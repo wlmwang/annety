@@ -5,6 +5,7 @@
 #define ANT_CODEC_STRING_EOF_CODEC_H_
 
 #include "Macros.h"
+#include "Logging.h"
 #include "codec/Codec.h"
 #include "strings/StringPiece.h"
 

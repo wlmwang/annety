@@ -53,6 +53,8 @@ public:
 	// Make sure run in own loop
 	void decode_read(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
 	{
+		DCHECK(!!buff);
+		
 		owner_loop_->check_in_own_loop();
 
 		int rt = 0;
@@ -76,6 +78,8 @@ public:
 	// *Thread safe*
 	void endcode_send(const TcpConnectionPtr& conn, NetBuffer* payload)
 	{
+		DCHECK(!!payload);
+
 		int rt = 0;
 		do {
 			NetBuffer buff;

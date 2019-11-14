@@ -23,6 +23,7 @@ using MessagePtr = std::shared_ptr<google::protobuf::Message>;
 using ProtobufMessageCallback = 
 		std::function<void(const TcpConnectionPtr&, const MessagePtr&, TimeStamp)>;
 
+// Dispather Callback
 class Callback
 {
 public:
@@ -55,12 +56,11 @@ private:
 	ProtobufMessageTCallback cb_;
 };
 
-// A dispatcher that handle protobuf message.
+// A simple dispatcher of protobuf message.
 class ProtobufDispatcher
 {
 public:
-	ProtobufDispatcher(ProtobufMessageCallback cb = unknown_message)
-		: default_cb_(std::move(cb)) {}
+	ProtobufDispatcher(ProtobufMessageCallback cb = unknown_message) : default_cb_(std::move(cb)) {}
 
 	// dispatch the protobuf message
 	void dispatch_message(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const
@@ -72,7 +72,7 @@ public:
 			if (default_cb_) {
 				default_cb_(conn, mesg, receive);
 			} else {
-				LOG(ERROR) << "ProtobufDispatcher::dispatch_message Invalid message typename=" 
+				LOG(ERROR) << "ProtobufDispatcher::dispatch_message Invalid message, TypeName=" 
 					<< mesg->GetTypeName();
 			}
 		}
@@ -93,6 +93,7 @@ private:
 			std::map<const google::protobuf::Descriptor*, std::shared_ptr<Callback>>;
 
 	CallbackMap cbs_;
+	
 	ProtobufMessageCallback default_cb_;
 };
 

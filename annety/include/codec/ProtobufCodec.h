@@ -5,6 +5,7 @@
 #define ANT_CODEC_PROTOBUF_CODEC_H
 
 #include "Macros.h"
+#include "Logging.h"
 #include "codec/Codec.h"
 
 #include <string>
@@ -39,6 +40,8 @@ using ProtobufMessageCallback =
 //   char     protobufData[length-nameLen-8];
 //   int32_t  checkSum; // adler32 of nameLen, typeName and protobufData
 // }
+//
+// A Simple Fixed Head Protobuf Codec with Length and protobuf::message::TypeName
 class ProtobufCodec : public Codec
 {
 public:
@@ -190,8 +193,8 @@ public:
 	}
 
 private:
-	void parse_payload(const TcpConnectionPtr&, NetBuffer*, TimeStamp);
 	bool serialize_payload(const google::protobuf::Message&, NetBuffer*);
+	void parse_payload(const TcpConnectionPtr&, NetBuffer*, TimeStamp);
 
 	static ERROR_CODE parse(NetBuffer*, MessagePtr&);
 	static google::protobuf::Message* generate_message(const std::string&);
@@ -235,30 +238,6 @@ private:
 	DISALLOW_COPY_AND_ASSIGN(ProtobufCodec);
 };
 
-void ProtobufCodec::parse_payload(const TcpConnectionPtr& conn, NetBuffer* payload, TimeStamp receive)
-{
-	MessagePtr mesg;
-	ERROR_CODE err = parse(payload, mesg);
-
-	if (err == kNoError && mesg) {
-		if (dispatch_cb_) {
-			dispatch_cb_(conn, mesg, receive);
-		} else {
-			LOG(WARNING) << "ProtobufCodec::parse_payload no dispatch callback";
-		}
-	} else {
-		error_cb_(conn, payload, receive, err);
-	}
-}
-
-void ProtobufCodec::error_callback(const TcpConnectionPtr& conn, NetBuffer*, TimeStamp, ERROR_CODE err)
-{
-	LOG(ERROR) << "ProtobufCodec::error_callback - " << to_errstr(err);
-	if (conn && conn->connected()) {
-		conn->shutdown();
-	}
-}
-
 bool ProtobufCodec::serialize_payload(const google::protobuf::Message& mesg, NetBuffer* payload)
 {
 	DCHECK(mesg.IsInitialized());
@@ -279,6 +258,22 @@ bool ProtobufCodec::serialize_payload(const google::protobuf::Message& mesg, Net
 	DCHECK(payload->readable_bytes() == sizeof(nameLen) + nameLen + size);
 
 	return true;
+}
+
+void ProtobufCodec::parse_payload(const TcpConnectionPtr& conn, NetBuffer* payload, TimeStamp receive)
+{
+	MessagePtr mesg;
+	ERROR_CODE err = parse(payload, mesg);
+
+	if (err == kNoError && mesg) {
+		if (dispatch_cb_) {
+			dispatch_cb_(conn, mesg, receive);
+		} else {
+			LOG(WARNING) << "ProtobufCodec::parse_payload no dispatch callback";
+		}
+	} else {
+		error_cb_(conn, payload, receive, err);
+	}
 }
 
 ProtobufCodec::ERROR_CODE ProtobufCodec::parse(NetBuffer* payload, MessagePtr& mesg)
@@ -328,6 +323,14 @@ google::protobuf::Message* ProtobufCodec::generate_message(const std::string& na
 	}
 
 	return mesg;
+}
+
+void ProtobufCodec::error_callback(const TcpConnectionPtr& conn, NetBuffer*, TimeStamp, ERROR_CODE err)
+{
+	LOG(ERROR) << "ProtobufCodec::error_callback - " << to_errstr(err);
+	if (conn && conn->connected()) {
+		conn->shutdown();
+	}
 }
 
 const std::string& ProtobufCodec::to_errstr(ERROR_CODE errorCode)

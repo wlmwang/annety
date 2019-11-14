@@ -5,6 +5,7 @@
 #define ANT_CODEC_LENGTH_HEADER_CODEC_H_
 
 #include "Macros.h"
+#include "Logging.h"
 #include "codec/Codec.h"
 
 namespace annety
