@@ -25,7 +25,7 @@ public:
 		CHECK(loop);
 	}
 
-	virtual ~Codec() {}
+	virtual ~Codec() = default;
 
 	// Decode payload from |buff| to |payload|
 	// NOTE: You must be remove the read bytes from |buff| when decode success

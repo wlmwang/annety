@@ -56,6 +56,7 @@ public:
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) override
 	{
 		int rt = 0;
+		
 		if (buff->readable_bytes() >= string_eof().size()) {
 			StringPiece::size_type n = StringPiece::npos;
 			if (string_eof().size() == 1) {
@@ -72,6 +73,7 @@ public:
 					<< ", max_payload=" << max_payload();
 				rt = -1;
 			} else if (n != StringPiece::npos) {
+				// FIXME: move bytes from |buff| to |payload|. (not copy)
 				payload->append(buff->begin_read(), n);
 				buff->has_read(n + string_eof().size());
 				curr_offset_ = 0;
@@ -100,7 +102,7 @@ public:
 			return -1;
 		}
 
-		// FIXME: move bytes from |payload| to |buff|
+		// FIXME: move bytes from |payload| to |buff|. (not copy)
 		buff->append(payload->begin_read(), length);
 		buff->append(string_eof().data(), string_eof().size());
 		payload->has_read_all();

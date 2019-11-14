@@ -13,7 +13,7 @@ namespace annety
 // struct streams __attribute__ ((__packed__))
 // {
 // 	uint32_t length;
-// 	char payload[N];
+// 	char payload[length];
 // }
 //
 // Like as:
@@ -86,6 +86,7 @@ public:
 		};
 
 		int rt = 0;
+
 		if (buff->readable_bytes() >= length_type()) {
 			const ssize_t length = get_payload_length(buff);
 			if (length < 0 || (max_payload() > 0 && length > max_payload())) {
@@ -93,7 +94,7 @@ public:
 					<< ", max_payload=" << max_payload();
 				rt = -1;
 			} else if (buff->readable_bytes() >= static_cast<size_t>(length + length_type())) {
-				// FIXME: move bytes from |buff| to |payload|.
+				// FIXME: move bytes from |buff| to |payload|. (not copy)
 				payload->append(buff->begin_read() + length_type(), length);
 				buff->has_read(length_type() + length);
 				rt = 1;
@@ -141,11 +142,11 @@ public:
 			return -1;
 		}
 
-		// FIXME: move bytes from |payload| to |buff|
+		// FIXME: move bytes from |payload| to |buff|. (not copy)
 		set_buff_length(payload, buff);
 		buff->append(payload->begin_read(), length);
 		payload->has_read_all();
-		
+
 		return 1;
 	}
 
