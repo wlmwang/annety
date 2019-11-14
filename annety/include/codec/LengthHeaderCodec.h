@@ -62,6 +62,8 @@ public:
 	//    0  decode incomplete, continues to read more data
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) override
 	{
+		DCHECK(!!buff && !!payload);
+
 		auto get_payload_length = [this] (const NetBuffer* buff) {
 			int64_t length = -1;
 			switch (length_type()) {
@@ -112,6 +114,8 @@ public:
 	//    0  encode incomplete, continues to send more data
 	virtual int encode(NetBuffer* payload, NetBuffer* buff) override
 	{
+		DCHECK(!!buff && !!payload);
+		
 		auto set_buff_length = [this] (const NetBuffer* payload, NetBuffer* buff) {
 			switch (length_type()) {
 			case kLengthType8:
