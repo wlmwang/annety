@@ -45,16 +45,6 @@ public:
 			length_type == kLengthType64);
 	}
 
-	LENGTH_TYPE length_type()
-	{
-		return length_type_;
-	}
-	
-	ssize_t max_payload()
-	{
-		return max_payload_;
-	}
-
 	// Decode payload from |buff| to |payload|
 	// NOTE: You must be remove the read bytes from |buff|
 	// Returns:
@@ -153,6 +143,17 @@ public:
 		payload->has_read_all();
 
 		return 1;
+	}
+
+private:
+	LENGTH_TYPE length_type()
+	{
+		return length_type_;
+	}
+	
+	ssize_t max_payload()
+	{
+		return max_payload_;
 	}
 
 private:

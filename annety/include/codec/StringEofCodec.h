@@ -38,16 +38,6 @@ public:
 		CHECK(max_payload > 0);
 	}
 
-	StringPiece string_eof()
-	{
-		return string_eof_;
-	}
-	
-	ssize_t max_payload()
-	{
-		return max_payload_;
-	}
-
 	// Decode payload from |buff| to |payload|
 	// NOTE: You must be remove the read bytes from |buff| when decode success
 	// Returns:
@@ -115,6 +105,17 @@ public:
 		return 1;
 	}
 
+private:
+	StringPiece string_eof()
+	{
+		return string_eof_;
+	}
+	
+	ssize_t max_payload()
+	{
+		return max_payload_;
+	}
+	
 private:
 	std::string inner_string_eof_;
 

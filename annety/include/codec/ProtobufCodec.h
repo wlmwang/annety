@@ -4,8 +4,10 @@
 #ifndef ANT_CODEC_PROTOBUF_CODEC_H
 #define ANT_CODEC_PROTOBUF_CODEC_H
 
+#include "build/CompilerSpecific.h"
 #include "Macros.h"
 #include "Logging.h"
+#include "Crc32c.h"
 #include "codec/Codec.h"
 
 #include <string>
@@ -18,12 +20,20 @@ namespace annety
 namespace
 {
 const std::string kNoErrorStr = "NoError";
-const std::string kInvalidLengthStr = "InvalidLength";
-const std::string kCheckSumErrorStr = "CheckSumError";
 const std::string kInvalidNameLenStr = "InvalidNameLen";
 const std::string kUnknownMessageTypeStr = "UnknownMessageType";
 const std::string kParseErrorStr = "ParseError";
 const std::string kUnknownErrorStr = "UnknownError";
+}	// namespace anonymous
+
+namespace
+{
+uint32_t peek_uint32(const char* buff)
+{
+	uint32_t be32 = 0;
+	::memcpy(&be32, buff, sizeof be32);
+	return net_to_host32(be32);
+}
 }	// namespace anonymous
 
 using MessagePtr = std::shared_ptr<google::protobuf::Message>;
@@ -38,7 +48,7 @@ using ProtobufMessageCallback =
 //   int32_t  nameLen;
 //   char     typeName[nameLen];	// c-style string
 //   char     protobufData[length-nameLen-8];
-//   int32_t  checkSum; // adler32 of nameLen, typeName and protobufData
+//   int32_t  checkSum;				// crc32 of nameLen, typeName and protobufData
 // }
 //
 // A Simple Fixed Head Protobuf Codec with Length and protobuf::message::TypeName
@@ -56,8 +66,6 @@ public:
 	enum ERROR_CODE
 	{
 		kNoError = 0,
-		kInvalidLength,
-		kCheckSumError,
 		kInvalidNameLen,
 		kUnknownMessageType,
 		kParseError,
@@ -126,10 +134,32 @@ public:
 					<< ", max_payload=" << max_payload();
 				rt = -1;
 			} else if (buff->readable_bytes() >= static_cast<size_t>(length + length_type())) {
-				// FIXME: move bytes from |buff| to |payload|. (not copy)
-				payload->append(buff->begin_read() + length_type(), length);
-				buff->has_read(length_type() + length);
-				rt = 1;
+				uint32_t expectsum = 0, checksum = 0;
+
+				// turn on/off crc32 checksum
+				if (LIKELY(checksum_length() > 0)) {
+					checksum = peek_uint32(buff->begin_read() + length_type() + length - checksum_length());
+
+					using crc32_func_t = uint32_t(*)(const char*, size_t);
+					crc32_func_t crc32_func = nullptr;
+					if (LIKELY(length - checksum_length() > 60)) {
+						crc32_func = Crc32c::crc32_long;
+					} else {
+						crc32_func = Crc32c::crc32_short;
+					}
+					expectsum = crc32_func(buff->begin_read() + length_type(), length - checksum_length());
+				}
+
+				if (LIKELY(expectsum == checksum)) {
+					// FIXME: move bytes from |buff| to |payload|. (not copy)
+					payload->append(buff->begin_read() + length_type(), length - checksum_length());
+					buff->has_read(length_type() + length);
+					rt = 1;
+				} else {
+					LOG(ERROR) << "ProtobufCodec::decode Invalid checksum=" << checksum
+						<< ", expectsum=" << expectsum;
+					rt = -1;
+				}
 			}
 		}
 
@@ -146,22 +176,22 @@ public:
 	{
 		DCHECK(!!buff && !!payload);
 		
-		auto set_buff_length = [this] (const NetBuffer* payload, NetBuffer* buff) {
+		auto set_buff_length = [this] (ssize_t length, NetBuffer* buff) {
 			switch (length_type()) {
 			case kLengthType8:
-				buff->append_int8(payload->readable_bytes());
+				buff->append_int8(length);
 				break;
 
 			case kLengthType16:
-				buff->append_int16(payload->readable_bytes());
+				buff->append_int16(length);
 				break;
 
 			case kLengthType32:
-				buff->append_int32(payload->readable_bytes());
+				buff->append_int32(length);
 				break;
 
 			case kLengthType64:
-				buff->append_int64(payload->readable_bytes());
+				buff->append_int64(length);
 				break;
 			}
 		};
@@ -177,8 +207,23 @@ public:
 		}
 
 		// FIXME: move bytes from |payload| to |buff|. (not copy)
-		set_buff_length(payload, buff);
+		set_buff_length(length + checksum_length(), buff);
 		buff->append(payload->begin_read(), length);
+		
+		// turn on/off crc32 checksum
+		if (LIKELY(checksum_length() > 0)) {
+			using crc32_func_t = uint32_t(*)(const char*, size_t);
+			crc32_func_t crc32_func = nullptr;
+			if (LIKELY(length > 60)) {
+				crc32_func = Crc32c::crc32_long;
+			} else {
+				crc32_func = Crc32c::crc32_short;
+			}
+
+			uint32_t checksum = crc32_func(payload->begin_read(), length);
+			buff->append_int32(checksum);
+		}
+
 		payload->has_read_all();
 
 		return 1;
@@ -203,32 +248,33 @@ private:
 	static const std::string& to_errstr(ERROR_CODE errorCode);
 
 	// sizeof(int32_t)
-	static LENGTH_TYPE length_type()
+	static constexpr LENGTH_TYPE length_type()
 	{
 		return kLengthType32;
 	}
 	
 	// same as codec_stream.h kDefaultTotalBytesLimit
-	static ssize_t max_payload()
+	static constexpr ssize_t max_payload()
 	{
 		return 64*1024*1024;
 	}
 
 	// nameLen >= 2
-	static ssize_t min_payload()
+	static constexpr ssize_t min_payload()
 	{
 		return header_length() + 2 + checksum_length();
 	}
 	
-	static ssize_t header_length()
+	static constexpr ssize_t header_length()
 	{
-		return sizeof(int32_t);
+		return sizeof(uint32_t);
 	}
 
-	// return sizeof(int32_t);
-	static ssize_t checksum_length()
+	// return sizeof(uint32_t)
+	// turn on/off crc32 checksum
+	static constexpr ssize_t checksum_length()
 	{
-		return 0;
+		return sizeof(uint32_t);
 	}
 
 private:
@@ -283,7 +329,7 @@ ProtobufCodec::ERROR_CODE ProtobufCodec::parse(NetBuffer* payload, MessagePtr& m
 	ERROR_CODE err = kNoError;
 
 	const size_t nameLen = payload->read_int32();
-	if (nameLen >= 2 && nameLen <= payload->readable_bytes() - checksum_length()) {
+	if (nameLen >= 2 && nameLen <= payload->readable_bytes()) {
 		// type name (-1 because of the index is 0 offset)
 		std::string name(payload->begin_read(), payload->begin_read() + nameLen - 1);
 
@@ -292,7 +338,7 @@ ProtobufCodec::ERROR_CODE ProtobufCodec::parse(NetBuffer* payload, MessagePtr& m
 		if (mesg) {
 			// parse protobuf from payload
 			const char* data = payload->begin_read() + nameLen;
-			int32_t dataLen = payload->readable_bytes() - nameLen - checksum_length();
+			int32_t dataLen = payload->readable_bytes() - nameLen;
 			if (mesg->ParseFromArray(data, dataLen)) {
 				err = kNoError;
 			} else {
@@ -339,10 +385,6 @@ const std::string& ProtobufCodec::to_errstr(ERROR_CODE errorCode)
 	{
 	case kNoError:
 		return kNoErrorStr;
-	case kInvalidLength:
-		return kInvalidLengthStr;
-	case kCheckSumError:
-		return kCheckSumErrorStr;
 	case kInvalidNameLen:
 		return kInvalidNameLenStr;
 	case kUnknownMessageType:
