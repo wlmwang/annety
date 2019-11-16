@@ -4,9 +4,9 @@
 #ifndef ANT_CODEC_PROTOBUF_CODEC_H
 #define ANT_CODEC_PROTOBUF_CODEC_H
 
-#include "build/CompilerSpecific.h"
 #include "Macros.h"
 #include "Logging.h"
+#include "ByteOrder.h"
 #include "Crc32c.h"
 #include "codec/Codec.h"
 
@@ -19,21 +19,21 @@ namespace annety
 {
 namespace
 {
-const std::string kNoErrorStr = "NoError";
-const std::string kInvalidNameLenStr = "InvalidNameLen";
-const std::string kUnknownMessageTypeStr = "UnknownMessageType";
-const std::string kParseErrorStr = "ParseError";
-const std::string kUnknownErrorStr = "UnknownError";
-}	// namespace anonymous
-
-namespace
-{
 uint32_t peek_uint32(const char* buff)
 {
 	uint32_t be32 = 0;
 	::memcpy(&be32, buff, sizeof be32);
 	return net_to_host32(be32);
 }
+}	// namespace anonymous
+
+namespace
+{
+const std::string kNoErrorStr = "NoError";
+const std::string kInvalidNameLenStr = "InvalidNameLen";
+const std::string kUnknownMessageTypeStr = "UnknownMessageType";
+const std::string kParseErrorStr = "ParseError";
+const std::string kUnknownErrorStr = "UnknownError";
 }	// namespace anonymous
 
 using MessagePtr = std::shared_ptr<google::protobuf::Message>;
@@ -200,7 +200,7 @@ public:
 		if (length == 0) {
 			LOG(WARNING) << "LengthHeaderCodec::encode Invalid length=0";
 			return 0;
-		} else if (length < 0 || (max_payload() > 0 && length > max_payload())) {
+		} else if (length < min_payload() || length > max_payload()) {
 			LOG(ERROR) << "LengthHeaderCodec::encode Invalid length=" << length
 				<< ", max_payload=" << max_payload();
 			return -1;
@@ -253,6 +253,11 @@ private:
 		return kLengthType32;
 	}
 	
+	static constexpr ssize_t header_length()
+	{
+		return sizeof(uint32_t);
+	}
+
 	// same as codec_stream.h kDefaultTotalBytesLimit
 	static constexpr ssize_t max_payload()
 	{
@@ -263,11 +268,6 @@ private:
 	static constexpr ssize_t min_payload()
 	{
 		return header_length() + 2 + checksum_length();
-	}
-	
-	static constexpr ssize_t header_length()
-	{
-		return sizeof(uint32_t);
 	}
 
 	// return sizeof(uint32_t)
