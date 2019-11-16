@@ -60,7 +60,8 @@ public:
 	LogStream& operator<<(long long);
 	LogStream& operator<<(unsigned long long);
 
-	LogStream& operator<<(const unsigned char* str) {
+	LogStream& operator<<(const unsigned char* str)
+	{
 		return operator<<(reinterpret_cast<const char*>(str));
 	}
 	LogStream& operator<<(char v)
