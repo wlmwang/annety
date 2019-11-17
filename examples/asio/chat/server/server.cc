@@ -16,6 +16,7 @@ using namespace annety;
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
+using CodecPtr = std::unique_ptr<Codec>;
 using ConnectionList = std::set<annety::TcpConnectionPtr>;
 
 class ChatServer
@@ -23,17 +24,17 @@ class ChatServer
 public:
 	// MSS = 408. MTU = 512 + (enable_checksum? 4 : 0)
 	ChatServer(EventLoop* loop, const EndPoint& addr)
-		: codec_(loop, LengthHeaderCodec::kLengthType32, true, 408)
-		// : codec_(loop, "\r\n", 408)
+		: codec_(new LengthHeaderCodec(loop, LengthHeaderCodec::kLengthType32, true, 408))
+		// : codec_(new StringEofCodec(loop, "\r\n", 408))
 	{
 		server_ = make_tcp_server(loop, addr, "ChatServer");
 
 		server_->set_connect_callback(
 			std::bind(&ChatServer::on_connect, this, _1));
 		server_->set_message_callback(
-			std::bind(&LengthHeaderCodec::decode_read, &codec_, _1, _2, _3));
+			std::bind(&Codec::decode_read, codec_.get(), _1, _2, _3));
 		
-		codec_.set_message_callback(
+		codec_->set_message_callback(
 			std::bind(&ChatServer::on_message, this, _1, _2, _3));
 	}
 
@@ -49,8 +50,7 @@ private:
 private:
 	TcpServerPtr server_;
 
-	LengthHeaderCodec codec_;
-	// StringEofCodec codec_;
+	CodecPtr codec_;
 
 	ConnectionList connections_;
 };
@@ -73,7 +73,7 @@ void ChatServer::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeS
 	// broadcast
 	ConnectionList::iterator it = connections_.begin();
 	for (; it != connections_.end(); ++it) {
-		codec_.endcode_send(*it, mesg);
+		codec_->endcode_send(*it, mesg);
 	}
 }
 

@@ -17,23 +17,24 @@ using namespace annety;
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
+using CodecPtr = std::unique_ptr<Codec>;
 
 class ChatClient
 {
 public:
 	// MSS = 408. MTU = 512 + (enable_checksum? 4 : 0)
 	ChatClient(EventLoop* loop, const EndPoint& addr)
-		: codec_(loop, LengthHeaderCodec::kLengthType32, true, 408)
-		// : codec_(loop, "\r\n", 408)
+		: codec_(new LengthHeaderCodec(loop, LengthHeaderCodec::kLengthType32, true, 408))
+		// : codec_(new StringEofCodec(loop, "\r\n", 408))
 	{
 		client_ = make_tcp_client(loop, addr, "ChatClient");
 
 		client_->set_connect_callback(
 			std::bind(&ChatClient::on_connect, this, _1));
 		client_->set_message_callback(
-			std::bind(&LengthHeaderCodec::decode_read, &codec_, _1, _2, _3));
+			std::bind(&LengthHeaderCodec::decode_read, codec_.get(), _1, _2, _3));
 
-		codec_.set_message_callback(
+		codec_->set_message_callback(
 			std::bind(&ChatClient::on_message, this, _1, _2, _3));
 
 		client_->enable_retry();
@@ -61,7 +62,7 @@ public:
 
 		AutoLock locked(lock_);
 		if (connection_) {
-			codec_.endcode_send(connection_, &buff);
+			codec_->endcode_send(connection_, &buff);
 		}
 	}
 
@@ -73,8 +74,7 @@ private:
 private:
 	TcpClientPtr client_;
 
-	LengthHeaderCodec codec_;
-	// StringEofCodec codec_;
+	CodecPtr codec_;
 	
 	MutexLock lock_;
 	TcpConnectionPtr connection_;
