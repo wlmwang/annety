@@ -21,10 +21,10 @@ using ConnectionList = std::set<annety::TcpConnectionPtr>;
 class ChatServer
 {
 public:
-	// MSS = 136. MTU = 140
+	// MSS = 408. MTU = 512 + (enable_checksum? 4 : 0)
 	ChatServer(EventLoop* loop, const EndPoint& addr)
-		// : codec_(loop, LengthHeaderCodec::kLengthType32, 136)
-		: codec_(loop, "\r\n", 136)
+		: codec_(loop, LengthHeaderCodec::kLengthType32, true, 408)
+		// : codec_(loop, "\r\n", 408)
 	{
 		server_ = make_tcp_server(loop, addr, "ChatServer");
 
@@ -44,13 +44,13 @@ public:
 
 private:
 	void on_connect(const TcpConnectionPtr& conn);
-	void on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp time);
+	void on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp);
 
 private:
 	TcpServerPtr server_;
 
-	// LengthHeaderCodec codec_;
-	StringEofCodec codec_;
+	LengthHeaderCodec codec_;
+	// StringEofCodec codec_;
 
 	ConnectionList connections_;
 };
@@ -68,7 +68,7 @@ void ChatServer::on_connect(const annety::TcpConnectionPtr& conn)
 	}
 }
 
-void ChatServer::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp time)
+void ChatServer::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp)
 {
 	// broadcast
 	ConnectionList::iterator it = connections_.begin();

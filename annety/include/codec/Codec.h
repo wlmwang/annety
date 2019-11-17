@@ -69,8 +69,8 @@ public:
 					LOG(WARNING) << "LengthHeaderCodec::message_callback no message callback";
 				}
 			} else if (rt == -1) {
-				conn->shutdown();
 				LOG(ERROR) << "LengthHeaderCodec::message_callback Invalid buff, rt=" << rt;
+				conn->shutdown();
 			}
 		} while (rt == 1);
 	}
@@ -88,8 +88,8 @@ public:
 			if (rt == 1) {
 				conn->send(&buff);
 			} else if (rt == -1) {
-				conn->shutdown();
 				LOG(ERROR) << "LengthHeaderCodec::send_callback Invalid buff, rt=" << rt;
+				conn->shutdown();
 			}
 		} while (0);
 	}

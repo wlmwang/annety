@@ -39,7 +39,7 @@ public:
 	}
 
 	// Decode payload from |buff| to |payload|
-	// NOTE: You must be remove the read bytes from |buff| when decode success
+	// NOTE: You must be remove the read bytes from |buff|
 	// Returns:
 	//   -1  decode error, going to close connection
 	//    1  decode success, going to call message callback
@@ -78,7 +78,7 @@ public:
 	}
 	
 	// Encode stream bytes from |payload| to |buff|
-	// NOTE: You must be remove the sent bytes from |payload| when encode success
+	// NOTE: You must be remove the sent bytes from |payload|
 	// Returns:
 	//   -1  encode error, going to close connection
 	//    1  encode success, going to send data to peer
@@ -100,7 +100,6 @@ public:
 		// FIXME: move bytes from |payload| to |buff|. (not copy)
 		buff->append(payload->begin_read(), length);
 		buff->append(string_eof().data(), string_eof().size());
-		payload->has_read_all();
 		
 		return 1;
 	}

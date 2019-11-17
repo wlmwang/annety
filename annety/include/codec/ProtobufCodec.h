@@ -4,6 +4,7 @@
 #ifndef ANT_CODEC_PROTOBUF_CODEC_H
 #define ANT_CODEC_PROTOBUF_CODEC_H
 
+#include "build/CompilerSpecific.h"
 #include "Macros.h"
 #include "Logging.h"
 #include "ByteOrder.h"
@@ -19,7 +20,7 @@ namespace annety
 {
 namespace
 {
-uint32_t peek_uint32(const char* buff)
+inline uint32_t peek_uint32(const char* buff)
 {
 	uint32_t be32 = 0;
 	::memcpy(&be32, buff, sizeof be32);
@@ -167,7 +168,7 @@ public:
 	}
 
 	// Encode stream bytes from |payload| to |buff|
-	// NOTE: You must be remove the sent bytes from |payload| when encode success
+	// NOTE: You must be remove the sent bytes from |payload|
 	// Returns:
 	//   -1  encode error, going to close connection
 	//    1  encode success, going to send data to peer
@@ -200,7 +201,7 @@ public:
 		if (length == 0) {
 			LOG(WARNING) << "LengthHeaderCodec::encode Invalid length=0";
 			return 0;
-		} else if (length < min_payload() || length > max_payload()) {
+		} else if (length < min_payload() - checksum_length() || length > max_payload()) {
 			LOG(ERROR) << "LengthHeaderCodec::encode Invalid length=" << length
 				<< ", max_payload=" << max_payload();
 			return -1;
@@ -223,8 +224,6 @@ public:
 			uint32_t checksum = crc32_func(payload->begin_read(), length);
 			buff->append_int32(checksum);
 		}
-
-		payload->has_read_all();
 
 		return 1;
 	}

@@ -21,10 +21,10 @@ using std::placeholders::_3;
 class ChatClient
 {
 public:
-	// MSS = 136. MTU = 140
+	// MSS = 408. MTU = 512 + (enable_checksum? 4 : 0)
 	ChatClient(EventLoop* loop, const EndPoint& addr)
-		// : codec_(loop, LengthHeaderCodec::kLengthType32, 136)
-		: codec_(loop, "\r\n", 136)
+		: codec_(loop, LengthHeaderCodec::kLengthType32, true, 408)
+		// : codec_(loop, "\r\n", 408)
 	{
 		client_ = make_tcp_client(loop, addr, "ChatClient");
 
@@ -68,13 +68,13 @@ public:
 private:
 	void on_connect(const TcpConnectionPtr& conn);
 
-	void on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp time);
+	void on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp);
 
 private:
 	TcpClientPtr client_;
 
-	// LengthHeaderCodec codec_;
-	StringEofCodec codec_;
+	LengthHeaderCodec codec_;
+	// StringEofCodec codec_;
 	
 	MutexLock lock_;
 	TcpConnectionPtr connection_;
@@ -94,7 +94,7 @@ void ChatClient::on_connect(const TcpConnectionPtr& conn)
 	}
 }
 
-void ChatClient::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp time)
+void ChatClient::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp)
 {
 	::printf("<<< %s\n", mesg->to_string().c_str());
 }
