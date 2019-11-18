@@ -1,8 +1,8 @@
 // By: wlmwang
 // Date: Oct 12 2019
 
-#ifndef ANT_CODEC_PROTOBUF_DISPATCHER_H
-#define ANT_CODEC_PROTOBUF_DISPATCHER_H
+#ifndef ANT_PROTOBUF_PROTOBUF_DISPATCHER_H
+#define ANT_PROTOBUF_PROTOBUF_DISPATCHER_H
 
 #include "Macros.h"
 #include "Logging.h"
@@ -104,4 +104,4 @@ void ProtobufDispatcher::unknown_message(const TcpConnectionPtr&, const MessageP
 
 }	// namespace annety
 
-#endif  // ANT_CODEC_PROTOBUF_DISPATCHER_H
+#endif  // ANT_PROTOBUF_PROTOBUF_DISPATCHER_H

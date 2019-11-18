@@ -4,8 +4,8 @@
 #include "TcpClient.h"
 #include "EventLoop.h"
 #include "synchronization/MutexLock.h"
-#include "codec/ProtobufCodec.h"
-#include "codec/ProtobufDispatcher.h"
+#include "protobuf/ProtobufCodec.h"
+#include "protobuf/ProtobufDispatcher.h"
 
 #include "Query.pb.h"
 

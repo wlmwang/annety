@@ -1,8 +1,8 @@
 // By: wlmwang
 // Date: Oct 12 2019
 
-#ifndef ANT_CODEC_PROTOBUF_CODEC_H
-#define ANT_CODEC_PROTOBUF_CODEC_H
+#ifndef ANT_PROTOBUF_PROTOBUF_CODEC_H
+#define ANT_PROTOBUF_PROTOBUF_CODEC_H
 
 #include "build/CompilerSpecific.h"
 #include "Macros.h"
@@ -91,6 +91,14 @@ public:
 	void set_dispatch_callback(ProtobufMessageCallback cb)
 	{
 		dispatch_cb_ = std::move(cb);
+	}
+	
+	void send(const TcpConnectionPtr& conn, const google::protobuf::Message& mesg)
+	{
+		NetBuffer payload;
+		if (serialize(mesg, &payload)) {
+			Codec::send(conn, &payload);
+		}
 	}
 
 	// Decode payload from |buff| to |payload|
@@ -226,14 +234,6 @@ public:
 		}
 
 		return 1;
-	}
-
-	void send(const TcpConnectionPtr& conn, const google::protobuf::Message& mesg)
-	{
-		NetBuffer payload;
-		if (serialize(mesg, &payload)) {
-			Codec::send(conn, &payload);
-		}
 	}
 
 private:
@@ -397,4 +397,4 @@ const std::string& ProtobufCodec::to_errstr(ERROR_CODE errorCode)
 
 }	// namespace annety
 
-#endif  // ANT_CODEC_PROTOBUF_CODEC_H
+#endif  // ANT_PROTOBUF_PROTOBUF_CODEC_H

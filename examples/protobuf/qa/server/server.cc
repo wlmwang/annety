@@ -3,8 +3,8 @@
 
 #include "TcpServer.h"
 #include "EventLoop.h"
-#include "codec/ProtobufCodec.h"
-#include "codec/ProtobufDispatcher.h"
+#include "protobuf/ProtobufCodec.h"
+#include "protobuf/ProtobufDispatcher.h"
 
 #include "Query.pb.h"
 
