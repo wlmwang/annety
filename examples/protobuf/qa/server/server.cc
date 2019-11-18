@@ -103,4 +103,6 @@ int main(int argc, char* argv[])
 
 	server.start();
 	loop.loop();
+
+	google::protobuf::ShutdownProtobufLibrary();
 }

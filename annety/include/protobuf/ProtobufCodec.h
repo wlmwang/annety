@@ -20,6 +20,8 @@ namespace annety
 {
 namespace
 {
+BEFORE_MAIN_EXECUTOR() { GOOGLE_PROTOBUF_VERIFY_VERSION;}
+
 inline uint32_t peek_uint32(const char* buff)
 {
 	uint32_t be32 = 0;

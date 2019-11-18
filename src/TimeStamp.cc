@@ -23,9 +23,7 @@
 namespace annety
 {
 // set time zone
-BEFORE_MAIN_EXECUTOR() {
-	TimeZone::set_time_zone();
-}
+BEFORE_MAIN_EXECUTOR() { TimeZone::set_time_zone();}
 
 namespace
 {
