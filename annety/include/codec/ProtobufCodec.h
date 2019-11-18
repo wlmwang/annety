@@ -84,7 +84,7 @@ public:
 		using std::placeholders::_2;
 		using std::placeholders::_3;
 
-		set_message_callback(std::bind(&ProtobufCodec::parse_payload, this, _1, _2, _3));
+		set_message_callback(std::bind(&ProtobufCodec::parse, this, _1, _2, _3));
 	}
 
 	// *Not thread safe*
@@ -228,20 +228,20 @@ public:
 		return 1;
 	}
 
-	void endcode_send(const TcpConnectionPtr& conn, const google::protobuf::Message& mesg)
+	void send(const TcpConnectionPtr& conn, const google::protobuf::Message& mesg)
 	{
 		NetBuffer payload;
-		if (serialize_payload(mesg, &payload)) {
-			Codec::endcode_send(conn, &payload);
+		if (serialize(mesg, &payload)) {
+			Codec::send(conn, &payload);
 		}
 	}
 
 private:
-	bool serialize_payload(const google::protobuf::Message&, NetBuffer*);
-	void parse_payload(const TcpConnectionPtr&, NetBuffer*, TimeStamp);
+	bool serialize(const google::protobuf::Message&, NetBuffer*);
+	void parse(const TcpConnectionPtr&, NetBuffer*, TimeStamp);
 
-	static ERROR_CODE parse(NetBuffer*, MessagePtr&);
-	static google::protobuf::Message* generate_message(const std::string&);
+	static ERROR_CODE parse_mesg(NetBuffer*, MessagePtr&);
+	static google::protobuf::Message* generate_mesg(const std::string&);
 
 	static void error_callback(const TcpConnectionPtr&, NetBuffer*, TimeStamp, ERROR_CODE);
 	static const std::string& to_errstr(ERROR_CODE errorCode);
@@ -283,7 +283,7 @@ private:
 	DISALLOW_COPY_AND_ASSIGN(ProtobufCodec);
 };
 
-bool ProtobufCodec::serialize_payload(const google::protobuf::Message& mesg, NetBuffer* payload)
+bool ProtobufCodec::serialize(const google::protobuf::Message& mesg, NetBuffer* payload)
 {
 	DCHECK(mesg.IsInitialized());
 	DCHECK(!payload->readable_bytes());
@@ -305,23 +305,23 @@ bool ProtobufCodec::serialize_payload(const google::protobuf::Message& mesg, Net
 	return true;
 }
 
-void ProtobufCodec::parse_payload(const TcpConnectionPtr& conn, NetBuffer* payload, TimeStamp receive)
+void ProtobufCodec::parse(const TcpConnectionPtr& conn, NetBuffer* payload, TimeStamp receive)
 {
 	MessagePtr mesg;
-	ERROR_CODE err = parse(payload, mesg);
+	ERROR_CODE err = parse_mesg(payload, mesg);
 
 	if (err == kNoError && mesg) {
 		if (dispatch_cb_) {
 			dispatch_cb_(conn, mesg, receive);
 		} else {
-			LOG(WARNING) << "ProtobufCodec::parse_payload no dispatch callback";
+			LOG(WARNING) << "ProtobufCodec::parse no dispatch callback";
 		}
 	} else {
 		error_cb_(conn, payload, receive, err);
 	}
 }
 
-ProtobufCodec::ERROR_CODE ProtobufCodec::parse(NetBuffer* payload, MessagePtr& mesg)
+ProtobufCodec::ERROR_CODE ProtobufCodec::parse_mesg(NetBuffer* payload, MessagePtr& mesg)
 {
 	DCHECK(payload->readable_bytes() > 0);
 
@@ -333,7 +333,7 @@ ProtobufCodec::ERROR_CODE ProtobufCodec::parse(NetBuffer* payload, MessagePtr& m
 		std::string name(payload->begin_read(), payload->begin_read() + nameLen - 1);
 
 		// create (prototype) message object from typename
-		mesg.reset(generate_message(name));
+		mesg.reset(generate_mesg(name));
 		if (mesg) {
 			// parse protobuf from payload
 			const char* data = payload->begin_read() + nameLen;
@@ -353,7 +353,7 @@ ProtobufCodec::ERROR_CODE ProtobufCodec::parse(NetBuffer* payload, MessagePtr& m
 	return err;
 }
 
-google::protobuf::Message* ProtobufCodec::generate_message(const std::string& name)
+google::protobuf::Message* ProtobufCodec::generate_mesg(const std::string& name)
 {
 	using namespace google::protobuf;
 	

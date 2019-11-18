@@ -63,7 +63,7 @@ public:
 	ProtobufDispatcher(ProtobufMessageCallback cb = unknown_message) : default_cb_(std::move(cb)) {}
 
 	// dispatch the protobuf message
-	void dispatch_message(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const
+	void dispatch(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const
 	{
 		CallbackMap::const_iterator it = cbs_.find(mesg->GetDescriptor());
 		if (it != cbs_.end()) {
@@ -72,7 +72,7 @@ public:
 			if (default_cb_) {
 				default_cb_(conn, mesg, receive);
 			} else {
-				LOG(ERROR) << "ProtobufDispatcher::dispatch_message Invalid message, TypeName=" 
+				LOG(ERROR) << "ProtobufDispatcher::dispatch Invalid message, TypeName=" 
 					<< mesg->GetTypeName();
 			}
 		}

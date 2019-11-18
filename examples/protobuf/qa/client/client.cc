@@ -35,10 +35,10 @@ public:
 		client_->set_connect_callback(
 			std::bind(&QueryClient::on_connect, this, _1));
 		client_->set_message_callback(
-			std::bind(&ProtobufCodec::decode_read, &codec_, _1, _2, _3));
+			std::bind(&ProtobufCodec::recv, &codec_, _1, _2, _3));
 
 		codec_.set_dispatch_callback(
-			std::bind(&ProtobufDispatcher::dispatch_message, &dispatcher_, _1, _2, _3));
+			std::bind(&ProtobufDispatcher::dispatch, &dispatcher_, _1, _2, _3));
 
 		dispatcher_.register_message_cb<qa::Answer>(
 			std::bind(&QueryClient::on_answer, this, _1, _2, _3));
@@ -81,7 +81,7 @@ void QueryClient::on_connect(const TcpConnectionPtr& conn)
 		query.set_questioner("Anny Wang");
 		query.add_question("Hello?");
 		
-		codec_.endcode_send(conn, query);
+		codec_.send(conn, query);
 	}
 }
 

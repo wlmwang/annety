@@ -32,7 +32,7 @@ public:
 		client_->set_connect_callback(
 			std::bind(&ChatClient::on_connect, this, _1));
 		client_->set_message_callback(
-			std::bind(&LengthHeaderCodec::decode_read, codec_.get(), _1, _2, _3));
+			std::bind(&LengthHeaderCodec::recv, codec_.get(), _1, _2, _3));
 
 		codec_->set_message_callback(
 			std::bind(&ChatClient::on_message, this, _1, _2, _3));
@@ -62,7 +62,7 @@ public:
 
 		AutoLock locked(lock_);
 		if (connection_) {
-			codec_->endcode_send(connection_, &buff);
+			codec_->send(connection_, &buff);
 		}
 	}
 

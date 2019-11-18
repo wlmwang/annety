@@ -32,7 +32,7 @@ public:
 		server_->set_connect_callback(
 			std::bind(&ChatServer::on_connect, this, _1));
 		server_->set_message_callback(
-			std::bind(&Codec::decode_read, codec_.get(), _1, _2, _3));
+			std::bind(&Codec::recv, codec_.get(), _1, _2, _3));
 		
 		codec_->set_message_callback(
 			std::bind(&ChatServer::on_message, this, _1, _2, _3));
@@ -73,7 +73,7 @@ void ChatServer::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeS
 	// broadcast
 	ConnectionList::iterator it = connections_.begin();
 	for (; it != connections_.end(); ++it) {
-		codec_->endcode_send(*it, mesg);
+		codec_->send(*it, mesg);
 	}
 }
 

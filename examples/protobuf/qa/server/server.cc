@@ -33,10 +33,10 @@ public:
 		server_->set_connect_callback(
 			std::bind(&QueryServer::on_connect, this, _1));
 		server_->set_message_callback(
-			std::bind(&ProtobufCodec::decode_read, &codec_, _1, _2, _3));
+			std::bind(&ProtobufCodec::recv, &codec_, _1, _2, _3));
 
 		codec_.set_dispatch_callback(
-			std::bind(&ProtobufDispatcher::dispatch_message, &dispatcher_, _1, _2, _3));
+			std::bind(&ProtobufDispatcher::dispatch, &dispatcher_, _1, _2, _3));
 
 		dispatcher_.register_message_cb<qa::Query>(
 			std::bind(&QueryServer::on_query, this, _1, _2, _3));
@@ -89,7 +89,7 @@ void QueryServer::on_query(const TcpConnectionPtr& conn, const QueryPtr& mesg, T
 	answer.set_answerer("~~~");
 	answer.add_solution("World!");
 	
-	codec_.endcode_send(conn, answer);
+	codec_.send(conn, answer);
 
 	conn->shutdown();
 }

@@ -50,8 +50,8 @@ public:
 	}
 
 	// *Not thread safe*
-	// Make sure run in own loop
-	void decode_read(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
+	// But run in own loop
+	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
 	{
 		DCHECK(!!buff);
 		
@@ -76,7 +76,7 @@ public:
 	}
 
 	// *Thread safe*
-	void endcode_send(const TcpConnectionPtr& conn, NetBuffer* payload)
+	void send(const TcpConnectionPtr& conn, NetBuffer* payload)
 	{
 		DCHECK(!!payload);
 
