@@ -26,7 +26,7 @@ class QueryServer
 {
 public:
 	QueryServer(EventLoop* loop, const EndPoint& addr)
-		: codec_(loop)
+		: codec_(loop, std::bind(&ProtobufDispatcher::dispatch, &dispatcher_, _1, _2, _3))
 	{
 		server_ = make_tcp_server(loop, addr, "QueryServer");
 		
@@ -35,12 +35,9 @@ public:
 		server_->set_message_callback(
 			std::bind(&ProtobufCodec::recv, &codec_, _1, _2, _3));
 
-		codec_.set_dispatch_callback(
-			std::bind(&ProtobufDispatcher::dispatch, &dispatcher_, _1, _2, _3));
-
-		dispatcher_.register_message_cb<qa::Query>(
+		dispatcher_.listen<qa::Query>(
 			std::bind(&QueryServer::on_query, this, _1, _2, _3));
-		dispatcher_.register_message_cb<qa::Answer>(
+		dispatcher_.listen<qa::Answer>(
 			std::bind(&QueryServer::on_answer, this, _1, _2, _3));
 	}
 

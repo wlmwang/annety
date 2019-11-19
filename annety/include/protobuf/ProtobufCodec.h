@@ -77,22 +77,17 @@ public:
 	using ErrorCallback = 
 			std::function<void(const TcpConnectionPtr&, NetBuffer*, TimeStamp, ERROR_CODE)>;
 
-	explicit ProtobufCodec(EventLoop* loop) : ProtobufCodec(loop, error_callback) {}
+	ProtobufCodec(EventLoop* loop, ProtobufMessageCallback cb) 
+		: ProtobufCodec(loop, std::move(cb), ProtobufCodec::error_callback) {}
 
-	ProtobufCodec(EventLoop* loop, ErrorCallback cb) 
-		: Codec(loop), error_cb_(std::move(cb))
+	ProtobufCodec(EventLoop* loop, ProtobufMessageCallback pmcb, ErrorCallback ecb) 
+		: Codec(loop), dispatch_cb_(std::move(pmcb)), error_cb_(std::move(ecb))
 	{
 		using std::placeholders::_1;
 		using std::placeholders::_2;
 		using std::placeholders::_3;
 
 		set_message_callback(std::bind(&ProtobufCodec::parse, this, _1, _2, _3));
-	}
-
-	// *Not thread safe*
-	void set_dispatch_callback(ProtobufMessageCallback cb)
-	{
-		dispatch_cb_ = std::move(cb);
 	}
 	
 	void send(const TcpConnectionPtr& conn, const google::protobuf::Message& mesg)

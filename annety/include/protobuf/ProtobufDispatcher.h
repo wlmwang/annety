@@ -60,7 +60,7 @@ private:
 class ProtobufDispatcher
 {
 public:
-	ProtobufDispatcher(ProtobufMessageCallback cb = unknown_message) : default_cb_(std::move(cb)) {}
+	ProtobufDispatcher(ProtobufMessageCallback cb = unknown) : default_cb_(std::move(cb)) {}
 
 	// dispatch the protobuf message
 	void dispatch(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const
@@ -79,14 +79,14 @@ public:
 	}
 
 	template<typename T>
-	void register_message_cb(const typename CallbackT<T>::ProtobufMessageTCallback& cb)
+	void listen(const typename CallbackT<T>::ProtobufMessageTCallback& cb)
 	{
 		std::shared_ptr<CallbackT<T>> pd(new CallbackT<T>(cb));
 		cbs_[T::descriptor()] = pd;
 	}
 
 private:
-	static void unknown_message(const TcpConnectionPtr&, const MessagePtr&, TimeStamp);
+	static void unknown(const TcpConnectionPtr&, const MessagePtr&, TimeStamp);
 
 private:
 	using CallbackMap = 
@@ -97,9 +97,9 @@ private:
 	ProtobufMessageCallback default_cb_;
 };
 
-void ProtobufDispatcher::unknown_message(const TcpConnectionPtr&, const MessagePtr& mesg, TimeStamp)
+void ProtobufDispatcher::unknown(const TcpConnectionPtr&, const MessagePtr& mesg, TimeStamp)
 {
-	LOG(WARNING) << "ProtobufDispatcher::unknown_message - " << mesg->GetTypeName();
+	LOG(WARNING) << "ProtobufDispatcher::unknown - " << mesg->GetTypeName();
 }
 
 }	// namespace annety
