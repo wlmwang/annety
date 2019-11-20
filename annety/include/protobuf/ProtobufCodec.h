@@ -311,7 +311,7 @@ bool ProtobufCodec::serialize(const google::protobuf::Message& mesg, NetBuffer* 
 
 void ProtobufCodec::parse(const TcpConnectionPtr& conn, NetBuffer* payload, TimeStamp receive)
 {
-	MessagePtr mesg;
+	MessagePtr mesg; // RAII
 	ERROR_CODE err = parse_mesg(payload, mesg);
 
 	if (err == kNoError && mesg) {
@@ -337,7 +337,7 @@ ProtobufCodec::ERROR_CODE ProtobufCodec::parse_mesg(NetBuffer* payload, MessageP
 		std::string name(payload->begin_read(), payload->begin_read() + nameLen - 1);
 
 		// create (prototype) message object from typename
-		mesg.reset(generate_mesg(name));
+		mesg.reset(generate_mesg(name)); // RAII
 		if (mesg) {
 			// parse protobuf from payload
 			const char* data = payload->begin_read() + nameLen;
