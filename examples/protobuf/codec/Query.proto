@@ -1,16 +1,20 @@
+// By: wlmwang
+// Date: Oct 12 2019
 
 syntax ="proto3";
 
-package qa;
+package examples.protobuf.codec;
 
-message Query {
+message Query
+{
 	int64 id = 1;
 	string questioner = 2;
 
 	repeated string question = 3;
 }
 
-message Answer {
+message Answer
+{
 	int64 id = 1;
 	string questioner = 2;
 	string answerer = 3;
@@ -18,6 +22,7 @@ message Answer {
 	repeated string solution = 4;
 }
 
-message Empty {
+message Empty
+{
 	int32 id = 1;
 }

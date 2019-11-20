@@ -4,7 +4,7 @@
 #include "TcpServer.h"
 #include "EventLoop.h"
 #include "protobuf/ProtobufCodec.h"
-#include "protobuf/ProtobufDispatcher.h"
+#include "protobuf/ProtobufDispatch.h"
 
 #include "Query.pb.h"
 
@@ -13,20 +13,20 @@
 #include <set>
 
 using namespace annety;
-using namespace qa;
+using namespace examples::protobuf::codec;
 
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
 
-using QueryPtr = std::shared_ptr<qa::Query>;
-using AnswerPtr = std::shared_ptr<qa::Answer>;
+using QueryPtr = std::shared_ptr<Query>;
+using AnswerPtr = std::shared_ptr<Answer>;
 
 class QueryServer
 {
 public:
 	QueryServer(EventLoop* loop, const EndPoint& addr)
-		: codec_(loop, std::bind(&ProtobufDispatcher::dispatch, &dispatcher_, _1, _2, _3))
+		: codec_(loop, std::bind(&ProtobufDispatch::dispatch, &dispatch_, _1, _2, _3))
 	{
 		server_ = make_tcp_server(loop, addr, "QueryServer");
 		
@@ -35,9 +35,9 @@ public:
 		server_->set_message_callback(
 			std::bind(&ProtobufCodec::recv, &codec_, _1, _2, _3));
 
-		dispatcher_.listen<qa::Query>(
+		dispatch_.listen<Query>(
 			std::bind(&QueryServer::on_query, this, _1, _2, _3));
-		dispatcher_.listen<qa::Answer>(
+		dispatch_.listen<Answer>(
 			std::bind(&QueryServer::on_answer, this, _1, _2, _3));
 	}
 
@@ -56,7 +56,7 @@ private:
 private:
 	TcpServerPtr server_;
 
-	ProtobufDispatcher dispatcher_;
+	ProtobufDispatch dispatch_;
 	ProtobufCodec codec_;
 };
 

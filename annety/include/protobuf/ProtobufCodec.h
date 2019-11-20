@@ -14,6 +14,7 @@
 #include <string>
 #include <utility>
 #include <functional>
+
 #include <google/protobuf/message.h>
 
 namespace annety
@@ -55,7 +56,7 @@ using ProtobufMessageCallback =
 // }
 //
 // A Simple Fixed Head Protobuf Codec with Length and protobuf::message::TypeName
-class ProtobufCodec : public Codec
+class ProtobufCodec : private Codec
 {
 public:
 	enum LENGTH_TYPE
@@ -90,6 +91,12 @@ public:
 		set_message_callback(std::bind(&ProtobufCodec::parse, this, _1, _2, _3));
 	}
 	
+	// using Codec::recv;
+	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
+	{
+		Codec::recv(conn, buff, receive);
+	}
+
 	void send(const TcpConnectionPtr& conn, const google::protobuf::Message& mesg)
 	{
 		NetBuffer payload;

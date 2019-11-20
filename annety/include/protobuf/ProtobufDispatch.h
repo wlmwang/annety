@@ -1,8 +1,8 @@
 // By: wlmwang
 // Date: Oct 12 2019
 
-#ifndef ANT_PROTOBUF_PROTOBUF_DISPATCHER_H
-#define ANT_PROTOBUF_PROTOBUF_DISPATCHER_H
+#ifndef ANT_PROTOBUF_PROTOBUF_DISPATCH_H
+#define ANT_PROTOBUF_PROTOBUF_DISPATCH_H
 
 #include "Macros.h"
 #include "Logging.h"
@@ -14,6 +14,7 @@
 #include <utility>
 #include <functional>
 #include <type_traits>
+
 #include <google/protobuf/message.h>
 
 namespace annety
@@ -57,10 +58,10 @@ private:
 };
 
 // A simple dispatcher of protobuf message.
-class ProtobufDispatcher
+class ProtobufDispatch
 {
 public:
-	ProtobufDispatcher(ProtobufMessageCallback cb = unknown) : default_cb_(std::move(cb)) {}
+	ProtobufDispatch(ProtobufMessageCallback cb = unknown) : default_cb_(std::move(cb)) {}
 
 	// dispatch the protobuf message
 	void dispatch(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const
@@ -72,7 +73,7 @@ public:
 			if (default_cb_) {
 				default_cb_(conn, mesg, receive);
 			} else {
-				LOG(ERROR) << "ProtobufDispatcher::dispatch Invalid message, TypeName=" 
+				LOG(ERROR) << "ProtobufDispatch::dispatch Invalid message, TypeName=" 
 					<< mesg->GetTypeName();
 			}
 		}
@@ -97,11 +98,11 @@ private:
 	ProtobufMessageCallback default_cb_;
 };
 
-void ProtobufDispatcher::unknown(const TcpConnectionPtr&, const MessagePtr& mesg, TimeStamp)
+void ProtobufDispatch::unknown(const TcpConnectionPtr&, const MessagePtr& mesg, TimeStamp)
 {
-	LOG(WARNING) << "ProtobufDispatcher::unknown - " << mesg->GetTypeName();
+	LOG(WARNING) << "ProtobufDispatch::unknown - " << mesg->GetTypeName();
 }
 
 }	// namespace annety
 
-#endif  // ANT_PROTOBUF_PROTOBUF_DISPATCHER_H
+#endif  // ANT_PROTOBUF_PROTOBUF_DISPATCH_H

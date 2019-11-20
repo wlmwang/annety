@@ -5,7 +5,7 @@
 #include "EventLoop.h"
 #include "synchronization/MutexLock.h"
 #include "protobuf/ProtobufCodec.h"
-#include "protobuf/ProtobufDispatcher.h"
+#include "protobuf/ProtobufDispatch.h"
 
 #include "Query.pb.h"
 
@@ -14,21 +14,21 @@
 #include <stdio.h>
 
 using namespace annety;
-using namespace qa;
+using namespace examples::protobuf::codec;
 
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
 
-using EmptyPtr = std::shared_ptr<qa::Empty>;
-using AnswerPtr = std::shared_ptr<qa::Answer>;
+using EmptyPtr = std::shared_ptr<Empty>;
+using AnswerPtr = std::shared_ptr<Answer>;
 
 class QueryClient
 {
 public:
 	QueryClient(EventLoop* loop, const EndPoint& addr)
 		: loop_(loop)
-		, codec_(loop, std::bind(&ProtobufDispatcher::dispatch, &dispatcher_, _1, _2, _3))
+		, codec_(loop, std::bind(&ProtobufDispatch::dispatch, &dispatch_, _1, _2, _3))
 	{
 		client_ = make_tcp_client(loop, addr, "QueryClient");
 
@@ -37,9 +37,9 @@ public:
 		client_->set_message_callback(
 			std::bind(&ProtobufCodec::recv, &codec_, _1, _2, _3));
 
-		dispatcher_.listen<qa::Answer>(
+		dispatch_.listen<Answer>(
 			std::bind(&QueryClient::on_answer, this, _1, _2, _3));
-		dispatcher_.listen<qa::Empty>(
+		dispatch_.listen<Empty>(
 			std::bind(&QueryClient::on_empty, this, _1, _2, _3));
 
 		client_->enable_retry();
@@ -62,7 +62,7 @@ private:
 	TcpClientPtr client_;
 	MutexLock lock_;
 
-	ProtobufDispatcher dispatcher_;
+	ProtobufDispatch dispatch_;
 	ProtobufCodec codec_;
 };
 
