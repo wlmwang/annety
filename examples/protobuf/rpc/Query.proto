@@ -1,0 +1,24 @@
+// By: wlmwang
+// Date: Oct 18 2019
+
+syntax ="proto3";
+
+option cc_generic_services = true;
+
+package examples.protobuf.rpc;
+
+message QueryRequest
+{
+	string checkerboard = 1;
+}
+
+message QueryResponse
+{
+	bool solved = 1;
+	string checkerboard = 2;
+}
+
+service QueryService
+{
+	rpc Solve (QueryRequest) returns (QueryResponse);
+}
