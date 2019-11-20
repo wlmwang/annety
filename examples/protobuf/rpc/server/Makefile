@@ -40,8 +40,8 @@ ${DIR_SRC}/%.o:${SRC_INC}/%.cc
 
 clean:
 	-rm -f ${TARGET} ${DIR_SRC}*.o
-	-rm -f ./*.pb.h ./*.pb.cc ../*.pb.h ../*.pb.cc
+	-rm -f ${DIR_SRC}/*.pb.h ${DIR_SRC}/*.pb.cc
 	
 proto:
-	protoc -I=../../../../annety/include/protorpc --cpp_out=../  ../../../../annety/include/protorpc/ProtorpcMessage.proto
-	protoc -I=../ --cpp_out=../ ../Query.proto
+	protoc -I=../../../../annety/include/protorpc --cpp_out=${DIR_SRC}  ../../../../annety/include/protorpc/ProtorpcMessage.proto
+	protoc -I=../ --cpp_out=${DIR_SRC} ../Query.proto

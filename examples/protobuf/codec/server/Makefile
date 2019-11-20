@@ -25,7 +25,7 @@ OBJ		:= $(patsubst %.cc, ${DIR_SRC}/%.o, $(notdir ${CC_SRC}))
 
 TARGET	:= server
 
-.PHONY:all clean
+.PHONY:all clean proto
 
 all: ${TARGET}
 
@@ -39,4 +39,8 @@ ${DIR_SRC}/%.o:${SRC_INC}/%.cc
 	${CC} ${CCFLAGS} ${INCFLAGS} -c $< -o $@ 
 
 clean:
-	-rm -f ${TARGET} ${DIR_SRC}*.o
+	-rm -f ${TARGET} ${DIR_SRC}/*.o
+	-rm -f ${DIR_SRC}/*.pb.h ${DIR_SRC}/*.pb.cc
+
+proto:
+	protoc -I=../ --cpp_out=${DIR_SRC} ../Query.proto
