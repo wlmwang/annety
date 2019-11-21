@@ -12,9 +12,6 @@
 #include <map>
 #include <string>
 #include <memory>
-#include <google/protobuf/message.h>
-#include <google/protobuf/descriptor.h>
-#include <google/protobuf/service.h>
 
 namespace annety
 {
@@ -66,7 +63,7 @@ void ProtorpcServer::new_connection(const TcpConnectionPtr& conn)
 
 	if (conn->connected()) {
 		chan_->attach_connection(conn);
-		
+
 		conn->set_message_callback(
 			std::bind(&ProtorpcChannel::recv, chan_.get(), _1, _2, _3));
 	} else {

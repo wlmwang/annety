@@ -19,12 +19,17 @@ class QueryServiceImpl : public QueryService
 {
 public:
 	virtual void Solve(::google::protobuf::RpcController* controller,
-					const QueryRequest* request, QueryResponse* response,
+					const Query* request,
+					Answer* response,
 					::google::protobuf::Closure* done)
 	{
 		LOG(INFO) << "QueryServiceImpl::Solve";
-		response->set_solved(true);
-		response->set_checkerboard("1234567");
+		
+		response->set_id(1);
+		response->set_questioner(request->questioner());
+		response->set_answerer("Anny Wang");
+		response->add_solution("World!!");
+
 		done->Run();
 	}
 };

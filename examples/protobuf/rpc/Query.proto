@@ -7,18 +7,24 @@ option cc_generic_services = true;
 
 package examples.protobuf.rpc;
 
-message QueryRequest
+message Query
 {
-	string checkerboard = 1;
+	int64 id = 1;
+	string questioner = 2;
+
+	repeated string question = 3;
 }
 
-message QueryResponse
+message Answer
 {
-	bool solved = 1;
-	string checkerboard = 2;
+	int64 id = 1;
+	string questioner = 2;
+	string answerer = 3;
+
+	repeated string solution = 4;
 }
 
 service QueryService
 {
-	rpc Solve (QueryRequest) returns (QueryResponse);
+	rpc Solve (Query) returns (Answer);
 }
