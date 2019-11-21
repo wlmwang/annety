@@ -7,17 +7,16 @@
 #include "EventLoop.h"
 #include "Logging.h"
 #include "synchronization/MutexLock.h"
-
 #include "protobuf/ProtobufCodec.h"
 #include "protobuf/ProtobufDispatch.h"
 
+// define the protorpc bytes protocol
 #include "ProtorpcMessage.pb.h"
 
 #include <map>
 #include <string>
 #include <memory>
 #include <atomic>
-
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/service.h>
@@ -43,16 +42,6 @@ public:
 			std::bind(&ProtorpcChannel::dispatch, this, _1, _2, _3));
 	}
 
-	ProtorpcChannel(EventLoop* loop, const TcpConnectionPtr& conn)
-		: loop_(loop), conn_(conn)
-		, codec_(loop, std::bind(&ProtobufDispatch::dispatch, &dispatch_, _1, _2, _3))
-	{
-		LOG(DEBUG) << "ProtorpcChannel::ProtorpcChannel - " << this;
-
-		dispatch_.listen<ProtorpcMessage>(
-			std::bind(&ProtorpcChannel::dispatch, this, _1, _2, _3));
-	}
-
 	virtual ~ProtorpcChannel() override
 	{
 		LOG(DEBUG) << "ProtorpcChannel::~ProtorpcChannel - " << this;
@@ -60,24 +49,28 @@ public:
 		for (const auto& outstanding : outstandings_) {
 			OutstandingCall out = outstanding.second;
 			delete out.resp;
-			// delete out.done;
 		}
+	}
+
+	void listen(::google::protobuf::Service* service)
+	{
+		const google::protobuf::ServiceDescriptor* desc = service->GetDescriptor();
+		services_[desc->full_name()] = service;
+	}
+
+	void attach_connection(const TcpConnectionPtr& conn)
+	{
+		conn_ = conn;
+	}
+	
+	void detach_connection()
+	{
+		conn_.reset();
 	}
 	
 	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
 	{
-		CHECK(conn == conn_);
 		codec_.recv(conn, buff, receive);
-	}
-
-	void set_services(const std::map<std::string, ::google::protobuf::Service*>* services)
-	{
-		services_ = services;
-	}
-	
-	void set_connection(const TcpConnectionPtr& conn)
-	{
-		conn_ = conn;
 	}
 
 	// Call the given method of the remote service.  The signature of this
@@ -92,7 +85,7 @@ public:
 							::google::protobuf::Closure* done) override
 	{
 		LOG(DEBUG) << "ProtorpcChannel::CallMethod req - " << request->DebugString();
-
+		
 		int64_t id = ++id_;
 
 		ProtorpcMessage mesg;
@@ -120,13 +113,14 @@ private:
 
 	void finish(::google::protobuf::Message*, int64_t);
 
-private:
+	// for rpc request
 	struct OutstandingCall
 	{
 		::google::protobuf::Message* resp;
 		::google::protobuf::Closure* done;
 	};
 
+private:
 	EventLoop* loop_ {nullptr};
 	TcpConnectionPtr conn_;
 
@@ -135,17 +129,19 @@ private:
 
 	std::atomic<int64_t> id_{0};
 
-	MutexLock lock_;
+	// for rpc client
+	MutexLock lock_ {};
 	std::map<int64_t, OutstandingCall> outstandings_;
 
-	const std::map<std::string, ::google::protobuf::Service*>* services_ {nullptr};
+	// for rpc server
+	std::map<std::string, ::google::protobuf::Service*> services_;
 };
 
 void ProtorpcChannel::dispatch(const TcpConnectionPtr& conn, const ProtorpcMessagePtr& mesg, TimeStamp)
 {
-	LOG(INFO) << "ProtorpcChannel::dispatch - " << mesg->DebugString();
+	DCHECK(conn == conn_);
 
-	CHECK(conn == conn_);
+	LOG(INFO) << "ProtorpcChannel::dispatch - " << mesg->DebugString();
 
 	switch ((int)mesg->type()) {
 		case ProtorpcMessage::REQUEST:
@@ -164,7 +160,7 @@ void ProtorpcChannel::dispatch(const TcpConnectionPtr& conn, const ProtorpcMessa
 
 void ProtorpcChannel::response(const ProtorpcMessage& mesg)
 {
-	LOG(DEBUG) << "ProtorpcChannel::response - " << mesg.DebugString();
+	LOG(DEBUG) << "ProtorpcChannel::response res - " << mesg.DebugString();
 
 	OutstandingCall out = { nullptr, nullptr};
 	{
@@ -189,9 +185,9 @@ void ProtorpcChannel::response(const ProtorpcMessage& mesg)
 
 void ProtorpcChannel::request(const ProtorpcMessage& mesg)
 {
-	LOG(DEBUG) << "ProtorpcChannel::request - " << mesg.DebugString();
+	LOG(DEBUG) << "ProtorpcChannel::request req - " << mesg.DebugString();
 
-	auto defer = [this] (ProtorpcMessage::ERROR_CODE err, const ProtorpcMessage& mesg) {
+	auto failed = [this] (ProtorpcMessage::ERROR_CODE err, const ProtorpcMessage& mesg) {
 		ProtorpcMessage resp;
 		resp.set_id(mesg.id());
 		resp.set_error(err);
@@ -203,17 +199,11 @@ void ProtorpcChannel::request(const ProtorpcMessage& mesg)
 	// init error code
 	ProtorpcMessage::ERROR_CODE err = ProtorpcMessage::WRONG_PROTO;
 
-	if (!services_) {
-		err = ProtorpcMessage::NO_SERVICE;
-		defer(err, mesg);
-		return;
-	}
-
 	// lookup listen impl services
-	std::map<std::string, google::protobuf::Service*>::const_iterator it = services_->find(mesg.service());
-	if (it == services_->end()) {
+	std::map<std::string, google::protobuf::Service*>::const_iterator it = services_.find(mesg.service());
+	if (it == services_.end()) {
 		err = ProtorpcMessage::NO_SERVICE;
-		defer(err, mesg);
+		failed(err, mesg);
 		return;
 	}
 
@@ -225,7 +215,7 @@ void ProtorpcChannel::request(const ProtorpcMessage& mesg)
 	const google::protobuf::MethodDescriptor* method = desc->FindMethodByName(mesg.method());
 	if (!method) {
 		err = ProtorpcMessage::NO_METHOD;
-		defer(err, mesg);
+		failed(err, mesg);
 		return;
 	}
 
@@ -235,7 +225,7 @@ void ProtorpcChannel::request(const ProtorpcMessage& mesg)
 	// parse request
 	if (!req->ParseFromString(mesg.request())) {
 		err = ProtorpcMessage::INVALID_REQUEST;
-		defer(err, mesg);
+		failed(err, mesg);
 		return;
 	}
 
@@ -250,7 +240,7 @@ void ProtorpcChannel::request(const ProtorpcMessage& mesg)
 
 void ProtorpcChannel::finish(::google::protobuf::Message* resp, int64_t id)
 {
-	LOG(DEBUG) << "ProtorpcChannel::finish - " << resp->DebugString();
+	LOG(DEBUG) << "ProtorpcChannel::finish res - " << resp->DebugString();
 
 	// RAII
 	std::unique_ptr<google::protobuf::Message> l(resp);

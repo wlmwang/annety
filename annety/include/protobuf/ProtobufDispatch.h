@@ -14,13 +14,11 @@
 #include <utility>
 #include <functional>
 #include <type_traits>
-
 #include <google/protobuf/message.h>
 
 namespace annety
 {
 using MessagePtr = std::shared_ptr<google::protobuf::Message>;
-
 using ProtobufMessageCallback = 
 		std::function<void(const TcpConnectionPtr&, const MessagePtr&, TimeStamp)>;
 
@@ -29,7 +27,7 @@ class Callback
 {
 public:
 	virtual ~Callback() = default;
-	virtual void emit(const TcpConnectionPtr&, const MessagePtr&, TimeStamp) const = 0;
+	virtual void operator()(const TcpConnectionPtr&, const MessagePtr&, TimeStamp) const = 0;
 };
 
 template <typename T>
@@ -45,7 +43,7 @@ public:
 
 	CallbackT(const ProtobufMessageTCallback& cb) : cb_(cb) {}
 
-	void emit(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const override
+	void operator()(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const override
 	{
 		std::shared_ptr<T> concrete = std::dynamic_pointer_cast<T>(mesg);
 		CHECK(concrete != NULL);
@@ -61,30 +59,17 @@ private:
 class ProtobufDispatch
 {
 public:
-	ProtobufDispatch(ProtobufMessageCallback cb = unknown) : default_cb_(std::move(cb)) {}
+	ProtobufDispatch(ProtobufMessageCallback cb = ProtobufDispatch::unknown) 
+		: default_cb_(std::move(cb)) {}
 
-	// dispatch the protobuf message
-	void dispatch(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const
-	{
-		CallbackMap::const_iterator it = cbs_.find(mesg->GetDescriptor());
-		if (it != cbs_.end()) {
-			it->second->emit(conn, mesg, receive);
-		} else {
-			if (default_cb_) {
-				default_cb_(conn, mesg, receive);
-			} else {
-				LOG(ERROR) << "ProtobufDispatch::dispatch Invalid message, TypeName=" 
-					<< mesg->GetTypeName();
-			}
-		}
-	}
-
-	template<typename T>
+	template <typename T>
 	void listen(const typename CallbackT<T>::ProtobufMessageTCallback& cb)
 	{
 		std::shared_ptr<CallbackT<T>> pd(new CallbackT<T>(cb));
 		cbs_[T::descriptor()] = pd;
 	}
+
+	void dispatch(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const;
 
 private:
 	static void unknown(const TcpConnectionPtr&, const MessagePtr&, TimeStamp);
@@ -94,9 +79,25 @@ private:
 			std::map<const google::protobuf::Descriptor*, std::shared_ptr<Callback>>;
 
 	CallbackMap cbs_;
-	
 	ProtobufMessageCallback default_cb_;
+
+	DISALLOW_COPY_AND_ASSIGN(ProtobufDispatch);
 };
+
+void ProtobufDispatch::dispatch(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const
+{
+	CallbackMap::const_iterator it = cbs_.find(mesg->GetDescriptor());
+	if (it != cbs_.end()) {
+		(*it->second)(conn, mesg, receive);
+	} else {
+		if (default_cb_) {
+			default_cb_(conn, mesg, receive);
+		} else {
+			LOG(ERROR) << "ProtobufDispatch::dispatch Invalid message, TypeName=" 
+				<< mesg->GetTypeName();
+		}
+	}
+}
 
 void ProtobufDispatch::unknown(const TcpConnectionPtr&, const MessagePtr& mesg, TimeStamp)
 {

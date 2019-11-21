@@ -7,13 +7,11 @@
 #include "TcpServer.h"
 #include "EventLoop.h"
 #include "Logging.h"
-
 #include "protorpc/ProtorpcChannel.h"
 
 #include <map>
 #include <string>
 #include <memory>
-
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/service.h>
@@ -26,10 +24,10 @@ class ProtorpcServer
 public:
 	ProtorpcServer(EventLoop* loop, const EndPoint& addr)
 		: loop_(loop)
+		, chan_(new ProtorpcChannel(loop))
 	{
 		server_ = make_tcp_server(loop, addr, "ProtorpcServer");
 
-		using std::placeholders::_1;
 		server_->set_connect_callback(
 			std::bind(&ProtorpcServer::new_connection, this, _1));
 	}
@@ -44,10 +42,9 @@ public:
 		server_->start();
 	}
 
-	void listen(::google::protobuf::Service* srv)
+	void listen(::google::protobuf::Service* service)
 	{
-		const google::protobuf::ServiceDescriptor* desc = srv->GetDescriptor();
-		services_[desc->full_name()] = srv;
+		chan_->listen(service);
 	}
 
 private:
@@ -56,8 +53,9 @@ private:
 private:
 	EventLoop* loop_;
 	TcpServerPtr server_;
+	ProtorpcChannelPtr chan_;
 
-	std::map<std::string, ::google::protobuf::Service*> services_;
+	DISALLOW_COPY_AND_ASSIGN(ProtorpcServer);
 };
 
 void ProtorpcServer::new_connection(const TcpConnectionPtr& conn)
@@ -67,20 +65,12 @@ void ProtorpcServer::new_connection(const TcpConnectionPtr& conn)
 		<< (conn->connected() ? "UP" : "DOWN");
 
 	if (conn->connected()) {
-		using std::placeholders::_1;
-		using std::placeholders::_2;
-		using std::placeholders::_3;
-
-		ProtorpcChannelPtr chan(new ProtorpcChannel(loop_, conn));
-		chan->set_services(&services_);
-		conn->set_message_callback(
-			std::bind(&ProtorpcChannel::recv, chan.get(), _1, _2, _3));
+		chan_->attach_connection(conn);
 		
-		// extend life cycle
-		conn->set_context(chan);
+		conn->set_message_callback(
+			std::bind(&ProtorpcChannel::recv, chan_.get(), _1, _2, _3));
 	} else {
-		// release life cycle
-		conn->set_context(ProtorpcChannelPtr());
+		chan_->detach_connection();
 	}
 }
 

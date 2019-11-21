@@ -12,23 +12,22 @@
 #include "codec/Codec.h"
 
 #include <string>
+#include <cstring>
 #include <utility>
 #include <functional>
-
 #include <google/protobuf/message.h>
 
 namespace annety
 {
 namespace
 {
-BEFORE_MAIN_EXECUTOR() { GOOGLE_PROTOBUF_VERIFY_VERSION;}
-
 inline uint32_t peek_uint32(const char* buff)
 {
 	uint32_t be32 = 0;
 	::memcpy(&be32, buff, sizeof be32);
 	return net_to_host32(be32);
 }
+BEFORE_MAIN_EXECUTOR() { GOOGLE_PROTOBUF_VERIFY_VERSION;}
 }	// namespace anonymous
 
 namespace
@@ -41,7 +40,6 @@ const std::string kUnknownErrorStr = "UnknownError";
 }	// namespace anonymous
 
 using MessagePtr = std::shared_ptr<google::protobuf::Message>;
-
 using ProtobufMessageCallback = 
 		std::function<void(const TcpConnectionPtr&, const MessagePtr&, TimeStamp)>;
 

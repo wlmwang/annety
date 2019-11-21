@@ -49,7 +49,6 @@ private:
 	void result(QueryResponse* resp)
 	{
 		LOG(INFO) << "QueryClient:result - " << resp->DebugString();
-		// finish rpc
 		client_->disconnect();
 	}
 
@@ -69,7 +68,7 @@ void QueryClient::on_connect(const TcpConnectionPtr& conn)
 			<< (conn->connected() ? "UP" : "DOWN");
 
 	if (conn->connected()) {
-		chan_->set_connection(conn);
+		chan_->attach_connection(conn);
 		
 		QueryResponse* res = new QueryResponse;
 		QueryRequest req;
@@ -77,6 +76,8 @@ void QueryClient::on_connect(const TcpConnectionPtr& conn)
 
 		stub_.Solve(nullptr, &req, res, NewCallback(this, &QueryClient::result, res));
 	} else {
+		chan_->detach_connection();
+
 		loop_->quit();
 	}
 }
