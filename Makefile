@@ -4,14 +4,15 @@
 
 #
 # 环境要求:
-# POSIX
-# C++11
+# C++11/POSIX
+# >= Linux 2.6.28 (epoll/timerfd/eventfd)
+# >= Darwin * (for develop)
 #
 
 CC		:= g++
 AR		:= ar
 LD		:= g++
-ARFLAGS := -pipe -fpic #-fpic 便于其他*.so库可以静态链接 ${LIBNAME}.a 库
+ARFLAGS := -pipe -fpic #-fpic 便于其他*.so库可以“静态”链接 *.a 库
 LDFLAGS := -pipe -fpic
 CCFLAGS	:= -g -Wall -std=c++11 #-DNDEBUG -O3
 
@@ -48,8 +49,8 @@ DIR_LD	:= ${DIR_SRC}/ld
 # 编译文件
 AR_OBJ	:= $(patsubst %.cc, ${DIR_AR}/%.o, $(notdir ${CC_SRC}))
 LD_OBJ	:= $(patsubst %.cc, ${DIR_LD}/%.o, $(notdir ${CC_SRC}))
-
 # $(info $(AR_OBJ))
+# $(info $(LD_OBJ))
 
 .PHONY:all clean install
 
