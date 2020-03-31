@@ -19,14 +19,14 @@ Timer::Timer(TimerCallback cb, TimeStamp expired, TimeDelta interval)
 	, cb_(std::move(cb))
 	, sequence_(globalSequence++)
 {
-	LOG(TRACE) << "Timer::Timer [" << "sequence:" << sequence_ 
+	DLOG(TRACE) << "Timer::Timer [" << "sequence:" << sequence_ 
 		<< ", interval:" << interval_ 
 		<<  ", expired:" << expired_ <<"] is constructing";
 }
 
 Timer::~Timer()
 {
-	LOG(TRACE) << "Timer::~Timer [" << "sequence:" << sequence_ 
+	DLOG(TRACE) << "Timer::~Timer [" << "sequence:" << sequence_ 
 		<< ", interval:" << interval_ 
 		<<  ", expired:" << expired_ <<"] is destructing";
 }

@@ -35,7 +35,7 @@ int shutdown(const SelectableFD& sfd, int how = SHUT_WR)
 
 void default_connect_callback(const TcpConnectionPtr& conn)
 {
-	LOG(TRACE) << conn->local_addr().to_ip_port() << " -> "
+	DLOG(TRACE) << conn->local_addr().to_ip_port() << " -> "
 			   << conn->peer_addr().to_ip_port() << " is "
 			   << (conn->connected() ? "UP" : "DOWN");
 	// do not call conn->force_close()
@@ -328,7 +328,7 @@ void TcpConnection::connect_established()
 
 	connect_cb_(shared_from_this());
 
-	LOG(TRACE) << "TcpConnection::connect_established is called";
+	DLOG(TRACE) << "TcpConnection::connect_established is called";
 }
 
 void TcpConnection::connect_destroyed()
@@ -343,7 +343,7 @@ void TcpConnection::connect_destroyed()
 	}
 	connect_channel_->remove();
 
-	LOG(TRACE) << "TcpConnection::connect_destroyed is called";
+	DLOG(TRACE) << "TcpConnection::connect_destroyed is called";
 }
 
 void TcpConnection::handle_read(TimeStamp recv_tm)
@@ -357,7 +357,7 @@ void TcpConnection::handle_read(TimeStamp recv_tm)
 	if (n > 0) {
 		message_cb_(shared_from_this(), input_buffer_.get(), recv_tm);
 	} else if (n == 0) {
-		LOG(TRACE) << "TcpConnection::handle_read the conntion fd=" 
+		DLOG(TRACE) << "TcpConnection::handle_read the conntion fd=" 
 			<< connect_socket_->internal_fd() 
 			<< " is going to closing";
 		handle_close();

@@ -17,7 +17,7 @@ TimerPool::TimerPool(EventLoop* loop)
 	, timer_socket_(new TimerFD(true, true))
 	, timer_channel_(new Channel(owner_loop_, timer_socket_.get()))
 {
-	LOG(TRACE) << "TimerPool::TimerPool" << " fd=" << 
+	DLOG(TRACE) << "TimerPool::TimerPool" << " fd=" << 
 		timer_socket_->internal_fd() << " is constructing";
 
 	timer_channel_->set_read_callback(
@@ -28,7 +28,7 @@ TimerPool::TimerPool(EventLoop* loop)
 
 TimerPool::~TimerPool()
 {
-	LOG(TRACE) << "TimerPool::~TimerPool" << " fd=" << 
+	DLOG(TRACE) << "TimerPool::~TimerPool" << " fd=" << 
 		timer_socket_->internal_fd() << " is destructing";
 
 	timer_channel_->disable_all_event();

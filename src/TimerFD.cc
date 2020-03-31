@@ -54,7 +54,7 @@ TimerFD::TimerFD(bool nonblock, bool cloexec)
 	fd_ = ev_->internal_fd();
 #endif
 	PCHECK(fd_ >= 0);
-	LOG(TRACE) << "TimerFD::TimerFD" << " fd=" << fd_ << " is constructing";
+	DLOG(TRACE) << "TimerFD::TimerFD" << " fd=" << fd_ << " is constructing";
 }
 
 TimerFD::~TimerFD()

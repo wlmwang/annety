@@ -23,7 +23,7 @@
 namespace annety
 {
 // set time zone
-BEFORE_MAIN_EXECUTOR() { TimeZone::set_time_zone();}
+// BEFORE_MAIN_EXECUTOR() { TimeZone::set_time_zone();}
 
 namespace
 {
@@ -51,8 +51,7 @@ void TimeZone::set_time_zone(int tzhour)
 void TimeZone::set_time_zone(const std::string& tzstr)
 {
 	// TZ=Asia/Shanghai
-	int rt = ::setenv("TZ", tzstr.c_str(), 1);
-	CHECK(rt == 0);
+	CHECK(::setenv("TZ", tzstr.c_str(), 1) == 0);
 	::tzset();
 }
 
