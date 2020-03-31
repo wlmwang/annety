@@ -248,15 +248,18 @@ std::ostream& operator<<(std::ostream& out, const FilePath& file_path);
 
 }	// namespace annety
 
+// Hashing ---------------------------------------------------------------------
+
+// We provide appropriate hash functions, so FilePath can be used as keys in 
+// hash sets and maps. --- see strings/StringPiece.h
+//
 // FIXME: User modify std namespace does not strictly conform to specifications.
 namespace std {
-// Define std::hash template specialization, and cooperate with operator==() of 
-// FilePath class, which can make it a key to std::unordered_map/std::unordered_set/...
 template <>
 struct hash<annety::FilePath>
 {
 	typedef annety::FilePath argument_type;
-	typedef std::size_t result_type;
+	typedef size_t result_type;
 	
 	result_type operator()(argument_type const& f) const
 	{

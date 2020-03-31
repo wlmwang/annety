@@ -331,7 +331,7 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* addr)
 	PLOG_IF(ERROR, ret < 0) << "::inet_pton failed";
 }
 
-// 将 "ip6 + port" 地址转换 struct sockaddr_in6
+// translate "ip6 + port" address into struct sockaddr_in6
 void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* addr)
 {
 	addr->sin6_family = AF_INET6;

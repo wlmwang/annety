@@ -15,6 +15,7 @@
 #include <functional>
 #include <string>
 #include <cstring>	// size_t,ssize_t,::memcpy
+
 #include <google/protobuf/message.h>
 
 namespace annety

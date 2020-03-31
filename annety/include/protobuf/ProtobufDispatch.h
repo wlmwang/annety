@@ -14,6 +14,7 @@
 #include <utility>
 #include <functional>
 #include <type_traits>
+
 #include <google/protobuf/message.h>
 
 namespace annety

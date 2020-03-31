@@ -7,7 +7,7 @@
 #include "build/BuildConfig.h"
 #include "Logging.h"
 
-#include <stdint.h>	// uint16_t,uint64_t,uintptr_t
+#include <stdint.h>		// uint16_t,uint64_t,uintptr_t
 
 namespace annety
 {

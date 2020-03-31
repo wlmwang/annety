@@ -21,6 +21,7 @@ namespace annety
 
 // TimeZone ------------------------------------------------------------------
 
+// *Not thread safe*
 class TimeZone
 {
 public:
@@ -360,7 +361,7 @@ public:
 	// Contains the NULL time. Use TimeStamp::Now() to get the current time.
 	constexpr TimeStamp() : TimeBase(0) {}
 
-	// Returns the current time. Watch out, the system might adjust its clock
+	// Returns the current UTC time. Watch out, the system might adjust its clock
 	// in which case time will actually go backwards. We don't guarantee that
 	// times are increasing, or that two calls to now() won't be the same.
 	static TimeStamp now();

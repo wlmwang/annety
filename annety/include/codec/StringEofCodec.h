@@ -46,7 +46,7 @@ public:
 	//    0  decode incomplete, continues to read more data
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) override
 	{
-		DCHECK(!!buff && !!payload);
+		CHECK(!!buff && !!payload);
 
 		int rt = 0;
 		
@@ -85,7 +85,7 @@ public:
 	//    0  encode incomplete, continues to send more data
 	virtual int encode(NetBuffer* payload, NetBuffer* buff) override
 	{
-		DCHECK(!!buff && !!payload);
+		CHECK(!!buff && !!payload);
 		
 		const ssize_t length = payload->readable_bytes();
 		if (length == 0) {

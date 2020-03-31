@@ -20,17 +20,13 @@ namespace annety
 // It is value sematics, which means that it can be copied or assigned.
 class EndPoint
 {
-#if defined(OS_MACOSX)
-	static_assert(offsetof(sockaddr_in, sin_family) == 1, "sin_family offset 1");
-	static_assert(offsetof(sockaddr_in6, sin6_family) == 1, "sin6_family offset 1");
-	static_assert(offsetof(sockaddr_in, sin_port) == 2, "sin_port offset 2");
-	static_assert(offsetof(sockaddr_in6, sin6_port) == 2, "sin6_port offset 2");
-#else
+#if defined(OS_LINUX)
 	static_assert(offsetof(sockaddr_in, sin_family) == 0, "sin_family offset 0");
 	static_assert(offsetof(sockaddr_in6, sin6_family) == 0, "sin6_family offset 0");
-	static_assert(offsetof(sockaddr_in, sin_port) == 2, "sin_port offset 2");
-	static_assert(offsetof(sockaddr_in6, sin6_port) == 2, "sin6_port offset 2");
-#endif	// defined(OS_MACOSX)
+#else
+	static_assert(offsetof(sockaddr_in, sin_family) == 1, "sin_family offset 1");
+	static_assert(offsetof(sockaddr_in6, sin6_family) == 1, "sin6_family offset 1");
+#endif
 
 public:
 	// |port| to EndPoint, ip default "0.0.0.0"

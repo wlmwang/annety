@@ -22,8 +22,8 @@ public:
 
 	ThreadLocal(const DeleteFuncType func = &ThreadLocal::local_dtor)
 	{
-		DCHECK(func);
-		DPCHECK(::pthread_key_create(&tls_key_, local_dtor_func_ = func) == 0);
+		CHECK(func);
+		PCHECK(::pthread_key_create(&tls_key_, local_dtor_func_ = func) == 0);
 	}
 	
 	// no virtual even ThreadLocalSingleton extends this
@@ -33,7 +33,7 @@ public:
 		// 2. TODO: pthread_key_delete could not call local_dtor_func_() when
 		// pthread_key_create called by one thread
 		Type* ptr = static_cast<Type*>(::pthread_getspecific(tls_key_));
-		DPCHECK(::pthread_key_delete(tls_key_) == 0);
+		PCHECK(::pthread_key_delete(tls_key_) == 0);
 		if (ptr) {
 			local_dtor_func_(ptr);
 		}
@@ -52,8 +52,8 @@ public:
 	
 	Type* set(Type* ptr)
 	{
-		DPCHECK(::pthread_getspecific(tls_key_) == nullptr);
-		DPCHECK(::pthread_setspecific(tls_key_, ptr) == 0);
+		PCHECK(::pthread_getspecific(tls_key_) == nullptr);
+		PCHECK(::pthread_setspecific(tls_key_, ptr) == 0);
 		return ptr;
 	}
 
@@ -65,7 +65,7 @@ private:
 	// 3. A thread(created ThreadLocal) exit will run local_dtor()
 	static void local_dtor(void *ptr)
 	{
-		DCHECK(ptr);
+		CHECK(ptr);
 
 		typedef char T_must_be_complete_type[sizeof(Type) == 0 ? -1 : 1];
 		T_must_be_complete_type dummy; (void) dummy;

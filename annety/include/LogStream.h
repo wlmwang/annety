@@ -6,9 +6,9 @@
 
 #include "ByteBuffer.h"
 
-#include <iosfwd>
+#include <iosfwd>	// std::basic_ostream,std::char_traits
+#include <limits>	// std::numeric_limits
 #include <string>
-#include <limits>
 
 namespace annety
 {
@@ -18,6 +18,8 @@ class TimeDelta;
 // It is value sematics, which means that it can be copied or assigned.
 class LogStream
 {
+	static const int  kMaxBufferSize = 4096;
+
 	static const int kMaxNumericSize = 32;
 	
 	static_assert(kMaxNumericSize - 10 > std::numeric_limits<double>::digits10,
@@ -29,15 +31,16 @@ class LogStream
 	static_assert(kMaxNumericSize - 10 > std::numeric_limits<long long>::digits10,
 		"kMaxNumericSize is large enough");
 
-	// for the function signature of std::endl
-	// STL define:
+	// For the function signature of std::endl
+	//
+	// See C++ STL define:
 	// template<class CharT, class Traits>
 	// std::basic_ostream<CharT, Traits>& endl(std::basic_ostream<CharT, Traits>& os);
 	typedef std::basic_ostream<char, std::char_traits<char>> CharOStream;
 	typedef CharOStream& (*StdEndLine) (CharOStream&);
 
 public:
-	LogStream() {}
+	LogStream(ssize_t max_size = kMaxBufferSize) : buffer_(max_size) {}
 	
 	// copy-ctor, move-ctor, dtor and assignment
 	LogStream(const LogStream&) = default;
@@ -132,8 +135,7 @@ private:
 	LogStream& format_number(T);
 
 private:
-	// fixed buffer
-	ByteBuffer buffer_{1024};
+	ByteBuffer buffer_;
 };
 
 std::ostream& operator<<(std::ostream& os, const LogStream& ls);

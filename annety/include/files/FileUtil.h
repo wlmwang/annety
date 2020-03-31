@@ -19,14 +19,15 @@
 #include <set>
 #include <stack>
 #include <string>
-#include <stdio.h>		// FILE*
-#include <sys/types.h>	// size_t,int64_t,gid_t,uid_t
+#include <stdio.h>		// FILE
+#include <stdint.h>		// uint32_t,int64_t
+#include <sys/types.h>	// size_t,gid_t,uid_t
 
 namespace annety
 {
 class TimeStamp;
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Functions that involve filesystem access or modification:
 
 // Returns an absolute version of a relative path. Returns an empty path on

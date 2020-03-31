@@ -9,7 +9,7 @@
 #define ANT_STRINGS_STRING_PIECE_H_
 
 #include <iterator>		// const_iterator
-#include <iosfwd>
+#include <iosfwd>		// std::ostream
 #include <algorithm>	// std::distance
 #include <string>
 #include <string.h>		// ::strlen,::memcmp
@@ -83,7 +83,7 @@ void assert_iterators_in_order(std::string::const_iterator begin,
 // StringPiece (for std::string)----------------------------------------
 
 // Defines the types, methods, operators, and data members common to both
-// StringPiece. Do not refer to this class directly, but rather to StringPiece.
+// StringPiece.
 //
 // It is value sematics, which means that it can be copied or assigned.
 class StringPiece
@@ -353,8 +353,8 @@ std::ostream& operator<<(std::ostream& os, const StringPiece& piece);
 
 // Hashing ---------------------------------------------------------------------
 
-// We provide appropriate hash functions, so StringPiece can
-// be used as keys in hash sets and maps.
+// We provide appropriate hash functions, so StringPiece can be used as keys in 
+// hash sets and maps. --- see files/FilePath.h
 #define HASH_STRING_PIECE(StringPieceType, string_piece)         \
   std::size_t result = 0;                                        \
   for (StringPieceType::const_iterator i = string_piece.begin(); \

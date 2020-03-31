@@ -18,7 +18,7 @@ namespace annety
 class NetBuffer : public ByteBuffer
 {
 public:
-	// inheritance of construct
+	// Inheritance all construct of ByteBuffer
 	using ByteBuffer::ByteBuffer;
 	
 	explicit NetBuffer() : ByteBuffer() {}

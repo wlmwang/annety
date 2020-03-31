@@ -53,7 +53,7 @@ public:
 	// But run in own loop
 	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
 	{
-		DCHECK(!!buff);
+		CHECK(!!buff);
 		
 		owner_loop_->check_in_own_loop();
 
@@ -78,7 +78,7 @@ public:
 	// *Thread safe*
 	void send(const TcpConnectionPtr& conn, NetBuffer* payload)
 	{
-		DCHECK(!!payload);
+		CHECK(!!payload);
 
 		int rt = 0;
 		do {

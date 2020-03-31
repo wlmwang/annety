@@ -32,8 +32,8 @@ public:
 		bool joinable = true;
 	};
 
-	explicit Thread(const TaskCallback& cb, const std::string& name_prefix = "T");
-	explicit Thread(TaskCallback&& cb, const std::string& name_prefix = "T");
+	explicit Thread(const TaskCallback& cb, const std::string& name_prefix = "A");
+	explicit Thread(TaskCallback&& cb, const std::string& name_prefix = "A");
 	
   	Thread(const TaskCallback& cb, const std::string& name_prefix, const Options& options);
   	Thread(TaskCallback&& cb, const std::string& name_prefix, const Options& options);
@@ -87,7 +87,7 @@ private:
 	std::string name_;
 	const Options options_;
 	ThreadRef ref_;	// PlatformThread handle, reset after Join.
-	ThreadId tid_ = kInvalidThreadId;	// The backing thread's id.
+	ThreadId tid_;	// The backing thread's id.
 	bool joined_ = false;	// True if Join has been called.
 	// Set to true when the platform-thread creation has started.
 	bool start_called_ = false;

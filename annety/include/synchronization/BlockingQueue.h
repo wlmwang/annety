@@ -14,6 +14,16 @@
 
 namespace annety
 {
+// A blocking queue is a queue that can be used in a multi-thread, it 
+// supports blocking waiting.  The difference between a blocking queue 
+// and a normal queue is:
+// 1. Supports multiple threads, multiple threads can safely access 
+//	  the queue.
+// 2. Supports producer and consumer. When the queue is empty, the 
+//	  consumer thread will block and wait for the queue to become non-empty, 
+//	  when the queue is full, the producer thread will block until the queue 
+//	  is non-full.
+//
 // Use like:
 //	// UnBoundedBlocking
 // 	BlockingQueue<int> unbound;

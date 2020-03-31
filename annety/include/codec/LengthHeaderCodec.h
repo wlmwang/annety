@@ -53,7 +53,7 @@ public:
 		, length_type_(length_type)
 		, max_payload_(max_payload)
 	{
-		DCHECK(length_type == kLengthType8 || 
+		CHECK(length_type == kLengthType8 || 
 			length_type == kLengthType16 || 
 			length_type == kLengthType32 || 
 			length_type == kLengthType64);
@@ -69,7 +69,7 @@ public:
 	//    0  decode incomplete, continues to read more data
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) override
 	{
-		DCHECK(!!buff && !!payload);
+		CHECK(!!buff && !!payload);
 
 		auto get_payload_length = [this] (const NetBuffer* buff) {
 			int64_t length = -1;
@@ -143,7 +143,7 @@ public:
 	//    0  encode incomplete, continues to send more data
 	virtual int encode(NetBuffer* payload, NetBuffer* buff) override
 	{
-		DCHECK(!!buff && !!payload);
+		CHECK(!!buff && !!payload);
 		
 		auto set_buff_length = [this] (ssize_t length, NetBuffer* buff) {
 			switch (length_type()) {

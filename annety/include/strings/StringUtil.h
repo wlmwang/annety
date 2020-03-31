@@ -11,13 +11,13 @@
 #include "build/CompilerSpecific.h"	// PRINTF_FORMAT
 #include "strings/StringPiece.h"
 
-#include <initializer_list>
+#include <initializer_list>	// std::initializer_list
 #include <string>
 #include <vector>
-#include <stdarg.h>
-#include <stddef.h>	// size_t
-#include <string.h>	// ::strdup
-#include <stdio.h>	// ::vsnprintf
+#include <stdarg.h>		// va_list
+#include <stddef.h>		// size_t
+#include <string.h>		// ::strdup
+#include <stdio.h>		// ::vsnprintf
 
 namespace annety
 {

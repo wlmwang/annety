@@ -10,7 +10,7 @@
 
 #include "ScopedGeneric.h"
 
-#include <errno.h>
+#include <errno.h>	// errno
 
 namespace annety
 {

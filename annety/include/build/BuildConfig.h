@@ -127,7 +127,7 @@
 #define ARCH_CPU_BIG_ENDIAN 1
 #endif
 #else
-#error Please add support for your architecture in build/BuildConfig.h
+#error Please add support for your architecture in BuildConfig.h
 #endif
 
 #endif  // ANT_BUILD_BUILD_CONFIG_H_

@@ -19,7 +19,7 @@ namespace threads
 {
 // FIXME: destruct not control
 thread_local static ThreadId tls_tid{0};
-thread_local static std::string tls_tid_string;
+thread_local static std::string tls_tid_string{};
 
 ThreadId tid()
 {
@@ -54,6 +54,7 @@ Thread::Thread(const TaskCallback& cb, const std::string& name_prefix,
 			   const Options& options)
 	: name_prefix_(name_prefix)
 	, options_(options)
+	, tid_(kInvalidThreadId)
 	, thread_main_cb_(cb)
 	, latch_(1) {}
 
@@ -61,56 +62,64 @@ Thread::Thread(TaskCallback&& cb, const std::string& name_prefix,
 			   const Options& options)
 	: name_prefix_(name_prefix)
 	, options_(options)
+	, tid_(kInvalidThreadId)
 	, thread_main_cb_(std::move(cb))
 	, latch_(1) {}
 
 Thread::~Thread()
 {
-	DCHECK(has_been_started()) << "Thread was never started.";
-	DCHECK(!options_.joinable || has_been_joined())
+	CHECK(has_been_started()) << "Thread was never started.";
+	CHECK(!options_.joinable || has_been_joined())
 		<< "Joinable Thread destroyed without being Join()ed.";
 }
 
 Thread& Thread::start()
 {
 	start_async();
+	
 	// Wait for the thread to complete initialization.
 	latch_.wait();
+	
 	started_ = true;
+
 	return *this;
 }
 
 Thread& Thread::start_async()
 {
-	DCHECK(!has_start_been_attempted()) << "Tried to Start a thread multiple times.";
+	CHECK(!has_start_been_attempted()) << "Tried to Start a thread multiple times.";
 	start_called_ = true;
+
 	bool success = options_.joinable
 		? PlatformThread::create(std::bind(&Thread::start_routine, this), &ref_)
 		: PlatformThread::create_non_joinable(std::bind(&Thread::start_routine, this));
+	
 	CHECK(success);
+	
 	return *this;
 }
 
 void Thread::join()
 {
-	DCHECK(options_.joinable) << "A non-joinable thread can't be joined.";
-	DCHECK(has_start_been_attempted()) << "Tried to Join a never-started thread.";
-	DCHECK(!has_been_joined()) << "Tried to Join a thread multiple times.";
+	CHECK(options_.joinable) << "A non-joinable thread can't be joined.";
+	CHECK(!has_been_joined()) << "Tried to Join a thread multiple times.";
+	CHECK(has_start_been_attempted()) << "Tried to Join a never-started thread.";
 
 	PlatformThread::join(ref_);
 	ref_ = ThreadRef();	// clear ref
+	
 	joined_ = true;
 }
 
 ThreadId Thread::tid()
 {
-	DCHECK(has_been_started());
+	CHECK(has_been_started());
 	return tid_;
 }
 
 ThreadRef Thread::ref()
 {
-	DCHECK(has_been_started());
+	CHECK(has_been_started());
 	return ref_;
 }
 

@@ -6,10 +6,10 @@
 
 #include "Logging.h"
 
-#include <type_traits>
-#include <tuple>
-#include <memory>
-#include <utility>
+#include <type_traits>	// std::is_pointer,std::remove_reference
+#include <tuple>		// std::tuple,std::get
+#include <memory>		// std::shared_ptr,std::weak_ptr
+#include <utility>		// std::forward,std::forward_as_tuple
 
 namespace annety
 {
@@ -48,7 +48,7 @@ struct MakeIndexSequence<0, indexes...>
 };
 
 // return type --------------------------------------------------------------------------
-// --see: std::result_of in C++11 is too limited. That C++17 is become better
+// @see: std::result_of in C++11 is too limited. That C++17 is become better
 template <typename T>
 struct ResultOf;
 

@@ -6,8 +6,8 @@
 
 #include "strings/StringPiece.h"
 
-#include <iosfwd>
-#include <algorithm>
+#include <iosfwd>		// std::ostream
+#include <algorithm>	// std::swap
 #include <vector>
 #include <string>
 #include <stddef.h>
@@ -15,24 +15,24 @@
 
 namespace annety
 {
-// cannot use LOG/CHECK macros, because LOG/CHECK Low-level implementation
-// is dependent ByteBuffer. so we use assert() macros here.
-
-// It is value sematics, which means that it can be copied or assigned.
-//
 // @coding
 // +-------------------+------------------+------------------+
-// | prependable bytes |  readable bytes  |  writable bytes  |
+// |  has read bytes   |  readable bytes  |  writable bytes  |
 // |                   |     (CONTENT)    |                  |
 // +-------------------+------------------+------------------+
 // |                   |                  |                  |
 // 0      <=      readerIndex   <=   writerIndex    <=     size
 // @coding
+//
+// Cannot use CHECK macros, because CHECK Low-level implementation
+// is dependent ByteBuffer. so we use assert() macros here.
+//
+// It is value sematics, which means that it can be copied or assigned.
 class ByteBuffer
 {
 public:
 	static const ssize_t kUnLimitSize = -1;
-	static const size_t  kInitialSize = 1024;
+	static const size_t  kInitialSize = 256;
 
 	explicit ByteBuffer(ssize_t max_size = kUnLimitSize, size_t init_size = kInitialSize)
 				: max_size_(max_size),

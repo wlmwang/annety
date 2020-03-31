@@ -12,6 +12,7 @@ namespace annety
 {
 class TimeDelta;
 
+// CountDownLatch can make multi-threads wait at the "door" until the latch count is 0.
 class CountDownLatch
 {
 public:

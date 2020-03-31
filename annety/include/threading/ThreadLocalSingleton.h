@@ -35,7 +35,7 @@ private:
 			if (!tls_instance_) {
 				tls_instance_ = ThreadLocal<Type>::get();
 			}
-			DCHECK(tls_instance_ != nullptr);
+			CHECK(tls_instance_ != nullptr);
 			return tls_instance_;
 		}
 
@@ -44,10 +44,10 @@ private:
 		// 2. A thread(main thread) exit will run on_thread_exit()
 		static void on_thread_exit(void* ptr)
 		{
-#	if defined(OS_LINUX)
-			// TODO(MacOS): Now, tls_instance_ == 0 ???
-			DCHECK(tls_instance_ == ptr);
-#	endif
+			// FIXME: Now, On MacOS platform the tls_instance_ == 0 ???
+#if defined(OS_LINUX)
+			CHECK(tls_instance_ == ptr);
+#endif
 			// call (Type)ptr ~destruct
 			ThreadLocal<Type>::local_dtor(ptr);
 			tls_instance_ = nullptr;

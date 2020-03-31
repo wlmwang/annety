@@ -17,8 +17,8 @@
 #include <iostream>
 #include <stdint.h>
 #include <stddef.h>
-#include <stdio.h>	// fwrite,abort
 #include <stdlib.h>
+#include <stdio.h>	// fwrite,abort
 
 namespace annety
 {

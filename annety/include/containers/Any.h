@@ -10,11 +10,11 @@
 
 #include "Logging.h"
 
-#include <memory>
-#include <utility>
-#include <type_traits>
-#include <typeinfo>
-#include <typeindex>
+#include <memory>		// std::unique_ptr
+#include <utility>		// std::move,std::forward
+#include <type_traits>	// std::is_same,std::enable_if
+#include <typeinfo>		// typeid
+#include <typeindex>	// std::type_index
 
 namespace annety
 {

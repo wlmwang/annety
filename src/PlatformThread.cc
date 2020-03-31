@@ -45,21 +45,21 @@ public:
 // |params| -> ThreadParams
 void* thread_func(void* params)
 {
+	CHECK(params);
+
 	tls_is_main_thread = false;
 
-	DCHECK(params);
 	std::unique_ptr<ThreadParams> thread_params(static_cast<ThreadParams*>(params));
 
 	// start enter thread function
 	thread_params->thread_main_cb_();
 
-	::pthread_exit(0);
 	return nullptr;
 }
 
 bool create_thread(bool joinable, TaskCallback cb, ThreadRef* thread_ref)
 {
-	DCHECK(thread_ref);
+	CHECK(thread_ref);
 
 	pthread_attr_t attributes;
 	::pthread_attr_init(&attributes);
@@ -97,6 +97,7 @@ ThreadId PlatformThread::current_id()
 {
 	// Pthreads doesn't have the concept of a thread ID, so we have to reach down
 	// into the kernel.
+	// FIXME: current_id should be return integer.
 #if defined(OS_MACOSX)
 	return pthread_mach_thread_np(::pthread_self());
 #elif defined(OS_LINUX)

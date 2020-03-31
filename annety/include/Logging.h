@@ -101,8 +101,7 @@ bool should_logging_message(LogSeverity severity);
 class LogMessage
 {
 public:
-	// todo
-	// compile time calculation of basename of source file
+	// FIXME: compile time calculation of basename of source file
 	class Filename
 	{
 	public:
