@@ -23,11 +23,11 @@ class Acceptor;
 class EventLoop;
 class EventLoopPool;
 
-// Wrapper server with TCP protocol
+// Tcp server wrapper of TCP protocol
 // It supports single-thread and thread-pool models
 //
-// This class owns life-time of Acceptor, and also storage all TcpConnections 
-// which has been connected itself.
+// This class owns lifetime of Acceptor, it storages all TcpConnection 
+// instances which has been connected.
 class TcpServer : public std::enable_shared_from_this<TcpServer>
 {
 public:
@@ -105,7 +105,7 @@ private:
 
 	std::atomic<int> next_conn_id_{1};
 	
-	// all connections pool(map)
+	// all connections pool(std::map)
 	ConnectionMap connections_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpServer);

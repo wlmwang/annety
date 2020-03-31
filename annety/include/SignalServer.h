@@ -20,10 +20,10 @@ namespace annety
 class EventLoop;
 class Channel;
 
-// Wrapper server with signal handler.
-// It can specify all signals except SIGKILL and SIGSTOP
+// Signal server wrapper of OS signal.
+// It can handle all signals except SIGKILL and SIGSTOP.
 //
-// notice:It be created only in main loop thread
+// Notice: It can only be created in main thread.
 class SignalServer
 {
 public:

@@ -14,6 +14,7 @@
 
 namespace annety
 {
+// It is value sematics, which means that it can be copied or assigned.
 class NetBuffer : public ByteBuffer
 {
 public:

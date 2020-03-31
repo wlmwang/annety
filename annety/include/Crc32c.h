@@ -19,7 +19,7 @@ extern uint32_t crc32_table16[];
 extern uint32_t crc32_table256[];
 }	// namespace anonymous
 
-// The code are based on the algorithm described at core/ngx_crc32.h
+// The code is based on the algorithm described at core/ngx_crc32.h
 class Crc32c
 {
 public:

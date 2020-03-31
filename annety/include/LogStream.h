@@ -15,6 +15,7 @@ namespace annety
 class TimeStamp;
 class TimeDelta;
 
+// It is value sematics, which means that it can be copied or assigned.
 class LogStream
 {
 	static const int kMaxNumericSize = 32;

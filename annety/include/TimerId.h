@@ -8,7 +8,8 @@ namespace annety
 {
 class Timer;
 
-// TimerId is standard layout class, but do not trivial class and pod.
+// TimerId is standard layout class, but it is neither a trivial class nor a pod.
+// It is value sematics, which means that it can be copied or assigned.
 class TimerId
 {
 public:

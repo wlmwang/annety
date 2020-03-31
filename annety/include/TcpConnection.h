@@ -23,10 +23,10 @@ class EventLoop;
 class SocketFD;
 class NetBuffer;
 
-// Wrapper client with TCP protocol
+// Tcp connection wrapper of TCP protocol
 //
-// this class owns life-time of connect-socket and connect-channel,
-// and itself life-time was hold by TcpServer and users
+// This class owns lifetime of connect-socket and connect-channel.
+// Own lifetime is held by TcpServer and users.
 class TcpConnection : public std::enable_shared_from_this<TcpConnection>
 {
 public:

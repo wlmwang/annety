@@ -18,6 +18,8 @@ namespace annety
 // cannot use LOG/CHECK macros, because LOG/CHECK Low-level implementation
 // is dependent ByteBuffer. so we use assert() macros here.
 
+// It is value sematics, which means that it can be copied or assigned.
+//
 // @coding
 // +-------------------+------------------+------------------+
 // | prependable bytes |  readable bytes  |  writable bytes  |

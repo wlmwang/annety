@@ -19,8 +19,8 @@ class SelectableFD;
 
 // a selectable I/O channel
 //
-// this class does not owns any life-time of file descriptor.
-// the wrapped file descriptor may be a socket, eventfd, timerfd or signalfd
+// This class does not owns the file descriptor lifetime.
+// File descriptor was wrapped which could be a socket, eventfd, timerfd or signalfd.
 class Channel
 {
 public:

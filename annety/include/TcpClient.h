@@ -24,6 +24,7 @@ class EventLoop;
 class Connector;
 using ConnectorPtr = std::shared_ptr<Connector>;
 
+// Tcp client wrapper of TCP protocol
 class TcpClient : public std::enable_shared_from_this<TcpClient>
 {
 public:

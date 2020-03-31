@@ -85,6 +85,8 @@ void assert_iterators_in_order(std::string::const_iterator begin,
 
 // Defines the types, methods, operators, and data members common to both
 // StringPiece. Do not refer to this class directly, but rather to StringPiece.
+//
+// It is value sematics, which means that it can be copied or assigned.
 class StringPiece
 {
 public:
