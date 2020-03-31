@@ -14,8 +14,8 @@
 #include "TimeStamp.h"
 
 #include <string>
-#include <stdint.h>
-#include <sys/stat.h>
+#include <stdint.h>		// uint32_t,int64_t
+#include <sys/stat.h>	// stat,stat64
 
 namespace annety
 {

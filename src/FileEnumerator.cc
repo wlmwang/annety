@@ -8,12 +8,12 @@
 #include "files/FileEnumerator.h"
 #include "Logging.h"
 
+#include <utility>		// std::move
 #include <dirent.h>		// DIR,dirent,opendir
 #include <errno.h>		// errno
 #include <fnmatch.h>	// fnmatch
 #include <string.h>		// memset
 #include <sys/stat.h>
-#include <utility>		// std::move
 
 namespace annety
 {

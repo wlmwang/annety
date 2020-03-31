@@ -12,10 +12,10 @@
 #include "EintrWrapper.h"
 #include "Logging.h"
 
-#include <memory>	// unique_ptr
-#include <stdio.h>	// FILE,fclose
+#include <memory>	// std::unique_ptr
+#include <stdio.h>	// FILE,::fclose
 #include <errno.h>	// errno
-#include <unistd.h>	// close
+#include <unistd.h>	// ::close
 
 namespace annety
 {

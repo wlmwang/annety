@@ -10,10 +10,9 @@
 
 #include <iterator>		// const_iterator
 #include <iosfwd>
-#include <string>
 #include <algorithm>	// std::distance
-
-#include <string.h>		// strlen,memcmp
+#include <string>
+#include <string.h>		// ::strlen,::memcmp
 #include <stddef.h>		// ptrdiff_t
 #include <assert.h>		// assert
 

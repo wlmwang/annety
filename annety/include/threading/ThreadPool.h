@@ -13,7 +13,7 @@
 #include <vector>
 #include <deque>
 #include <memory>
-#include <stddef.h>
+#include <stddef.h>	// size_t
 
 namespace annety
 {

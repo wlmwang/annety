@@ -16,13 +16,11 @@
 #include "files/File.h"
 #include "files/FilePath.h"
 
-#include <stddef.h>		// size_t
-#include <inttypes.h>	// gid_t,uid_t,int64_t
-#include <stdio.h>
-
 #include <set>
 #include <stack>
 #include <string>
+#include <stdio.h>		// FILE*
+#include <sys/types.h>	// size_t,int64_t,gid_t,uid_t
 
 namespace annety
 {

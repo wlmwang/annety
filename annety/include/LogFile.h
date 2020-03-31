@@ -13,7 +13,7 @@
 #include <atomic>
 #include <memory>
 #include <string>
-#include <inttypes.h>
+#include <sys/types.h>	// size_t,int64_t,off_t
 
 namespace annety
 {

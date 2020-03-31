@@ -12,7 +12,7 @@
 #include "Macros.h"
 
 #include <algorithm>	// std::swap
-#include <stdlib.h>		// abort
+#include <stdlib.h>		// ::abort
 
 namespace annety
 {

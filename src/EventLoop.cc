@@ -10,7 +10,7 @@
 #include "TimerPool.h"
 #include "PlatformThread.h"
 
-#include <signal.h>	// for signal
+#include <signal.h>	// signal
 
 namespace annety
 {

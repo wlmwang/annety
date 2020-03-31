@@ -23,7 +23,7 @@ namespace containers
 class Any;
 template <typename T> T& any_cast(const Any&);
 
-// use std::any since C++17. defined in header <any>
+// Suggest use std::any since C++17. defined in header <any>
 class Any
 {
 public:
@@ -71,7 +71,7 @@ public:
 	template <typename T>
 	T& any_cast() const
 	{
-		// throw std::bad_any_cast in C++17
+		// throw std::bad_any_cast like as C++17
 		if (!is<T>()) {
 			LOG(ERROR) << "can not cast " << typeid(T).name() 
 					<< " to " << type_.name();

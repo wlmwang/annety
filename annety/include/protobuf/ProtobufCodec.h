@@ -11,10 +11,10 @@
 #include "Crc32c.h"
 #include "codec/Codec.h"
 
-#include <string>
-#include <cstring>
 #include <utility>
 #include <functional>
+#include <string>
+#include <cstring>	// size_t,ssize_t,::memcpy
 #include <google/protobuf/message.h>
 
 namespace annety

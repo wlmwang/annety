@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 #include <functional>	// std::hash
-#include <stddef.h>
+#include <stddef.h>		// size_t
 
 namespace annety
 {
@@ -248,7 +248,10 @@ std::ostream& operator<<(std::ostream& out, const FilePath& file_path);
 
 }	// namespace annety
 
+// FIXME: User modify std namespace does not strictly conform to specifications.
 namespace std {
+// Define std::hash template specialization, and cooperate with operator==() of 
+// FilePath class, which can make it a key to std::unordered_map/std::unordered_set/...
 template <>
 struct hash<annety::FilePath>
 {

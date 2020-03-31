@@ -12,13 +12,11 @@
 #include "TimeStamp.h"
 #include "files/FilePath.h"
 
-#include <sys/stat.h>		// struct stat
-#include <sys/types.h>		// size_t
-#include <stddef.h>
-
 #include <vector>
 #include <stack>
 #include <unordered_set>
+#include <sys/stat.h>		// stat
+#include <sys/types.h>		// size_t,ino_t
 
 namespace annety
 {

@@ -12,8 +12,7 @@
 #include <utility>
 #include <memory>
 #include <functional>
-
-#include <signal.h> // for SIGTERM...
+#include <signal.h> // SIGTERM,...
 
 namespace annety
 {

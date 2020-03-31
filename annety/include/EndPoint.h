@@ -9,7 +9,7 @@
 
 #include <string>
 #include <stdint.h>
-#include <stddef.h>		// offsetof
+#include <stddef.h>		// offsetof Macros
 #include <netinet/in.h>	// in_addr
 
 namespace annety
