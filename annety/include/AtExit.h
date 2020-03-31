@@ -17,17 +17,19 @@
 namespace annety
 {
 // This class provides a facility similar to the CRT atexit(), except that
-// we control when the callbacks are executed. Under Windows for a DLL they
-// happen at a really bad time and under the loader lock. This facility is
-// mostly used by Singleton.
+// we control when the callbacks are executed.
+// This facility is mostly used by Singleton. It is *Not 100% thread safe*
 //
 // The usage is simple. Early in the main() scope create an AtExitManager 
-// object on the stack:
-// int main(...) {
-//    AtExitManager exit_manager;
-//    exit_manager.register_callback(std::bind(&func));
+// instance on the stack:
+// int main(...)
+// {
+//	  {
+//    	  AtExitManager exit_manager;
+//    	  exit_manager.register_callback(std::bind(&func));
+//	  }
 // }
-// When the exit_manager object goes out of scope, all the registered
+// When the exit_manager instance goes out of scope, all the registered
 // callbacks and singleton destructors will be called.
 class AtExitManager
 {
@@ -49,11 +51,9 @@ public:
 
 protected:
 	// This constructor will allow this instance of AtExitManager to be created
-	// even if one already exists.  This should only be used for testing!
+	// even if one already exists.
 	// AtExitManagers are kept on a global stack, and it will be removed during
 	// destruction.  This allows you to shadow another AtExitManager.
-	//
-	// This should only be used for testing!
 	explicit AtExitManager(bool shadow);
 
 private:

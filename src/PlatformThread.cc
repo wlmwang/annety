@@ -77,7 +77,7 @@ bool create_thread(bool joinable, TaskCallback cb, ThreadRef* thread_ref)
 	bool success = !err;
 	if (success) {
 		// ThreadParams should be deleted on the created thread after used.
-		IGNORE_UNUSED_RESULT(params.release());
+		ALLOW_UNUSED_RESULT(params.release());
 	} else {
 		// Value of |ref| is undefined if pthread_create fails.
 		ref = 0;

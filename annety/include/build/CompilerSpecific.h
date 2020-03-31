@@ -47,7 +47,7 @@ template<typename T>
 inline void ignore_result(const T&) {}
 }	// namespace internal
 }	// namespace annety
-#define IGNORE_UNUSED_RESULT(x) annety::internal::ignore_result(x)
+#define ALLOW_UNUSED_RESULT(x) annety::internal::ignore_result(x)
 
 // Tell the compiler a function is using a printf-style format string.
 // |format_param| is the one-based index of the format string parameter;
