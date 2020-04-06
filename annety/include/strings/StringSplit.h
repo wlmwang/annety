@@ -26,7 +26,6 @@ namespace annety
 // }
 // ...
 
-
 enum WhitespaceHandling
 {
 	KEEP_WHITESPACE,

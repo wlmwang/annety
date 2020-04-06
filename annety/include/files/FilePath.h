@@ -37,7 +37,6 @@ namespace annety
 // cout << endl;
 // ...
 
-
 // An abstraction to isolate users from the differences between native
 // pathnames on different platforms.
 class FilePath

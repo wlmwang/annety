@@ -21,18 +21,19 @@ namespace annety
 {
 // Example:
 // // File
-// FilePath path("annety-text-file.log");
-// File fp(path, File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
-// cout << "write(annety-file.log):" << endl;
-// cout << fp.write(0, "test text", sizeof("test text")) << endl;
+// File fp(FilePath("annety-text-file.log"), 
+// 			File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
+// cout << "write len:" << fp.write(0, "text", sizeof("text")) << endl;
+// cout << "content len:" << fp.get_length() << endl;
 //
 // char buf[1024];
 // cout << "read len:" << fp.read(0, buf, sizeof(buf)) << endl;
 // cout << "read content:" << buf << endl;
 //
-// cout << "delete file:" << delete_file(path, false) << endl;
+// File::Info info;
+// cout << "get info:" << fp.get_info(&info) << endl;
+// cout << "create time:" << info.creation_time << endl;
 // ...
-
 
 // Platform file descriptor
 #if defined(OS_POSIX)

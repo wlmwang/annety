@@ -47,7 +47,6 @@ namespace annety
 // pool.stop();
 // ...
 
-
 // You just call run_tasker() to add a task to the list of work to be done.
 // joinall() will make sure that all outstanding work is processed, and wait
 // for everything to finish.  You can reuse a pool, so you can call start()

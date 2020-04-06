@@ -34,7 +34,6 @@ namespace annety
 // When the *_exit_manager instance goes out of scope, all the registered
 // callbacks and the registered singleton destructors will be called.
 
-
 // This class provides a facility similar to the CRT atexit(), except that
 // we control when the callbacks are executed.
 //

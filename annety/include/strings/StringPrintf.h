@@ -17,10 +17,11 @@ namespace annety
 {
 // Example:
 // // StringPrintf
-// string sf = string_printf("printf(%%3.1) %3.1f", 555.33);
+// string sf = string_printf("printf(%%3.1) %3.1f", 111.111);
 // cout << sf << endl;
+//
+// cout << string_appendf(&sf, "*%s", "222.222") << endl;
 // ...
-
 
 // Return a C++ string given printf-like input.
 std::string string_printf(_Printf_format_string_ const char* format, ...)

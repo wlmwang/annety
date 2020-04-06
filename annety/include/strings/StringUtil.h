@@ -26,12 +26,13 @@ namespace annety
 // StringPiece ts = trim_whitespace(" 12345  ", TrimPositions::TRIM_ALL);
 // cout << ts << "|" << ts.size() << endl;
 //
-// std::string ss = "abcd";
-// cout << write_into(&ss, 2) << endl;
+// std::string str = "abcd";
+// cout << write_into(&str, 2) << endl;
 //
 // cout << equals_case_insensitive("ABcD", "AbcD") << endl;
+//
+// cout << starts_with("abcdedcba", "bc", CompareCase::INSENSITIVE) << endl;
 // ...
-
 
 // Misc----------------------------------------------------
 

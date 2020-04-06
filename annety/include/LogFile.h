@@ -26,7 +26,6 @@ namespace annety
 // logf.flush();
 // ...
 
-
 class File;
 
 class LogFile

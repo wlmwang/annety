@@ -39,7 +39,6 @@ namespace annety
 // cout << "move ByteBuffer:" << buff2 << "|" << buff << endl;
 // ...
 
-
 // FIXME: ByteBuffer cannot use CHECK macros, because CHECK Low-level 
 // implementation is dependent ByteBuffer. so we use assert() macros here.
 //

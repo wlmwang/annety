@@ -29,6 +29,7 @@ namespace annety
 // }
 // ...
 
+// FIXME: Add a iterator for easy for-range.
 
 // A class for enumerating the files in a provided path. The order of the
 // results is not guaranteed.

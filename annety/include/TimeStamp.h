@@ -29,7 +29,6 @@ namespace annety
 // cout << "midnight:" << now.utc_midnight() << endl;
 // ...
 
-
 // TimeZone ------------------------------------------------------------------
 // *Not thread safe*
 class TimeZone

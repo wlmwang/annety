@@ -11,6 +11,9 @@
 #include <memory>		// std::shared_ptr,std::weak_ptr
 #include <utility>		// std::forward,std::forward_as_tuple
 
+// FIXME: Do not support binding lambda expressions yet, and it’s 
+// not good for right-value!!!
+
 namespace annety
 {
 namespace containers
@@ -43,10 +46,6 @@ namespace containers
 // }
 // if (xx) xx(20);
 // ...
-
-
-// FIXME: Do not support binding lambda expressions yet, and it’s 
-// not good for right-value!!!
 
 // Placeholder --------------------------------------------------------------------------
 template <int N>

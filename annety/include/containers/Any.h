@@ -16,6 +16,8 @@
 #include <typeinfo>		// typeid
 #include <typeindex>	// std::type_index
 
+// Suggest use std::any since C++17, defined in header <any>
+
 namespace annety
 {
 namespace containers
@@ -43,9 +45,6 @@ namespace containers
 // cout << "c cast to int:" << any_cast<int>(c) << endl;
 // cout << "c cast to string:" << any_cast<string>(c) << endl;
 // ...
-
-
-// Suggest use std::any since C++17, defined in header <any>
 
 class Any;
 template <typename T> T& any_cast(const Any&);

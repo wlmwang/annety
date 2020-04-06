@@ -28,7 +28,6 @@ namespace annety
 // }
 // ...
 
-
 class ConditionVariable;
 
 namespace internal

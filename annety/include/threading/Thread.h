@@ -25,7 +25,6 @@ namespace annety
 // }).start().join();
 // ...
 
-
 class Thread
 {
 public:

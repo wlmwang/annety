@@ -24,12 +24,15 @@ namespace annety
 // StringPiece sp1 = sp;
 // cout << sp << ":" << sp1 << endl;
 // cout	<< sp.rfind("s") << "|" << sp.find("c") << "|" << sp.substr(2) << endl;
-// 
-// std::unordered_set<StringPiece, StringPieceHash> sets{
+//
+// std::set<StringPiece> sets{
+//		sp, sp1
+// };
+//
+// std::unordered_set<StringPiece, StringPieceHash> hash_sets{
 //		sp, sp1
 // };
 // ...
-
 
 // Defines the types, methods, operators, and data members common to both
 // StringPiece.

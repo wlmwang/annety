@@ -23,7 +23,6 @@ namespace annety
 // cout << "stream:" << stream << "|" << stream1 << endl;
 // ...
 
-
 class TimeStamp;
 class TimeDelta;
 

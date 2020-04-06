@@ -11,8 +11,8 @@
 
 namespace annety
 {
+// see: https://gcc.gnu.org/onlinedocs/gcc-4.4.0/gcc/Other-Builtins.html
 // Returns a value with all bytes in |x| swapped.
-// i.e. reverses the endianness.
 inline uint16_t byte_swap(uint16_t x)
 {
 	return __builtin_bswap16(x);

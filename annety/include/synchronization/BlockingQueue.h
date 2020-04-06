@@ -40,7 +40,6 @@ namespace annety
 // consumer.join();	// will hold
 // ...
 
-
 // A blocking queue is a queue that can be used in a multi-thread, it 
 // supports blocking waiting.  The difference between a blocking queue 
 // and a normal queue is:

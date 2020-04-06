@@ -52,7 +52,6 @@ namespace annety
 // consumer.join();	// will hold
 // ...
 
-
 // ConditionVariable wraps pthreads condition variable synchronization .
 // This functionality is very helpful for having several threads wait for 
 // an event, as is common with a thread pool managed by a master.  
