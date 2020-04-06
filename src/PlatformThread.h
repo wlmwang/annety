@@ -19,6 +19,15 @@
 
 namespace annety
 {
+// Example:
+// // PlatformThreadHandle
+// PlatformThreadHandle handle;
+// PlatformThread::create([]() {
+//		//... your code in thread...
+// }, &handle);
+// PlatformThread::join(handle);
+// ...
+
 // A namespace for low-level thread functions.
 class PlatformThread
 {

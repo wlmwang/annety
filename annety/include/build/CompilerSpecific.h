@@ -11,12 +11,12 @@
 #include "build/BuildConfig.h"
 
 // Annotate a variable indicating it's ok if the variable is not used.
-// e.g:
+// Example:
 // 	int x = 1; ALLOW_UNUSED_LOCAL(x);
 #define ALLOW_UNUSED_LOCAL(x) (void)x
 
 // Annotate a typedef or function indicating it's ok if it's not used.
-// e.g:
+// Example:
 // 	typedef Foo Bar ALLOW_UNUSED_TYPE;
 #if defined(COMPILER_GCC) || defined(__clang__)
 #define ALLOW_UNUSED_TYPE __attribute__((unused))
@@ -25,7 +25,7 @@
 #endif
 
 // Annotate a function indicating the caller must examine the return value.
-// e.g:
+// Example:
 // 	int foo() WARN_UNUSED_RESULT;
 #undef WARN_UNUSED_RESULT
 #if defined(COMPILER_GCC) || defined(__clang__)
@@ -37,7 +37,7 @@
 // Used to explicitly mark the return value of a function as unused. If you are
 // really sure you don't want to do anything with the return value of a function
 // that has been marked WARN_UNUSED_RESULT, wrap it with this. 
-// e.g:
+// Example:
 // 	std::unique_ptr<MyType> my_var = ...;
 //  if (TakeOwnership(my_var.get()) == SUCCESS)
 // 		ignore_result(my_var.release());
@@ -64,8 +64,10 @@ inline void ignore_result(const T&) {}
 #endif
 
 // Macro for hinting that an expression is likely to be false.
-// e.g:
-// 	if (UNLIKELY(tls_tid == 0)) {}
+// Example:
+// 	if (UNLIKELY(tls_tid == 0)) {
+//		//... your code ...
+//	}
 #if !defined(UNLIKELY)
 #if defined(COMPILER_GCC) || defined(__clang__)
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)

@@ -17,6 +17,37 @@
 
 namespace annety
 {
+// Example:
+// // ThreadPool
+// ThreadPool pool(5, "annety-pool");
+// pool.start();
+//
+// // add task one by one-----------------------------------------
+// for (int i = 0; i < 10; i++) {
+//		pool.run_tasker([]() {
+//			LOG(INFO) << "ThreadPool(single):" << pthread_self();
+//		});
+// }
+//
+// // add task batch-----------------------------------------
+// pool.run_tasker([]() {
+//		LOG(INFO) << "ThreadPool(batch):" << pthread_self();
+// }, 10);
+// 
+// pool.joinall();
+//
+// // restart the thread-pool-----------------------------------------
+// pool.start();
+// pool.run_tasker([](){
+//		LOG(INFO) << "ThreadPool(restart):" << pthread_self();
+// }, 10);
+//
+// pool.joinall();
+//
+// pool.stop();
+// ...
+
+
 // You just call run_tasker() to add a task to the list of work to be done.
 // joinall() will make sure that all outstanding work is processed, and wait
 // for everything to finish.  You can reuse a pool, so you can call start()

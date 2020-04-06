@@ -15,6 +15,36 @@
 
 namespace annety
 {
+// Example:
+// // ByteBuffer
+// ByteBuffer buff{10};
+// buff.append("123456");
+// buff.append("ab");
+// buff.append("cd");
+//
+// ByteBuffer buff1 = buff;
+//
+// cout << "take before:" << buff << endl;
+// cout << "take all:" << buff.taken_as_string() << endl;	// taken
+// cout << "take after:" << buff << "|" << buff1 << endl;	// buff1 unchange
+// 
+// buff.append("01");
+// buff.append("23");
+//
+// cout << "append success:" << buff.append("4567890") << endl;
+// cout << "append success:" << buff.append("a") << endl;
+// cout << "append rt:" << buff << endl;
+//
+// ByteBuffer buff2 = std::move(buff);	// buff is empty
+// cout << "move ByteBuffer:" << buff2 << "|" << buff << endl;
+// ...
+
+
+// FIXME: ByteBuffer cannot use CHECK macros, because CHECK Low-level 
+// implementation is dependent ByteBuffer. so we use assert() macros here.
+//
+// It is value sematics, which means that it can be copied or assigned.
+//
 // @coding
 // +-------------------+------------------+------------------+
 // |  has read bytes   |  readable bytes  |  writable bytes  |
@@ -23,11 +53,6 @@ namespace annety
 // |                   |                  |                  |
 // 0      <=      readerIndex   <=   writerIndex    <=     size
 // @coding
-//
-// Cannot use CHECK macros, because CHECK Low-level implementation
-// is dependent ByteBuffer. so we use assert() macros here.
-//
-// It is value sematics, which means that it can be copied or assigned.
 class ByteBuffer
 {
 public:

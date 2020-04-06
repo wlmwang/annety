@@ -22,7 +22,7 @@ class Channel;
 class Poller;
 class TimerPool;
 
-// Event dispatcher(Reactor class), one loop per thread.
+// Event dispatcher(Reactor mode implementation), one loop per thread.
 //
 // Usually, it is a stack instance in the main() function.
 // It may also be created in the EventLoopThread class.

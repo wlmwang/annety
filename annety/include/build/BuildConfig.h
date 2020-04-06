@@ -33,8 +33,8 @@
 
 // For access to standard POSIXish features, use OS_POSIX instead of a
 // more specific macro.
-#if defined(OS_FREEBSD) || defined(OS_LINUX) || defined(OS_MACOSX) || \
-    defined(OS_SOLARIS) || defined(OS_NETBSD) || defined(OS_OPENBSD)
+#if defined(OS_FREEBSD) || defined(OS_NETBSD) || defined(OS_OPENBSD) || \
+    defined(OS_SOLARIS) || defined(OS_MACOSX) || defined(OS_LINUX)
 #define OS_POSIX 1
 #endif
 
@@ -55,7 +55,8 @@
 #error Your compiler do not support C++0x in BuildConfig.h
 #endif
 
-// Processor architecture detection.  For more info on what's defined, see:
+// Processor architecture detection.
+// For more info on what's defined, see:
 //   http://msdn.microsoft.com/en-us/library/b0084kay.aspx
 //   http://www.agner.org/optimize/calling_conventions.pdf
 //   or with gcc, run: "echo | gcc -E -dM -"

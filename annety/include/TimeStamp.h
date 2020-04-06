@@ -18,9 +18,19 @@
 
 namespace annety
 {
+// Example:
+// // TimeStamp
+// TimeStamp now = TimeStamp::now();
+// cout << "now(UTC):" << now << endl;
+// 
+// now += TimeDelta::from_hours(8);
+// cout << "now(UTC) + 8h:" << now << endl;
+//
+// cout << "midnight:" << now.utc_midnight() << endl;
+// ...
+
 
 // TimeZone ------------------------------------------------------------------
-
 // *Not thread safe*
 class TimeZone
 {
@@ -31,7 +41,6 @@ public:
 };
 
 // TimeDelta ------------------------------------------------------------------
-
 class TimeDelta
 {
 public:

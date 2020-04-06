@@ -16,21 +16,29 @@
 
 namespace annety
 {
-// This class provides a facility similar to the CRT atexit(), except that
-// we control when the callbacks are executed.
-// This facility is mostly used by Singleton. It is *Not 100% thread safe*
-//
-// The usage is simple. Early in the main() scope create an AtExitManager 
-// instance on the stack:
+// Example:
+// // AtExitManager
+// void func(void) {}
+// Early in the main() scope create an AtExitManager instance on the stack:
+// AtExitManager g_exit_manager;
 // int main(...)
 // {
-//	  {
-//    	  AtExitManager exit_manager;
-//    	  exit_manager.register_callback(std::bind(&func));
-//	  }
+// 		g_exit_manager.register_callback(std::bind(&func));
+//		
+//		// Important: for testing only!!!
+//		{
+//			AtExitManager scoped_exit_manager;
+//			AtExitManager::RegisterCallback(std::bind(&func));
+//		}
 // }
-// When the exit_manager instance goes out of scope, all the registered
-// callbacks and singleton destructors will be called.
+// When the *_exit_manager instance goes out of scope, all the registered
+// callbacks and the registered singleton destructors will be called.
+
+
+// This class provides a facility similar to the CRT atexit(), except that
+// we control when the callbacks are executed.
+//
+// This facility is *Not 100% thread safe*, it is mostly used by Singleton.
 class AtExitManager
 {
 public:
@@ -38,8 +46,7 @@ public:
 
 	AtExitManager();
 
-	// The dtor calls all the registered callbacks. Do not try to register more
-	// callbacks after this point.
+	// The dtor calls all the registered callbacks.
 	~AtExitManager();
 
 	// Registers the specified function to be called at exit.
@@ -54,13 +61,16 @@ protected:
 	// even if one already exists.
 	// AtExitManagers are kept on a global stack, and it will be removed during
 	// destruction.  This allows you to shadow another AtExitManager.
+	//
+	// Important: for testing only!!!
 	explicit AtExitManager(bool shadow);
 
 private:
 	MutexLock lock_;
 	std::stack<AtExitCallback> stack_cb_;
 	
-	AtExitManager* next_manager_;  // Stack of managers to allow shadowing.
+	// Stack of managers to allow shadowing.
+	AtExitManager* next_manager_;
 
 	DISALLOW_COPY_AND_ASSIGN(AtExitManager);
 };

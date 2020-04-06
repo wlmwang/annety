@@ -18,19 +18,21 @@ namespace annety
 //
 // Testing may use the shadow version of the constructor, and if we are building 
 // a dynamic library we may end up with multiple AtExitManagers on the same process.
-// We don't protect this for thread-safe access, since it will only be modified 
+// 
+// We don't protect this for thread-safe access, because it will only be modified 
 // in testing.
 static AtExitManager* g_top_manager = nullptr;
 
-// It is *Not 100% thread safe*
+// It is *Not 100% thread safe*, especially if we use shadow of the constructor.
 AtExitManager::AtExitManager() : next_manager_(g_top_manager)
 {
 	// If multiple modules instantiate AtExitManagers they'll end up living 
-	// in this module... they have to coexist.
+	// in this module... they have to co-exist().
 	CHECK(!g_top_manager);
 	g_top_manager = this;
 }
 
+// It is *Not 100% thread safe*, especially if we use shadow of the constructor.
 AtExitManager::~AtExitManager()
 {
 	if (!g_top_manager) {
@@ -38,7 +40,7 @@ AtExitManager::~AtExitManager()
 		return;
 	}
 
-	// If using shadow version of the constructor, this may cause the CHECK to fail.
+	// If we use shadow of the constructor, this may cause the CHECK to fail.
 	CHECK_EQ(this, g_top_manager);
 
 	process_callbacks();
@@ -81,7 +83,7 @@ void AtExitManager::process_callbacks()
 	}
 }
 
-// We don't protect this for thread-safe access, since it will only be modified 
+// We don't protect this for thread-safe access, because it will only be modified 
 // in testing.
 AtExitManager::AtExitManager(bool shadow) : next_manager_(g_top_manager)
 {

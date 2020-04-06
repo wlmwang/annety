@@ -12,6 +12,18 @@
 
 namespace annety
 {
+// Example:
+// // LogStream
+// LogStream stream;
+// stream << -12345.345 << "#" << string_printf("printf(%%3d) %3d", 555) << true;
+// 
+// LogStream stream1 = stream;	// copy
+// stream.reset();	// stream1 unchange
+//
+// cout << "stream:" << stream << "|" << stream1 << endl;
+// ...
+
+
 class TimeStamp;
 class TimeDelta;
 

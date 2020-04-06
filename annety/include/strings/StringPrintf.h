@@ -15,6 +15,13 @@
 
 namespace annety
 {
+// Example:
+// // StringPrintf
+// string sf = string_printf("printf(%%3.1) %3.1f", 555.33);
+// cout << sf << endl;
+// ...
+
+
 // Return a C++ string given printf-like input.
 std::string string_printf(_Printf_format_string_ const char* format, ...)
     PRINTF_FORMAT(1, 2) WARN_UNUSED_RESULT;

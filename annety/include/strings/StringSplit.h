@@ -16,6 +16,17 @@
 
 namespace annety
 {
+// Example:
+// // StringSplit
+// std::string input = "12, 345;67,890";
+// std::vector<std::string> tokens 
+// 		= split_string(input, ",;", KEEP_WHITESPACE, SPLIT_WANT_ALL);
+// for (auto &t : tokens) {
+//		cout << t << endl;
+// }
+// ...
+
+
 enum WhitespaceHandling
 {
 	KEEP_WHITESPACE,

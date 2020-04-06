@@ -19,6 +19,16 @@
 
 namespace annety
 {
+// Example:
+// // MutexLock
+// MutexLock lock;
+// {
+//		AutoLock locked(lock);
+// 		//... your code in critical area ...
+// }
+// ...
+
+
 class ConditionVariable;
 
 namespace internal

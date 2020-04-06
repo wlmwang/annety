@@ -10,6 +10,28 @@
 
 namespace annety
 {
+// Example:
+// // CountDownLatch
+// CountDownLatch latch(1);
+//
+// Thread master([&latch]() {
+//		LOG(INFO) << "master start:" << pthread_self();
+//		latch.wait();
+//		LOG(INFO) << "master end:" << pthread_self();
+// }, "annety-master");
+// master.start();
+//
+// Thread worker([&latch]() {
+//		LOG(INFO) << "worker start:" << pthread_self();
+//		latch.count_down();
+//		LOG(INFO) << "worker end:" << pthread_self();
+// }, "annety-worker");
+// worker.start();
+//
+// master.join();
+// worker.join();
+// ...
+
 class TimeDelta;
 
 // CountDownLatch can make multi-threads wait at the "door" until the latch count is 0.

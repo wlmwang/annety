@@ -159,7 +159,7 @@ File::File(PlatformFile platform_file)
 	, created_(false)
 {
 #if defined(OS_POSIX)
-	DCHECK_GE(platform_file, -1);
+	CHECK_GE(platform_file, -1);
 #endif
 }
 
@@ -217,7 +217,7 @@ void File::close()
 
 int64_t File::seek(Whence whence, int64_t offset)
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 
 	return ::lseek(file_.get(), static_cast<off_t>(offset),
 				   static_cast<int>(whence));
@@ -225,7 +225,7 @@ int64_t File::seek(Whence whence, int64_t offset)
 
 int File::read(int64_t offset, char* data, int size)
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 	if (size < 0) {
 		return -1;
 	}
@@ -247,7 +247,7 @@ int File::read(int64_t offset, char* data, int size)
 
 int File::read_at_current_pos(char* data, int size)
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 	if (size < 0) {
 	return -1;
 	}
@@ -269,7 +269,7 @@ int File::read_at_current_pos(char* data, int size)
 
 int File::read_no_best_effort(int64_t offset, char* data, int size)
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 	if (size < 0) {
 		return -1;
 	}
@@ -279,7 +279,7 @@ int File::read_no_best_effort(int64_t offset, char* data, int size)
 
 int File::read_at_current_pos_no_best_effort(char* data, int size)
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 	if (size < 0) {
 		return -1;
 	}
@@ -294,7 +294,7 @@ int File::write(int64_t offset, const char* data, int size)
 		return write_at_current_pos(data, size);
 	}
 
-	DCHECK(is_valid());
+	CHECK(is_valid());
 	if (size < 0) {
 		return -1;
 	}
@@ -316,7 +316,7 @@ int File::write(int64_t offset, const char* data, int size)
 
 int File::write_at_current_pos(const char* data, int size)
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 	if (size < 0) {
 		return -1;
 	}
@@ -338,7 +338,7 @@ int File::write_at_current_pos(const char* data, int size)
 
 int File::write_at_current_pos_no_best_effort(const char* data, int size)
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 	if (size < 0) {
 		return -1;
 	}
@@ -348,7 +348,7 @@ int File::write_at_current_pos_no_best_effort(const char* data, int size)
 
 int64_t File::get_length()
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 
 	stat_wrapper_t file_info;
 	if (call_fstat(file_.get(), &file_info)) {
@@ -360,14 +360,14 @@ int64_t File::get_length()
 
 bool File::set_length(int64_t length)
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 
 	return !call_ftruncate(file_.get(), length);
 }
 
 bool File::set_times(TimeStamp last_access_time, TimeStamp last_modified_time)
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 
 	timeval times[2];
 	times[0] = last_access_time.to_timeval();
@@ -378,7 +378,7 @@ bool File::set_times(TimeStamp last_access_time, TimeStamp last_modified_time)
 
 bool File::get_info(Info* info)
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 
 	stat_wrapper_t file_info;
 	if (call_fstat(file_.get(), &file_info)) {
@@ -391,14 +391,14 @@ bool File::get_info(Info* info)
 
 File::Error File::lock()
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 
 	return call_fcntl_flock(file_.get(), true);
 }
 
 File::Error File::unlock()
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 
 	return call_fcntl_flock(file_.get(), false);
 }
@@ -455,7 +455,7 @@ File::Error File::os_error_to_file_error(int saved_errno)
 // TODO(erikkay): does it make sense to support FLAG_EXCLUSIVE_* here?
 void File::do_initialize(const FilePath& path, uint32_t flags)
 {
-	DCHECK(!is_valid());
+	CHECK(!is_valid());
 
 	int open_flags = 0;
 	if (flags & FLAG_CREATE) {
@@ -543,7 +543,7 @@ void File::do_initialize(const FilePath& path, uint32_t flags)
 
 bool File::flush()
 {
-	DCHECK(is_valid());
+	CHECK(is_valid());
 
 #if defined(OS_LINUX)
 	return !HANDLE_EINTR(::fdatasync(file_.get()));
@@ -554,7 +554,7 @@ bool File::flush()
 
 void File::set_platform_file(PlatformFile file)
 {
-	DCHECK(!file_.is_valid());
+	CHECK(!file_.is_valid());
 	file_.reset(file);
 }
 

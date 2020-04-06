@@ -18,6 +18,21 @@
 
 namespace annety
 {
+// Example:
+// // StringPiece
+// StringPiece sp("abcdcba");
+// StringPiece sp1 = sp;
+// cout << sp << ":" << sp1 << endl;
+// cout	<< sp.rfind("s") << "|" << sp.find("c") << "|" << sp.substr(2) << endl;
+// 
+// std::unordered_set<StringPiece, StringPieceHash> sets{
+//		sp, sp1
+// };
+// ...
+
+
+// Defines the types, methods, operators, and data members common to both
+// StringPiece.
 class StringPiece;
 
 // internal ----------------------------------------------------
@@ -80,7 +95,7 @@ void assert_iterators_in_order(std::string::const_iterator begin,
 
 }  // namespace internal
 
-// StringPiece (for std::string)----------------------------------------
+// StringPiece (std::string/c-style string)----------------------------------------
 
 // Defines the types, methods, operators, and data members common to both
 // StringPiece.
@@ -354,7 +369,8 @@ std::ostream& operator<<(std::ostream& os, const StringPiece& piece);
 // Hashing ---------------------------------------------------------------------
 
 // We provide appropriate hash functions, so StringPiece can be used as keys in 
-// hash sets and maps. --- see files/FilePath.h
+// hash sets and maps.
+// There is a simpler way (not better way), see: files/FilePath.h
 #define HASH_STRING_PIECE(StringPieceType, string_piece)         \
   std::size_t result = 0;                                        \
   for (StringPieceType::const_iterator i = string_piece.begin(); \
@@ -362,6 +378,9 @@ std::ostream& operator<<(std::ostream& os, const StringPiece& piece);
     result = (result * 131) + *i;                                \
   return result;
 
+// For the hash functions of std::unordered_map/std::unordered_set/...
+// Example:
+// std::unordered_set<StringPiece, StringPieceHash> sets;
 struct StringPieceHash
 {
 	std::size_t operator()(const StringPiece& sp) const

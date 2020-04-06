@@ -18,6 +18,15 @@
 
 namespace annety
 {
+// Example:
+// // LogFile
+// LogFile logf("logging", 1024);
+// logf.append("12345", strlen("12345"));
+// logf.append("text", strlen("text"));
+// logf.flush();
+// ...
+
+
 class File;
 
 class LogFile

@@ -17,6 +17,42 @@
 
 namespace annety
 {
+// Example:
+// // ConditionVariable
+// MutexLock lock;
+// ConditionVariable cv(lock);
+// std::vector<int> queue;
+//
+// Thread producer([&lock, &cv]() {
+//		for (int i = 0; i < 10; i++) {
+//			AutoLock locked(lock);
+// 			while (!queue.empty()) {
+//				cv.wait();
+//			}
+//			LOG(INFO) << "producer:" << i << "|" << pthread_self();
+//			queue.push(i);
+//			cv.signal();
+//		}
+// }, "annety-producer");
+// producer.start();
+//
+// Thread consumer([&lock, &cv]() {
+//		while (true) {
+//			AutoLock locked(lock);
+//			while (queue.empty()) {
+//				cv.wait();
+//			}
+// 			LOG(INFO) << "consumer:" << queue.pop() << "|" << pthread_self();
+//			cv.signal();
+//		}
+// }, "annety-consumer");
+// consumer.start();
+//
+// producer.join();
+// consumer.join();	// will hold
+// ...
+
+
 // ConditionVariable wraps pthreads condition variable synchronization .
 // This functionality is very helpful for having several threads wait for 
 // an event, as is common with a thread pool managed by a master.  

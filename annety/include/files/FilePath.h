@@ -19,6 +19,25 @@
 
 namespace annety
 {
+// Example:
+// // FilePath
+// FilePath fp("/usr/local/annety.log.gz");
+// cout << "full:" << fp << endl;
+// cout << "dirname:" << fp.dirname() << endl;
+// cout << "basename:" << fp.basename() << endl;
+// cout << "extension:" << fp.extension() << endl;
+// cout << "final extension:" << fp.final_extension() << endl;
+//
+// cout << "scan all components:" << endl;
+// std::vector<std::string> components;
+// fp.get_components(&components);
+// for (auto cc : components) {
+//		cout << "|" << cc << "|";
+// }
+// cout << endl;
+// ...
+
+
 // An abstraction to isolate users from the differences between native
 // pathnames on different platforms.
 class FilePath
@@ -251,9 +270,10 @@ std::ostream& operator<<(std::ostream& out, const FilePath& file_path);
 // Hashing ---------------------------------------------------------------------
 
 // We provide appropriate hash functions, so FilePath can be used as keys in 
-// hash sets and maps. --- see strings/StringPiece.h
+// hash sets and maps.
 //
-// FIXME: User modify std namespace does not strictly conform to specifications.
+// FIXME: Modify std namespace does not strictly conform to specifications.
+// There is a better way (not simpler way), see: strings/StringPiece.h
 namespace std {
 template <>
 struct hash<annety::FilePath>

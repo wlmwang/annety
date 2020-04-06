@@ -15,8 +15,38 @@ namespace annety
 {
 namespace containers
 {
-// FIXME: do not support binding lambda expressions yet, and it’s 
-// not good for right-value support!!!
+// Example:
+// // WBindFuctor
+// void TestFun(int a, int b, int c) {}
+// class WapperCall {
+// 		void test(int c) {}
+// };
+//
+// std::function<void(int)> xx;
+// {
+//		xx = containers::make_bind(TestFun, 1, 2, containers::_1);
+//		xx(3);
+//
+//		std::shared_ptr<WapperCall> call(new WapperCall());
+//		xx = containers::make_bind(&WapperCall::test, call, containers::_1);
+//		cout << "use cout:" << call.use_count() << endl;
+//		xx(10);
+//
+//		xx = containers::make_weak_bind(&WapperCall::test, call, containers::_1);
+//		cout << "use cout:" << call.use_count() << endl;
+//		xx(11);
+//
+//		std::weak_ptr<WapperCall> wcall = call;
+//		xx = containers::make_weak_bind(&WapperCall::test, wcall, containers::_1);
+//		cout << "use cout:" << call.use_count() << endl;
+//		xx(12);
+// }
+// if (xx) xx(20);
+// ...
+
+
+// FIXME: Do not support binding lambda expressions yet, and it’s 
+// not good for right-value!!!
 
 // Placeholder --------------------------------------------------------------------------
 template <int N>
@@ -34,7 +64,7 @@ static Placeholder<9> ALLOW_UNUSED_TYPE _9; static Placeholder<19> ALLOW_UNUSED_
 static Placeholder<10> ALLOW_UNUSED_TYPE _10; static Placeholder<20> ALLOW_UNUSED_TYPE _20;
 
 // Sequence --------------------------------------------------------------------------
-// --see: std::integer_sequence/std::make_index_sequence() in C++14
+// see: std::integer_sequence/std::make_index_sequence() in C++14
 template <int...>
 struct IndexSequence {};
 
@@ -48,7 +78,7 @@ struct MakeIndexSequence<0, indexes...>
 };
 
 // return type --------------------------------------------------------------------------
-// @see: std::result_of in C++11 is too limited. That C++17 is become better
+// see: std::result_of in C++11 is too limited. That C++17 is become better
 template <typename T>
 struct ResultOf;
 

@@ -12,7 +12,7 @@
 
 #include <memory>		// std::unique_ptr
 #include <utility>		// std::move,std::forward
-#include <type_traits>	// std::is_same,std::enable_if
+#include <type_traits>	// std::is_same,std::decay,std::enable_if
 #include <typeinfo>		// typeid
 #include <typeindex>	// std::type_index
 
@@ -20,24 +20,51 @@ namespace annety
 {
 namespace containers
 {
+// Example:
+// // Any
+// Any a = 1;
+// Any b = string("hello, world");
+// Any c;
+// Any d = make_any(a);
+//
+// cout << std::boolalpha;
+// cout << "a has value:" << a.has_value() << endl;
+// cout << "b has value:" << b.has_value() << endl;
+// cout << "c has value:" << c.has_value() << endl;
+// cout << "d has value:" << d.has_value() << endl;
+//
+// cout << "a is int:" << a.type().name() << endl;
+// cout << "a cast to int:" << any_cast<int>(a) << endl;
+//
+// any_cast<int>(a) = 2;
+// cout << "a cast to int:" << any_cast<int>(a) << endl;
+//
+// c = a;
+// cout << "c cast to int:" << any_cast<int>(c) << endl;
+// cout << "c cast to string:" << any_cast<string>(c) << endl;
+// ...
+
+
+// Suggest use std::any since C++17, defined in header <any>
+
 class Any;
 template <typename T> T& any_cast(const Any&);
 
-// Suggest use std::any since C++17. defined in header <any>
 class Any
 {
 public:
 	Any() : type_(std::type_index(typeid(void))) {}
 
-	// FIXME: the following four methods do not exist in std::any
-	// please use annety::make_any, which is consistent with std::any
+	// FIXME: the following four methods do not exist in std::any.	
+	// Please use annety::make_any, which is consistent with std::any.
+
 	Any(const Any& rhs) : ptr_(rhs.clone()), type_(rhs.type_) {}
 	Any(Any&& rhs) : ptr_(std::move(rhs.ptr_)), type_(rhs.type_) {}
 
-	// the std::enable_if<> type-traits is limited to non-Any type
+	// The std::enable_if<> type-traits is limited to non-Any type
 	template <typename U, typename = typename std::enable_if<
 							!std::is_same<typename std::decay<U>::type, Any>::value
-							, U>::type> 
+							, U>::type>
 	Any(U&& value) 
 		: ptr_(new Derived<typename std::decay<U>::type>(std::forward<U>(value)))
 		, type_(std::type_index(typeid(typename std::decay<U>::type))) {}
@@ -71,7 +98,7 @@ public:
 	template <typename T>
 	T& any_cast() const
 	{
-		// throw std::bad_any_cast like as C++17
+		// Maybe throw std::bad_any_cast like as C++17
 		if (!is<T>()) {
 			LOG(ERROR) << "can not cast " << typeid(T).name() 
 					<< " to " << type_.name();
@@ -83,7 +110,7 @@ public:
 	}
 
 private:
-	// for access private Any::any_cast if we following std::any
+	// For access private Any::any_cast if we following std::any
 	template <typename T> friend T& any_cast(const Any&);
 
 	template <typename T>

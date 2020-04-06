@@ -12,6 +12,20 @@
 
 namespace annety
 {
+// Example:
+// // Thread
+// Thread thread([]() {
+//		//... your code in thread...
+// }, "annety-thread");
+// thread.start();
+// thread.join();
+//
+// Thread([]() {
+//		//... your code in thread...
+// }).start().join();
+// ...
+
+
 class Thread
 {
 public:

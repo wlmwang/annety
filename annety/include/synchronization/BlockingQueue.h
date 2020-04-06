@@ -14,6 +14,33 @@
 
 namespace annety
 {
+// Example:
+// // BlockingQueue
+// // BlockingQueue<int> queue;
+// BlockingQueue<int, BoundedBlockingTrait<int>> queue(2);
+// Thread producer([&queue]() {
+//		for (int i = 0; i < 10; i++) {
+//			queue.push(i);
+//			LOG(INFO) << "producer:" << i << "|" << pthread_self();
+//		}
+// }, "annety-producer");
+// producer.start();
+//
+// // test for BoundedBlockingTrait
+// // sleep(1);
+//
+// Thread consumer([&queue]() {
+//		while(true) {
+// 			LOG(INFO) << "consumer:" << queue.pop() << "|" << pthread_self();
+// 		}
+// }, "annety-consumer");
+// consumer.start();
+//
+// producer.join();
+// consumer.join();	// will hold
+// ...
+
+
 // A blocking queue is a queue that can be used in a multi-thread, it 
 // supports blocking waiting.  The difference between a blocking queue 
 // and a normal queue is:
@@ -23,18 +50,6 @@ namespace annety
 //	  consumer thread will block and wait for the queue to become non-empty, 
 //	  when the queue is full, the producer thread will block until the queue 
 //	  is non-full.
-//
-// Use like:
-//	// UnBoundedBlocking
-// 	BlockingQueue<int> unbound;
-//	unbound.push(1);
-//	auto rt = unbound.pop();
-//
-//	// BoundedBlocking
-// 	BlockingQueue<int, BoundedBlockingTrait<int>> bounded(10);
-//	bounded.push(2);
-//	auto rt = bounded.pop();
-
 template <typename T> class UnBoundedBlockingTrait;
 template <typename T> class BoundedBlockingTrait;
 

@@ -19,20 +19,36 @@
 
 namespace annety
 {
-// platform file
+// Example:
+// // File
+// FilePath path("annety-text-file.log");
+// File fp(path, File::FLAG_OPEN_ALWAYS | File::FLAG_APPEND | File::FLAG_READ);
+// cout << "write(annety-file.log):" << endl;
+// cout << fp.write(0, "test text", sizeof("test text")) << endl;
+//
+// char buf[1024];
+// cout << "read len:" << fp.read(0, buf, sizeof(buf)) << endl;
+// cout << "read content:" << buf << endl;
+//
+// cout << "delete file:" << delete_file(path, false) << endl;
+// ...
+
+
+// Platform file descriptor
 #if defined(OS_POSIX)
 using PlatformFile = int;
 using ScopedPlatformFile = ScopedFD;
 constexpr PlatformFile kInvalidPlatformFile = -1;
 #endif
 
+// Platform file stat
 #if defined(OS_BSD) || defined(OS_MACOSX)
 typedef struct stat stat_wrapper_t;
 #elif defined(OS_POSIX)
 typedef struct stat64 stat_wrapper_t;
 #endif
 
-// This wrapper around an OS-level file.
+// This wrapper is around an OS-level file.
 //
 // Note about const: this class does not attempt to determine if the underlying
 // file system object is affected by a particular method in order to consider
@@ -152,7 +168,8 @@ public:
 
 	// Creates an object with a specific error_details code.
 	explicit File(Error error_details);
-  
+
+	// close file, and reset scope-file-fd
 	~File();
 
 	// Moveable

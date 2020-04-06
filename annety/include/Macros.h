@@ -34,10 +34,12 @@
 // http://en.cppreference.com/w/cpp/iterator/size
 namespace annety {
 namespace internal {
+// Get Container(STL) count at run-time.
 template <typename Container>
 constexpr auto size(const Container& c) -> decltype(c.size()) {
 	return c.size();
 }
+// Get array count at compile-time.
 template <typename T, size_t N>
 constexpr size_t size(const T (&array)[N]) noexcept {
 	return N;
@@ -46,22 +48,21 @@ constexpr size_t size(const T (&array)[N]) noexcept {
 }	// namespace annety
 #define arraysize(x) annety::internal::size(x)
 
-// Concatenate numbers in c/c++ macros to a token.
+// Concatenate two symbol to a token.
 #define MACROS_CONCAT(a, b) a##b
 
-// Convert symbol to string
+// Convert symbol to c-style string
 #define MACROS_STRING(a) #a
 
 // Put following code somewhere global to run it before main():
-//  Use like:
-//   BEFORE_MAIN_EXECUTOR()
-//   {
-//       ... your code ...
-//   }
+// Example:
+//	BEFORE_MAIN_EXECUTOR()
+//	{
+//		//... your code ...
+//	}
 //
 // Your can:
-//   * Write any code and access global variables.
-//   * Use ASSERT_*.
+//   * Use CHECK_*.
 //   * Have multiple BEFORE_MAIN_EXECUTOR() in one scope.
 //
 // Since the code run in global scope, quit with exit() or similar functions.

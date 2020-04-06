@@ -20,16 +20,20 @@
 
 namespace annety
 {
+// Example:
+// // FileEnumerator
+// cout << "scan all (*.cc) file in current directory:" << endl;
+// FileEnumerator enums(FilePath("./"), false, FileEnumerator::FILES, "*.cc");
+// for (FilePath name = enums.next(); !name.empty(); name = enums.next()) {
+//		cout << name << endl;
+// }
+// ...
+
+
 // A class for enumerating the files in a provided path. The order of the
 // results is not guaranteed.
 //
-// This is blocking. Do not use on critical threads.
-//
-// Example:
-//
-//   FileEnumerator enums(FilePath("."), false, FileEnumerator::FILES, "*.txt");
-//   for (FilePath name = enums.next(); !name.empty(); name = enums.next())
-//     ...
+// Important: This is blocking call. Do not use it on critical threads.
 class FileEnumerator
 {
 public:
