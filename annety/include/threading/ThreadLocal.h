@@ -11,6 +11,49 @@
 
 namespace annety
 {
+// Example:
+// // ThreadLocal
+// class thread_local_test
+// {
+// public:
+//		thread_local_test() {
+//			cout << pthread_self() << "|" << "thread_local_test" << endl;
+//		}
+//		~thread_local_test() {
+//			cout << pthread_self() << "|" << "~thread_local_test" << "|" << foo_ << endl;
+//		}
+//
+//		void setfoo(const string& f) {
+//			foo_ = f;
+//		}
+//		string getfoo() {
+//			cout << pthread_self() << "|" << foo_ << endl;
+//			return foo_;
+//		}
+//
+// private:
+//		string foo_ = "nochage";
+// };
+//
+// ThreadLocal<thread_local_test> tls;
+// tls.get()->setfoo("main");
+// tls.get()->getfoo();				// main
+// Thread([&tls]() {
+//		tls.get()->getfoo();		// nochage
+//		{
+//			ThreadLocal<thread_local_test> tls;
+//			tls.get()->setfoo("pthread1");
+//			tls.get()->getfoo();	// pthread1
+//		}
+//		tls.get()->getfoo();		// nochage
+//
+// }, "thread local").start().join();
+//
+// cout << "thread local ~destruct before" << endl;
+//
+// tls.get()->getfoo();				// main
+// ...
+
 template <typename Type>
 class ThreadLocalSingleton;
 

@@ -10,8 +10,8 @@
 #include <algorithm>	// std::swap
 #include <vector>
 #include <string>
-#include <stddef.h>
-#include <assert.h>
+#include <stddef.h>		// ssize_t,size_t
+#include <assert.h>		// assert
 
 namespace annety
 {
@@ -42,6 +42,8 @@ namespace annety
 // FIXME: ByteBuffer cannot use CHECK macros, because CHECK Low-level 
 // implementation is dependent ByteBuffer. so we use assert() macros here.
 //
+// FIXME: Fixed length ByteBuffer is initialized, the memory will be allocated.
+//
 // It is value sematics, which means that it can be copied or assigned.
 //
 // @coding
@@ -56,18 +58,18 @@ class ByteBuffer
 {
 public:
 	static const ssize_t kUnLimitSize = -1;
-	static const size_t  kInitialSize = 256;
+	static const size_t  kInitialSize = 1024;
 
 	explicit ByteBuffer(ssize_t max_size = kUnLimitSize, size_t init_size = kInitialSize)
-				: max_size_(max_size),
-				  buffer_(max_size>0? max_size: init_size) {}
+				: max_size_(max_size)
+				, buffer_(max_size>0? max_size: init_size) {}
 
 	// copy, dtor and assignment
 	ByteBuffer(const ByteBuffer&) = default;
 	ByteBuffer& operator=(const ByteBuffer&) = default;
 	~ByteBuffer() = default;
 	
-	// move 
+	// move method
 	ByteBuffer(ByteBuffer&& rhs) 
 		: max_size_(rhs.max_size_)
 		, reader_index_(rhs.reader_index_)
@@ -103,10 +105,13 @@ public:
 		return writer_index_ - reader_index_;
 	}
 
+	// Use this carefully (must allocate max_size_ memory when ByteBuffer initialize).
 	size_t writable_bytes() const
 	{
 		assert(size() >= writer_index_);
 		size_t vbytes = size();
+
+		// fixed length ByteBuffer
 		if (max_size_ != kUnLimitSize) {
 			vbytes = max_size_;
 			assert(vbytes >= writer_index_);
@@ -156,14 +161,14 @@ public:
 		reset();
 	}
 
-	// Use this carefully(about ownership)
-	StringPiece to_string_piece() const
-	{
-		return StringPiece(begin_read(), readable_bytes());
-	}
 	std::string to_string() const
 	{
 		return std::string(begin_read(), readable_bytes());
+	}
+	// Use this carefully (about ownership).
+	StringPiece to_string_piece() const
+	{
+		return StringPiece(begin_read(), readable_bytes());
 	}
 
 	// -1 means taken all byte data
@@ -179,6 +184,7 @@ public:
 		return result;
 	}
 
+	// buffer_ memory may be reallocated or migrated
 	bool append(const StringPiece& str)
 	{
 		return append(str.data(), str.size());
@@ -198,17 +204,17 @@ public:
 		return false;
 	}
 	
+	// buffer_ memory may be reallocated or migrated
 	void ensure_writable_bytes(size_t len)
 	{
 		make_writable_bytes(len);
 	}
 
-	void shrink(size_t reserve)
+	void shrink()
 	{
+		migration_buffer_data();
+		buffer_.resize(readable_bytes());
 		buffer_.shrink_to_fit();
-		if (reserve) {
-			buffer_.reserve(reserve);
-		}
 	}
 
 protected:
@@ -220,6 +226,8 @@ protected:
 	const char* data() const { return buffer_.data();}
 
 	void make_writable_bytes(size_t len);
+	
+	void migration_buffer_data();
 
 private:
 	ssize_t max_size_{kUnLimitSize};

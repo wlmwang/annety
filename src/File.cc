@@ -159,7 +159,7 @@ File::File(PlatformFile platform_file)
 	, created_(false)
 {
 #if defined(OS_POSIX)
-	CHECK_GE(platform_file, -1);
+	CHECK_GE(platform_file, kInvalidPlatformFile);
 #endif
 }
 
@@ -410,7 +410,7 @@ File File::duplicate() const
 	}
 
 	PlatformFile other_fd = HANDLE_EINTR(dup(get_platform_file()));
-	if (other_fd == -1) {
+	if (other_fd == kInvalidPlatformFile) {
 		return File(File::get_last_file_error());
 	}
 

@@ -34,8 +34,12 @@ namespace annety
 // };
 // ...
 
+// FIXME: StringPiece cannot use CHECK macros, because CHECK Low-level 
+// implementation is dependent StringPiece. so we use assert() macros here.
+
 // Defines the types, methods, operators, and data members common to both
 // StringPiece.
+// This class does not owns the string lifetime.
 class StringPiece;
 
 // internal ----------------------------------------------------
@@ -102,6 +106,7 @@ void assert_iterators_in_order(std::string::const_iterator begin,
 
 // Defines the types, methods, operators, and data members common to both
 // StringPiece.
+// This class does not owns the string lifetime.
 //
 // It is value sematics, which means that it can be copied or assigned.
 class StringPiece
@@ -366,7 +371,6 @@ private:
 };
 
 // StingPiece ostream --------------------------------------------------------
-
 std::ostream& operator<<(std::ostream& os, const StringPiece& piece);
 
 // Hashing ---------------------------------------------------------------------
@@ -374,12 +378,12 @@ std::ostream& operator<<(std::ostream& os, const StringPiece& piece);
 // We provide appropriate hash functions, so StringPiece can be used as keys in 
 // hash sets and maps.
 // There is a simpler way (not better way), see: files/FilePath.h
-#define HASH_STRING_PIECE(StringPieceType, string_piece)         \
-  std::size_t result = 0;                                        \
-  for (StringPieceType::const_iterator i = string_piece.begin(); \
-       i != string_piece.end(); ++i)                             \
-    result = (result * 131) + *i;                                \
-  return result;
+#define HASH_STRING_PIECE(StringPieceType, string_piece)			\
+	std::size_t result = 0;											\
+	for (StringPieceType::const_iterator i = string_piece.begin();	\
+		i != string_piece.end(); ++i)								\
+	result = (result * 131) + *i;									\
+	return result;
 
 // For the hash functions of std::unordered_map/std::unordered_set/...
 // Example:

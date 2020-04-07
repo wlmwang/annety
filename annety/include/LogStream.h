@@ -18,7 +18,7 @@ namespace annety
 // stream << -12345.345 << "#" << string_printf("printf(%%3d) %3d", 555) << true;
 // 
 // LogStream stream1 = stream;	// copy
-// stream.reset();	// stream1 unchange
+// stream.reset();				// stream1 unchange
 //
 // cout << "stream:" << stream << "|" << stream1 << endl;
 // ...
@@ -42,9 +42,9 @@ class LogStream
 	static_assert(kMaxNumericSize - 10 > std::numeric_limits<long long>::digits10,
 		"kMaxNumericSize is large enough");
 
-	// For the function signature of std::endl
+	// FIXME: for the function signature of std::endl
 	//
-	// See C++ STL define:
+	// see: C++ STL define:
 	// template<class CharT, class Traits>
 	// std::basic_ostream<CharT, Traits>& endl(std::basic_ostream<CharT, Traits>& os);
 	typedef std::basic_ostream<char, std::char_traits<char>> CharOStream;

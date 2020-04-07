@@ -39,7 +39,8 @@ public:
 	// we're on the right thread quickly.
 	static ThreadRef current_ref();
 
-	// Is it the main thread
+	// FIXME: Can only work on threads created by PlatformThread class
+	// Is it the main thread.
 	static bool is_main_thread();
 
 	// Yield the current thread so another thread can be scheduled.

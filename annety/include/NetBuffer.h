@@ -29,10 +29,8 @@ public:
 	NetBuffer& operator=(const NetBuffer&) = default;
 	NetBuffer& operator=(NetBuffer&&) = default;
 	~NetBuffer() = default;
-  
-	const char* peek() const { return begin_read();}
 
-	// Append int* to buffer ----------------------------------
+	// append int* to buffer ----------------------------------
 	void append_int64(int64_t x)
 	{
 		int64_t be64 = host_to_net64(x);
@@ -53,7 +51,7 @@ public:
 		append(&x, sizeof x);
 	}
 
-	// Read int* from buffer ----------------------------------
+	// read int* from buffer ----------------------------------
 	int64_t read_int64()
 	{
 		int64_t result = peek_int64();
@@ -77,6 +75,11 @@ public:
 		int8_t result = peek_int8();
 		has_read_int8();
 		return result;
+	}
+
+	const char* peek() const
+	{
+		return begin_read();
 	}
 
 	// Require: readable_bytes() >= sizeof(int64_t)

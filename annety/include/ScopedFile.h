@@ -19,14 +19,20 @@
 
 namespace annety
 {
+// Platform file descriptor
+#if defined(OS_POSIX)
+using PlatformFile = int;
+constexpr PlatformFile kInvalidPlatformFile = -1;
+#endif
+
 namespace internal
 {
 struct ScopedFDCloseTraits
 {
 public:
-	static int invalid_value() { return -1;}
+	static PlatformFile invalid_value() { return kInvalidPlatformFile;}
 
-	static void free(int fd)
+	static void free(PlatformFile fd)
 	{
 		// It's important to crash here.
 		// There are security implications to not closing a file descriptor
@@ -73,7 +79,7 @@ public:
 // should generally use annety::File instead which can be constructed with a
 // handle, and in addition to handling ownership, has convenient cross-platform
 // file manipulation functions on it.
-typedef ScopedGeneric<int, internal::ScopedFDCloseTraits> ScopedFD;
+typedef ScopedGeneric<PlatformFile, internal::ScopedFDCloseTraits> ScopedFD;
 
 // Automatically closes |FILE*|s.
 typedef std::unique_ptr<FILE, internal::ScopedFILECloser> ScopedFILE;

@@ -8,7 +8,8 @@
 #ifndef ANT_STRINGS_STRING_PRINTF_H_
 #define ANT_STRINGS_STRING_PRINTF_H_
 
-#include "build/CompilerSpecific.h"	// PRINTF_FORMAT
+#include "build/CompilerSpecific.h"	// _Printf_format_string_
+									// PRINTF_FORMAT,WARN_UNUSED_RESULT
 
 #include <string>
 #include <stdarg.h>   // va_list

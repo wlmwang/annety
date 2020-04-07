@@ -38,9 +38,10 @@
 // really sure you don't want to do anything with the return value of a function
 // that has been marked WARN_UNUSED_RESULT, wrap it with this. 
 // Example:
-// 	std::unique_ptr<MyType> my_var = ...;
-//  if (TakeOwnership(my_var.get()) == SUCCESS)
-// 		ignore_result(my_var.release());
+// std::unique_ptr<MyType> my_var = ...;
+// if (TakeOwnership(my_var.get()) == SUCCESS) {
+//		ALLOW_UNUSED_RESULT(my_var.release());
+// }
 namespace annety {
 namespace internal {
 template<typename T>
@@ -65,7 +66,6 @@ inline void ignore_result(const T&) {}
 
 // Macro for hinting that an expression is likely to be false.
 // see: https://gcc.gnu.org/onlinedocs/gcc-4.4.0/gcc/Other-Builtins.html
-//
 // Example:
 // if (UNLIKELY(data == 0)) {
 //		//... your code ...

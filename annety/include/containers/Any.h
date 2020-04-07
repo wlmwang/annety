@@ -16,7 +16,7 @@
 #include <typeinfo>		// typeid
 #include <typeindex>	// std::type_index
 
-// Suggest use std::any since C++17, defined in header <any>
+// FIXME: Suggest use std::any since C++17, defined in header <any>
 
 namespace annety
 {

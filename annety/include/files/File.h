@@ -35,13 +35,6 @@ namespace annety
 // cout << "create time:" << info.creation_time << endl;
 // ...
 
-// Platform file descriptor
-#if defined(OS_POSIX)
-using PlatformFile = int;
-using ScopedPlatformFile = ScopedFD;
-constexpr PlatformFile kInvalidPlatformFile = -1;
-#endif
-
 // Platform file stat
 #if defined(OS_BSD) || defined(OS_MACOSX)
 typedef struct stat stat_wrapper_t;

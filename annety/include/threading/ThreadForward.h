@@ -30,10 +30,11 @@ typedef mach_port_t ThreadId;
 typedef pid_t ThreadId;
 #endif
 
-namespace threads
-{
+namespace threads {
 ThreadId tid();
 StringPiece tid_string();
+
+// FIXME: Can only work on threads created by PlatformThread class
 bool is_main_thread();
 }	// namespace threads
 

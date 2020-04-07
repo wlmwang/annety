@@ -12,7 +12,7 @@
 namespace annety
 {
 // see: https://gcc.gnu.org/onlinedocs/gcc-4.4.0/gcc/Other-Builtins.html
-// Important: There are many languages without unsigned types, such as Java/Python...
+// FIXME: There are many languages without unsigned types, such as Java/Python...
 
 // Returns a value with all bytes in |x| swapped.
 inline uint16_t byte_swap(uint16_t x)
