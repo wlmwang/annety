@@ -31,10 +31,11 @@ typedef int64_t ThreadId;
 #endif
 
 namespace threads {
+// For Logging functions.
 ThreadId tid();
 StringPiece tid_string();
 
-// FIXME: Can only work on threads created by PlatformThread class
+// It may not work before running the main() function.
 bool is_main_thread();
 }	// namespace threads
 

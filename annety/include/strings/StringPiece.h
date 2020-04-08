@@ -265,7 +265,7 @@ public:
 	{
 		internal::append_to_string(*this, target);
 	}
-  
+	
 	size_type copy(value_type* target, size_type n, size_type pos = 0) const
 	{
 		return internal::copy(*this, target, n, pos);

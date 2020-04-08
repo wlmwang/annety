@@ -6,7 +6,7 @@
 // Date: May 28 2019
 
 #include "PlatformThread.h"
-#include "build/CompilerSpecific.h"
+#include "Macros.h"
 #include "Logging.h"
 
 #include <unistd.h>		// getpid
@@ -27,10 +27,13 @@
 
 namespace annety
 {
-namespace
+namespace {
+// It may not work before running the main() function.
+thread_local bool tls_is_main_thread{false};
+BEFORE_MAIN_EXECUTOR()
 {
-// default is the main thread
-thread_local bool tls_is_main_thread{true};
+	tls_is_main_thread = true;
+}
 
 struct ThreadParams
 {
@@ -46,8 +49,6 @@ public:
 void* thread_func(void* params)
 {
 	CHECK(params);
-
-	tls_is_main_thread = false;
 
 	std::unique_ptr<ThreadParams> thread_params(static_cast<ThreadParams*>(params));
 

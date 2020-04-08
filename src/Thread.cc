@@ -32,7 +32,7 @@ ThreadId tid()
 StringPiece tid_string()
 {
 	if (UNLIKELY(tls_tid_string.empty())) {
-		sstring_printf(&tls_tid_string, "%d", tid());
+		sstring_printf(&tls_tid_string, "%ld", tid());
 	}
 	return tls_tid_string;
 }
@@ -128,7 +128,7 @@ void Thread::start_routine()
 	tid_ = PlatformThread::current_id();
 	
 	// Construct our full name of the form "name_prefix_/TID".
-	name_ = string_printf("%s/%d", name_prefix_.c_str(), tid_);
+	name_ = string_printf("%s/%ld", name_prefix_.c_str(), tid_);
 	PlatformThread::set_name(name_);
 
 	// We've initialized our new thread, signal that we're done to start().
