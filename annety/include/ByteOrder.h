@@ -11,9 +11,10 @@
 
 namespace annety
 {
-// see: https://gcc.gnu.org/onlinedocs/gcc-4.4.0/gcc/Other-Builtins.html
-// FIXME: There are many languages without unsigned types, such as Java/Python...
+// see: https://gcc.gnu.org/onlinedocs/gcc-4.8.0/gcc/Other-Builtins.html
+// Important: __builtin_bswap16 function was not supported until GCC-4.8
 
+// ----------------------------------------------------------------------------
 // Returns a value with all bytes in |x| swapped.
 inline uint16_t byte_swap(uint16_t x)
 {
@@ -43,6 +44,7 @@ inline uintptr_t byte_swap_uintptr_t(uintptr_t x)
 	NOTREACHED();
 }
 
+// ----------------------------------------------------------------------------
 // Converts the bytes in |x| from network to host order (endianness), and
 // returns the result.
 inline uint16_t net_to_host16(uint16_t x)
@@ -70,6 +72,7 @@ inline uint64_t net_to_host64(uint64_t x)
 #endif
 }
 
+// ----------------------------------------------------------------------------
 // Converts the bytes in |x| from host to network order (endianness), and
 // returns the result.
 inline uint16_t host_to_net16(uint16_t x)

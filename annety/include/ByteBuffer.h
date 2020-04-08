@@ -6,10 +6,10 @@
 
 #include "strings/StringPiece.h"
 
-#include <iosfwd>		// std::ostream
-#include <algorithm>	// std::swap
 #include <vector>
 #include <string>
+#include <iosfwd>		// std::ostream
+#include <algorithm>	// std::swap
 #include <stddef.h>		// ssize_t,size_t
 #include <assert.h>		// assert
 
@@ -40,11 +40,13 @@ namespace annety
 // ...
 
 // FIXME: ByteBuffer cannot use CHECK macros, because CHECK Low-level 
-// implementation is dependent ByteBuffer. so we use assert() macros here.
+// implementation is depend ByteBuffer. so we use assert() macros here.
 //
-// FIXME: Fixed length ByteBuffer is initialized, the memory will be allocated.
+// FIXME: Fixed-length ByteBuffer will be allocated memory immediately 
+// after initialization.
 //
 // It is value sematics, which means that it can be copied or assigned.
+// *Not thread safe*
 //
 // @coding
 // +-------------------+------------------+------------------+

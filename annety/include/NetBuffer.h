@@ -14,7 +14,11 @@
 
 namespace annety
 {
+// There are many languages without unsigned types, such as Java/Python,
+// so here we only provide signed-integer byte-order conversion function.
+//
 // It is value sematics, which means that it can be copied or assigned.
+// *Not thread safe*
 class NetBuffer : public ByteBuffer
 {
 public:

@@ -109,6 +109,7 @@ void assert_iterators_in_order(std::string::const_iterator begin,
 // This class does not owns the string lifetime.
 //
 // It is value sematics, which means that it can be copied or assigned.
+// *Not thread safe*
 class StringPiece
 {
 public:

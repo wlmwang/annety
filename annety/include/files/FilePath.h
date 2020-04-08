@@ -39,6 +39,7 @@ namespace annety
 
 // An abstraction to isolate users from the differences between native
 // pathnames on different platforms.
+// *Not thread safe*
 class FilePath
 {
 public:

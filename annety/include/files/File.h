@@ -50,6 +50,7 @@ typedef struct stat64 stat_wrapper_t;
 // obvious non-modifying way are marked as const. Any method that forward calls
 // to the OS is not considered const, even if there is no apparent change to
 // member variables.
+// *Not thread safe*
 class File
 {
 public:

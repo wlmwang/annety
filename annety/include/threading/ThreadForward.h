@@ -27,7 +27,7 @@ using TaskCallback = std::function<void()>;
 #if defined(OS_MACOSX)
 typedef mach_port_t ThreadId;
 #elif defined(OS_POSIX)
-typedef pid_t ThreadId;
+typedef int64_t ThreadId;
 #endif
 
 namespace threads {
@@ -60,6 +60,7 @@ public:
 
 	bool operator==(ThreadRef other) const
 	{
+		// pthread_equal()
 		return id_ == other.id_;
 	}
 

@@ -37,7 +37,7 @@ namespace annety
 // This class provides a facility similar to the CRT atexit(), except that
 // we control when the callbacks are executed.
 //
-// This facility is *Not 100% thread safe*, it is mostly used by Singleton.
+// *Not 100% thread safe*. This facility is mostly used by Singleton.
 class AtExitManager
 {
 public:

@@ -35,6 +35,7 @@ namespace annety
 // results is not guaranteed.
 //
 // Important: This is blocking call. Do not use it on critical threads.
+// *Not thread safe*
 class FileEnumerator
 {
 public:

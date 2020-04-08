@@ -97,14 +97,17 @@ ThreadId PlatformThread::current_id()
 {
 	// Pthreads doesn't have the concept of a thread ID, so we have to reach down
 	// into the kernel.
-	// FIXME: current_id should be return integer.
-#if defined(OS_MACOSX)
-	return pthread_mach_thread_np(::pthread_self());
-#elif defined(OS_LINUX)
+#if defined(OS_LINUX)
 	return ::syscall(__NR_gettid);
+#elif defined(OS_MACOSX)
+	return pthread_mach_thread_np(::pthread_self());
 #elif defined(OS_SOLARIS)
+	// pthread_t is a unsigned int on Solaris(same as Linux).
+	// Such as: typedef unsigned long int pthread_t; // Linux
 	return ::pthread_self();
 #elif defined(OS_POSIX)
+	// pthread_t is a pointer to the pthread struct.
+	// Such as: typedef struct pthread* pthread_t; // OpenBSD
 	return reinterpret_cast<int64_t>(::pthread_self());
 #endif
 }
