@@ -22,8 +22,7 @@
 
 namespace annety
 {
-namespace
-{
+namespace {
 const char* const kLogSeverityNames[] = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL"};
 static_assert(LOG_NUM_SEVERITIES == arraysize(kLogSeverityNames),
 			"Incorrect number of kLogSeverityNames");
@@ -58,10 +57,8 @@ LogFFlushHandlerFunction g_log_fflush_handler = &defaultFlush;
 LogSeverity g_min_log_severity = 0;
 
 // For cache colums logging
-// FIXME: destruct not control
-thread_local TimeStamp::Exploded tls_local_exploded{};
-thread_local std::string tls_format_ymdhis{};
-thread_local int64_t tls_last_second{};
+thread_local char tls_format_ymdhis[32]{'\0'};
+thread_local int64_t tls_last_second{0};
 
 }	// namespace anonymous
 
@@ -120,17 +117,22 @@ void LogMessage::Impl::begin()
 	// time exploded string
 	TimeDelta td = time_ - TimeStamp();
 	if (td.in_seconds() != tls_last_second) {
-		time_.to_local_explode(&tls_local_exploded);
-		sstring_printf(&tls_format_ymdhis, "%04d-%02d-%02d %02d:%02d:%02d",
-						tls_local_exploded.year,
-						tls_local_exploded.month,
-						tls_local_exploded.day_of_month,
-						tls_local_exploded.hour,
-						tls_local_exploded.minute,
-						tls_local_exploded.second);
+		TimeStamp::Exploded local_exploded;
+		time_.to_local_explode(&local_exploded);
+
+		sstring_printf(tls_format_ymdhis, sizeof tls_format_ymdhis, 
+					"%04d-%02d-%02d %02d:%02d:%02d",
+					local_exploded.year,
+					local_exploded.month,
+					local_exploded.day_of_month,
+					local_exploded.hour,
+					local_exploded.minute,
+					local_exploded.second
+				);
+
 		tls_last_second = td.in_seconds();
 	}
-	stream_ << string_printf("%s.%06d ", tls_format_ymdhis.c_str(), 
+	stream_ << string_printf("%s.%06d ", tls_format_ymdhis, 
 				static_cast<int>(td.internal_value() % TimeStamp::kMicrosecondsPerSecond));
 	
 	// tid string

@@ -41,16 +41,18 @@ FilePath get_log_filename(const FilePath& path)
 	TimeStamp::Exploded exploded;
 	TimeStamp curr = TimeStamp::now();
 	curr.to_local_explode(&exploded);
-	string_appendf(&filename, ".%04d%02d%02d-%02d%02d%02d.",
-								exploded.year,
-								exploded.month,
-								exploded.day_of_month,
-								exploded.hour,
-								exploded.minute,
-								exploded.second);
+	sstring_appendf(&filename, 
+		".%04d%02d%02d-%02d%02d%02d.",
+		exploded.year,
+		exploded.month,
+		exploded.day_of_month,
+		exploded.hour,
+		exploded.minute,
+		exploded.second
+	);
 
 	// hostname().getpid().log
-	string_appendf(&filename, "%s.%d.%s", hostname().c_str(), getpid(), "log");
+	sstring_appendf(&filename, "%s.%d.%s", hostname().c_str(), getpid(), "log");
 
 	return FilePath(filename);
 }

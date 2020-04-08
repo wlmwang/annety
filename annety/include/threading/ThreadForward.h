@@ -31,12 +31,11 @@ typedef int64_t ThreadId;
 #endif
 
 namespace threads {
-// For Logging functions.
+// It may not work before running the main function.
+bool is_main_thread();
+
 ThreadId tid();
 StringPiece tid_string();
-
-// It may not work before running the main() function.
-bool is_main_thread();
 }	// namespace threads
 
 const ThreadId kInvalidThreadId{0};

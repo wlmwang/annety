@@ -18,21 +18,21 @@ namespace annety
 namespace threads
 {
 // FIXME: destruct not control
-thread_local static ThreadId tls_tid{0};
-thread_local static std::string tls_tid_string{};
+thread_local static ThreadId tls_tid_int{-1};
+thread_local static char tls_tid_string[20]{'\0'};
 
 ThreadId tid()
 {
-	if (UNLIKELY(tls_tid == 0)) {
-		tls_tid = PlatformThread::current_id();
+	if (UNLIKELY(tls_tid_int == -1)) {
+		tls_tid_int = PlatformThread::current_id();
 	}
-	return tls_tid;
+	return tls_tid_int;
 }
 
 StringPiece tid_string()
 {
-	if (UNLIKELY(tls_tid_string.empty())) {
-		sstring_printf(&tls_tid_string, "%ld", tid());
+	if (UNLIKELY(tls_tid_string[0] == 0)) {
+		sstring_printf(tls_tid_string, sizeof tls_tid_string, "%ld", tid());
 	}
 	return tls_tid_string;
 }
@@ -77,7 +77,7 @@ Thread& Thread::start()
 {
 	start_async();
 	
-	// Wait for the thread to complete initialization.
+	// wait for the thread to complete initialization.
 	latch_.wait();
 	
 	started_ = true;

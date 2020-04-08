@@ -37,7 +37,7 @@ inline int vsnprintf_T(char* buffer,
 // Templatized backend for string_printf/string_appendf. This does not finalize
 // the va_list, the caller is expected to do that.
 template <class StringType>
-static void string_appendvt(StringType* dst,
+static void sstring_appendvt(StringType* dst,
 							const typename StringType::value_type* format,
 							va_list ap)
 {
@@ -101,43 +101,69 @@ static void string_appendvt(StringType* dst,
 
 std::string string_printf(const char* format, ...)
 {
+	std::string rt;
+
 	va_list ap;
 	::va_start(ap, format);
-	std::string result;
-	string_appendv(&result, format, ap);
+	sstring_appendv(&rt, format, ap);
 	va_end(ap);
-	return result;
+	return rt;
 }
 
 std::string string_printv(const char* format, va_list ap)
 {
-	std::string result;
-	string_appendv(&result, format, ap);
-	return result;
+	std::string rt;
+	sstring_appendv(&rt, format, ap);
+	return rt;
 }
 
 const std::string& sstring_printf(std::string* dst, const char* format, ...)
 {
-	va_list ap;
-	::va_start(ap, format);
 	dst->clear();
-	string_appendv(dst, format, ap);
+
+	va_list ap;
+	::va_start(ap, format);
+	sstring_appendv(dst, format, ap);
 	::va_end(ap);
 	return *dst;
 }
 
-const std::string& string_appendf(std::string* dst, const char* format, ...)
+const std::string& sstring_printv(std::string* dst, const char* format, va_list ap)
+{
+	dst->clear();
+	sstring_appendv(dst, format, ap);
+	return *dst;
+}
+
+const std::string& sstring_appendf(std::string* dst, const char* format, ...)
 {
 	va_list ap;
 	::va_start(ap, format);
-	string_appendv(dst, format, ap);
+	sstring_appendv(dst, format, ap);
 	::va_end(ap);
 	return *dst;
 }
 
-void string_appendv(std::string* dst, const char* format, va_list ap)
+const std::string& sstring_appendv(std::string* dst, const char* format, va_list ap)
 {
-	string_appendvt(dst, format, ap);
+	sstring_appendvt(dst, format, ap);
+	return *dst;
+}
+
+int sstring_printf(char* dst, size_t len, const char* format, ...)
+{
+	int rt;
+
+	va_list ap;
+	::va_start(ap, format);
+	rt = sstring_printv(dst, len, format, ap);
+	::va_end(ap);
+	return rt;
+}
+
+int sstring_printv(char* dst, size_t len, const char* format, va_list ap)
+{
+	return vsnprintf_T(dst, len, format, ap);
 }
 
 }	// namespace annety
