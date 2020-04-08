@@ -97,14 +97,17 @@ private:
 
 private:
 	const std::string name_prefix_;
-	std::string name_;
 	const Options options_;
+	std::string name_;
 	ThreadRef ref_;	// PlatformThread handle, reset after Join.
 	ThreadId tid_;	// The backing thread's id.
-	bool joined_ = false;	// True if Join has been called.
-	// Set to true when the platform-thread creation has started.
-	bool start_called_ = false;
+
+	// True if Join has been called.
+	bool joined_ = false;
+	// Set to true when the thread has created.
 	bool started_ = false;
+	// Set to true when the thread has started.
+	bool start_called_ = false;
 
 	TaskCallback thread_main_cb_;
 	CountDownLatch latch_;

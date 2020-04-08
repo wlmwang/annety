@@ -56,10 +56,9 @@ LogFFlushHandlerFunction g_log_fflush_handler = &defaultFlush;
 // 0=TRACE 1=INFO 2=WARNING 3=ERROR 4=FATAL
 LogSeverity g_min_log_severity = 0;
 
-// For cache colums logging
-thread_local char tls_format_ymdhis[32]{'\0'};
+// logging cache colums
 thread_local int64_t tls_last_second{0};
-
+thread_local char tls_format_ymdhis[32]{'\0'};
 }	// namespace anonymous
 
 void set_min_log_severity(LogSeverity severity)
@@ -199,11 +198,10 @@ template std::string MakeCheckOpString<unsigned int, unsigned long>(
 template std::string MakeCheckOpString<std::string, std::string>(
 	const std::string&, const std::string&, const char* name);
 
-// for NOTREACHED
+// FOR NOTREACHED
 void LogErrorNotReached(int line, const LogMessage::Filename& file)
 {
-	LogMessage(line , file, LOG_ERROR).stream() 
-		<< "NOTREACHED() hit.";
+	LogMessage(line , file, LOG_ERROR).stream() << "NOTREACHED() hit.";
 }
 
 }	// namespace annety

@@ -25,24 +25,25 @@ using TaskCallback = std::function<void()>;
 
 // Used for logging. Always an integer value.
 #if defined(OS_MACOSX)
-typedef mach_port_t ThreadId;
+// FIXME: consistent with POSIX for printf*
+// typedef mach_port_t ThreadId;
+typedef int64_t ThreadId;
 #elif defined(OS_POSIX)
 typedef int64_t ThreadId;
 #endif
 
-namespace threads {
-// It may not work before running the main function.
-bool is_main_thread();
+const ThreadId kInvalidThreadId{0};
 
+namespace threads {
 ThreadId tid();
 StringPiece tid_string();
+// It may not work before running the main function.
+bool is_main_thread();
 }	// namespace threads
-
-const ThreadId kInvalidThreadId{0};
 
 // Used for thread checking and debugging.
 // Meant to be as fast as possible.
-// These are produced by PlatformThread::CurrentRef(), and used to later
+// These are produced by PlatformThread::current_ref(), and used to later
 // check if we are on the same thread or not by using ==. These are safe
 // to copy between threads, but can't be copied to another process as they
 // have no meaning there. Also, the internal identifier can be re-used
@@ -60,13 +61,12 @@ public:
 
 	bool operator==(ThreadRef other) const
 	{
-		// pthread_equal()
-		return id_ == other.id_;
+		return pthread_equal(id_, other.id_);
 	}
 
 	bool operator!=(ThreadRef other) const
 	{
-		return id_ != other.id_;
+		return !(*this==other);
 	}
 
 	bool empty() const

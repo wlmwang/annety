@@ -15,15 +15,14 @@
 
 namespace annety
 {
-namespace threads
-{
-// FIXME: destruct not control
-thread_local static ThreadId tls_tid_int{-1};
+namespace threads {
+// threading cache colums
+thread_local static ThreadId tls_tid_int{kInvalidThreadId};
 thread_local static char tls_tid_string[20]{'\0'};
 
 ThreadId tid()
 {
-	if (UNLIKELY(tls_tid_int == -1)) {
+	if (UNLIKELY(tls_tid_int == kInvalidThreadId)) {
 		tls_tid_int = PlatformThread::current_id();
 	}
 	return tls_tid_int;
@@ -32,7 +31,7 @@ ThreadId tid()
 StringPiece tid_string()
 {
 	if (UNLIKELY(tls_tid_string[0] == 0)) {
-		sstring_printf(tls_tid_string, sizeof tls_tid_string, "%ld", tid());
+		sstring_printf(tls_tid_string, sizeof tls_tid_string, "%lld", tid());
 	}
 	return tls_tid_string;
 }
@@ -41,7 +40,6 @@ bool is_main_thread()
 {
 	return PlatformThread::is_main_thread();
 }
-
 }	// namespace threads
 
 Thread::Thread(const TaskCallback& cb, const std::string& name_prefix)
@@ -127,11 +125,11 @@ void Thread::start_routine()
 {
 	tid_ = PlatformThread::current_id();
 	
-	// Construct our full name of the form "name_prefix_/TID".
-	name_ = string_printf("%s/%ld", name_prefix_.c_str(), tid_);
+	// construct our full name of the form "name_prefix_/TID".
+	name_ = string_printf("%s/%lld", name_prefix_.c_str(), tid_);
 	PlatformThread::set_name(name_);
 
-	// We've initialized our new thread, signal that we're done to start().
+	// we've initialized our new thread, signal that we're done to start().
 	latch_.count_down();
 	
 	try {
