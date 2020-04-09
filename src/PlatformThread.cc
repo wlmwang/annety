@@ -21,9 +21,9 @@
 #include <sys/prctl.h>		// prctl
 #endif
 
+#include <string>
 #include <utility>	// std::move
 #include <memory>	// std::unique_ptr
-#include <string>
 
 namespace annety
 {

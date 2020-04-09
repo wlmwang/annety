@@ -64,13 +64,13 @@ EndPoint::EndPoint(uint16_t port, bool loopback_only, bool ipv6)
 		addr6_.sin6_family = AF_INET6;
 		in6_addr ip = loopback_only ? in6addr_loopback : in6addr_any;
 		addr6_.sin6_addr = ip;
-		addr6_.sin6_port = host_to_net16(port);
+		addr6_.sin6_port = host_to_net16(port);		// ::htons()
 	} else {
 		::memset(&addr_, 0, sizeof addr_);
 		addr_.sin_family = AF_INET;
 		in_addr_t ip = loopback_only ? kInaddrLoopback : kInaddrAny;
-		addr_.sin_addr.s_addr = host_to_net32(ip);
-		addr_.sin_port = host_to_net16(port);
+		addr_.sin_addr.s_addr = host_to_net32(ip);	// ::htonl()
+		addr_.sin_port = host_to_net16(port);		// ::htons()
 	}
 }
 
@@ -106,7 +106,7 @@ std::string EndPoint::to_ip() const
 
 uint16_t EndPoint::to_port() const
 {
-	return net_to_host16(addr_.sin_port);
+	return net_to_host16(addr_.sin_port);	// ::ntohs()
 }
 
 uint32_t EndPoint::ip_net_endian() const
@@ -119,7 +119,7 @@ uint32_t EndPoint::ip_net_endian() const
 static thread_local char tls_resolve_buffer[64 * 1024];
 bool EndPoint::resolve(const StringPiece& hostname, EndPoint* out)
 {
-	CHECK(out != nullptr);
+	DCHECK(out != nullptr);
 
 	struct hostent hent;
 	struct hostent* he = nullptr;
@@ -132,7 +132,7 @@ bool EndPoint::resolve(const StringPiece& hostname, EndPoint* out)
 	PLOG_IF(ERROR, ret < 0) << "::gethostbyname_r failed";
 
 	if (ret == 0 && he != nullptr) {
-		CHECK(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
+		DCHECK(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
 
 		out->addr_.sin_family = AF_INET;
 		out->addr_.sin_addr = *reinterpret_cast<struct in_addr*>(he->h_addr);

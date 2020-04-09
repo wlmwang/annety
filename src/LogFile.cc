@@ -8,16 +8,11 @@
 #include "files/FilePath.h"
 #include "strings/StringPrintf.h"
 
-#include <assert.h>
-#include <unistd.h>
+#include <unistd.h> // pid_t,getpid
 
 namespace annety
 {
 namespace {
-pid_t getpid()
-{
-	return ::getpid();
-}
 std::string hostname()
 {
 	// HOST_NAME_MAX 64
@@ -52,7 +47,7 @@ FilePath get_log_filename(const FilePath& path)
 	);
 
 	// hostname().getpid().log
-	sstring_appendf(&filename, "%s.%d.%s", hostname().c_str(), getpid(), "log");
+	sstring_appendf(&filename, "%s.%d.%s", hostname().c_str(), ::getpid(), "log");
 
 	return FilePath(filename);
 }
@@ -66,7 +61,7 @@ LogFile::LogFile(const FilePath& path,
 	, rotate_size_b_(rotate_size_b)
 	, check_every_n_(check_every_n)
 {
-	assert(!path_.ends_with_separator());
+	DCHECK(!path_.ends_with_separator());
 	rotate(true);
 }
 
@@ -99,7 +94,7 @@ void LogFile::append_unlocked(const char* message, int len)
 			rotate();
 		}
 	}
-	assert(file_->write_at_current_pos(message, len) == len);
+	DCHECK(file_->write_at_current_pos(message, len) == len);
 }
 
 void LogFile::rotate(bool force)
@@ -111,7 +106,7 @@ void LogFile::rotate(bool force)
 		File* file = new File(get_log_filename(path_), File::FLAG_OPEN_ALWAYS |
 													   File::FLAG_APPEND);
 		
-		assert(file->error_details() == File::FILE_OK);
+		DCHECK(file->error_details() == File::FILE_OK);
 		written_.store(file->get_length());
 
 		file_.reset(file);
