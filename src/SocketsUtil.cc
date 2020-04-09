@@ -86,7 +86,7 @@ int socket(sa_family_t family, bool nonblock, bool cloexec)
 	if (cloexec) {
 		DCHECK(set_close_on_exec(fd));
 	}
-#else
+#else	// defined(OS_MACOSX)
 	if (nonblock) {
 		flags |= SOCK_NONBLOCK;
 	}
@@ -94,7 +94,7 @@ int socket(sa_family_t family, bool nonblock, bool cloexec)
 		flags |= SOCK_CLOEXEC;
 	}
 	int fd = ::socket(family, flags, IPPROTO_TCP);
-#endif
+#endif	// defined(OS_POSIX) || defined(OS_BSD) || ...
 
 	DPLOG_IF(ERROR, fd < 0) << "::socket failed";
 	return fd;
@@ -112,7 +112,7 @@ int accept(int servfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec)
 	if (cloexec) {
 		DCHECK(set_close_on_exec(servfd));
 	}
-#else
+#else	// defined(OS_MACOSX)
 	int flags = 0;
 	if (nonblock) {
 		flags |= SOCK_NONBLOCK;
@@ -120,8 +120,8 @@ int accept(int servfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec)
 	if (cloexec) {
 		flags |= SOCK_CLOEXEC;
 	}
-	int connfd = ::accept4(servfd, sockaddr_cast(addr), &addrlen, flags);	
-#endif
+	int connfd = ::accept4(servfd, sockaddr_cast(addr), &addrlen, flags);
+#endif	// defined(OS_POSIX) || defined(OS_BSD) || ...
 
 	DPLOG_IF(ERROR, connfd < 0) << "::accept failed";
 
@@ -186,7 +186,8 @@ int connect(int servfd, const struct sockaddr* addr)
 
 int listen(int servfd)
 {
-	int ret = ::listen(servfd, SOMAXCONN);	// #define SOMAXCONN 128
+	// #define SOMAXCONN 128
+	int ret = ::listen(servfd, SOMAXCONN);
 	DPCHECK(ret >= 0);
 	return ret;
 }
