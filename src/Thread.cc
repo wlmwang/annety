@@ -2,8 +2,9 @@
 // Date: May 28 2019
 
 #include "build/CompilerSpecific.h"
-#include "threading/Thread.h"
+#include "FormatMacros.h"
 #include "PlatformThread.h"
+#include "threading/Thread.h"
 #include "strings/StringPiece.h"
 #include "strings/StringPrintf.h"
 #include "Exceptions.h"
@@ -31,7 +32,7 @@ ThreadId tid()
 StringPiece tid_string()
 {
 	if (UNLIKELY(tls_tid_string[0] == 0)) {
-		sstring_printf(tls_tid_string, sizeof tls_tid_string, "%lld", tid());
+		sstring_printf(tls_tid_string, sizeof tls_tid_string, "%" PRId64, tid());
 	}
 	return tls_tid_string;
 }
@@ -126,7 +127,7 @@ void Thread::start_routine()
 	tid_ = PlatformThread::current_id();
 	
 	// construct our full name of the form "name_prefix_/TID".
-	name_ = string_printf("%s/%lld", name_prefix_.c_str(), tid_);
+	name_ = string_printf("%s/%" PRId64, name_prefix_.c_str(), tid_);
 	PlatformThread::set_name(name_);
 
 	// we've initialized our new thread, signal that we're done to start().

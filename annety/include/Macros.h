@@ -54,18 +54,16 @@ constexpr size_t size(const T (&array)[N]) noexcept {
 // Convert symbol to c-style string
 #define MACROS_STRING(a) #a
 
-// Put following code somewhere global to run it before main():
+// Put following code somewhere global to run it before main().
+// DO NOT CREATE ANY THREAD BEFORE RUN main()!!!
 // Example:
-//	BEFORE_MAIN_EXECUTOR()
-//	{
+// BEFORE_MAIN_EXECUTOR()
+// {
 //		//... your code ...
-//	}
-//
-// Your can:
-//   * Use CHECK_*.
+// }
+// You can write code:
+//   * Use CHECK_*/LOG(...).
 //   * Have multiple BEFORE_MAIN_EXECUTOR() in one scope.
-//
-// Since the code run in global scope, quit with exit() or similar functions.
 #if defined(__cplusplus)
 #define BEFORE_MAIN_EXECUTOR								\
 namespace {													\
