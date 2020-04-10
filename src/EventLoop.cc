@@ -14,11 +14,28 @@
 
 namespace annety
 {
-// as a network library, it is important to ignore SIGPIPE signal.
+// TCP is a full-duplex channel. When close() is called by the peer, even 
+// if it is intended to close the two channels, the local will still only 
+// receive FIN packet. Because according to the semantics of TCP protocol, 
+// the local may think that the peer only closes the write channel, the read 
+// channel did not close.
+// In other words, due to the limitations of the TCP protocol, an endpoint 
+// cannot know that the peer has been completely closed.
+//
+// If you call read() on a socket that has received a FIN packet, if the receive 
+// buffer is empty, it returns 0, which is also a normal connection close.
+// But when you first call write() on it, if the send buffer is fine, Will return 
+// the correct write. However, the send packet will cause the peer to send a RST 
+// packet. After receiving the RST, if write() is called a second time, a SIGPIPE 
+// signal will be generated, causing the process to exit.
+//
+// In short, when we receive a FIN packet, we can still write(), which is a 
+// limitation of the TCP protocol. However, if we write() twice at this time, 
+// it is very likely to cause SIGPIPE signal (although it causes RST for the 
+// first time, but the kernel returns correctly if the send buffer is fine).
 BEFORE_MAIN_EXECUTOR() { ::signal(SIGPIPE, SIG_IGN);}
 
-namespace
-{
+namespace {
 thread_local EventLoop* tls_event_loop = nullptr;
 }	// namespace anonymous
 
