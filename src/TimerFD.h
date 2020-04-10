@@ -12,6 +12,20 @@
 
 namespace annety
 {
+// A timer that delivers timer expiration notifications via a file descriptor.
+//
+// They provide an alternative to the use of setitimer(2) or timer_create(2), 
+// with the advantage that the file descriptor may be monitored by select(2), 
+// poll(2), and epoll(7).
+//
+// Linux:
+// The fds_ attribute is a file descriptor created by ::timerfd_create() - Linux 2.6.27.
+// fds_ is output, it will be monitored by the channel for readable events.
+// fds_ is input, it will be sync written by external when the event is triggered.
+//
+// Others:
+// Use EventFD to simulate timerfd. Provide the same timer expiration notification 
+// that can pass the file descriptor.
 class TimerFD : public SelectableFD
 {
 public:

@@ -5,17 +5,16 @@
 #include "Logging.h"
 
 #if defined(OS_LINUX)
-#include <sys/timerfd.h>  // timerfd
+#include <sys/timerfd.h>  // timerfd,itimerspec
 #else
 #include "EventFD.h"
 #endif
 
-#include <unistd.h>
+#include <unistd.h>		// ::memset
 
 namespace annety
 {
-namespace internal
-{
+namespace internal {
 #if defined(OS_LINUX)
 int create_timerfd(bool nonblock, bool cloexec)
 {
@@ -26,6 +25,14 @@ int create_timerfd(bool nonblock, bool cloexec)
 	if (cloexec) {
 		flags |= TFD_CLOEXEC;
 	}
+
+	// CLOCK_REALTIME
+	// A settable system-wide clock (manual changes the system time will 
+	// affect its continuity).
+	//
+	// CLOCK_MONOTONIC
+	// A nonsettable clock that is not affected by discontinuous changes 
+	// in the system clock (e.g., manual changes to system time).
 	return ::timerfd_create(CLOCK_MONOTONIC, flags);
 }
 
@@ -35,8 +42,15 @@ int reset_timerfd(int timerfd, TimeDelta delta_ms)
 		return -1;
 	}
 
+	// In Linux versions up to and including 2.6.26, flags must 
+	// be specified as zero.
 	struct itimerspec it;
 	::memset(&it, 0, sizeof it);
+
+	// struct itimerspec {
+	// 		timespec it_interval; // Interval for periodic timer. It is time-interval.
+	// 		timespec it_value; // Initial expiration. It is a time-stamp.
+	// }
 	it.it_value = delta_ms.to_timespec();
 
 	return ::timerfd_settime(timerfd, 0, &it, NULL);
@@ -60,6 +74,7 @@ TimerFD::TimerFD(bool nonblock, bool cloexec)
 TimerFD::~TimerFD()
 {
 #if !defined(OS_LINUX)
+	// fd_ lifetime is controlled by the ev_ (EventFD).
 	fd_ = -1;
 #endif
 }

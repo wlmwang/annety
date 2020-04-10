@@ -29,6 +29,8 @@ static_assert(EPOLLRDHUP == POLLRDHUP,  "epoll uses same flag values as poll");
 static_assert(EPOLLERR == POLLERR,      "epoll uses same flag values as poll");
 static_assert(EPOLLHUP == POLLHUP,      "epoll uses same flag values as poll");
 
+// epoll_create1() was added to the kernel in version 2.6.27. Library support 
+// is provided in glibc starting with version 2.9
 EPollPoller::EPollPoller(EventLoop* loop)
 	: Poller(loop)
 	, epollfd_(::epoll_create1(EPOLL_CLOEXEC))
@@ -194,10 +196,9 @@ const char* EPollPoller::operation_to_string(int op)
 }	// namespace annety
 
 #else
-namespace annety
-{
+namespace annety {
 // FIXME: suppression may cause "has no symbols" warnings for some compilers.
-// For example, MacOS
+// Example: OS_MACOSX
 void ALLOW_UNUSED_TYPE suppress_no_symbols_warning()
 {
 	NOTREACHED();

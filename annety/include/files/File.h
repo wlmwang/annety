@@ -40,6 +40,8 @@ namespace annety
 typedef struct stat stat_wrapper_t;
 #elif defined(OS_POSIX)
 typedef struct stat64 stat_wrapper_t;
+#else
+#error Do not support your os platform in File.h
 #endif
 
 // This wrapper is around an OS-level file.

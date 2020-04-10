@@ -171,6 +171,8 @@ ThreadId PlatformThread::current_id()
 	// Type pthread_t is a pointer to the pthread struct.
 	// such as: typedef struct pthread* pthread_t; // OpenBSD
 	return reinterpret_cast<int64_t>(::pthread_self());
+#else
+#error Do not support your os platform in PlatformThread.h
 #endif
 }
 
@@ -202,7 +204,9 @@ void PlatformThread::set_name(const std::string& name)
 	if (err < 0 && errno != EPERM) {
 		DPLOG(ERROR) << "prctl(PR_SET_NAME)";
 	}
-#endif	// defined(OS_LINUX)
+#else
+	// FIXME: TODO
+#endif	// defined(OS_POSIX)
 }
 
 }	// namespace annety

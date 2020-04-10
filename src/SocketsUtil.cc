@@ -12,8 +12,9 @@
 #include <unistd.h>		// close
 #include <stdio.h>		// snprintf
 #include <sys/socket.h>	// SOMAXCONN,struct sockaddr,sockaddr_in[6]
-#include <sys/uio.h>	// struct iovec,readv
-#include <netinet/tcp.h>
+						// getsockopt,setsockopt
+#include <sys/uio.h>	// struct iovec,readv,writev
+#include <netinet/tcp.h>// IPPROTO_TCP,TCP_NODELAY
 
 namespace annety
 {
@@ -86,7 +87,7 @@ int socket(sa_family_t family, bool nonblock, bool cloexec)
 	if (cloexec) {
 		DCHECK(set_close_on_exec(fd));
 	}
-#else	// defined(OS_MACOSX)
+#elif defined(OS_POSIX)
 	if (nonblock) {
 		flags |= SOCK_NONBLOCK;
 	}
@@ -94,7 +95,9 @@ int socket(sa_family_t family, bool nonblock, bool cloexec)
 		flags |= SOCK_CLOEXEC;
 	}
 	int fd = ::socket(family, flags, IPPROTO_TCP);
-#endif	// defined(OS_POSIX) || defined(OS_BSD) || ...
+#else
+#error Do not support your os platform in SocketsUtil.h
+#endif
 
 	DPLOG_IF(ERROR, fd < 0) << "::socket failed";
 	return fd;
@@ -112,7 +115,7 @@ int accept(int servfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec)
 	if (cloexec) {
 		DCHECK(set_close_on_exec(servfd));
 	}
-#else	// defined(OS_MACOSX)
+#elif defined(OS_POSIX)
 	int flags = 0;
 	if (nonblock) {
 		flags |= SOCK_NONBLOCK;
@@ -121,7 +124,9 @@ int accept(int servfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec)
 		flags |= SOCK_CLOEXEC;
 	}
 	int connfd = ::accept4(servfd, sockaddr_cast(addr), &addrlen, flags);
-#endif	// defined(OS_POSIX) || defined(OS_BSD) || ...
+#else
+#error Do not support your os platform in SocketsUtil.h
+#endif	// defined(OS_LINUX) || defined(OS_BSD) || ...
 
 	DPLOG_IF(ERROR, connfd < 0) << "::accept failed";
 
@@ -165,7 +170,7 @@ int bind(int fd, const struct sockaddr* addr)
 	if (addr->sa_family == AF_INET) {
 		addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in));
 	}
-#endif
+#endif	// defined(OS_MACOSX)
 	int ret = ::bind(fd, addr, addrlen);
 	DPCHECK(ret >= 0);
 	return ret;
@@ -178,7 +183,7 @@ int connect(int servfd, const struct sockaddr* addr)
 	if (addr->sa_family == AF_INET) {
 		addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in));
 	}
-#endif
+#endif	// defined(OS_MACOSX)
 	int ret = ::connect(servfd, addr, addrlen);
 	DPLOG_IF(ERROR, ret < 0 && errno != EINPROGRESS) << "::connect failed";
 	return ret;

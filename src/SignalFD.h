@@ -16,6 +16,20 @@
 
 namespace annety
 {
+// A file descriptor that can be used to accept signals targeted at the caller.
+//
+// This provides an alternative to the use of a signal handler or sigwaitinfo(2),
+// and has the advantage that the file descriptor may be monitored by select(2), 
+// poll(2), and epoll(7).
+//
+// Linux:
+// The fds_ attribute is a file descriptor created by ::signalfd() - Linux 2.6.26.
+// fds_ is output, it will be monitored by the channel for readable events.
+// fds_ is input, it will be sync written by external when the event is triggered.
+//
+// Others:
+// Use EventFD to simulate signalfd. Provide the same accept signals notification 
+// that can pass the file descriptor.
 class SignalFD : public SelectableFD
 {
 public:
@@ -49,7 +63,7 @@ private:
 
 	SignalSet signo_;
 	std::unique_ptr<SelectableFD> ev_;
-#endif
+#endif	// !defined(OS_LINUX)
 
 	DISALLOW_COPY_AND_ASSIGN(SignalFD);
 };

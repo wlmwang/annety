@@ -12,7 +12,7 @@
 #include <iosfwd>		// std::ostream
 #include <algorithm>	// std::distance
 #include <string>
-#include <string.h>		// ::strlen,::memcmp
+#include <string.h>		// strlen,memcmp
 #include <stddef.h>		// ptrdiff_t
 #include <assert.h>		// assert
 

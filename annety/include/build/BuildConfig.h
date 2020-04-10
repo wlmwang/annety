@@ -22,7 +22,7 @@
 #elif defined(__sun)
 #define OS_SOLARIS 1
 #else
-#error Do not support your platform in BuildConfig.h
+#error Do not support your os platform in BuildConfig.h
 #endif
 
 // For access to standard BSD features, use OS_BSD instead of a
@@ -128,7 +128,7 @@
 #define ARCH_CPU_BIG_ENDIAN 1
 #endif
 #else
-#error Please add support for your architecture in BuildConfig.h
+#error Please add support for your cpu architecture in BuildConfig.h
 #endif
 
 #endif  // ANT_BUILD_BUILD_CONFIG_H_
