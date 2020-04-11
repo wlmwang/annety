@@ -40,25 +40,26 @@ thread_local EventLoop* tls_event_loop = nullptr;
 }	// namespace anonymous
 
 EventLoop::EventLoop() 
-	: poll_timeout_ms_(kPollTimeoutMs)
-	, owning_thread_(new ThreadRef(PlatformThread::current_ref()))
+	: owning_thread_id_(new ThreadId(PlatformThread::current_id()))
+	, owning_thread_ref_(new ThreadRef(PlatformThread::current_ref()))
 	, poller_(new PollPoller(this))
-	, timer_pool_(new TimerPool(this))
+	, timer_(new TimerPool(this))
 	, wakeup_socket_(new EventFD(true, true))
 	, wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {
 	LOG(DEBUG) << "EventLoop::EventLoop is creating by thread " 
-		<< owning_thread_->ref() 
+		<< owning_thread_id_.get() 
 		<< ", EventLoop address is " << this;
 
 	{
 		CHECK(!tls_event_loop) << "EventLoop::EventLoop has been created by thread " 
-			<< owning_thread_->ref() << ", now current thread is " 
-			<< PlatformThread::current_ref().ref();
-		
+			<< owning_thread_id_.get() << ", now current thread is " 
+			<< PlatformThread::current_id();
 		tls_event_loop = this;
 	}
 
+	// Thread ipc: other threads wake up the own thread, wakeup function 
+	// executed in the own thread.
 	wakeup_channel_->set_read_callback(
 		std::bind(&EventLoop::handle_read, this));
 	wakeup_channel_->enable_read_event();
@@ -69,13 +70,22 @@ EventLoop::~EventLoop()
 	CHECK(looping_ == false);
 	
 	LOG(DEBUG) << "EventLoop::~EventLoop is called by thread " 
-		<< PlatformThread::current_ref().ref()
+		<< owning_thread_id_.get() << ", now current thread is " 
+		<< PlatformThread::current_id()
 		<< ", deleted EventLoop address is " << this;
 
 	wakeup_channel_->disable_all_event();
 	wakeup_channel_->remove();
 
 	tls_event_loop = nullptr;
+}
+
+void EventLoop::quit()
+{
+	quit_ = true;
+	if (!is_in_own_loop()) {
+		wakeup();
+	}
 }
 
 void EventLoop::loop()
@@ -85,62 +95,36 @@ void EventLoop::loop()
 	CHECK(!looping_);
 	looping_ = true;
 
-	LOG(TRACE) << "EventLoop::loop " << this 
-		<< " timeout " << poll_timeout_ms_ << "ms is beginning";
-
-	// maybe someone calls terminate() before loop()
-	// quit_ = false;
 	while (!quit_) {
-		LOG(TRACE) << "EventLoop::loop timeout " << poll_timeout_ms_ << "ms";
+		DLOG(TRACE) << "EventLoop::loop timeout " << poll_timeout_ms_ << "ms";
 
 		active_channels_.clear();
-		poll_tm_ = poller_->poll(poll_timeout_ms_, &active_channels_);
-
+		poll_active_ms_ = poller_->poll(poll_timeout_ms_, &active_channels_);
+		
 		if (LOG_IS_ON(TRACE)) {
 			print_active_channels();
 		}
-		looping_times_++;
 		
-		// handling event channels
+		looping_times_++;
+
+		// Handling active event channels.
 		event_handling_ = true;
-		for (Channel* ch : active_channels_) {
-			current_channel_ = ch;
-			current_channel_->handle_event(poll_tm_);
+		for (Channel* channel : active_channels_) {
+			channel->handle_event(poll_active_ms_);
 		}
-		current_channel_ = nullptr;
 		event_handling_ = false;
 
 #if !defined(OS_LINUX)
-		// for timers
-		timer_pool_->check_timer(TimeStamp::now());
-#endif
-		// wakeup and run queue functions
+		// There is no `timerfd` mechanism in other OS platforms, so we choose to 
+		// use traditional poller timeout.
+		timer_->check_timer(TimeStamp::now());
+#endif	// !defined(OS_LINUX)
+
+		// wakeup and run queue functions.
 		do_calling_wakeup_functors();
 	}
 
-	LOG(TRACE) << "EventLoop::loop " << this 
-		<< " timeout " << poll_timeout_ms_ << " has finished";
 	looping_ = false;
-}
-
-void EventLoop::quit()
-{
-	// Forced to enter the event queue, so that it does not immediately exit 
-	// when called by current EventLoop thread
-	queue_in_own_loop(std::bind(&EventLoop::terminate, this));
-}
-
-void EventLoop::terminate()
-{
-	quit_ = true;
-	if (!is_in_own_loop()) {
-		wakeup();
-	}
-}
-
-void EventLoop::set_poll_timeout(int64_t ms)
-{
-	poll_timeout_ms_ = ms;
 }
 
 TimerId EventLoop::run_at(double time_s, TimerCallback cb)
@@ -149,7 +133,7 @@ TimerId EventLoop::run_at(double time_s, TimerCallback cb)
 }
 TimerId EventLoop::run_at(TimeStamp time, TimerCallback cb)
 {
-	return timer_pool_->add_timer(std::move(cb), time, 0.0);
+	return timer_->add_timer(std::move(cb), time, 0.0);
 }
 
 TimerId EventLoop::run_after(double delay_s, TimerCallback cb)
@@ -167,34 +151,17 @@ TimerId EventLoop::run_every(double interval_s, TimerCallback cb)
 }
 TimerId EventLoop::run_every(TimeDelta delta, TimerCallback cb)
 {
-	return timer_pool_->add_timer(std::move(cb), TimeStamp::now()+delta, delta.in_seconds_f());
+	return timer_->add_timer(std::move(cb), TimeStamp::now()+delta, delta.in_seconds_f());
 }
 
 void EventLoop::cancel(TimerId timerId)
 {
-	return timer_pool_->cancel_timer(timerId);
+	return timer_->cancel_timer(timerId);
 }
 
-void EventLoop::wakeup()
+void EventLoop::set_poll_timeout(int64_t ms)
 {
-	uint64_t one = 1;
-	ssize_t n = wakeup_socket_->write(&one, sizeof one);
-	if (n != sizeof one) {
-		PLOG(ERROR) << "EventLoop::wakeup writes " << n << " bytes instead of 8";
-		return;
-	}
-	LOG(TRACE) << "EventLoop::wakeup is called";
-}
-
-void EventLoop::handle_read()
-{
-	uint64_t one;
-	ssize_t n = wakeup_socket_->read(&one, sizeof one);
-	if (n != sizeof one) {
-		PLOG(ERROR) << "EventLoop::handle_read reads " << n << " bytes instead of 8";
-		return;
-	}
-	LOG(TRACE) << "EventLoop::handle_read is called";
+	poll_timeout_ms_ = ms;
 }
 
 void EventLoop::update_channel(Channel* channel)
@@ -237,7 +204,9 @@ void EventLoop::queue_in_own_loop(Functor cb)
 		wakeup_functors_.push_back(std::move(cb));
 	}
 
-	// wakeup the own loop thread when poller is finished
+	// wakeup the own loop thread:
+	// 1. current thread is not the own loop thread.
+	// 2. the poller has returned (Executing wakeup function).
 	if (!is_in_own_loop() || calling_wakeup_functors_) {
 		wakeup();
 	}
@@ -246,38 +215,61 @@ void EventLoop::queue_in_own_loop(Functor cb)
 void EventLoop::check_in_own_loop() const
 {
 	CHECK(is_in_own_loop()) << " EventLoop::check_in_own_loop was created by thread " 
-		<< owning_thread_->ref() << ", but current calling thread is " 
-		<< PlatformThread::current_ref().ref()
+		<< owning_thread_id_.get() << ", but current calling thread is " 
+		<< PlatformThread::current_id()
 		<< ", EventLoop address is " << this;
 }
 
 bool EventLoop::is_in_own_loop() const
 {
-	return *owning_thread_ == PlatformThread::current_ref();
+	return *owning_thread_ref_ == PlatformThread::current_ref();
 }
 
 void EventLoop::do_calling_wakeup_functors()
 {
 	calling_wakeup_functors_ = true;
+	
 	std::vector<Functor> functors;
 	{
 		AutoLock locked(lock_);
 		functors.swap(wakeup_functors_);
 	}
-
 	for (const Functor& func : functors) {
 		func();
 	}
+
 	calling_wakeup_functors_ = false;
+}
+
+void EventLoop::wakeup()
+{
+	uint64_t one = 1;
+	ssize_t n = wakeup_socket_->write(&one, sizeof one);
+	if (n != sizeof one) {
+		PLOG(ERROR) << "EventLoop::wakeup writes " << n << " bytes instead of 8";
+		return;
+	}
+	DLOG(TRACE) << "EventLoop::wakeup is called";
+}
+
+void EventLoop::handle_read()
+{
+	uint64_t one;
+	ssize_t n = wakeup_socket_->read(&one, sizeof one);
+	if (n != sizeof one) {
+		PLOG(ERROR) << "EventLoop::handle_read reads " << n << " bytes instead of 8";
+		return;
+	}
+	DLOG(TRACE) << "EventLoop::handle_read is called";
 }
 
 void EventLoop::print_active_channels() const
 {
 	check_in_own_loop();
 	
-	for (const Channel* ch : active_channels_) {
-		LOG(TRACE) << "EventLoop::print_active_channels {" 
-			<< ch->revents_to_string() << "}";
+	for (const Channel* channel : active_channels_) {
+		DLOG(TRACE) << "EventLoop::print_active_channels {" 
+			<< channel->revents_to_string() << "}";
 	}
 }
 

@@ -63,7 +63,7 @@ EventFD::EventFD(bool nonblock, bool cloexec)
 	fd_ = internal::eventfd(nonblock, cloexec);
 #else
 	PCHECK(internal::pipe(fds_, nonblock, cloexec));
-	// for channel register readable event.
+	// for channel, can register readable event.
 	fd_ = fds_[0];
 #endif
 	PCHECK(fd_ >= 0);

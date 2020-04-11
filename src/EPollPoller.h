@@ -15,14 +15,19 @@
 
 namespace annety
 {
+// IO Multiplexing wrapper of epoll(4).
+//
+// This class does not owns the EventLoop and Channels lifetime.
 class EPollPoller : public Poller
 {
 public:
 	EPollPoller(EventLoop* loop);
 	~EPollPoller() override;
 
+	// *Not thread safe*, but run in own loop thread.
 	TimeStamp poll(int timeout_ms, ChannelList* active_channels) override;
 
+	// *Not thread safe*, but run in own loop thread.
 	void update_channel(Channel* channel) override;
 	void remove_channel(Channel* channel) override;
 
@@ -32,6 +37,7 @@ private:
 	static const int kInitEventListSize = 16;
 	static const char* operation_to_string(int op);
 	
+	// *Not thread safe*, but run in own loop thread.
 	void fill_active_channels(int num, ChannelList* active_channels) const;
 	void update(int operation, Channel* channel);
 

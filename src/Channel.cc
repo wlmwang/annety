@@ -18,7 +18,10 @@ const int Channel::kWriteEvent = POLLOUT;
 
 Channel::Channel(EventLoop* loop, SelectableFD* sfd)
 	: owner_loop_(loop)
-	, select_fd_(sfd) {}
+	, select_fd_(sfd)
+{
+	DCHECK(loop && sfd);
+}
 
 Channel::~Channel()
 {
@@ -26,7 +29,7 @@ Channel::~Channel()
 	DCHECK(!added_to_loop_);
 
 	if (owner_loop_->is_in_own_loop()) {
-		// channel must has removed
+		// channel must has removed.
 		DCHECK(!owner_loop_->has_channel(this));
 	}
 }
@@ -40,7 +43,7 @@ void Channel::handle_event(TimeStamp receive_tm)
 {
 	owner_loop_->check_in_own_loop();
 	
-	LOG(TRACE) << "Channel::handle_event is handling event begin " << revents_to_string();
+	DLOG(TRACE) << "Channel::handle_event is handling event begin " << revents_to_string();
 	event_handling_ = true;
 
 	// hup event
@@ -68,7 +71,7 @@ void Channel::handle_event(TimeStamp receive_tm)
 	}
 
 	event_handling_ = false;
-	LOG(TRACE) << "Channel::handle_event event was handled finish";
+	DLOG(TRACE) << "Channel::handle_event event was handled finish";
 }
 
 void Channel::remove()

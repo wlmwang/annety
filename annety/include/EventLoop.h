@@ -11,6 +11,7 @@
 #include "synchronization/MutexLock.h"
 
 #include <vector>
+#include <atomic>
 #include <memory>
 #include <utility>
 #include <functional>
@@ -22,10 +23,11 @@ class Channel;
 class Poller;
 class TimerPool;
 
-// Event dispatcher(Reactor mode implementation), one loop per thread.
+// Reactor. at most one per thread, That is, each thread has at most 
+// one EventLoop instance.
 //
-// Usually, it is a stack instance in the main() function.
-// It may also be created in the EventLoopThread class.
+// Thread ipc: other threads wake up the own thread, wakeup function 
+// executed in the own thread.
 class EventLoop
 {
 public:
@@ -45,22 +47,21 @@ public:
 	// segmentation fault, better to call through shared_ptr 
 	// for 100% safety.
 	// *Not 100% thread safe*
-	void terminate();
 	void quit();
 
 	// Timers method ---------------------------------
 
-	// Runs cb at time seconds.
+	// Runs callback at time seconds.
 	// *Thread safe*
 	TimerId run_at(double time_s, TimerCallback cb);
 	TimerId run_at(TimeStamp time, TimerCallback cb);
 
-	// Runs cb after delay seconds.
+	// Runs callback after delay seconds.
 	// *Thread safe*
 	TimerId run_after(double delay_s, TimerCallback cb);
 	TimerId run_after(TimeDelta delta, TimerCallback cb);
 
-	// Runs cb every interval seconds.
+	// Runs callback every interval seconds.
 	// *Thread safe*
 	TimerId run_every(double interval_s, TimerCallback cb);
 	TimerId run_every(TimeDelta delta, TimerCallback cb);
@@ -71,6 +72,7 @@ public:
 
 	// On non-timefd platform, control poll timeout to 
 	// implement timer.
+	// *Thread safe*
 	void set_poll_timeout(int64_t ms = kPollTimeoutMs);
 	
 	// Channel method ---------------------------------
@@ -97,41 +99,39 @@ public:
 	bool is_in_own_loop() const;
 
 private:
-	// wake up the own loop thread.
+	// wakeup the own loop thread.
 	// *Thread safe*
 	void wakeup();
-
-	// *Not thread safe*, but run in own loop thread aways.
 	void handle_read();
+
+	// *Not thread safe*, but run in own loop thread.
 	void do_calling_wakeup_functors();
 	
-	// *Not thread safe*, but run in own loop thread aways.
+	// *Not thread safe*, but run in own loop thread.
 	void print_active_channels() const;
 
 private:
-	// atomic
-	bool quit_{false};
-	bool looping_{false};
-	uint64_t looping_times_{0};
-	bool event_handling_{false};
-	int32_t poll_timeout_ms_{-1};
-	// atomic
-	bool calling_wakeup_functors_{false};
-	
-	// create EventLoop threadref
-	std::unique_ptr<ThreadRef> owning_thread_;
+	std::atomic<bool> quit_{false};
+	std::atomic<bool> looping_{false};
+	std::atomic<bool> event_handling_{false};
+	std::atomic<bool> calling_wakeup_functors_{false};
+	std::atomic<int64_t> looping_times_{0};
+	std::atomic<int64_t> poll_timeout_ms_{kPollTimeoutMs};
+
+	// The creation thread of EventLoop
+	std::unique_ptr<ThreadId> owning_thread_id_;
+	std::unique_ptr<ThreadRef> owning_thread_ref_;
 
 	std::unique_ptr<Poller> poller_;
-	std::unique_ptr<TimerPool> timer_pool_;
+	std::unique_ptr<TimerPool> timer_;
+
+	TimeStamp poll_active_ms_;
+	ChannelList active_channels_;
 
 	SelectableFDPtr wakeup_socket_;
 	std::unique_ptr<Channel> wakeup_channel_;
 
-	TimeStamp poll_tm_;
-	ChannelList active_channels_;
-	Channel* current_channel_{nullptr};
-
-	mutable MutexLock lock_;
+	MutexLock lock_;
 	std::vector<Functor> wakeup_functors_;
 
 	DISALLOW_COPY_AND_ASSIGN(EventLoop);

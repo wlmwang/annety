@@ -17,9 +17,9 @@ namespace annety
 class EventLoop;
 class SelectableFD;
 
-// a selectable I/O channel
+// A selectable IO channel.
 //
-// This class does not owns the file descriptor lifetime.
+// This class does not owns the EventLoop and SelectableFD lifetime.
 // File descriptor was wrapped which could be a socket, eventfd, timerfd or signalfd.
 class Channel
 {
@@ -101,6 +101,7 @@ public:
 	void remove();
 
 private:
+	// *Not thread safe*, but run in own loop thread.
 	void update();
 	static std::string events_to_string(int fd, int ev);
 
@@ -119,7 +120,7 @@ private:
 	bool event_handling_{false};
 	bool added_to_loop_{false};
 
-	// update() event type
+	// update() event type, kNew == -1;
 	int index_{-1};
 
 	ReadEventCallback read_cb_;

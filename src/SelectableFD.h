@@ -10,10 +10,10 @@
 
 namespace annety
 {
-// a selectable I/O file descriptor
+// A selectable IO file descriptor.
 //
-// this class owns life-time of the file description,
-// the wrapped file descriptor may be a socket, eventfd, timerfd or signalfd
+// This class owns the file description lifetime.
+// File descriptor was wrapped which could be a socket, eventfd, timerfd or signalfd.
 class SelectableFD
 {
 public:

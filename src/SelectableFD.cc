@@ -14,7 +14,7 @@ SelectableFD::SelectableFD(int fd) : fd_(fd)
 
 SelectableFD::~SelectableFD()
 {
-	LOG(TRACE) << "SelectableFD::~SelectableFD closing fd=" << fd_;
+	DLOG(TRACE) << "SelectableFD::~SelectableFD closing fd=" << fd_;
 	if (fd_ != -1) {
 		sockets::close(fd_);
 	}

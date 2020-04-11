@@ -15,6 +15,9 @@ namespace annety
 {
 class Channel;
 
+// Base class for IO Multiplexing
+//
+// This class does not owns the EventLoop and Channels lifetime.
 class Poller
 {
 public:
