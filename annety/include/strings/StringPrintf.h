@@ -10,7 +10,6 @@
 
 #include "build/CompilerSpecific.h"	// _Printf_format_string_
 									// PRINTF_FORMAT,WARN_UNUSED_RESULT
-
 #include <string>
 #include <stdarg.h>   // va_list
 
@@ -62,6 +61,6 @@ int sstring_printv(char* dst, size_t len,
 	_Printf_format_string_ const char* format, va_list ap)
 	PRINTF_FORMAT(3, 0);
 
-}  // namespace annety
+}	// namespace annety
 
 #endif  // ANT_STRINGS_STRING_PRINTF_H_

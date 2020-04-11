@@ -20,8 +20,6 @@
 
 namespace annety
 {
-namespace containers
-{
 // Example:
 // // Any
 // Any a = 1;
@@ -46,6 +44,8 @@ namespace containers
 // cout << "c cast to string:" << any_cast<string>(c) << endl;
 // ...
 
+namespace containers
+{
 class Any;
 template <typename T> T& any_cast(const Any&);
 

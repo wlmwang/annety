@@ -13,8 +13,7 @@
 namespace annety
 {
 // crc32 lookup tables
-namespace internal
-{
+namespace internal {
 extern uint32_t crc32_table16[];
 extern uint32_t crc32_table256[];
 }	// namespace anonymous

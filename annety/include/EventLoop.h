@@ -37,52 +37,58 @@ public:
 	EventLoop();
 	~EventLoop();
 	
-	// Must called in own loop thread
+	// One loop per thread.
+	// *Not thread safe*, but run in the own loop.
 	void loop();
 
+	// When you call with a native pointer, there may be a 
+	// segmentation fault, better to call through shared_ptr 
+	// for 100% safety.
 	// *Not 100% thread safe*
-	// When you call with a native pointer, there may be a segmentation fault.
-	// Better to call through shared_ptr<EventLoop> for 100% safety
 	void terminate();
 	void quit();
 
-	// Timers -------------------------------------------
-	void set_poll_timeout(int64_t ms = kPollTimeoutMs);
+	// Timers method ---------------------------------
 
-	// Runs callback at 'time'
+	// Runs cb at time seconds.
 	// *Thread safe*
-	TimerId run_at(double tm_s, TimerCallback cb);
+	TimerId run_at(double time_s, TimerCallback cb);
 	TimerId run_at(TimeStamp time, TimerCallback cb);
 
-	// Runs callback after @c delay seconds.
+	// Runs cb after delay seconds.
 	// *Thread safe*
 	TimerId run_after(double delay_s, TimerCallback cb);
 	TimerId run_after(TimeDelta delta, TimerCallback cb);
 
-	// Runs callback every @c interval seconds.
+	// Runs cb every interval seconds.
 	// *Thread safe*
 	TimerId run_every(double interval_s, TimerCallback cb);
 	TimerId run_every(TimeDelta delta, TimerCallback cb);
 
-	// Cancels the timer
+	// Cancel the timer
 	// *Thread safe*
 	void cancel(TimerId timerId);
 
-	// Internal method ---------------------------------
-
-	// *Not thread safe* , but run in own loop thread aways.
+	// On non-timefd platform, control poll timeout to 
+	// implement timer.
+	void set_poll_timeout(int64_t ms = kPollTimeoutMs);
+	
+	// Channel method ---------------------------------
+	
+	// *Not thread safe*, but run in the own loop.
 	void update_channel(Channel* channel);
 	void remove_channel(Channel* channel);
 	bool has_channel(Channel *channel);
 
-	// Run callback immediately in the own loop thread.
-	// Maybe it wakeup the own loop thread and run the cb.
-	// If in the own loop thread, cb is run within the call-function.
+	// Internal method ---------------------------------
+
+	// 1. If in the own loop thread, cb is executed immediately,
+	// 2. otherwise the own loop thread will be wake up, then 
+	// cb is executed async.
 	// *Thread safe*
 	void run_in_own_loop(Functor cb);
 
-	// Queue callback in the own loop.
-	// Run after finish looping.
+	// Queue cb in the own loop, run after finish looping.
 	// *Thread safe*
 	void queue_in_own_loop(Functor cb);
 	
@@ -91,8 +97,10 @@ public:
 	bool is_in_own_loop() const;
 
 private:
+	// wake up the own loop thread.
 	// *Thread safe*
 	void wakeup();
+
 	// *Not thread safe*, but run in own loop thread aways.
 	void handle_read();
 	void do_calling_wakeup_functors();

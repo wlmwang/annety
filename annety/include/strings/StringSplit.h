@@ -24,6 +24,13 @@ namespace annety
 // for (auto &t : tokens) {
 //		cout << t << endl;
 // }
+//
+// StringPairs kvs;
+// std::string str = "name=wlmwang;age=18";
+// cout << "split kv:" << split_string_into_key_value_pairs(str, '=', ';', &kv) << endl;
+// for (std::pair kv : kvs) {
+//		cout << kv.first << "=" << kv.second << endl;
+// }
 // ...
 
 enum WhitespaceHandling

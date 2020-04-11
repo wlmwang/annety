@@ -29,13 +29,13 @@ namespace annety
 // }
 // ...
 
-// FIXME: Add a iterator for easy for-range.
-
 // A class for enumerating the files in a provided path. The order of the
 // results is not guaranteed.
 //
 // Important: This is blocking call. Do not use it on critical threads.
 // *Not thread safe*
+//
+// FIXME: Add a iterator for easy for-range.
 class FileEnumerator
 {
 public:

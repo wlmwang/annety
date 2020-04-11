@@ -38,11 +38,6 @@
 #define OS_POSIX 1
 #endif
 
-// Use tcmalloc.
-#if defined(OS_LINUX) && !defined(NO_TCMALLOC)
-#define USE_TCMALLOC 1
-#endif
-
 // Compiler detection.
 #if defined(__GNUC__)
 #define COMPILER_GCC 1
@@ -57,9 +52,9 @@
 
 // Processor architecture detection.
 // For more info on what's defined, see:
-//   http://msdn.microsoft.com/en-us/library/b0084kay.aspx
-//   http://www.agner.org/optimize/calling_conventions.pdf
-//   or with gcc, run: "echo | gcc -E -dM -"
+// http://msdn.microsoft.com/en-us/library/b0084kay.aspx
+// http://www.agner.org/optimize/calling_conventions.pdf
+// or with gcc, run: "echo | gcc -E -dM -"
 #if defined(_M_X64) || defined(__x86_64__)
 #define ARCH_CPU_X86_FAMILY 1
 #define ARCH_CPU_X86_64 1

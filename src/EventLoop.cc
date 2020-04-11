@@ -143,9 +143,9 @@ void EventLoop::set_poll_timeout(int64_t ms)
 	poll_timeout_ms_ = ms;
 }
 
-TimerId EventLoop::run_at(double tm_s, TimerCallback cb)
+TimerId EventLoop::run_at(double time_s, TimerCallback cb)
 {
-	return run_at(TimeStamp()+TimeDelta::from_seconds_d(tm_s), std::move(cb));
+	return run_at(TimeStamp()+TimeDelta::from_seconds_d(time_s), std::move(cb));
 }
 TimerId EventLoop::run_at(TimeStamp time, TimerCallback cb)
 {

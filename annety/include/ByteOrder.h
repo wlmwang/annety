@@ -12,7 +12,7 @@
 namespace annety
 {
 // see: https://gcc.gnu.org/onlinedocs/gcc-4.8.0/gcc/Other-Builtins.html
-// Important: __builtin_bswap16 function was not supported until GCC-4.8
+// Important: __builtin_bswap16 function was not supported until GCC-4.8.
 
 // ----------------------------------------------------------------------------
 // Returns a value with all bytes in |x| swapped.

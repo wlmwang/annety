@@ -34,9 +34,6 @@ namespace annety
 // };
 // ...
 
-// FIXME: StringPiece cannot use CHECK macros, because CHECK Low-level 
-// implementation is dependent StringPiece. so we use assert() macros here.
-
 // Defines the types, methods, operators, and data members common to both
 // StringPiece.
 // This class does not owns the string lifetime.
@@ -110,17 +107,20 @@ void assert_iterators_in_order(std::string::const_iterator begin,
 //
 // It is value sematics, which means that it can be copied or assigned.
 // *Not thread safe*
+//
+// FIXME: StringPiece cannot use CHECK macros, because CHECK Low-level 
+// implementation is dependent StringPiece. so we use assert() macros here.
 class StringPiece
 {
 public:
 	typedef size_t size_type;
-  	typedef typename std::string::value_type value_type;	// usually char
-  	typedef const value_type* pointer;
-  	typedef const value_type& reference;
-  	typedef const value_type& const_reference;
-  	typedef ptrdiff_t difference_type;
-  	typedef const value_type* const_iterator;
-  	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+	typedef typename std::string::value_type value_type;	// usually char
+	typedef const value_type* pointer;
+	typedef const value_type& reference;
+	typedef const value_type& const_reference;
+	typedef ptrdiff_t difference_type;
+	typedef const value_type* const_iterator;
+	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 	
 	static const size_type npos = -1;
 
@@ -179,10 +179,10 @@ public:
 	size_type max_size() const { return length_; }
 	size_type capacity() const { return length_; }
 
-  	void clear()
-  	{
-  		ptr_ = NULL;
-  		length_ = 0;
+	void clear()
+	{
+		ptr_ = NULL;
+		length_ = 0;
 	}
 
 	void set(const value_type* str)
@@ -271,7 +271,7 @@ public:
 		return internal::copy(*this, target, n, pos);
 	}
 
-  	// find: Search for a character or substring at a given offset.
+	// find: Search for a character or substring at a given offset.
 	size_type find(const StringPiece& s, size_type pos = 0) const
 	{
 		return internal::find(*this, s, pos);
@@ -291,7 +291,7 @@ public:
 		return internal::rfind(*this, c, pos);
 	}
 
-  	// find_first_of: Find the first occurence of one of a set of characters.
+	// find_first_of: Find the first occurence of one of a set of characters.
 	size_type find_first_of(const StringPiece& s, size_type pos = 0) const
 	{
 		return internal::find_first_of(*this, s, pos);
@@ -397,6 +397,6 @@ struct StringPieceHash
 	}
 };
 
-}  // namespace annety
+}	// namespace annety
 
 #endif	// ANT_STRINGS_STRING_PIECE_H_

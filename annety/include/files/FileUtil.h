@@ -25,6 +25,24 @@
 
 namespace annety
 {
+// Example:
+// // FileUtil
+// FilePath path("annety-text-file.log");
+// if (!path_exists(path)) {
+//		TimeStamp now = TimeStamp::now();
+//		cout << "touch file:" << touch_file(path, now, now) << endl;
+// } else {
+// 		cout << "delete file:" << delete_file(path, false) << endl;
+// }
+// const char text[] = "text";
+// cout << "write file:" << write_file(path, text, sizeof text) << endl;
+// cout << "append file:" << append_to_file(path, text, sizeof text) << endl;
+//
+// std::string content;
+// cout << "read file:" << read_file_to_string(path, &content) << endl;
+// cout << "file content:" << content << endl;
+// ...
+
 class TimeStamp;
 
 // -----------------------------------------------------------------------------
@@ -370,7 +388,6 @@ int get_maximum_path_component_length(const FilePath& path);
 // Internal --------------------------------------------------------------------
 namespace internal
 {
-
 // Same as Move but allows paths with traversal components.
 // Use only with extreme care.
 bool move_unsafe(const FilePath& from_path,
