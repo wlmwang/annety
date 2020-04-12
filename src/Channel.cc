@@ -20,12 +20,14 @@ Channel::Channel(EventLoop* loop, SelectableFD* sfd)
 	: owner_loop_(loop)
 	, select_fd_(sfd)
 {
-	DCHECK(loop && sfd);
+	CHECK(loop && sfd);
 }
 
 Channel::~Channel()
 {
-	DCHECK(!event_handling_);
+	// Object cannot be destructed during event handling, and 
+	// it has been removed from the event loop.
+	DCHECK(!handling_event_);
 	DCHECK(!added_to_loop_);
 
 	if (owner_loop_->is_in_own_loop()) {
@@ -39,12 +41,12 @@ int Channel::fd() const
 	return select_fd_->internal_fd();
 }
 
-void Channel::handle_event(TimeStamp receive_tm)
+void Channel::handle_event(TimeStamp received_ms)
 {
 	owner_loop_->check_in_own_loop();
 	
 	DLOG(TRACE) << "Channel::handle_event is handling event begin " << revents_to_string();
-	event_handling_ = true;
+	handling_event_ = true;
 
 	// hup event
 	// FIXME: revents_ & POLLOUT? (::connect could be trigger?)
@@ -63,14 +65,14 @@ void Channel::handle_event(TimeStamp receive_tm)
 	}
 	// readable
 	if (revents_ & (POLLIN | POLLPRI | POLLHUP)) {
-		if (read_cb_) read_cb_(receive_tm);
+		if (read_cb_) read_cb_(received_ms);
 	}
 	// writeable
 	if (revents_ & POLLOUT) {
 		if (write_cb_) write_cb_();
 	}
 
-	event_handling_ = false;
+	handling_event_ = false;
 	DLOG(TRACE) << "Channel::handle_event event was handled finish";
 }
 

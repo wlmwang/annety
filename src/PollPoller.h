@@ -13,20 +13,33 @@
 
 namespace annety
 {
+// IO Multiplexing wrapper of poll(4).
+//
+// This class does not owns the EventLoop and Channels lifetime.
 class PollPoller : public Poller
 {
 public:
 	PollPoller(EventLoop* loop);
 	~PollPoller() override;
 	
+	// Polls the I/O events.
+	// *Not thread safe*, but run in own loop thread.
 	TimeStamp poll(int timeout_ms, ChannelList* active_channels) override;
 
+	// Changes the interested I/O events.
+	// *Not thread safe*, but run in own loop thread.
 	void update_channel(Channel* channel) override;
+
+	// Remove the channel, when it destructs.
+	// *Not thread safe*, but run in own loop thread.
 	void remove_channel(Channel* channel) override;
 
 private:
 	using PollFdList = std::vector<struct pollfd>;
+
+	// *Not thread safe*, but run in own loop thread.
 	void fill_active_channels(int num, ChannelList* active_channels) const;
+	int update_poll_events(int operation, Channel* channel);
 
 private:
 	PollFdList pollfds_;

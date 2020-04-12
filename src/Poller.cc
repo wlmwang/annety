@@ -3,11 +3,15 @@
 
 #include "Poller.h"
 #include "Channel.h"
+#include "Logging.h"
 
 namespace annety
 {
 Poller::Poller(EventLoop* loop)
-	: owner_loop_(loop) {}
+	: owner_loop_(loop)
+{
+	CHECK(loop);
+}
 
 Poller::~Poller() = default;
 

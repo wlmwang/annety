@@ -58,8 +58,8 @@ EventLoop::EventLoop()
 		tls_event_loop = this;
 	}
 
-	// Thread ipc: other threads wake up the own thread, wakeup function 
-	// executed in the own thread.
+	// Thread ipc: Other threads add a wakeup task function, and then wakeup 
+	// the own thread to execute it.
 	wakeup_channel_->set_read_callback(
 		std::bind(&EventLoop::handle_read, this));
 	wakeup_channel_->enable_read_event();
@@ -67,7 +67,7 @@ EventLoop::EventLoop()
 
 EventLoop::~EventLoop()
 {
-	CHECK(looping_ == false);
+	CHECK(!looping_);
 	
 	LOG(DEBUG) << "EventLoop::~EventLoop is called by thread " 
 		<< owning_thread_id_.get() << ", now current thread is " 
@@ -108,11 +108,11 @@ void EventLoop::loop()
 		looping_times_++;
 
 		// Handling active event channels.
-		event_handling_ = true;
+		handling_event_ = true;
 		for (Channel* channel : active_channels_) {
 			channel->handle_event(poll_active_ms_);
 		}
-		event_handling_ = false;
+		handling_event_ = false;
 
 #if !defined(OS_LINUX)
 		// There is no `timerfd` mechanism in other OS platforms, so we choose to 
@@ -159,9 +159,9 @@ void EventLoop::cancel(TimerId timerId)
 	return timer_->cancel_timer(timerId);
 }
 
-void EventLoop::set_poll_timeout(int64_t ms)
+void EventLoop::set_poll_timeout(int64_t time_ms)
 {
-	poll_timeout_ms_ = ms;
+	poll_timeout_ms_ = time_ms;
 }
 
 void EventLoop::update_channel(Channel* channel)

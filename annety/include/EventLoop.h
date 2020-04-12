@@ -23,11 +23,11 @@ class Channel;
 class Poller;
 class TimerPool;
 
-// Reactor. at most one per thread, That is, each thread has at most 
-// one EventLoop instance.
+// Reactor mode, Event dispatcher.
+// One loop per thread: Each thread has at most one EventLoop instance.
 //
-// Thread ipc: other threads wake up the own thread, wakeup function 
-// executed in the own thread.
+// Thread ipc: Other threads add a wakeup task function, and then wakeup 
+// the own thread to execute it.
 class EventLoop
 {
 public:
@@ -73,7 +73,7 @@ public:
 	// On non-timefd platform, control poll timeout to 
 	// implement timer.
 	// *Thread safe*
-	void set_poll_timeout(int64_t ms = kPollTimeoutMs);
+	void set_poll_timeout(int64_t time_ms = kPollTimeoutMs);
 	
 	// Channel method ---------------------------------
 	
@@ -113,7 +113,7 @@ private:
 private:
 	std::atomic<bool> quit_{false};
 	std::atomic<bool> looping_{false};
-	std::atomic<bool> event_handling_{false};
+	std::atomic<bool> handling_event_{false};
 	std::atomic<bool> calling_wakeup_functors_{false};
 	std::atomic<int64_t> looping_times_{0};
 	std::atomic<int64_t> poll_timeout_ms_{kPollTimeoutMs};

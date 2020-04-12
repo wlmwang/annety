@@ -24,11 +24,16 @@ public:
 	EPollPoller(EventLoop* loop);
 	~EPollPoller() override;
 
+	// Polls the I/O events.
 	// *Not thread safe*, but run in own loop thread.
 	TimeStamp poll(int timeout_ms, ChannelList* active_channels) override;
 
+	// Changes the interested I/O events.
 	// *Not thread safe*, but run in own loop thread.
 	void update_channel(Channel* channel) override;
+
+	// Remove the channel, when it destructs.
+	// *Not thread safe*, but run in own loop thread.
 	void remove_channel(Channel* channel) override;
 
 private:
@@ -39,11 +44,11 @@ private:
 	
 	// *Not thread safe*, but run in own loop thread.
 	void fill_active_channels(int num, ChannelList* active_channels) const;
-	void update(int operation, Channel* channel);
+	int update_poll_events(int operation, Channel* channel);
 
 private:
 	int epollfd_;
-	EventList events_;
+	EventList active_events_;
 
 	DISALLOW_COPY_AND_ASSIGN(EPollPoller);
 };
