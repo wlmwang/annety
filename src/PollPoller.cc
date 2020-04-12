@@ -2,8 +2,8 @@
 // Date: Jun 17 2019
 
 #include "PollPoller.h"
-#include "Logging.h"
 #include "Channel.h"
+#include "Logging.h"
 #include "ScopedClearLastError.h"
 
 #include <algorithm>
@@ -13,7 +13,10 @@
 
 namespace annety
 {
-PollPoller::PollPoller(EventLoop* loop) : Poller(loop) {}
+PollPoller::PollPoller(EventLoop* loop) : Poller(loop)
+{
+	CHECK(loop);
+}
 
 PollPoller::~PollPoller() = default;
 
@@ -26,7 +29,7 @@ TimeStamp PollPoller::poll(int timeout_ms, ChannelList* active_channels)
 	ScopedClearLastError last_error;
 
 	// Get a list of all triggered IO events
-	int num = ::poll(pollfds_.data(), pollfds_.size(), timeout_ms);
+	int num = ::poll(listen_events_.data(), listen_events_.size(), timeout_ms);
 	TimeStamp curr(TimeStamp::now());
 
 	if (num > 0) {
@@ -48,48 +51,39 @@ void PollPoller::update_channel(Channel* channel)
 {
 	Poller::check_in_own_loop();
 	
-	const int index = channel->index();
+	const int status = channel->status();
 	DLOG(TRACE) << "PollPoller::update_channel fd = " << channel->fd() 
-		<< " events = " << channel->events() << " index = " << index;
+		<< " events = " << channel->events() << " status = " << status;
 
-	if (channel->index() < 0) {
-		// Add a new channel
-		// with push PollFdList
+	if (status == kChannelPollInit || status == kChannelPollDeleted) {
+		// Add a new or re-add a deleted(Disabled event) channel.
+		if (status == kChannelPollInit) {
+			// Ensure the new one
+			DCHECK(channels_.find(channel->fd()) == channels_.end());
+			channels_[channel->fd()] = channel;
+		} else {
+			// Ensure the existing one
+			DCHECK(channels_.find(channel->fd()) != channels_.end());
+			DCHECK(channels_[channel->fd()] == channel);
+		}
 
-		// Ensure the new one
-		DCHECK(channels_.find(channel->fd()) == channels_.end());
-		channels_[channel->fd()] = channel;
-
-		// add poll event
-		struct pollfd pfd;
-		pfd.fd = channel->fd();
-		pfd.events = static_cast<short>(channel->events());
-		pfd.revents = 0;
-		pollfds_.push_back(pfd);
-
-		int idx = static_cast<int>(pollfds_.size())-1;
-		channel->set_index(idx);
+		channel->set_status(kChannelPollAdded);
+		update_poll_events(kPollCtlAdd, channel);
 	} else {
-		// Update existing one with push PollFdList
+		// Update existing one
+		DCHECK(status == kChannelPollAdded);
 
 		// Ensure the existing one
 		DCHECK(channels_.find(channel->fd()) != channels_.end());
 		DCHECK(channels_[channel->fd()] == channel);
 
-		int idx = channel->index();
-		DCHECK(0 <= idx && idx < static_cast<int>(pollfds_.size()));
-
-		struct pollfd& pfd = pollfds_[idx];
-		DCHECK(pfd.fd == channel->fd() || pfd.fd == -channel->fd()-1);
-
-		// update poll event
-		pfd.fd = channel->fd();
-		pfd.events = static_cast<short>(channel->events());
-		pfd.revents = 0;
-
-		// ignore this pollfd (Disabled event)
 		if (channel->is_none_event()) {
-			pfd.fd = -channel->fd()-1;	// avoid fd=0
+			// Disabled event
+			update_poll_events(kPollCtlDel, channel);
+			channel->set_status(kChannelPollDeleted);
+		} else {
+			// Modify event
+			update_poll_events(kPollCtlMod, channel);
 		}
 	}
 }
@@ -106,27 +100,16 @@ void PollPoller::remove_channel(Channel* channel)
 	DCHECK(channels_[fd] == channel);
 	DCHECK(channel->is_none_event());
 
-	int idx = channel->index();
-	DCHECK(0 <= idx && idx < static_cast<int>(pollfds_.size()));
-	
-	const struct pollfd& pfd = pollfds_[idx];
-	DCHECK(pfd.fd == -fd-1 && pfd.events == channel->events());
+	int status = channel->status();
+	DCHECK(status == kChannelPollAdded || status == kChannelPollDeleted);
 	
 	size_t n = channels_.erase(fd);
 	DCHECK(n == 1);
-	
-	if (static_cast<size_t>(idx) == pollfds_.size()-1) {
-		pollfds_.pop_back();
-	} else {
-		// erase container element. O(1)
-		int channel_at_end = pollfds_.back().fd;
-		std::iter_swap(pollfds_.begin()+idx, pollfds_.end()-1);
-		if (channel_at_end < 0) {
-			channel_at_end = -channel_at_end-1;
-		}
-		channels_[channel_at_end]->set_index(idx);
-		pollfds_.pop_back();
+
+	if (status == kChannelPollAdded) {
+		update_poll_events(kPollCtlDel, channel);
 	}
+	channel->set_status(kChannelPollInit);
 }
 
 void PollPoller::fill_active_channels(int num, ChannelList* active_channels) const
@@ -135,20 +118,70 @@ void PollPoller::fill_active_channels(int num, ChannelList* active_channels) con
 
 	DLOG(TRACE) << "PollPoller::fill_active_channels is having " << num << " events happened";
 	
-	PollFdList::const_iterator pfd = pollfds_.begin();
-	for (; pfd != pollfds_.end() && num > 0; ++pfd) {
-		if (pfd->revents > 0) {
+	PollFdList::const_iterator vit = listen_events_.begin();
+	for (; vit != listen_events_.end() && num > 0; ++vit) {
+		if (vit->revents > 0) {
 			--num;
-			ChannelMap::const_iterator it = channels_.find(pfd->fd);
-			DCHECK(it != channels_.end());
+			ChannelMap::const_iterator mit = channels_.find(vit->fd);
+			DCHECK(mit != channels_.end());
 
-			Channel* channel = it->second;
-			DCHECK(channel->fd() == pfd->fd);
+			Channel* channel = mit->second;
+			DCHECK(channel->fd() == vit->fd);
 
-			channel->set_revents(pfd->revents);
+			channel->set_revents(vit->revents);
 			active_channels->push_back(channel);
 		}
 	}
+}
+
+void PollPoller::update_poll_events(int operation, Channel* channel)
+{
+	Poller::check_in_own_loop();
+
+	DLOG(TRACE) << "PollPoller::update_poll_events poll_ctl op = " 
+		<< operation_to_string(operation) << " fd = " << channel->fd() 
+		<< " event = { " << channel->events_to_string() << " }";
+
+	PollFdList::iterator it = find_poll_events(channel->fd());
+
+	switch (operation) {
+	case kPollCtlAdd:
+		DCHECK(it == listen_events_.end());
+
+		struct pollfd pfd;
+		pfd.fd = channel->fd();
+		pfd.events = static_cast<short>(channel->events());
+		pfd.revents = 0;
+		listen_events_.push_back(pfd);
+		break;
+	
+	case kPollCtlDel:
+		DCHECK(it != listen_events_.end());
+
+		listen_events_.erase(it);
+		break;
+
+	case kPollCtlMod:
+		DCHECK(it != listen_events_.end());
+
+		it->revents = 0;
+		it->events = static_cast<short>(channel->events());
+		break;
+	}
+}
+
+std::vector<struct pollfd>::iterator PollPoller::find_poll_events(int fd)
+{
+	Poller::check_in_own_loop();
+
+	PollFdList::iterator it = listen_events_.begin();
+	for (; it != listen_events_.end(); ++it) {
+		if (it->fd == fd) {
+			break;
+		}
+	}
+
+	return it;
 }
 
 }	// namespace annety

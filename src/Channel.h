@@ -84,11 +84,11 @@ public:
 		update();
 	}
 
-	// For Poller
-	int index() { return index_;}
-	void set_index(int idx) { index_ = idx;}
+	// For Poller of update_channel
+	int status() { return status_;}
+	void set_status(int status) { status_ = status;}
 
-	// For EventLoop
+	// For EventLoop of loop
 	void handle_event(TimeStamp received_ms);
 	EventLoop* owner_loop() { return owner_loop_;}
 	
@@ -111,15 +111,13 @@ private:
 	EventLoop* owner_loop_{nullptr};
 	SelectableFD* select_fd_{nullptr};
 	
+	int status_{0};
 	int	events_{0};
 	int revents_{0};
 
 	std::atomic<bool> added_to_loop_{false};
 	std::atomic<bool> handling_event_{false};
 	std::atomic<bool> logging_hup_{true};
-
-	// update() event type, must have kNew == -1;
-	int index_{-1};
 
 	ReadEventCallback read_cb_;
 	EventCallback write_cb_;

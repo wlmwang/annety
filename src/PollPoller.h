@@ -5,8 +5,8 @@
 #define ANT_POLL_POLLER_H_
 
 #include "Macros.h"
-#include "Poller.h"
 #include "TimeStamp.h"
+#include "Poller.h"
 
 #include <vector>
 #include <poll.h>
@@ -14,6 +14,7 @@
 namespace annety
 {
 // IO Multiplexing wrapper of poll(4).
+// Just for develop/debug.
 //
 // This class does not owns the EventLoop and Channels lifetime.
 class PollPoller : public Poller
@@ -39,10 +40,11 @@ private:
 
 	// *Not thread safe*, but run in own loop thread.
 	void fill_active_channels(int num, ChannelList* active_channels) const;
-	int update_poll_events(int operation, Channel* channel);
+	void update_poll_events(int operation, Channel* channel);
+	PollFdList::iterator find_poll_events(int fd);
 
 private:
-	PollFdList pollfds_;
+	PollFdList listen_events_;
 
 	DISALLOW_COPY_AND_ASSIGN(PollPoller);
 };

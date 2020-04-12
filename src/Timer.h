@@ -22,7 +22,7 @@ public:
 	int64_t sequence() const { return sequence_;}
 	bool repeat() const { return !interval_.is_null();}
 
-	void restart(TimeStamp tm);
+	void restart(TimeStamp curr);
 	void run() const { cb_();}
 
 private:

@@ -12,6 +12,11 @@
 
 namespace annety
 {
+// Same flag values as Poller.h
+namespace {
+const int kChannelPollInit = -1;
+}	// anonymous namespace
+
 const int Channel::kNoneEvent = 0;
 const int Channel::kReadEvent = POLLIN | POLLPRI;
 const int Channel::kWriteEvent = POLLOUT;
@@ -19,6 +24,7 @@ const int Channel::kWriteEvent = POLLOUT;
 Channel::Channel(EventLoop* loop, SelectableFD* sfd)
 	: owner_loop_(loop)
 	, select_fd_(sfd)
+	, status_(kChannelPollInit)
 {
 	CHECK(loop && sfd);
 }

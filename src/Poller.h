@@ -13,6 +13,16 @@
 
 namespace annety
 {
+namespace {
+const int kChannelPollInit = -1;
+const int kChannelPollAdded = 1;
+const int kChannelPollDeleted = 2;
+
+const int kPollCtlAdd = 1;
+const int kPollCtlDel = 2;
+const int kPollCtlMod = 3;
+}	// anonymous namespace
+
 class Channel;
 
 // Base class of IO Multiplexing
@@ -48,6 +58,8 @@ public:
 	}
 
 protected:
+	static const char* operation_to_string(int op);
+
 	EventLoop* owner_loop_;
 	ChannelMap channels_;
 

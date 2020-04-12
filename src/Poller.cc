@@ -23,4 +23,19 @@ bool Poller::has_channel(Channel* channel) const
 	return it != channels_.end() && it->second == channel;
 }
 
+const char* Poller::operation_to_string(int op)
+{
+	switch (op) {
+	case kPollCtlAdd:
+		return "ADD";
+	case kPollCtlDel:
+		return "DEL";
+	case kPollCtlMod:
+		return "MOD";
+	}
+	
+	NOTREACHED();
+	return "Unknown Operation";
+}
+
 }	// namespace annety

@@ -58,7 +58,7 @@ EventLoop::EventLoop()
 		tls_event_loop = this;
 	}
 
-	// Thread ipc: Other threads add a wakeup task function, and then wakeup 
+	// Thread ipc: Other threads add a wakeup function, and then wakeup 
 	// the own thread to execute it.
 	wakeup_channel_->set_read_callback(
 		std::bind(&EventLoop::handle_read, this));

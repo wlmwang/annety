@@ -31,10 +31,10 @@ Timer::~Timer()
 		<<  ", expired:" << expired_ <<"] is destructing";
 }
 
-void Timer::restart(TimeStamp tm)
+void Timer::restart(TimeStamp curr)
 {
 	if (repeat()) {
-		expired_ = tm + interval_;
+		expired_ = curr + interval_;
 	} else {
 		// repeat() should be called by user
 		// expired_ = TimeStamp();

@@ -47,12 +47,11 @@ int reset_timerfd(int timerfd, TimeDelta delta_ms)
 	struct itimerspec it;
 	::memset(&it, 0, sizeof it);
 
-	// struct itimerspec {
-	// 		timespec it_interval; // Interval for periodic timer. It is time-interval.
-	// 		timespec it_value; // Initial expiration. It is a time-stamp.
-	// }
+	// We only use the one-time wakeup of timerfd, and the repeat timer will be 
+	// reset when the timer timeout.
 	it.it_value = delta_ms.to_timespec();
 
+	// `it_value` is a offset value from current time when the second param is 0
 	return ::timerfd_settime(timerfd, 0, &it, NULL);
 }
 #endif

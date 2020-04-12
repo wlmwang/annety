@@ -20,6 +20,7 @@ namespace annety
 // This class does not owns the EventLoop and Channels lifetime.
 class EPollPoller : public Poller
 {
+	static const int kInitEventListSize = 16;
 public:
 	EPollPoller(EventLoop* loop);
 	~EPollPoller() override;
@@ -38,13 +39,10 @@ public:
 
 private:
 	using EventList = std::vector<struct epoll_event>;
-
-	static const int kInitEventListSize = 16;
-	static const char* operation_to_string(int op);
 	
 	// *Not thread safe*, but run in own loop thread.
 	void fill_active_channels(int num, ChannelList* active_channels) const;
-	int update_poll_events(int operation, Channel* channel);
+	void update_poll_events(int operation, Channel* channel);
 
 private:
 	int epollfd_;
