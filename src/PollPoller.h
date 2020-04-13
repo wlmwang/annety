@@ -17,6 +17,7 @@ namespace annety
 // Just for develop/debug.
 //
 // This class does not owns the EventLoop and Channels lifetime.
+// *Not thread safe*, but they are all called in the own loop.
 class PollPoller : public Poller
 {
 public:

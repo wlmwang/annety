@@ -20,7 +20,7 @@ TimerPool::TimerPool(EventLoop* loop)
 	DLOG(TRACE) << "TimerPool::TimerPool" << " fd=" << 
 		timer_socket_->internal_fd() << " is constructing";
 
-	// All timers share a timerfd and channel
+	// All timers share a `timerfd` and channel.
 	timer_channel_->set_read_callback(
 		std::bind(&TimerPool::handle_read, this));
 	timer_channel_->enable_read_event();
@@ -64,7 +64,8 @@ void TimerPool::add_timer_in_own_loop(Timer* timer)
 	// Save the timer
 	bool earliest_changed = save(timer);
 
-	// If there is a earliest expiration timer, reset the timerfd expiration time.
+	// If there is a earliest expiration timer, reset the `timerfd` 
+	// expiration time.
 	if (earliest_changed) {
 		reset(timer->expired());
 	}
@@ -91,7 +92,7 @@ void TimerPool::cancel_timer_in_own_loop(TimerId timer_id)
 			active_timers_.erase(it);
 		}
 	} else if (calling_expired_timers_) {
-		// Timer specified by timer_id maybe is calling.
+		// Timer specified by timer_id maybe is calling now.
 		// Insert the timer to canceling timers queue.
 		canceling_timers_.insert(timer);
 	}
@@ -99,7 +100,7 @@ void TimerPool::cancel_timer_in_own_loop(TimerId timer_id)
 	DLOG(TRACE) << "TimerPool::cancel_timer_in_own_loop " << (it != active_timers_.end());
 	DCHECK(timers_.size() == active_timers_.size());
 
-	// reset the timerfd expiration time.
+	// reset the `timerfd` expiration time.
 	if (!timers_.empty()) {
 		reset(timers_.begin()->second->expired());
 	} else {
@@ -116,6 +117,7 @@ void TimerPool::handle_read()
 	{
 		// On Linux platform, kernel will write an unsigned 8-byte integer (uint64_t) 
 		// containing the number of expirations that have occurred.
+		// On non-Linux platforms, pipe will be used to simulate `timerfd`.
 		uint64_t one;
 		ssize_t n = timer_socket_->read(&one, sizeof one);
 		if (n != sizeof one) {
@@ -139,7 +141,7 @@ void TimerPool::handle_read()
 		}
 		calling_expired_timers_ = false;
 
-		// delete or reset expired, like as interval timers.
+		// delete or reset expired, such as interval timers.
 		update(curr, expired_timers);
 	}
 }
@@ -188,7 +190,7 @@ void TimerPool::update(TimeStamp time, const EntryTimerList& expired_timers)
 		}
 	}
 
-	// reset the timerfd expiration time.
+	// reset the `timerfd` expiration time.
 	if (!timers_.empty()) {
 		reset(timers_.begin()->second->expired());
 	} else {
@@ -221,6 +223,7 @@ void TimerPool::check_timer_in_own_loop(TimeStamp expired)
 
 void TimerPool::wakeup()
 {
+	// On non-Linux platforms, pipe will be used to simulate `timerfd`.
 	uint64_t one = 1;
 	ssize_t n = timer_socket_->write(&one, sizeof one);
 	if (n != sizeof one) {
@@ -244,12 +247,14 @@ void TimerPool::reset(TimeStamp expired)
 		TimerFD* tf = static_cast<TimerFD*>(timer_socket_.get());
 		tf->reset(delta);
 #else
+		// On non-Linux platforms, Use the traditional poller timeout to implement 
+		// the timers
 		owner_loop_->set_poll_timeout(delta.in_milliseconds());
 #endif	// defined(OS_LINUX)
 	} else {
 #if defined(OS_LINUX)
 		// Nothing to do.
-		// Because we only use the one-shot wakeup of timerfd, and the repeat 
+		// Because we only use the one-shot wakeup of `timerfd`, and the repeat 
 		// timer will be reset when the timer timeout.
 #else
 		// Restore original poll timeout.

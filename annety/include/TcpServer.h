@@ -23,10 +23,10 @@ class Acceptor;
 class EventLoop;
 class EventLoopPool;
 
-// Tcp server wrapper of TCP protocol
-// It supports single-thread and thread-pool models
+// Server wrapper of TCP protocol.
+// It supports single-thread and thread-pool model.
 //
-// This class owns lifetime of Acceptor, it storages all TcpConnection 
+// This class owns lifetime of Acceptor, it also storages all TcpConnection 
 // instances which has been connected.
 class TcpServer : public std::enable_shared_from_this<TcpServer>
 {
@@ -41,20 +41,14 @@ public:
 	~TcpServer();
 	
 	void initialize();
+	void set_thread_num(int num_threads);
+
+	void start();
 
 	const std::string& ip_port() const { return ip_port_; }
 	const std::string& name() const { return name_; }
 	EventLoop* get_owner_loop() const { return owner_loop_; }
-
-	void start();
-
-	void set_thread_num(int num_threads);
 	
-	void set_thread_init_callback(ThreadInitCallback cb)
-	{
-		thread_init_cb_ = std::move(cb);
-	}
-
 	// The following interfaces are usually be called before start()
 	// *Not thread safe*
 	void set_connect_callback(ConnectCallback cb)
@@ -71,14 +65,20 @@ public:
 	{
 		write_complete_cb_ = std::move(cb);
 	}
+	// *Not thread safe*
+	void set_thread_init_callback(ThreadInitCallback cb)
+	{
+		thread_init_cb_ = std::move(cb);
+	}
 
 private:
-	// *Not thread safe*, but in loop
-	void new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeraddr);
 	// *Thread safe*
 	void remove_connection(const TcpConnectionPtr& conn);
-	// *Not thread safe*, but in loop
+	// *Not thread safe*, but run in own loop thread.
 	void remove_connection_in_loop(const TcpConnectionPtr& conn);
+	
+	// *Not thread safe*, but run in own loop thread.
+	void new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeraddr);
 
 private:
 	using ConnectionMap = std::map<std::string, TcpConnectionPtr>;
@@ -91,21 +91,20 @@ private:
 	// ATOMIC_FLAG_INIT is macros
 	std::atomic_flag started_ = ATOMIC_FLAG_INIT;
 
-	// accept connect socket
+	// Acceptor of listen-socket Server.
 	std::unique_ptr<Acceptor> acceptor_;
 	
-	// thread pool for NIO
+	// ThreadPool of event loops.
 	std::unique_ptr<EventLoopPool> loop_pool_;
 
-	// user callback functions
+	// User registered callback functions.
 	ConnectCallback connect_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;
 	ThreadInitCallback thread_init_cb_;
 
+	// Client connections pool (std::map).
 	std::atomic<int> next_conn_id_{1};
-	
-	// all connections pool(std::map)
 	ConnectionMap connections_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpServer);

@@ -12,6 +12,7 @@
 
 namespace annety
 {
+// A timer instance.
 class Timer
 {
 public:

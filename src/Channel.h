@@ -19,10 +19,11 @@ class EventLoop;
 class SelectableFD;
 
 // A selectable IO channel.
-// It acts as a combination of IO Multiplexing and file descriptors.
+// It acts as a combination of IO Multiplexing and file descriptor.
 //
 // This class does not owns the EventLoop and SelectableFD lifetime.
 // File descriptor was wrapped which could be a socket, eventfd, timerfd or signalfd.
+// *Not thread safe*, but they are all called in the own loop.
 class Channel
 {
 public:
@@ -84,21 +85,21 @@ public:
 		update();
 	}
 
-	// For Poller of update_channel
+	// For Poller to update_channel/remove_channel.
 	int status() { return status_;}
 	void set_status(int status) { status_ = status;}
 
-	// For EventLoop of loop
+	// For EventLoop to handle the actived channels.
 	void handle_event(TimeStamp received_ms);
 	EventLoop* owner_loop() { return owner_loop_;}
-	
+
+	// For EventLoop to update the IO events (events_) of this channel.
+	void remove();
+	void update();
+
 	// For debug
 	std::string revents_to_string() const;
 	std::string events_to_string() const;
-
-	// *Not thread safe*, but run in own loop thread.
-	void remove();
-	void update();
 
 private:
 	static std::string events_to_string(int fd, int ev);

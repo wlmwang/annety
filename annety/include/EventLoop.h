@@ -86,7 +86,7 @@ public:
 
 	// 1. If in the own loop thread, cb is executed immediately,
 	// 2. otherwise the own loop thread will be wake up, then 
-	// cb is executed async.
+	// 	  cb is executed async.
 	// *Thread safe*
 	void run_in_own_loop(Functor cb);
 
@@ -122,15 +122,21 @@ private:
 	std::unique_ptr<ThreadId> owning_thread_id_;
 	std::unique_ptr<ThreadRef> owning_thread_ref_;
 
-	std::unique_ptr<Poller> poller_;
+	// Timer pool.
 	std::unique_ptr<TimerPool> timer_;
 
+	// IO Multiplexing.
+	std::unique_ptr<Poller> poller_;
+
+	// active channel.
 	TimeStamp poll_active_ms_;
 	ChannelList active_channels_;
 
+	// wakeup channel.
 	SelectableFDPtr wakeup_socket_;
 	std::unique_ptr<Channel> wakeup_channel_;
 
+	// wakeup function.
 	MutexLock lock_;
 	std::vector<Functor> wakeup_functors_;
 

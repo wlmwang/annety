@@ -18,6 +18,7 @@ namespace annety
 // IO Multiplexing wrapper of epoll(4).
 //
 // This class does not owns the EventLoop and Channels lifetime.
+// *Not thread safe*, but they are all called in the own loop.
 class EPollPoller : public Poller
 {
 	static const int kInitEventListSize = 16;

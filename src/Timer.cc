@@ -36,7 +36,7 @@ void Timer::restart(TimeStamp curr)
 	if (repeat()) {
 		expired_ = curr + interval_;
 	} else {
-		// repeat() should be called by user
+		// repeat() should be called by user.
 		// expired_ = TimeStamp();
 		NOTREACHED();
 	}

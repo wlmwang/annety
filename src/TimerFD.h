@@ -24,7 +24,7 @@ namespace annety
 // fds_ is input, it will be sync written by external when the event is triggered.
 //
 // Others:
-// Use EventFD to simulate timerfd. Provide the same timer expiration notification 
+// Use EventFD(:pipe) to simulate `timerfd`. Provide the same timer expiration notification 
 // that can pass the file descriptor.
 class TimerFD : public SelectableFD
 {

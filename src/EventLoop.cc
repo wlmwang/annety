@@ -42,8 +42,8 @@ thread_local EventLoop* tls_event_loop = nullptr;
 EventLoop::EventLoop() 
 	: owning_thread_id_(new ThreadId(PlatformThread::current_id()))
 	, owning_thread_ref_(new ThreadRef(PlatformThread::current_ref()))
-	, poller_(new PollPoller(this))
 	, timer_(new TimerPool(this))
+	, poller_(new PollPoller(this))
 	, wakeup_socket_(new EventFD(true, true))
 	, wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {
@@ -115,8 +115,8 @@ void EventLoop::loop()
 		handling_event_ = false;
 
 #if !defined(OS_LINUX)
-		// There is no `timerfd` mechanism in other OS platforms, so we choose to 
-		// use traditional poller timeout.
+		// On non-Linux platforms, Use the traditional poller timeout to implement 
+		// the timers, here you need to manually check the timeout timers.
 		timer_->check_timer(TimeStamp::now());
 #endif	// !defined(OS_LINUX)
 

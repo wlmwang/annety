@@ -23,12 +23,17 @@ class Channel;
 class Timer;
 class TimerId;
 
-// Timer pool, all timers share a timerfd. 
-// We only use the one-shot wakeup of timerfd, and the repeat timer will be 
+// Timer pool, all timers share a `timerfd`.
+// On the Linux platform, the kernel will write an unsigned 8-byte integer 
+// (uint64_t) that contains the number of expirations that have occurred 
+// into `timerfd`(file descriptor).  On non-Linux platforms, pipe will be 
+// used to simulate `timerfd`.
+//
+// We only use the one-shot wakeup of `timerfd`, and the repeat timer will be 
 // reset when the timer timeout.
 //
 // Cannot be sure that the timer callback will be called on time, because 
-// the timerfd event may be blocked by other file descriptors.
+// the `timerfd` event may be blocked by other file descriptors.
 //
 // This class owns the SelectableFD and Channel lifetime.
 class TimerPool
@@ -37,11 +42,14 @@ public:
 	explicit TimerPool(EventLoop* loop);
 	~TimerPool();
 	
-	// Must be thread safe. Usually be called from other threads.
+	// Usually be called from other threads.
+	// *Thread safe*
 	TimerId add_timer(TimerCallback cb, TimeStamp expired, double interval_s);
 	void cancel_timer(TimerId timer_id);
 
 #if !defined(OS_LINUX)
+	// On non-Linux platforms, Use the traditional poller timeout to implement 
+	// the timers, and provide a timer check function.
 	void check_timer(TimeStamp expired);
 #endif
 
@@ -67,8 +75,7 @@ private:
 	void handle_read();
 
 #if !defined(OS_LINUX)
-	// On Linux platform, kernel will write an unsigned 8-byte integer (uint64_t) 
-	// containing the number of expirations that have occurred.
+	// On non-Linux platforms, pipe will be used to simulate `timerfd`.
 	void wakeup();
 	void check_timer_in_own_loop(TimeStamp expired);
 #endif
