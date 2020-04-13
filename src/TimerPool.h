@@ -57,15 +57,21 @@ private:
 	// FIXME: use unique_ptr<Timer> instead of raw pointers.
 	// This requires heterogeneous comparison lookup (N3465) from C++14
 
-	// Active list, sorted by pointer address first, then by sequence. 
-	// for cancel(), the timer fast search.
-	using ActiveTimer = std::pair<Timer*, int64_t>;
-	using ActiveTimerSet = std::set<ActiveTimer>;
-
+	// The EntryTimer structure is used to add multiple timers with 
+	// the same expiration time to the std::set.
+	//
 	// Timer list. sorted by expired first, then by pointer address.
 	using EntryTimer = std::pair<TimeStamp, Timer*>;
 	using EntryTimerSet = std::set<EntryTimer>;
 	using EntryTimerList = std::vector<EntryTimer>;
+
+	// The ActiveTimer structure is used to quickly find a timer from
+	// the std::set using TimerId.
+	//
+	// Active list, sorted by pointer address first, then by sequence. 
+	// for cancel(), the timer fast search.
+	using ActiveTimer = std::pair<Timer*, int64_t>;
+	using ActiveTimerSet = std::set<ActiveTimer>;
 
 	// *Not thread safe*, but run in own loop thread.
 	void add_timer_in_own_loop(Timer* timer);

@@ -7,7 +7,10 @@
 namespace annety
 {
 class Timer;
-
+// TimerId is used to identify a unique timer. the `sequence_` attribute is the 
+// unique identifier (the address cannot be used as a unique identifier. It is 
+// renewable and has ABA problems).
+// 
 // TimerId is standard layout class, but it is neither a trivial class nor a pod.
 // It is value sematics, which means that it can be copied or assigned.
 class TimerId

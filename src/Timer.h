@@ -12,7 +12,11 @@
 
 namespace annety
 {
-// A timer instance.
+// A timer task.
+// 
+// The `sequence_` attribute is used to identify a unique timer. (the 
+// address of timer cannot be used as a unique identifier. It is renewable 
+// and has ABA problems).
 class Timer
 {
 public:

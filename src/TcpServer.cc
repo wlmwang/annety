@@ -109,12 +109,13 @@ void TcpServer::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 								std::move(sockfd),
 								localaddr,
 								peeraddr);
-	// transfer register user callbacks to TcpConnection
+	// copy user callbacks into TcpConnection.
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
 
-	// must be weak bind
+	// Must use weak bind. Otherwise, there is a circular reference problem 
+	// of smart pointer.
 	using containers::_1;
 	using containers::make_weak_bind;
 	conn->set_close_callback(
@@ -142,7 +143,8 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 	size_t n = connections_.erase(conn->name());
 	DCHECK(n == 1);
 
-	// can't remove conn here immediately, because we are inside Channel::handle_event
+	// Can't remove conn here immediately, because we are inside Channel::handle_event now.
+	// The purpose is not to let the channel's iterator fail.
 	conn->get_owner_loop()->queue_in_own_loop(
 		std::bind(&TcpConnection::connect_destroyed, conn));
 }

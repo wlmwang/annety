@@ -17,9 +17,10 @@ class EndPoint;
 class SelectableFD;
 class Channel;
 
-// Wrapper listen socket which used to accept connect sockets
+// Wrapper listen socket which used to accept connect sockets.
 //
-// This class owns life-time of listen-socket and listen-channel
+// This class owns the SelectableFD and Channel lifetime.
+// *Not thread safe*, but they are all called in the own loop.
 class Acceptor
 {
 public:
@@ -32,8 +33,8 @@ public:
 	{
 		new_connect_cb_ = cb;
 	}
-
-	bool is_listen() const {
+	bool is_listen() const
+	{
 		return listen_;
 	}
 	
@@ -52,6 +53,9 @@ private:
 	
 	NewConnectCallback new_connect_cb_;
 
+	// A special file descriptor is used to solve the situation that the file 
+	// descriptors are exhausted when accept().
+	// By Marc Lehmann, author of libev.
 	int idle_fd_;
 
 	DISALLOW_COPY_AND_ASSIGN(Acceptor);
