@@ -47,7 +47,7 @@ private:
 	EventLoop* owner_loop_{nullptr};
 	bool listen_{false};
 
-	// listen socket
+	// Listen socket/channel
 	SelectableFDPtr listen_socket_;
 	std::unique_ptr<Channel> listen_channel_;
 	

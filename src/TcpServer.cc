@@ -61,6 +61,7 @@ void TcpServer::initialize()
 	CHECK(!initilize_);
 	initilize_ = true;
 
+	// FIXME: There is a circular reference problem of smart pointer.
 	acceptor_->set_new_connect_callback(
 		std::bind(&TcpServer::new_connection, shared_from_this(), _1, _2));
 }
@@ -78,10 +79,10 @@ void TcpServer::start()
 	CHECK(initilize_);
 	
 	if (!started_.test_and_set()) {
-		// starting all thread pool
+		// Starting all event loop thread pool.
 		loop_pool_->start(thread_init_cb_);
 
-		// setting listening socket in current thread
+		// Setting listening socket in current thread.
 		CHECK(!acceptor_->is_listen());
 		acceptor_->listen();
 	}
@@ -93,11 +94,11 @@ void TcpServer::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 
 	// Get one EventLoop thread for NIO
 	EventLoop* loop = loop_pool_->get_next_loop();
-  	
-	std::string name = name_ + string_printf("#%s#%d", 
-								ip_port_.c_str(), next_conn_id_++);
 
 	EndPoint localaddr(internal::get_local_addr(*sockfd));
+
+	std::string name = name_ + string_printf("#%s#%d", 
+								ip_port_.c_str(), next_conn_id_++);
 
 	LOG(INFO) << "TcpServer::new_connection [" << name_
 		<< "] accept new connection [" << name
@@ -121,14 +122,18 @@ void TcpServer::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 	conn->set_close_callback(
 			make_weak_bind(&TcpServer::remove_connection, shared_from_this(), _1));
 
+	// Storages all client connections.
 	connections_[name] = conn;
-
+	
+	// Run in the `conn` own loop.
 	loop->run_in_own_loop(std::bind(&TcpConnection::connect_established, conn));
 }
 
 void TcpServer::remove_connection(const TcpConnectionPtr& conn)
 {
 	using containers::make_weak_bind;
+	
+	// run in the `conn` own loop.
 	owner_loop_->run_in_own_loop(
 		make_weak_bind(&TcpServer::remove_connection_in_loop, shared_from_this(), conn));
 }
@@ -143,7 +148,8 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 	size_t n = connections_.erase(conn->name());
 	DCHECK(n == 1);
 
-	// Can't remove conn here immediately, because we are inside Channel::handle_event now.
+	// Can't remove `conn` here immediately, because we are inside Channel's 
+	// handle_event now.
 	// The purpose is not to let the channel's iterator fail.
 	conn->get_owner_loop()->queue_in_own_loop(
 		std::bind(&TcpConnection::connect_destroyed, conn));

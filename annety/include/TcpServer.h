@@ -26,8 +26,8 @@ class EventLoopPool;
 // Server wrapper of TCP protocol.
 // It supports single-thread and thread-pool model.
 //
-// This class owns lifetime of Acceptor, it also storages all TcpConnection 
-// instances which has been connected.
+// This class owns lifetime of Acceptor, it also storages all client 
+// connections pool which has been connected.
 class TcpServer : public std::enable_shared_from_this<TcpServer>
 {
 public:

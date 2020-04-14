@@ -15,8 +15,7 @@
 
 namespace annety
 {
-namespace internal
-{
+namespace internal {
 // Specific connect socket related function interfaces
 int set_keep_alive(const SelectableFD& sfd, bool on)
 {
@@ -66,6 +65,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
 
 	// setting keepalive sockopt
 	internal::set_keep_alive(*connect_socket_, true);
+	// set_tcp_nodelay(true);
 }
 
 TcpConnection::~TcpConnection()
@@ -92,11 +92,12 @@ void TcpConnection::initialize_in_loop()
 {
 	owner_loop_->check_in_own_loop();
 
-	// cannot use std::bind() with shared_from_this()
-	// it would forms a circular reference to the connect_channel_ object
+	// Cannot use std::bind() with shared_from_this(), it would forms a 
+	// circular reference to the connect_channel_ object.
 	using containers::_1;
 	using containers::make_weak_bind;
 
+	// Register all channel's base events.
 	connect_channel_->set_read_callback(
 		make_weak_bind(&TcpConnection::handle_read, shared_from_this(), _1));
 	connect_channel_->set_write_callback(
@@ -111,7 +112,8 @@ void TcpConnection::set_tcp_nodelay(bool on)
 {
 	CHECK(initilize_);
 
-	DCHECK_GE(internal::set_tcp_nodelay(*connect_socket_, on), 0);
+	int rt = internal::set_tcp_nodelay(*connect_socket_, on);
+	DCHECK_GE(rt, 0);
 }
 
 void TcpConnection::send(const void* data, int len)
@@ -319,13 +321,17 @@ void TcpConnection::stop_read_in_loop()
 
 void TcpConnection::connect_established()
 {
+	// Now the shared_from_this().use_count() == 3.
+
 	owner_loop_->check_in_own_loop();
 
+	// Change the Connection state.
 	DCHECK(state_ == kConnecting);
 	state_ = kConnected;
 
 	connect_channel_->enable_read_event();
 
+	// Call the user connect callback.
 	connect_cb_(shared_from_this());
 
 	DLOG(TRACE) << "TcpConnection::connect_established is called";
@@ -346,16 +352,40 @@ void TcpConnection::connect_destroyed()
 	DLOG(TRACE) << "TcpConnection::connect_destroyed is called";
 }
 
-void TcpConnection::handle_read(TimeStamp recv_tm)
+void TcpConnection::handle_close()
+{
+	owner_loop_->check_in_own_loop();
+
+	DLOG(TRACE) << "TcpConnection::handle_close the fd = " 
+		<< connect_socket_->internal_fd() 
+		<< " state = " << state_to_string() << " is closing";
+	
+	DCHECK(state_ == kConnected || state_ == kDisconnecting);
+
+	state_ = kDisconnected;
+	connect_channel_->disable_all_event();
+
+	// FIXME: Backup the connection(shared_ptr).
+	// TcpConnectionPtr backup(shared_from_this());
+
+	// Call the user connect callback.
+	connect_cb_(shared_from_this());
+
+	// Call the Server close callback (TcpServer::remove_connection).
+	close_cb_(shared_from_this());
+}
+
+void TcpConnection::handle_read(TimeStamp recv_ms)
 {
 	owner_loop_->check_in_own_loop();
 
 	ScopedClearLastError last_error;
 
-	// wrapper ::read() call
+	// Wrapper the ::read() system call.
 	ssize_t n = input_buffer_->read_fd(connect_socket_->internal_fd());
 	if (n > 0) {
-		message_cb_(shared_from_this(), input_buffer_.get(), recv_tm);
+		// Call the user message callback.
+		message_cb_(shared_from_this(), input_buffer_.get(), recv_ms);
 	} else if (n == 0) {
 		DLOG(TRACE) << "TcpConnection::handle_read the conntion fd=" 
 			<< connect_socket_->internal_fd() 
@@ -396,25 +426,6 @@ void TcpConnection::handle_write()
 			<< connect_socket_->internal_fd()
 			<< " is down, no more writing";
 	}
-}
-
-void TcpConnection::handle_close()
-{
-	owner_loop_->check_in_own_loop();
-
-	LOG(TRACE) << "TcpConnection::handle_close the fd = " 
-		<< connect_socket_->internal_fd() 
-		<< " state = " << state_to_string() << " is closing";
-	DCHECK(state_ == kConnected || state_ == kDisconnecting);
-
-	state_ = kDisconnected;
-	connect_channel_->disable_all_event();
-
-	// backup the connection(shared_ptr<>)
-	TcpConnectionPtr backup(shared_from_this());
-	connect_cb_(backup);
-
-	close_cb_(backup);
 }
 
 void TcpConnection::handle_error()

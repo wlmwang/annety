@@ -24,7 +24,9 @@ class Poller;
 class TimerPool;
 
 // Reactor mode, Event dispatcher.
-// One loop per thread: Each thread has at most one EventLoop instance.
+// It mainly acts as a combination of IO multiplexing and channels, and 
+// controls the thread safety model.  One loop per thread: Each thread 
+// has at most one EventLoop instance.
 //
 // Thread ipc: Other threads add a wakeup task function, and then wakeup 
 // the own thread to execute it.
@@ -122,21 +124,21 @@ private:
 	std::unique_ptr<ThreadId> owning_thread_id_;
 	std::unique_ptr<ThreadRef> owning_thread_ref_;
 
+	// IO Multiplexing.
+	std::unique_ptr<Poller> poller_;
+	
 	// Timer pool.
 	std::unique_ptr<TimerPool> timer_;
 
-	// IO Multiplexing.
-	std::unique_ptr<Poller> poller_;
-
-	// active channel.
+	// client active channel.
 	TimeStamp poll_active_ms_;
 	ChannelList active_channels_;
 
-	// wakeup channel.
+	// wakeup socket/channel.
 	SelectableFDPtr wakeup_socket_;
 	std::unique_ptr<Channel> wakeup_channel_;
 
-	// wakeup function.
+	// wakeup task function.
 	MutexLock lock_;
 	std::vector<Functor> wakeup_functors_;
 

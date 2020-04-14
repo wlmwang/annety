@@ -42,8 +42,8 @@ thread_local EventLoop* tls_event_loop = nullptr;
 EventLoop::EventLoop() 
 	: owning_thread_id_(new ThreadId(PlatformThread::current_id()))
 	, owning_thread_ref_(new ThreadRef(PlatformThread::current_ref()))
-	, timer_(new TimerPool(this))
 	, poller_(new PollPoller(this))
+	, timer_(new TimerPool(this))
 	, wakeup_socket_(new EventFD(true, true))
 	, wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {

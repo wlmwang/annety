@@ -19,7 +19,8 @@ class EventLoop;
 class SelectableFD;
 
 // A selectable IO channel.
-// It acts as a combination of IO Multiplexing and file descriptor.
+// It acts as a combination of EventLoop and file descriptor.  It saves the events 
+// that the file descriptor is monitored and the events it is being triggered.
 //
 // This class does not owns the EventLoop and SelectableFD lifetime.
 // File descriptor was wrapped which could be a socket, eventfd, timerfd or signalfd.

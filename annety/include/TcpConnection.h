@@ -25,8 +25,8 @@ class NetBuffer;
 
 // Tcp connection wrapper of TCP protocol
 //
-// This class owns lifetime of connect-socket and connect-channel.
-// Own lifetime is held by TcpServer and users.
+// This class owns the SelectableFD and Channel lifetime. Own lifetime 
+// is held by TcpServer (ConnectionMap) and users.
 class TcpConnection : public std::enable_shared_from_this<TcpConnection>
 {
 public:
@@ -44,11 +44,11 @@ public:
 	const EndPoint& local_addr() const { return local_addr_; }
 	const EndPoint& peer_addr() const { return peer_addr_; }
 
-	// not thread safe.
+	// *Not thread safe*, but run in the own loop.
 	bool connected() const { return state_ == kConnected; }
 	bool disconnected() const { return state_ == kDisconnected; }
 
-	// not thread safe.
+	// *Not thread safe*, but run in the own loop.
 	void send(const void* message, int len);
 	void send(const StringPiece& message);
 	void send(NetBuffer&& message);
@@ -109,7 +109,7 @@ public:
 	void connect_destroyed();
 
 private:
-	enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting};
+	enum StateE {kDisconnected, kConnecting, kConnected, kDisconnecting};
 
 	void handle_read(TimeStamp recv_tm);
 	void handle_write();
@@ -131,8 +131,10 @@ private:
 private:
 	EventLoop* owner_loop_;
 	const std::string name_;
+	
 	bool initilize_{false};
 	bool reading_{true};
+
 	// FIXME: use atomic variable
 	StateE state_{kConnecting};
 
@@ -145,7 +147,7 @@ private:
 
 	CloseCallback close_cb_;
 
-	// user callback function
+	// User callback function
 	ConnectCallback connect_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;
