@@ -44,15 +44,15 @@ public:
 	const EndPoint& local_addr() const { return local_addr_; }
 	const EndPoint& peer_addr() const { return peer_addr_; }
 
-	// *Not thread safe*, but run in the own loop.
 	bool connected() const { return state_ == kConnected; }
 	bool disconnected() const { return state_ == kDisconnected; }
 
-	// *Not thread safe*, but run in the own loop.
-	void send(const void* message, int len);
+	// *Thread safe*
 	void send(const StringPiece& message);
 	void send(NetBuffer&& message);
-	void send(NetBuffer* message);  // this one will swap data
+	void send(NetBuffer* message);
+	void send(const void* message, int len);
+
 	// NOT thread safe, no simultaneous calling
 	void shutdown();
 	void force_close();
@@ -111,7 +111,7 @@ public:
 private:
 	enum StateE {kDisconnected, kConnecting, kConnected, kDisconnecting};
 
-	void handle_read(TimeStamp recv_tm);
+	void handle_read(TimeStamp received_ms);
 	void handle_write();
 	void handle_close();
 	void handle_error();

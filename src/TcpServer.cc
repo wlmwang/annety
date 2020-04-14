@@ -32,7 +32,7 @@ TcpServer::TcpServer(EventLoop* loop, const EndPoint& addr, const std::string& n
 	, name_(name)
 	, ip_port_(addr.to_ip_port())
 	, acceptor_(new Acceptor(loop, addr, reuse_port))
-	, loop_pool_(new EventLoopPool(loop, name))
+	, workers_(new EventLoopPool(loop, name))
 	, connect_cb_(default_connect_callback)
 	, message_cb_(default_message_callback)
 {
@@ -62,6 +62,7 @@ void TcpServer::initialize()
 	initilize_ = true;
 
 	// FIXME: There is a circular reference problem of smart pointer.
+	// make_weak_bind() is not good for right-value yet.
 	acceptor_->set_new_connect_callback(
 		std::bind(&TcpServer::new_connection, shared_from_this(), _1, _2));
 }
@@ -71,7 +72,7 @@ void TcpServer::set_thread_num(int num_threads)
 	CHECK(initilize_);
 
 	CHECK(0 <= num_threads);
-	loop_pool_->set_thread_num(num_threads);
+	workers_->set_thread_num(num_threads);
 }
 
 void TcpServer::start()
@@ -80,10 +81,10 @@ void TcpServer::start()
 	
 	if (!started_.test_and_set()) {
 		// Starting all event loop thread pool.
-		loop_pool_->start(thread_init_cb_);
+		workers_->start(thread_init_cb_);
 
 		// Setting listening socket in current thread.
-		CHECK(!acceptor_->is_listen());
+		DCHECK(!acceptor_->is_listen());
 		acceptor_->listen();
 	}
 }
@@ -92,8 +93,8 @@ void TcpServer::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 {
 	owner_loop_->check_in_own_loop();
 
-	// Get one EventLoop thread for NIO
-	EventLoop* loop = loop_pool_->get_next_loop();
+	// Get one EventLoop thread for NIO.
+	EventLoop* worker = workers_->get_next_loop();
 
 	EndPoint localaddr(internal::get_local_addr(*sockfd));
 
@@ -105,7 +106,7 @@ void TcpServer::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 		<< "] from " << peeraddr.to_ip_port();
 
 	TcpConnectionPtr conn = make_tcp_connection(
-								loop, 
+								worker, 
 								name,
 								std::move(sockfd),
 								localaddr,
@@ -125,15 +126,15 @@ void TcpServer::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 	// Storages all client connections.
 	connections_[name] = conn;
 	
-	// Run in the `conn` own loop.
-	loop->run_in_own_loop(std::bind(&TcpConnection::connect_established, conn));
+	// Run in the `conn` own loop. server and `conn` may not be the same thread.
+	// The `conn` will be copied with std::bind(). so conn.use_count()==3.
+	worker->run_in_own_loop(std::bind(&TcpConnection::connect_established, conn));
 }
 
 void TcpServer::remove_connection(const TcpConnectionPtr& conn)
 {
+	// Run in the `server` own loop. `conn` and server may not be the same thread.
 	using containers::make_weak_bind;
-	
-	// run in the `conn` own loop.
 	owner_loop_->run_in_own_loop(
 		make_weak_bind(&TcpServer::remove_connection_in_loop, shared_from_this(), conn));
 }
@@ -149,7 +150,7 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 	DCHECK(n == 1);
 
 	// Can't remove `conn` here immediately, because we are inside Channel's 
-	// handle_event now.
+	// event handling function now.
 	// The purpose is not to let the channel's iterator fail.
 	conn->get_owner_loop()->queue_in_own_loop(
 		std::bind(&TcpConnection::connect_destroyed, conn));

@@ -37,12 +37,13 @@ void default_connect_callback(const TcpConnectionPtr& conn)
 	DLOG(TRACE) << conn->local_addr().to_ip_port() << " -> "
 			   << conn->peer_addr().to_ip_port() << " is "
 			   << (conn->connected() ? "UP" : "DOWN");
-	// do not call conn->force_close()
-	// because some users want to register message callback only.
+	// Do not call conn->force_close(), because some users want 
+	// to register message callback only.
 }
 
 void default_message_callback(const TcpConnectionPtr&, NetBuffer* buf, TimeStamp)
 {
+	// Discard all the buffer data.
 	buf->has_read_all();
 }
 
@@ -65,6 +66,8 @@ TcpConnection::TcpConnection(EventLoop* loop,
 
 	// setting keepalive sockopt
 	internal::set_keep_alive(*connect_socket_, true);
+
+	// Need to manually enable.
 	// set_tcp_nodelay(true);
 }
 
@@ -80,9 +83,11 @@ TcpConnection::~TcpConnection()
 
 void TcpConnection::initialize()
 {
-	CHECK(!initilize_);
+	DCHECK(!initilize_);
 	initilize_ = true;
 
+	// Cannot use std::bind() with shared_from_this(), it would forms a 
+	// circular reference to the owner_loop_ object.
 	using containers::make_weak_bind;
 	owner_loop_->run_in_own_loop(
 		make_weak_bind(&TcpConnection::initialize_in_loop, shared_from_this()));
@@ -97,7 +102,7 @@ void TcpConnection::initialize_in_loop()
 	using containers::_1;
 	using containers::make_weak_bind;
 
-	// Register all channel's base events.
+	// Register all channel's base I/O events.
 	connect_channel_->set_read_callback(
 		make_weak_bind(&TcpConnection::handle_read, shared_from_this(), _1));
 	connect_channel_->set_write_callback(
@@ -110,7 +115,7 @@ void TcpConnection::initialize_in_loop()
 
 void TcpConnection::set_tcp_nodelay(bool on)
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 
 	int rt = internal::set_tcp_nodelay(*connect_socket_, on);
 	DCHECK_GE(rt, 0);
@@ -118,51 +123,54 @@ void TcpConnection::set_tcp_nodelay(bool on)
 
 void TcpConnection::send(const void* data, int len)
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 
 	send(StringPiece(static_cast<const char*>(data), len));
 }
 
 void TcpConnection::send(const StringPiece& message)
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 
-	// FIXME: as string
 	if (state_ == kConnected) {
 		if (owner_loop_->is_in_own_loop()) {
 			send_in_loop(message);
 		} else {
-			void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::send_in_loop;
+			void (TcpConnection::*fp)(const StringPiece&) = &TcpConnection::send_in_loop;
+			// FIXME: as_string is too bad.
 			// move semantics in here, even RVO
 			using containers::make_weak_bind;
 			owner_loop_->run_in_own_loop(
 				make_weak_bind(fp, shared_from_this(), message.as_string()));
+			// std::forward<string>(message)
 		}
 	}
 }
 
 void TcpConnection::send(NetBuffer&& message)
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 
-	NetBuffer msg(std::move(message));
-	send(&msg);
+	NetBuffer mesg(std::move(message));
+	send(&mesg);
 }
 
 void TcpConnection::send(NetBuffer* buf)
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 
-	// FIXME: as string
 	if (state_ == kConnected) {
 		if (owner_loop_->is_in_own_loop()) {
+			// FIXME: as_string is too bad.
 			send_in_loop(buf->taken_as_string());
 		} else {
-			void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::send_in_loop;
+			void (TcpConnection::*fp)(const StringPiece&) = &TcpConnection::send_in_loop;
+			// FIXME: as_string is too bad.
 			// move semantics in here, even RVO
 			using containers::make_weak_bind;
 			owner_loop_->run_in_own_loop(
 				make_weak_bind(fp, shared_from_this(), buf->taken_as_string()));
+			// std::forward<string>(message)
 		}
 	}
 }
@@ -184,21 +192,29 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 		return;
 	}
 
-	// if no thing in output queue, try writing directly
+	// If no thing in output queue, try writing directly.
 	if (!connect_channel_->is_write_event() && output_buffer_->readable_bytes() == 0) {
 		nwrote = connect_socket_->write(data, len);
 		if (nwrote >= 0) {
 			remaining = len - nwrote;
 			if (remaining == 0 && write_complete_cb_) {
+				// Call the user write complete callback. Async callback.
 				owner_loop_->queue_in_own_loop(
 					std::bind(write_complete_cb_, shared_from_this()));
+
+				// Call the user write complete callback. Async callback.
+				// using containers::make_weak_bind;
+				// owner_loop_->queue_in_own_loop(
+				// 	make_weak_bind(write_complete_cb_, shared_from_this()));
+
 			}
 		} else {
+			// Write failed.
 			nwrote = 0;
 			if (errno != EAGAIN && errno != EWOULDBLOCK) {
 				PLOG(ERROR) << "TcpConnection::send_in_loop has failed";
 				if (errno == EPIPE || errno == ECONNRESET) {
-					// the peer endpoint has closed
+					// The peer endpoint has closed.
 					fault_error = true;
 				}
 			}
@@ -207,16 +223,21 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 
 	DCHECK(remaining <= len);
 	if (!fault_error && remaining > 0) {
-		size_t oldlen = output_buffer_->readable_bytes();
-
-		if (oldlen + remaining >= high_water_mark_ && oldlen < high_water_mark_ 
+		size_t history = output_buffer_->readable_bytes();
+		if (history + remaining >= high_water_mark_ && history < high_water_mark_ 
 			&& high_water_mark_cb_)
 		{
+			// Call the user high watermark callback. Async callback.
 			owner_loop_->queue_in_own_loop(
-				std::bind(high_water_mark_cb_, shared_from_this(), oldlen + remaining));
+				std::bind(high_water_mark_cb_, shared_from_this(), history + remaining));
+
+			// Call the user high watermark callback. Async callback.
+			// using containers::make_weak_bind;
+			// owner_loop_->queue_in_own_loop(
+			// 	make_weak_bind(high_water_mark_cb_, shared_from_this(), history + remaining));
 		}
 
-		// copy data to output_buffer_
+		// FIXME: Copy data to output_buffer_ and enable write event.
 		output_buffer_->append(static_cast<const char*>(data) + nwrote, remaining);
 		if (!connect_channel_->is_write_event()) {
 			connect_channel_->enable_write_event();
@@ -226,10 +247,11 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 
 void TcpConnection::shutdown()
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 
 	if (state_ == kConnected) {
 		state_ = kDisconnecting;
+		
 		using containers::make_weak_bind;
 		owner_loop_->run_in_own_loop(
 			make_weak_bind(&TcpConnection::shutdown_in_loop, shared_from_this()));
@@ -241,6 +263,7 @@ void TcpConnection::shutdown_in_loop()
 	owner_loop_->check_in_own_loop();
 	
 	if (!connect_channel_->is_write_event()) {
+		// There is still data not sent completely.
 		internal::shutdown(*connect_socket_);
 	}
 }
@@ -321,7 +344,9 @@ void TcpConnection::stop_read_in_loop()
 
 void TcpConnection::connect_established()
 {
-	// Now the shared_from_this().use_count() == 3.
+	// cout << (shared_from_this().use_count()==4); // true
+	// shared_from_this() +1
+	// new_connection() +3
 
 	owner_loop_->check_in_own_loop();
 
@@ -339,6 +364,10 @@ void TcpConnection::connect_established()
 
 void TcpConnection::connect_destroyed()
 {
+	// cout << (shared_from_this().use_count()==2); // true
+	// shared_from_this() +1
+	// std::bind() called by remove_connection_in_loop() +1
+
 	owner_loop_->check_in_own_loop();
 
 	if (state_ == kConnected) {
@@ -354,6 +383,11 @@ void TcpConnection::connect_destroyed()
 
 void TcpConnection::handle_close()
 {
+	// cout << (shared_from_this().use_count()==3); // true
+	// shared_from_this() +1
+	// WBindFuctor +1
+	// ConnectionMap +1
+
 	owner_loop_->check_in_own_loop();
 
 	DLOG(TRACE) << "TcpConnection::handle_close the fd = " 
@@ -361,21 +395,17 @@ void TcpConnection::handle_close()
 		<< " state = " << state_to_string() << " is closing";
 	
 	DCHECK(state_ == kConnected || state_ == kDisconnecting);
-
 	state_ = kDisconnected;
 	connect_channel_->disable_all_event();
-
-	// FIXME: Backup the connection(shared_ptr).
-	// TcpConnectionPtr backup(shared_from_this());
 
 	// Call the user connect callback.
 	connect_cb_(shared_from_this());
 
-	// Call the Server close callback (TcpServer::remove_connection).
+	// Call the Server close callback.
 	close_cb_(shared_from_this());
 }
 
-void TcpConnection::handle_read(TimeStamp recv_ms)
+void TcpConnection::handle_read(TimeStamp received_ms)
 {
 	owner_loop_->check_in_own_loop();
 
@@ -385,7 +415,7 @@ void TcpConnection::handle_read(TimeStamp recv_ms)
 	ssize_t n = input_buffer_->read_fd(connect_socket_->internal_fd());
 	if (n > 0) {
 		// Call the user message callback.
-		message_cb_(shared_from_this(), input_buffer_.get(), recv_ms);
+		message_cb_(shared_from_this(), input_buffer_.get(), received_ms);
 	} else if (n == 0) {
 		DLOG(TRACE) << "TcpConnection::handle_read the conntion fd=" 
 			<< connect_socket_->internal_fd() 

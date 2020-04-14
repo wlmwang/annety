@@ -41,44 +41,43 @@ public:
 	~TcpServer();
 	
 	void initialize();
-	void set_thread_num(int num_threads);
 
 	void start();
 
 	const std::string& ip_port() const { return ip_port_; }
 	const std::string& name() const { return name_; }
-	EventLoop* get_owner_loop() const { return owner_loop_; }
 	
-	// The following interfaces are usually be called before start()
-	// *Not thread safe*
+	// *Not thread safe*, but usually be called before start().
 	void set_connect_callback(ConnectCallback cb)
 	{
 		connect_cb_ = std::move(cb);
 	}
-	// *Not thread safe*
+	// *Not thread safe*, but usually be called before start().
 	void set_message_callback(MessageCallback cb)
 	{
 		message_cb_ = std::move(cb);
 	}
-	// *Not thread safe*
+	// *Not thread safe*, but usually be called before start().
 	void set_write_complete_callback(WriteCompleteCallback cb)
 	{
 		write_complete_cb_ = std::move(cb);
 	}
-	// *Not thread safe*
+	// *Not thread safe*, but usually be called before start().
 	void set_thread_init_callback(ThreadInitCallback cb)
 	{
 		thread_init_cb_ = std::move(cb);
 	}
+	// *Not thread safe*, but usually be called before start().
+	void set_thread_num(int num_threads);
 
 private:
-	// *Thread safe*
+	// *Not thread safe*, but run in own loop thread.
+	void new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeraddr);
+
+	// *Thread safe*, for Connection.
 	void remove_connection(const TcpConnectionPtr& conn);
 	// *Not thread safe*, but run in own loop thread.
 	void remove_connection_in_loop(const TcpConnectionPtr& conn);
-	
-	// *Not thread safe*, but run in own loop thread.
-	void new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeraddr);
 
 private:
 	using ConnectionMap = std::map<std::string, TcpConnectionPtr>;
@@ -96,7 +95,7 @@ private:
 	std::unique_ptr<Acceptor> acceptor_;
 	
 	// ThreadPool of event loops.
-	std::unique_ptr<EventLoopPool> loop_pool_;
+	std::unique_ptr<EventLoopPool> workers_;
 
 	// User registered callback functions.
 	ConnectCallback connect_cb_;
