@@ -61,8 +61,11 @@ void TcpServer::initialize()
 	CHECK(!initilize_);
 	initilize_ = true;
 
-	// FIXME: There is a circular reference problem of smart pointer.
-	// make_weak_bind() is not good for right-value yet.
+	// FIXME: Must use weak bind. Otherwise, there is a circular reference problem 
+	// of smart pointer (`acceptor_` storages this shared_ptr).
+	// 1. but the server objects usually do not need to be destroyed.
+	// 2. please use weak_from_this() since C++17.
+	// 3. make_weak_bind() is not good for right-value yet.
 	acceptor_->set_new_connect_callback(
 		std::bind(&TcpServer::new_connection, shared_from_this(), _1, _2));
 }
@@ -117,7 +120,7 @@ void TcpServer::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 	conn->set_write_complete_callback(write_complete_cb_);
 
 	// Must use weak bind. Otherwise, there is a circular reference problem 
-	// of smart pointer.
+	// of smart pointer (`connections_` storages all connections).
 	using containers::_1;
 	using containers::make_weak_bind;
 	conn->set_close_callback(
@@ -126,17 +129,17 @@ void TcpServer::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 	// Storages all client connections.
 	connections_[name] = conn;
 	
-	// Run in the `conn` own loop. server and `conn` may not be the same thread.
-	// The `conn` will be copied with std::bind(). so conn.use_count()==3.
-	worker->run_in_own_loop(std::bind(&TcpConnection::connect_established, conn));
+	// Run in the `conn` own loop, because server and `conn` may not be the same thread.
+	// The `conn` will be copied with std::bind(). So conn.use_count() will become 3.
+	worker->run_in_own_loop(
+		std::bind(&TcpConnection::connect_established, conn));
 }
 
 void TcpServer::remove_connection(const TcpConnectionPtr& conn)
 {
-	// Run in the `server` own loop. `conn` and server may not be the same thread.
-	using containers::make_weak_bind;
+	// Run in the `server` own loop, because `conn` and server may not be the same thread.
 	owner_loop_->run_in_own_loop(
-		make_weak_bind(&TcpServer::remove_connection_in_loop, shared_from_this(), conn));
+		std::bind(&TcpServer::remove_connection_in_loop, shared_from_this(), conn));
 }
 
 void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
@@ -149,9 +152,8 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 	size_t n = connections_.erase(conn->name());
 	DCHECK(n == 1);
 
-	// Can't remove `conn` here immediately, because we are inside Channel's 
-	// event handling function now.
-	// The purpose is not to let the channel's iterator fail.
+	// Can't remove `conn` here immediately, because we are inside Channel's event handling 
+	// function now.  The purpose is not to let the channel's iterator fail.
 	conn->get_owner_loop()->queue_in_own_loop(
 		std::bind(&TcpConnection::connect_destroyed, conn));
 }

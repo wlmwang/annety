@@ -51,6 +51,7 @@ private:
 	SelectableFDPtr listen_socket_;
 	std::unique_ptr<Channel> listen_channel_;
 	
+	// New connection callback
 	NewConnectCallback new_connect_cb_;
 
 	// A special file descriptor is used to solve the situation that the file 

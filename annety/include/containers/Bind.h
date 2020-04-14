@@ -14,6 +14,9 @@
 // FIXME: Do not support binding lambda expressions yet, and it is 
 // not good for right-value!!!
 
+// FIXME: Suggest use weak_from_this() since C++17, it is defined 
+// in std::enable_shared_from_this<T>::weak_from_this().
+
 namespace annety
 {
 // Example:

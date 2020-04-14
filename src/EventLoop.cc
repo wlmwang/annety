@@ -43,7 +43,7 @@ EventLoop::EventLoop()
 	: owning_thread_id_(new ThreadId(PlatformThread::current_id()))
 	, owning_thread_ref_(new ThreadRef(PlatformThread::current_ref()))
 	, poller_(new PollPoller(this))
-	, timer_(new TimerPool(this))
+	, timers_(new TimerPool(this))
 	, wakeup_socket_(new EventFD(true, true))
 	, wakeup_channel_(new Channel(this, wakeup_socket_.get()))
 {
@@ -117,7 +117,7 @@ void EventLoop::loop()
 #if !defined(OS_LINUX)
 		// On non-Linux platforms, Use the traditional poller timeout to implement 
 		// the timers, here you need to manually check the timeout timers.
-		timer_->check_timer(TimeStamp::now());
+		timers_->check_timer(TimeStamp::now());
 #endif	// !defined(OS_LINUX)
 
 		// wakeup and run queue functions.
@@ -133,7 +133,7 @@ TimerId EventLoop::run_at(double time_s, TimerCallback cb)
 }
 TimerId EventLoop::run_at(TimeStamp time, TimerCallback cb)
 {
-	return timer_->add_timer(std::move(cb), time, 0.0);
+	return timers_->add_timer(std::move(cb), time, 0.0);
 }
 
 TimerId EventLoop::run_after(double delay_s, TimerCallback cb)
@@ -151,12 +151,12 @@ TimerId EventLoop::run_every(double interval_s, TimerCallback cb)
 }
 TimerId EventLoop::run_every(TimeDelta delta, TimerCallback cb)
 {
-	return timer_->add_timer(std::move(cb), TimeStamp::now()+delta, delta.in_seconds_f());
+	return timers_->add_timer(std::move(cb), TimeStamp::now()+delta, delta.in_seconds_f());
 }
 
 void EventLoop::cancel(TimerId timerId)
 {
-	return timer_->cancel_timer(timerId);
+	return timers_->cancel_timer(timerId);
 }
 
 void EventLoop::set_poll_timeout(int64_t time_ms)

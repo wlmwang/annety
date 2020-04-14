@@ -128,7 +128,7 @@ private:
 	std::unique_ptr<Poller> poller_;
 	
 	// Timer pool.
-	std::unique_ptr<TimerPool> timer_;
+	std::unique_ptr<TimerPool> timers_;
 
 	// client active channel.
 	TimeStamp poll_active_ms_;
