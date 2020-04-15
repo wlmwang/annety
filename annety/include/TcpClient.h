@@ -46,7 +46,7 @@ public:
 	void enable_retry() { retry_ = true;}
 	void disable_retry() { retry_ = false;}
 
-	// for connection
+	// for connect
 	void connect();
 	void disconnect();
 

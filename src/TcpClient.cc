@@ -12,7 +12,7 @@
 #include "strings/StringPrintf.h"
 #include "containers/Bind.h"
 
-#include <unistd.h>	// usleep
+#include <unistd.h>		// ::usleep
 
 namespace annety
 {
@@ -97,7 +97,7 @@ TcpClient::~TcpClient()
 
 void TcpClient::connect()
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 
 	// FIXME: check state
 	connect_ = true;
@@ -106,7 +106,7 @@ void TcpClient::connect()
 
 void TcpClient::disconnect()
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 
 	connect_ = false;
 	{

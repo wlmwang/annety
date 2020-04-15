@@ -57,26 +57,30 @@ void Channel::handle_event(TimeStamp received_ms)
 	DLOG(TRACE) << "Channel::handle_event is handling event begin " << revents_to_string();
 	handling_event_ = true;
 
-	// hup event
-	// FIXME: revents_ & POLLOUT? (::connect could be trigger?)
-	if ((revents_ & POLLHUP) && (!(revents_ & POLLIN) /*|| !(revents_ & POLLOUT)*/)) {
+	// POLLHUP: Hang up (output only).
+	if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
 		LOG_IF(WARNING, logging_hup_) << "Channel::handle_event fd = " << fd() 
 			<< " POLLHUP event has received";
 		
 		if (close_cb_) close_cb_();
 	}
-	// error
+
+	// POLLERR: Error condition (output only).
+	// POLLNVAL: Invalid request: fd not open (output only).
 	if (revents_ & (POLLERR | POLLNVAL)) {
 		LOG_IF(WARNING, revents_ & POLLNVAL) << "Channel::handle_event fd = " << fd() 
 			<< " POLLNVAL event has received";
 		
 		if (error_cb_) error_cb_();
 	}
-	// readable
+
+	// POLLIN: There is data to read.
+	// POLLPRI: There is urgent data to read
 	if (revents_ & (POLLIN | POLLPRI | POLLHUP)) {
 		if (read_cb_) read_cb_(received_ms);
 	}
-	// writeable
+
+	// POLLOUT: Writing now will not block.
 	if (revents_ & POLLOUT) {
 		if (write_cb_) write_cb_();
 	}

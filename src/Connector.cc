@@ -16,8 +16,7 @@
 
 namespace annety
 {
-namespace internal
-{
+namespace internal {
 int socket(sa_family_t family, bool nonblock, bool cloexec)
 {
 	return sockets::socket(family, nonblock, cloexec);
@@ -37,8 +36,9 @@ bool is_self_connect(const SelectableFD& conn_sfd)
 
 }	// namespace internal
 
+// Every retry() is doubles delay.
+static const int kInitRetryDelayMs = 500;
 static const int kMaxRetryDelayMs = 30*1000;
-static const int kInitRetryDelayMs = 500;	// every retry() is doubles delay
 
 Connector::Connector(EventLoop* loop, const EndPoint& addr)
 	: owner_loop_(loop)
@@ -54,8 +54,8 @@ Connector::~Connector()
 	LOG(DEBUG) << "Connector::~Connector [" << server_addr_.to_ip_port() 
 		<< "] Connector is destructing and the retry is " << retry_delay_ms_;
 
-	DCHECK(!connect_socket_) << " Please stop() the Connector before destruct";
-	DCHECK(!connect_channel_) << " Please stop() the Connector before destruct";
+	DCHECK(!connect_socket_) << "Please stop() the Connector before destruct";
+	DCHECK(!connect_channel_) << "Please stop() the Connector before destruct";
 }
 
 void Connector::start()
@@ -75,7 +75,7 @@ void Connector::stop()
 	owner_loop_->run_in_own_loop(
 		make_weak_bind(&Connector::stop_in_own_loop, shared_from_this()));
 	
-	// cancel timer
+	// Cancel the timer.
 	if (time_id_.is_valid()) {
 		owner_loop_->cancel(time_id_);
 	}
@@ -132,32 +132,37 @@ void Connector::connect()
 
 	ScopedClearLastError last_error;
 
-	// non-block ::connect()
+	// Non-block socket to ::connect().
 	internal::connect(*connect_socket_, server_addr_);
 	switch (errno)
 	{
 	case 0:
-	case EINPROGRESS:	// Operation now in progress (errno=115)
-	case EINTR:
-	case EISCONN:
+	case EISCONN:		// 106: Transport endpoint is already connected.
+	case EINPROGRESS:	// 115: Operation now in progress.
+	case EINTR:			// 4: Interrupted system call.
 		connecting();
 		break;
 
-	case EAGAIN:
-	case EADDRINUSE:
-	case EADDRNOTAVAIL:
-	case ECONNREFUSED:	// Connection refused
-	case ENETUNREACH:
+	case EAGAIN:		// 11: Resource temporarily unavailable.
+						// 	   - Not enough free local ports...
+	case EADDRNOTAVAIL:	// 99: Address not available.
+						// 	   - Not enough free local ports...
+	case EADDRINUSE:	// 98: Address already in use.
+						// 	   - Local address is in use...
+	case ENETUNREACH:	// 101:Network is unreachable.
+						//	   - Network issue.
+	case ECONNREFUSED:	// 111:Connection refused.
+						//	   - The address is not listening...
 		retry_in_own_loop();
 		break;
 
-	case EACCES:
-	case EPERM:
-	case EAFNOSUPPORT:
-	case EALREADY:
-	case EBADF:
-	case EFAULT:
-	case ENOTSOCK:
+	case EPERM:			// 1. Operation not permitted.
+	case EACCES:		// 13: Permission denied.
+	case EFAULT:		// 14: Bad address.
+	case EBADF:			// 77: File descriptor in bad state.
+	case ENOTSOCK:		// 88: Not a socket.  (non-socket).
+	case EAFNOSUPPORT:	// 97: Address family not supported by protocol.
+	case EALREADY:		// 114: Connection already in progress.
 		PLOG(ERROR) << "Connector::connect has error";
 		connect_socket_.reset();
 		break;
@@ -179,10 +184,15 @@ void Connector::connecting()
 	state_ = kConnecting;
 	connect_channel_.reset(new Channel(owner_loop_, connect_socket_.get()));
 
-	// When the socket becomes writable, the connection is successfully established
-	// But if the socket becomes readable or readable & writable, the connection fails
+	// When the socket becomes writable, the connection is successfully established.
+	// But if the socket becomes readable or readable & writable, the connection fails.
+	//
 	// ON LINUX, connect() failure, the multiplexer trigger event is [IN OUT HUP ERR]
 	// ON MACOS, connect() failure, the multiplexer trigger event is [IN PRI HUP]
+
+	// FIXME: Please use weak_from_this() since C++17.
+	// Must use weak bind. Otherwise, there is a circular reference problem 
+	// of smart pointer (`connect_channel_` storages this shared_ptr).
 	using containers::make_weak_bind;
 	connect_channel_->set_error_callback(
 		make_weak_bind(&Connector::handle_error, shared_from_this()));
@@ -201,8 +211,9 @@ void Connector::handle_write()
 
 	LOG(TRACE) << "Connector::handle_write the state=" << state_;
 
-	// When the socket becomes writable, the connection is successfully established
-	// But if the socket becomes readable or readable & writable, the connection fails
+	// When the socket becomes writable, the connection is successfully established.
+	// But if the socket becomes readable or readable & writable, the connection fails.
+	//
 	// ON LINUX, connect() failure, the multiplexer trigger event is [IN OUT HUP ERR]
 	// ON MACOS, connect() failure, the multiplexer trigger event is [IN PRI HUP]
 	if (state_ == kConnecting) {
@@ -274,6 +285,7 @@ void Connector::handle_error()
 
 	LOG(WARNING) << "Connector::handle_error the state=" << state_;
 	
+	// When connecting, readable is not an expected event.
 	if (state_ == kConnecting) {
 		DCHECK(connect_socket_);
 		remove_and_reset_channel();
