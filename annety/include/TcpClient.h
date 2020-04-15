@@ -37,7 +37,8 @@ public:
 	
 	void initialize();
 
-	~TcpClient();  // force out-line dtor, for std::unique_ptr members.
+	// force out-line dtor, for std::unique_ptr members.
+	~TcpClient();
 
 	const std::string& name() const { return name_;}
 	EventLoop* get_own_loop() const { return owner_loop_;}

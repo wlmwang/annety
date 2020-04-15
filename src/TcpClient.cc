@@ -66,7 +66,7 @@ void TcpClient::initialize()
 	// 	make_weak_bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
 
 	// FIXME: Please use weak_from_this() since C++17.
-	// It is best to manually manage the lifecycle of connector_
+	// It is best to manually manage the lifecycle of connector_.
 	connector_->set_new_connect_callback(
 		std::bind(&TcpClient::new_connection, this, _1, _2));
 	connector_->set_error_connect_callback(
