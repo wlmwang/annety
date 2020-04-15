@@ -16,10 +16,9 @@
 
 namespace annety
 {
-namespace internal
-{
+namespace internal {
 // Consistent with the function of the same name in the TcpServer.cc file.
-// Redefining the reduction of dependencies here
+// Redefining the reduction of dependencies here.
 static struct sockaddr_in6 get_local_addr(const SelectableFD& sfd)
 {
 	return sockets::get_local_addr(sfd.internal_fd());
@@ -48,6 +47,32 @@ TcpClient::TcpClient(EventLoop* loop, const EndPoint& addr, const std::string& n
 		<< "] client is constructing which connecting to " << ip_port_;
 }
 
+void TcpClient::initialize()
+{
+	DCHECK(!initilize_);
+	initilize_ = true;
+
+	// FIXME: Please use weak_from_this() since C++17.
+	// Must use weak bind. Otherwise, there is a circular reference problem 
+	// of smart pointer (`connector_` storages this shared_ptr).
+	// 1. but the client instance usually do not need to be destroyed.
+	// 2. make_weak_bind() is not good for right-value yet.
+
+
+	// using containers::_1;
+	// using containers::_2;
+	// using containers::make_weak_bind;
+	// connector_->set_new_connect_callback(
+	// 	make_weak_bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
+
+	// FIXME: Please use weak_from_this() since C++17.
+	// It is best to manually manage the lifecycle of connector_
+	connector_->set_new_connect_callback(
+		std::bind(&TcpClient::new_connection, this, _1, _2));
+	connector_->set_error_connect_callback(
+			std::bind(&TcpClient::error_connect, this));
+}
+
 TcpClient::~TcpClient()
 {
 	DCHECK(initilize_);
@@ -55,7 +80,7 @@ TcpClient::~TcpClient()
 	LOG(DEBUG) << "TcpClient::~TcpClient [" << name_ 
 		<< "] client is destructing which be connected to " << ip_port_;
 
-	// FIXME: Never run the code, because the conn have circular reference with 
+	// FIXME: Never run the code, because the `conn` have circular reference with 
 	// TcpClient. --- shared_from_this() by bind() in initialize()
 	// And the stop() method use usleep to wait remove_connection() finish.
 	close_connection();
@@ -68,26 +93,6 @@ TcpClient::~TcpClient()
 		owner_loop_->queue_in_own_loop(
 			std::bind(&internal::remove_connector, connector_));
 	}
-}
-
-void TcpClient::initialize()
-{
-	CHECK(!initilize_);
-	initilize_ = true;
-
-	// FIXME: make_weak_bind() have a bug with right reference
-	// using containers::_1;
-	// using containers::_2;
-	// using containers::make_weak_bind;
-	// connector_->set_new_connect_callback(
-	// 	make_weak_bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
-
-	// FIXME: unsafe
-	// It is best to manually manage the lifecycle of connector_
-	connector_->set_new_connect_callback(
-		std::bind(&TcpClient::new_connection, this, _1, _2));
-	connector_->set_error_connect_callback(
-			std::bind(&TcpClient::error_connect, this));
 }
 
 void TcpClient::connect()

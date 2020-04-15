@@ -13,6 +13,7 @@
 #include "containers/Any.h"
 
 #include <string>
+#include <atomic>
 #include <memory>
 #include <functional>
 
@@ -23,10 +24,10 @@ class EventLoop;
 class SocketFD;
 class NetBuffer;
 
-// Tcp connection wrapper of TCP protocol
+// Connection wrapper of TCP protocol.
 //
 // This class owns the SelectableFD and Channel lifetime. Own lifetime 
-// is held by TcpServer (ConnectionMap) and users.
+// is held by Server (`ConnectionMap`) and users.
 class TcpConnection : public std::enable_shared_from_this<TcpConnection>
 {
 public:
@@ -35,37 +36,51 @@ public:
 				SelectableFDPtr sockfd,
 				const EndPoint& localaddr,
 				const EndPoint& peeraddr);
-	~TcpConnection();
 	
 	void initialize();
 
-	EventLoop* get_owner_loop() const { return owner_loop_; }
+	~TcpConnection();
+
 	const std::string& name() const { return name_; }
 	const EndPoint& local_addr() const { return local_addr_; }
 	const EndPoint& peer_addr() const { return peer_addr_; }
-
-	bool connected() const { return state_ == kConnected; }
-	bool disconnected() const { return state_ == kDisconnected; }
+	EventLoop* get_owner_loop() const { return owner_loop_; }
 
 	// *Thread safe*
-	void send(const StringPiece& message);
-	void send(NetBuffer&& message);
-	void send(NetBuffer* message);
-	void send(const void* message, int len);
-
-	// NOT thread safe, no simultaneous calling
-	void shutdown();
-	void force_close();
-	void force_close_with_delay(double delay_s);
-
-	void set_tcp_nodelay(bool on);
-
-	// reading or not
-	void start_read();
-	void stop_read();
-	// NOT thread safe, may race with start/stopReadInLoop
+	bool connected() const { return state_ == kConnected; }
+	bool disconnected() const { return state_ == kDisconnected; }
 	bool is_reading() const { return reading_; };
 
+	// *Thread safe*
+	// Enable/Disable the read event. Is enabled by default.
+	void start_read();
+	void stop_read();
+
+	// *Thread safe*
+	void send(NetBuffer*);	// this one will swap data
+	void send(NetBuffer&);	// this one will swap data
+	void send(NetBuffer&&);
+	void send(const NetBuffer*);
+	void send(const NetBuffer&);
+	void send(const void*, int);
+	void send(const StringPiece&);
+
+	// *Thread safe*
+	// After the output buffer is sent, then handling shutdown 
+	// the writable channel.
+	void shutdown();
+	// Don't care if the output buffer is sent, handling close 
+	// the file descriptor (destory connection instance).
+	void force_close();
+	// Delay handling close the file descriptor (destory 
+	// connection instance).
+	void force_close_with_delay(double delay_s);
+
+	// TCP opens the Nagle algorithm by default. Turn off it.
+	void set_tcp_nodelay(bool on);
+
+	// *Not thread safe*, but run in own loop thread.
+	// Getter/Setter the connection context.
 	void set_context(const containers::Any& context) 
 	{
 		context_ = context;
@@ -79,6 +94,8 @@ public:
 		return &context_;
 	}
 
+	// The callback function of the user moved from the `Server`.
+	// *Not thread safe*, but run in own loop thread.
 	void set_connect_callback(ConnectCallback cb)
 	{
 		connect_cb_ = std::move(cb);
@@ -96,32 +113,33 @@ public:
 		high_water_mark_cb_ = std::move(cb);
 		high_water_mark_ = high_water_mark;
 	}
-
 	void set_close_callback(CloseCallback cb)
 	{
 		close_cb_ = std::move(cb);
 	}
 	
-	NetBuffer* input_buffer();
-	NetBuffer* output_buffer();
-
 	void connect_established();
 	void connect_destroyed();
+
+	NetBuffer* input_buffer();
+	NetBuffer* output_buffer();
 
 private:
 	enum StateE {kDisconnected, kConnecting, kConnected, kDisconnecting};
 
-	void handle_read(TimeStamp received_ms);
+	void initialize_in_loop();
+
+	void handle_read(TimeStamp);
 	void handle_write();
 	void handle_close();
 	void handle_error();
 
-	void initialize_in_loop();
-	
-	void send_in_loop(const StringPiece& message);
-	void send_in_loop(const void* message, size_t len);
+	void send_in_loop(const StringPiece&);
+	void send_in_loop(const void*, size_t);
+
 	void shutdown_in_loop();
 	void force_close_in_loop();
+
 	void start_read_in_loop();
 	void stop_read_in_loop();
 
@@ -131,12 +149,10 @@ private:
 private:
 	EventLoop* owner_loop_;
 	const std::string name_;
-	
 	bool initilize_{false};
-	bool reading_{true};
 
-	// FIXME: use atomic variable
-	StateE state_{kConnecting};
+	std::atomic<bool> reading_{true};
+	std::atomic<StateE> state_{kConnecting};
 
 	const EndPoint local_addr_;
 	const EndPoint peer_addr_;
@@ -145,20 +161,20 @@ private:
 	SelectableFDPtr connect_socket_;
 	std::unique_ptr<Channel> connect_channel_;
 
-	CloseCallback close_cb_;
+	// socket buffer
+	std::unique_ptr<NetBuffer> input_buffer_;
+	std::unique_ptr<NetBuffer> output_buffer_;
 
-	// User callback function
+	// A connection's context.
+	containers::Any context_;
+
+	// User callback function.
+	CloseCallback close_cb_;
 	ConnectCallback connect_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;
 	HighWaterMarkCallback high_water_mark_cb_;
 	size_t high_water_mark_{64*1024*1024};
-
-	std::unique_ptr<NetBuffer> input_buffer_;
-	std::unique_ptr<NetBuffer> output_buffer_;
-
-	// a connection's context
-	containers::Any context_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpConnection);
 };

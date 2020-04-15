@@ -25,11 +25,11 @@ class TimerPool;
 
 // Reactor mode, Event dispatcher.
 // It mainly acts as a combination of IO multiplexing and channels, and 
-// controls the thread safety model.  One loop per thread: Each thread 
+// controls the thread safety model. - One loop per thread: Each thread 
 // has at most one EventLoop instance.
 //
-// Thread ipc: Other threads add a wakeup task function, and then wakeup 
-// the own thread to execute it.
+// Thread ipc: EventLoop is unlocked! Other threads add a wakeup task, 
+// and then system will wakeup the own thread to execute it.
 class EventLoop
 {
 public:
@@ -39,6 +39,7 @@ public:
 	static const int kPollTimeoutMs = 30*1000; // -1
 
 	EventLoop();
+	
 	~EventLoop();
 	
 	// One loop per thread.

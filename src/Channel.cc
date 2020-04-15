@@ -40,6 +40,9 @@ Channel::~Channel()
 		// channel must has removed.
 		DCHECK(!owner_loop_->has_channel(this));
 	}
+
+	DLOG(TRACE) << "Channel::~Channel the channel fd=" 
+		<< select_fd_->internal_fd() << " is destructing";
 }
 
 int Channel::fd() const

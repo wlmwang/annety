@@ -24,7 +24,7 @@ class EventLoop;
 class EventLoopPool;
 
 // Server wrapper of TCP protocol.
-// It supports single-thread and thread-pool model.
+// It supports single-thread and multi-thread model.
 //
 // This class owns lifetime of Acceptor, it also storages all client 
 // connections pool which has been connected.
@@ -38,15 +38,21 @@ public:
 			  const std::string& name = "a-srv",
 			  bool reuse_port = false);
 
-	~TcpServer();
-	
 	void initialize();
+
+	~TcpServer();
 
 	void start();
 
 	const std::string& ip_port() const { return ip_port_; }
 	const std::string& name() const { return name_; }
 	
+	// Turn on the server to become a multi-threaded model.
+	// *Not thread safe*, but usually be called before start().
+	void set_thread_num(int num_threads);
+
+	// User registered callback functions.
+
 	// *Not thread safe*, but usually be called before start().
 	void set_connect_callback(ConnectCallback cb)
 	{
@@ -67,17 +73,15 @@ public:
 	{
 		thread_init_cb_ = std::move(cb);
 	}
-	// *Not thread safe*, but usually be called before start().
-	void set_thread_num(int num_threads);
 
 private:
 	// *Not thread safe*, but run in own loop thread.
-	void new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeraddr);
+	void new_connection(SelectableFDPtr&& peerfd, const EndPoint& peeraddr);
 
 	// *Thread safe*, for Connection.
-	void remove_connection(const TcpConnectionPtr& conn);
+	void remove_connection(const TcpConnectionPtr&);
 	// *Not thread safe*, but run in own loop thread.
-	void remove_connection_in_loop(const TcpConnectionPtr& conn);
+	void remove_connection_in_loop(const TcpConnectionPtr&);
 
 private:
 	using ConnectionMap = std::map<std::string, TcpConnectionPtr>;
@@ -85,7 +89,6 @@ private:
 	EventLoop* owner_loop_{nullptr};
 	const std::string name_;
 	const std::string ip_port_;
-
 	bool initilize_{false};
 	
 	// ATOMIC_FLAG_INIT is macro
@@ -97,15 +100,15 @@ private:
 	// ThreadPool of event loops.
 	std::unique_ptr<EventLoopPool> workers_;
 
+	// Client connections pool (std::map).
+	std::atomic<int> next_conn_id_{1};
+	ConnectionMap connections_;
+	
 	// User registered callback functions.
 	ConnectCallback connect_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;
 	ThreadInitCallback thread_init_cb_;
-
-	// Client connections pool (std::map).
-	std::atomic<int> next_conn_id_{1};
-	ConnectionMap connections_;
 
 	DISALLOW_COPY_AND_ASSIGN(TcpServer);
 };
