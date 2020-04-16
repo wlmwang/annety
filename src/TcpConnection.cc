@@ -66,7 +66,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
 	// setting keepalive sockopt
 	internal::set_keep_alive(*connect_socket_, true);
 
-	// Need to manually enable.
+	// When necessary, manually closed by the user.
 	// set_tcp_nodelay(true);
 }
 
@@ -83,10 +83,10 @@ void TcpConnection::initialize()
 
 TcpConnection::~TcpConnection()
 {
-	DCHECK(initilize_ == true);
+	DCHECK(initilize_);
 	DCHECK(state_ == kDisconnected);
 	
-	LOG(TRACE) << "TcpConnection::~TcpConnection the [" <<  name_ << "] connecting of "
+	DLOG(TRACE) << "TcpConnection::~TcpConnection the [" <<  name_ << "] connecting of "
 		<< " fd=" << connect_socket_->internal_fd()
 		<< " state=" << state_to_string() << " is destructing";
 }
@@ -502,14 +502,14 @@ const char* TcpConnection::state_to_string() const
 	}
 }
 
-// constructs an object of type TcpConnectionPtr and wraps it
+// Constructs an object of type TcpConnectionPtr and wraps it.
 TcpConnectionPtr make_tcp_connection(EventLoop* loop,
 				const std::string& name,
 				SelectableFDPtr&& sockfd,
 				const EndPoint& localaddr,
 				const EndPoint& peeraddr)
 {
-	CHECK(loop && sockfd);
+	DCHECK(loop && sockfd);
 
 	TcpConnectionPtr conn(new TcpConnection(loop, name, std::move(sockfd), localaddr, peeraddr));
 	conn->initialize();

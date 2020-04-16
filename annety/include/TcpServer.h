@@ -10,9 +10,9 @@
 
 #include <map>
 #include <string>
+#include <atomic>
 #include <memory>
 #include <utility>
-#include <atomic>
 #include <functional>
 
 namespace annety
@@ -94,16 +94,16 @@ private:
 	// ATOMIC_FLAG_INIT is macro
 	std::atomic_flag started_ = ATOMIC_FLAG_INIT;
 
-	// Acceptor of listen-socket Server.
+	// Accept the processor.
 	std::unique_ptr<Acceptor> acceptor_;
 	
 	// ThreadPool of event loops.
 	std::unique_ptr<EventLoopPool> workers_;
 
 	// Client connections pool (std::map).
-	std::atomic<int> next_conn_id_{1};
+	int next_conn_id_{1};
 	ConnectionMap connections_;
-	
+
 	// User registered callback functions.
 	ConnectCallback connect_cb_;
 	MessageCallback message_cb_;

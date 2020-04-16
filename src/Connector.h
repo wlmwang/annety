@@ -10,6 +10,7 @@
 #include "CallbackForward.h"
 
 #include <string>
+#include <atomic>
 #include <memory>
 #include <functional>
 #include <utility>
@@ -38,14 +39,15 @@ public:
 	// *Thread safe*
 	void retry();
 
-	// FIXME: *Not thread safe*
-	// you must be call this in loop thread
+	// *Thread safe*
 	void restart();
 
+	// *Not thread safe*, but usually be called before start().
 	void set_new_connect_callback(NewConnectCallback cb)
 	{
 		new_connect_cb_ = std::move(cb);
 	}
+	// *Not thread safe*, but usually be called before start().
 	void set_error_connect_callback(ErrorCallback cb)
 	{
 		error_connect_cb_ = std::move(cb);
@@ -59,16 +61,20 @@ public:
 private:
 	enum States {kDisconnected, kConnecting, kConnected};
 
-	void connect();
-	void connecting();
+	// *Not thread safe*, but run in own loop thread.
+	void do_connect();
+	void in_connect();
+
+	// *Not thread safe*, but run in own loop thread.
 	void start_in_own_loop();
 	void stop_in_own_loop();
 	void retry_in_own_loop();
 
-	void handle_read();
+	// *Not thread safe*, but run in own loop thread.
 	void handle_write();
 	void handle_error();
 
+	// *Not thread safe*, but run in own loop thread.
 	void reset_channel();
 	void remove_and_reset_channel();
 
@@ -76,11 +82,14 @@ private:
 	EventLoop* owner_loop_{nullptr};
 	EndPoint server_addr_;
 
-	bool connect_{false}; // atomic
-	States state_{kDisconnected};  // FIXME: use atomic variable
+	std::atomic<bool> connect_{false};
+	std::atomic<States> state_{kDisconnected};
+
+	// For retry()
 	int retry_delay_ms_;
 	TimerId time_id_;
 
+	// connect socket/channel
 	SelectableFDPtr connect_socket_;
 	std::unique_ptr<Channel> connect_channel_;
 

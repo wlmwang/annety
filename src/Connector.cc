@@ -77,7 +77,7 @@ void Connector::stop()
 	owner_loop_->run_in_own_loop(
 		make_weak_bind(&Connector::stop_in_own_loop, shared_from_this()));
 	
-	// Cancel the timer.
+	// Cancel the timer of retry.
 	if (time_id_.is_valid()) {
 		owner_loop_->cancel(time_id_);
 	}
@@ -98,7 +98,6 @@ void Connector::restart()
 	retry_delay_ms_ = kInitRetryDelayMs;
 
 	state_ = kDisconnected;
-
 	connect_ = true;
 
 	// FIXME: Please use weak_from_this() since C++17.
@@ -113,7 +112,7 @@ void Connector::start_in_own_loop()
 	DCHECK(state_ == kDisconnected);
   
 	if (connect_) {
-		connect();
+		do_connect();
 	} else {
 		LOG(DEBUG) << "Connector::start_in_own_loop do not connect, maybe has connected";
 	}
@@ -129,16 +128,40 @@ void Connector::stop_in_own_loop()
 	connect_socket_.reset();
 }
 
-void Connector::connect()
+void Connector::retry_in_own_loop()
+{
+	owner_loop_->check_in_own_loop();
+
+	state_ = kDisconnected;
+	connect_socket_.reset();
+
+	if (connect_) {
+		LOG(DEBUG) << "Connector::retry connecting to " << server_addr_.to_ip_port()
+			<< " in " << retry_delay_ms_ << " milliseconds";
+
+		// FIXME: Please use weak_from_this() since C++17.
+		// retry after.
+		using containers::make_weak_bind;
+		time_id_ = owner_loop_->run_after(
+			TimeDelta::from_milliseconds(retry_delay_ms_),
+			make_weak_bind(&Connector::start_in_own_loop, shared_from_this()));
+
+		// double delay.
+		retry_delay_ms_ = std::min(retry_delay_ms_ * 2, kMaxRetryDelayMs);
+	} else {
+		DLOG(TRACE) << "Connector::retry do not connect";
+	}
+}
+
+void Connector::do_connect()
 {
 	owner_loop_->check_in_own_loop();
 
 	DCHECK(!connect_socket_);
 	connect_socket_.reset(new SocketFD(server_addr_.family(), true, true));
 
-	ScopedClearLastError last_error;
-
 	// Non-block socket to call ::connect().
+	ScopedClearLastError last_error;
 	internal::connect(*connect_socket_, server_addr_);
 	switch (errno)
 	{
@@ -147,7 +170,7 @@ void Connector::connect()
 	case EISCONN:		// 106:	Transport endpoint is already connected.
 	case EINPROGRESS:	// 115:	Operation now in progress.
 						//		- The connection could not be established immediately.
-		connecting();
+		in_connect();
 		break;
 
 	case EAGAIN:		// 11:	Resource temporarily unavailable.
@@ -172,18 +195,18 @@ void Connector::connect()
 	case EALREADY:		// 114:	Connection already in progress.
 						//		- Before the connection is completely established, 
 						//		will fail with EALREADY.
-		PLOG(ERROR) << "Connector::connect has error";
+		PLOG(ERROR) << "Connector::do_connect has error";
 		connect_socket_.reset();
 		break;
 
 	default:
-		PLOG(ERROR) << "Connector::connect has unexpected error";
+		PLOG(ERROR) << "Connector::do_connect has unexpected error";
 		connect_socket_.reset();
 		break;
 	}
 }
 
-void Connector::connecting()
+void Connector::in_connect()
 {
 	owner_loop_->check_in_own_loop();
 
@@ -193,11 +216,17 @@ void Connector::connecting()
 	state_ = kConnecting;
 	connect_channel_.reset(new Channel(owner_loop_, connect_socket_.get()));
 
-	// When the socket becomes writable, the connection is successfully established.
-	// But if the socket becomes readable or readable & writable, the connection fails.
+	// IO Multiplexing Event: 
+	// 1. If the connection is established and no data arrives, then 
+	//	  sockfd is writable.
+	// 2. If the connection is established before poll and some data 
+	// 	  has arrived, then sockfd is readable and writable.
+	// 3. If the connection fails, sockfd is also readable and writable.
 	//
-	// OS_LINUX, connect() fail, the multiplexer trigger event is [IN OUT HUP ERR]
-	// OS_MACOS, connect() fail, the multiplexer trigger event is [IN PRI HUP]
+	// To distinguish between 2 and 3 (both readable and writable), you 
+	// can call getsockopt() to check for errors.
+	//
+	// LINUX: connect() fail, the multiplexer event may is [IN OUT HUP ERR]
 
 	// FIXME: Please use weak_from_this() since C++17.
 	// Must use weak bind. Otherwise, there is a circular reference problem 
@@ -207,12 +236,13 @@ void Connector::connecting()
 		make_weak_bind(&Connector::handle_error, shared_from_this()));
 	connect_channel_->set_write_callback(
 		make_weak_bind(&Connector::handle_write, shared_from_this()));
-	connect_channel_->set_read_callback(
-		make_weak_bind(&Connector::handle_read, shared_from_this()));
 
-	// When connecting, readable is not an expected event.
-	connect_channel_->enable_read_event();
 	connect_channel_->enable_write_event();
+
+	// FIXME: Compatible with MACOS platform??
+	// connect_channel_->set_read_callback(
+	// 	make_weak_bind(&Connector::handle_write, shared_from_this()));
+	// connect_channel_->enable_read_event();
 }
 
 void Connector::handle_write()
@@ -221,21 +251,20 @@ void Connector::handle_write()
 
 	LOG(DEBUG) << "Connector::handle_write the state=" << state_;
 
-	// OS_LINUX, connect() fail, the multiplexer trigger event is [IN OUT HUP ERR]
 	if (state_ == kConnecting) {
 		DCHECK(connect_socket_);
 		remove_and_reset_channel();
 
+		ScopedClearLastError last_error;
 		int err = internal::get_sock_error(*connect_socket_);
-		if (err < 0) {
-			ScopedClearLastError last_error;
+		if (err) {
 			errno = err;
 			PLOG(WARNING) << "Connector::handle_write connect has failed";
 
 			connect_socket_.reset();
 			state_ = kDisconnected;
 
-			// connect fail.
+			// connect fail. --- retry()
 			if (error_connect_cb_) {
 				error_connect_cb_();
 			}
@@ -258,37 +287,6 @@ void Connector::handle_write()
 	}
 }
 
-void Connector::handle_read()
-{
-	owner_loop_->check_in_own_loop();
-
-	LOG(WARNING) << "Connector::handle_read the state=" << state_;
-	
-	// OS_MACOS, connect() fail, the multiplexer trigger event is [IN PRI HUP]
-	if (state_ == kConnecting) {
-		DCHECK(connect_socket_);
-		remove_and_reset_channel();
-
-		// Logging the error string.
-		int err = internal::get_sock_error(*connect_socket_);
-		{
-			ScopedClearLastError last_error;
-			errno = err;
-			PLOG(WARNING) << "Connector::handle_read has failed";
-		}
-
-		connect_socket_.reset();
-		state_ = kDisconnected;
-
-		// connect failure.
-		if (err) {
-			if (error_connect_cb_) {
-				error_connect_cb_();
-			}
-		}
-	}
-}
-
 void Connector::handle_error()
 {
 	owner_loop_->check_in_own_loop();
@@ -299,9 +297,9 @@ void Connector::handle_error()
 		DCHECK(connect_socket_);
 		remove_and_reset_channel();
 
+		ScopedClearLastError last_error;
 		int err = internal::get_sock_error(*connect_socket_);
 		{
-			ScopedClearLastError last_error;
 			errno = err;
 			PLOG(WARNING) << "Connector::handle_error has failed";
 		}
@@ -309,36 +307,12 @@ void Connector::handle_error()
 		connect_socket_.reset();
 		state_ = kDisconnected;
 
-		// connect failure
+		// connect fail. --- retry()
 		if (err) {
 			if (error_connect_cb_) {
 				error_connect_cb_();
 			}
 		}
-	}
-}
-
-void Connector::retry_in_own_loop()
-{
-	owner_loop_->check_in_own_loop();
-
-	state_ = kDisconnected;
-	connect_socket_.reset();
-
-	if (connect_) {
-		LOG(DEBUG) << "Connector::retry connecting to " << server_addr_.to_ip_port()
-			<< " in " << retry_delay_ms_ << " milliseconds";
-
-		// retry after
-		using containers::make_weak_bind;
-		time_id_ = owner_loop_->run_after(
-			TimeDelta::from_milliseconds(retry_delay_ms_),
-			make_weak_bind(&Connector::start_in_own_loop, shared_from_this()));
-
-		// double delay
-		retry_delay_ms_ = std::min(retry_delay_ms_ * 2, kMaxRetryDelayMs);
-	} else {
-		DLOG(TRACE) << "Connector::retry do not connect";
 	}
 }
 
@@ -351,7 +325,9 @@ void Connector::remove_and_reset_channel()
 		connect_channel_->remove();
 	}
 
-	// Can't reset Channel here, because we are inside Channel::handle_event
+	// Can't remove Channel here immediately, because we are inside channel's 
+	// event handling function now.  The purpose is not to let the channel's 
+	// iterator fail.
 	using containers::make_weak_bind;
 	owner_loop_->queue_in_own_loop(
 		make_weak_bind(&Connector::reset_channel, shared_from_this()));

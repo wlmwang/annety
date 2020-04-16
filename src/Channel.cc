@@ -58,6 +58,10 @@ void Channel::handle_event(TimeStamp received_ms)
 	handling_event_ = true;
 
 	// POLLHUP: Hang up (output only).
+	//
+	// !(revents_ & POLLIN) means:
+	// 1. Let `read_cb_` handle normal connection closure.
+	// 2. HUP in writable event, indicating that you are writing a closed connection.
 	if ((revents_ & POLLHUP) && !(revents_ & POLLIN)) {
 		LOG_IF(WARNING, logging_hup_) << "Channel::handle_event fd = " << fd() 
 			<< " POLLHUP event has received";
@@ -75,8 +79,10 @@ void Channel::handle_event(TimeStamp received_ms)
 	}
 
 	// POLLIN: There is data to read.
-	// POLLPRI: There is urgent data to read
-	if (revents_ & (POLLIN | POLLPRI | POLLHUP)) {
+	// POLLPRI: There is urgent data to read.
+	// POLLRDHUP: Stream socket peer closed connection, or shutdown writing half 
+	// of connection.  --- since Linux 2.6.17.
+	if (revents_ & (POLLIN | POLLPRI /*| POLLRDHUP*/)) {
 		if (read_cb_) read_cb_(received_ms);
 	}
 

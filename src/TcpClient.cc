@@ -24,15 +24,6 @@ static struct sockaddr_in6 get_local_addr(const SelectableFD& sfd)
 	return sockets::get_local_addr(sfd.internal_fd());
 }
 
-void remove_connection(EventLoop* loop, const TcpConnectionPtr& conn)
-{
-	loop->queue_in_own_loop(std::bind(&TcpConnection::connect_destroyed, conn));
-}
-void remove_connector(ConnectorPtr& connector)
-{
-	// connector.reset();
-}
-
 }	// namespace internal
 
 TcpClient::TcpClient(EventLoop* loop, const EndPoint& addr, const std::string& name)
@@ -57,20 +48,10 @@ void TcpClient::initialize()
 	// of smart pointer (`connector_` storages this shared_ptr).
 	// 1. but the client instance usually do not need to be destroyed.
 	// 2. make_weak_bind() is not good for right-value yet.
-
-
-	// using containers::_1;
-	// using containers::_2;
-	// using containers::make_weak_bind;
-	// connector_->set_new_connect_callback(
-	// 	make_weak_bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
-
-	// FIXME: Please use weak_from_this() since C++17.
-	// It is best to manually manage the lifecycle of connector_.
 	connector_->set_new_connect_callback(
-		std::bind(&TcpClient::new_connection, this, _1, _2));
+		std::bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
 	connector_->set_error_connect_callback(
-			std::bind(&TcpClient::error_connect, this));
+			std::bind(&TcpClient::handle_retry, shared_from_this()));
 }
 
 TcpClient::~TcpClient()
@@ -80,18 +61,22 @@ TcpClient::~TcpClient()
 	LOG(DEBUG) << "TcpClient::~TcpClient [" << name_ 
 		<< "] client is destructing which be connected to " << ip_port_;
 
-	// FIXME: Never run the code, because the `conn` have circular reference with 
-	// TcpClient. --- shared_from_this() by bind() in initialize()
-	// And the stop() method use usleep to wait remove_connection() finish.
-	close_connection();
+	TcpConnectionPtr conn;
+	{
+		AutoLock locked(lock_);
+		conn = connection_;
+	}
 
-	if (connector_) {
-		LOG(DEBUG) << "TcpClient::~TcpClient [" << name_ 
-			<< "] connector is destructing which address is " << connector_.get();
-
+	if (!conn) {
 		connector_->stop();
-		owner_loop_->queue_in_own_loop(
-			std::bind(&internal::remove_connector, connector_));
+
+		// FIXME: *HACK* FOR `connection` close FINISH.
+		// Waiting for TCP wavehand protocol(Four-Way Wavehand) to complete,
+		// so that we can have a chance to call `connect_cb_`.
+		owner_loop_->run_after(1, std::bind([](ConnectorPtr& connector) {
+			// remove connector.
+			connector.reset();
+		}, connector_));
 	}
 }
 
@@ -99,62 +84,34 @@ void TcpClient::connect()
 {
 	DCHECK(initilize_);
 
-	// FIXME: check state
-	connect_ = true;
-	connector_->start();
+	if (!connect_) {
+		connect_ = true;
+		connector_->start();
+	}
 }
 
 void TcpClient::disconnect()
 {
 	DCHECK(initilize_);
 
-	connect_ = false;
-	{
-		AutoLock locked(lock_);
-		if (connection_) {
-			connection_->shutdown();
+	if (connect_) {
+		{
+			AutoLock locked(lock_);
+			if (connection_) {
+				connection_->shutdown();
+			}
 		}
-	}
-}
-
-void TcpClient::error_connect()
-{
-	CHECK(initilize_);
-
-	if (error_cb_) {
-		error_cb_();
-	}
-
-	close_connection();
-
-	if (retry_ && connect_) {
-		LOG(DEBUG) << "TcpClient::error_connect the [" << name_ 
-			<< "] client on " << ip_port_ << ", wait for reconnect now";
-
-		if (connector_) {
-			owner_loop_->queue_in_own_loop(
-				std::bind(&Connector::retry, connector_));
-		}
-	} else {
-		// FIXME: exit program when connect failure??
-		// exit(0);
+		connect_ = false;
 	}
 }
 
 void TcpClient::stop()
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 
 	if (connect_) {
-		disconnect();
-	}
-	connector_->stop();
-
-	// FIXME: HACK FOR disconnect() FINISH
-	// Waiting for TCP wavehand protocol(Four-Way Wavehand) to complete,
-	// so that we can have a chance to call connect_cb_
-	if (!owner_loop_->is_in_own_loop()) {
-		usleep(100 * 1000);
+		connector_->stop();
+		connect_ = false;
 	}
 }
 
@@ -171,25 +128,24 @@ void TcpClient::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 		<< "] connect new connection [" << name
 		<< "] from " << localaddr.to_ip_port();
 	
-	// FIXME: poll with zero timeout to double confirm the new connection
 	TcpConnectionPtr conn = make_tcp_connection(
 								owner_loop_, 
 								name,
 								std::move(sockfd),
 								localaddr,
-								peeraddr
-							);
-	// transfer register user callbacks to TcpConnection
+								peeraddr);
+	// Copy user callbacks into TcpConnection.
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
 	
-	// must be manually release conn object (@see TcpClient::remove_connection())
+	// FIXME: Please use weak_from_this() since C++17.
+	// Must use weak bind. Otherwise, there is a circular reference problem 
+	// of smart pointer (`connection_` storages conn).
 	using containers::_1;
-	using containers::make_bind;
 	using containers::make_weak_bind;
 	conn->set_close_callback(
-			make_bind(&TcpClient::remove_connection, shared_from_this(), _1));
+			make_weak_bind(&TcpClient::remove_connection, shared_from_this(), _1));
 	
 	{
 		AutoLock locked(lock_);
@@ -203,35 +159,65 @@ void TcpClient::remove_connection(const TcpConnectionPtr& conn)
 	owner_loop_->check_in_own_loop();
 	DCHECK(owner_loop_ == conn->get_owner_loop());
 	
+	// reset the `connection_` object.
 	{
 		AutoLock locked(lock_);
 		DCHECK(connection_ == conn);
 		connection_.reset();
 	}
 
-	// can't remove conn here immediately, because we are inside Channel::handle_event
-	owner_loop_->queue_in_own_loop(std::bind(&TcpConnection::connect_destroyed, conn));
+	// Can't remove `conn` here immediately, because we are inside channel's 
+	// event handling function now.
+	// The `conn` will be copied by std::bind().
+	owner_loop_->queue_in_own_loop(
+		std::bind(&TcpConnection::connect_destroyed, conn));
 	
 	if (retry_ && connect_) {
 		LOG(DEBUG) << "TcpClient::remove_connection the [" << name_ 
 			<< "] client on " << ip_port_ << ", wait for reconnect now";
 		
+		// retry.
 		if (connector_) {
 			connector_->restart();
 		}
 	}
 }
 
+void TcpClient::handle_retry()
+{
+	DCHECK(initilize_);
+
+	if (error_cb_) {
+		error_cb_();
+	}
+	close_connection();
+
+	// retry server.
+	if (retry_ && connect_) {
+		LOG(DEBUG) << "TcpClient::handle_retry the [" << name_ 
+			<< "] client on " << ip_port_ << ", wait for reconnect now";
+
+		if (connector_) {
+			// The `connector_` will be copied by std::bind().
+			owner_loop_->queue_in_own_loop(
+				std::bind(&Connector::retry, connector_));
+		}
+	} else {
+		// FIXME: exit program when connect fail??
+		// exit(0);
+	}
+}
+
 void TcpClient::close_connection()
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 	
 	bool unique = false;
 	TcpConnectionPtr conn;
 	{
 		AutoLock locked(lock_);
-		conn = connection_;
 		unique = connection_.unique();
+		conn = connection_;
 	}
 	
 	LOG(DEBUG) << "TcpClient::close_connection the conn address is " 
@@ -240,8 +226,13 @@ void TcpClient::close_connection()
 	if (conn) {
 		DCHECK(owner_loop_ == conn->get_owner_loop());
 
-		// *Not 100% safe*, if we are in different thread
-		CloseCallback cb = std::bind(&internal::remove_connection, owner_loop_, _1);
+		// FIXME: *Not 100% safe*, if we are in different thread.
+		CloseCallback cb = std::bind([](EventLoop* loop, const TcpConnectionPtr& conn) {
+			// remove conn.
+			loop->queue_in_own_loop(std::bind(&TcpConnection::connect_destroyed, conn));
+		}, owner_loop_, _1);
+
+		// close callback.
 		owner_loop_->run_in_own_loop(
 			std::bind(&TcpConnection::set_close_callback, conn, cb));
 		
@@ -251,10 +242,10 @@ void TcpClient::close_connection()
 	}
 }
 
-// constructs an object of type TcpClientPtr and wraps it
+// Constructs an object of type TcpClientPtr and wraps it.
 TcpClientPtr make_tcp_client(EventLoop* loop, const EndPoint& addr, const std::string& name)
 {
-	CHECK(loop);
+	DCHECK(loop);
 
 	TcpClientPtr crv(new TcpClient(loop, addr, name));
 	crv->initialize();

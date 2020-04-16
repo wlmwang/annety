@@ -11,9 +11,9 @@
 
 #include <map>
 #include <string>
+#include <atomic>
 #include <memory>
 #include <utility>
-#include <atomic>
 #include <functional>
 
 namespace annety
@@ -37,7 +37,6 @@ public:
 	
 	void initialize();
 
-	// force out-line dtor, for std::unique_ptr members.
 	~TcpClient();
 
 	const std::string& name() const { return name_;}
@@ -50,8 +49,6 @@ public:
 	// for connect
 	void connect();
 	void disconnect();
-
-	// for connector_ quit, and wait Four-Way Wavehand to disconnect()
 	void stop();
 
 	TcpConnectionPtr connection() const
@@ -62,22 +59,22 @@ public:
 
 	// User registered callback functions.
 
-	// *Not thread safe*, but usually be called before start().
+	// *Not thread safe*, but usually be called before connect().
 	void set_connect_callback(ConnectCallback cb)
 	{
 		connect_cb_ = std::move(cb);
 	}
-	// *Not thread safe*, but usually be called before start().
+	// *Not thread safe*, but usually be called before connect().
 	void set_error_callback(ErrorCallback cb)
 	{
 		error_cb_ = std::move(cb);
 	}
-	// *Not thread safe*, but usually be called before start().
+	// *Not thread safe*, but usually be called before connect().
 	void set_message_callback(MessageCallback cb)
 	{
 		message_cb_ = std::move(cb);
 	}
-	// *Not thread safe*, but usually be called before start().
+	// *Not thread safe*, but usually be called before connect().
 	void set_write_complete_callback(WriteCompleteCallback cb)
 	{
 		write_complete_cb_ = std::move(cb);
@@ -91,8 +88,10 @@ private:
 	void remove_connection(const TcpConnectionPtr&);
 
 	// *Not thread safe*, but run in own loop thread.
-	void error_connect();
 	void close_connection();
+
+	// *Not thread safe*, but run in own loop thread.
+	void handle_retry();
 
 private:
 	EventLoop* owner_loop_;
@@ -100,14 +99,15 @@ private:
 	const std::string ip_port_;
 	bool initilize_{false};
 	
-	bool retry_{false};		// atomic
-	bool connect_{true};	// atomic
+	std::atomic<bool> connect_{true};
+	std::atomic<bool> retry_{false};
 
+	// Connect the processor.
 	ConnectorPtr connector_;
 	
 	// Client connection.
 	mutable MutexLock lock_;
-	std::atomic<int> next_conn_id_{1};
+	int next_conn_id_{1};
 	TcpConnectionPtr connection_;
 
 	// User registered callback functions.

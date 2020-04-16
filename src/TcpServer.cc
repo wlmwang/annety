@@ -176,10 +176,10 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 		std::bind(&TcpConnection::connect_destroyed, conn));
 }
 
-// constructs an object of type TcpServerPtr and wraps it
+// Constructs an object of type TcpServerPtr and wraps it.
 TcpServerPtr make_tcp_server(EventLoop* loop, const EndPoint& addr, const std::string& name, bool reuse_port)
 {
-	CHECK(loop);
+	DCHECK(loop);
 	
 	TcpServerPtr srv(new TcpServer(loop, addr, name, reuse_port));
 	srv->initialize();

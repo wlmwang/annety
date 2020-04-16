@@ -157,7 +157,7 @@ private:
 	const EndPoint local_addr_;
 	const EndPoint peer_addr_;
 
-	// connect socket
+	// connect socket/channel
 	SelectableFDPtr connect_socket_;
 	std::unique_ptr<Channel> connect_channel_;
 

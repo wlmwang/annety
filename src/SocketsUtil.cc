@@ -160,6 +160,7 @@ int accept(int servfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec)
 				break;
 		}
 	}
+	
 	return connfd;
 }
 
@@ -273,12 +274,19 @@ struct sockaddr_in6 get_peer_addr(int fd)
 
 int get_sock_error(int fd)
 {
-	int opt;
-	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
-	if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, &opt, &optlen) < 0) {
+	int err;
+	
+	// If an error occurs, the return value of getsockopt is not portable:
+	// 1. OS_BSD: The getsockopt will returns 0, and the error is written 
+	// 	  to the variable `err`.
+	// 2. OS_SOLARIS: The getsockopt will returns -1, and the error is 
+	// 	  written to the global `errno`.
+	socklen_t optlen = static_cast<socklen_t>(sizeof err);
+	if (::getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &optlen) < 0) {
 		return errno;
 	}
-	return opt;
+	
+	return err;
 }
 
 bool is_self_connect(int fd)
@@ -326,7 +334,8 @@ void to_ip(char* buf, size_t size, const struct sockaddr* addr)
 
 		const struct sockaddr_in* addr4 = sockaddr_in_cast(addr);
 		
-		// Convert numeric format to dotted decimal IP address format
+		// Convert numeric format to dotted decimal IP address format.
+		// inet_ntoa() is *Not thread safe*.
 		const char *ptr = ::inet_ntop(AF_INET, &addr4->sin_addr, buf, static_cast<socklen_t>(size));
 		DPCHECK(ptr);
 	} else if (addr->sa_family == AF_INET6) {
@@ -334,7 +343,8 @@ void to_ip(char* buf, size_t size, const struct sockaddr* addr)
 
 		const struct sockaddr_in6* addr6 = sockaddr_in6_cast(addr);
 		
-		// Convert number(network byte-order) to IP address
+		// Convert number(network byte-order) to IP address.
+		// inet_ntoa() is *Not thread safe*.
 		const char *ptr = ::inet_ntop(AF_INET6, &addr6->sin6_addr, buf, static_cast<socklen_t>(size));
 		DPCHECK(ptr);
 	}
@@ -346,7 +356,7 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* addr)
 	addr->sin_family = AF_INET;
 	addr->sin_port = host_to_net16(port);	// ::htons()
 
-	// Convert IP address to number(network byte-order) 
+	// Convert IP address to number(network byte-order).
 	int ret = ::inet_pton(AF_INET, ip, &addr->sin_addr);
 	PLOG_IF(ERROR, ret < 0) << "::inet_pton failed";
 }
@@ -357,7 +367,7 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* addr)
 	addr->sin6_family = AF_INET6;
 	addr->sin6_port = host_to_net16(port);	// ::htons()
 
-	// Convert IP address to number(network byte-order) 
+	// Convert IP address to number(network byte-order).
 	int ret = ::inet_pton(AF_INET6, ip, &addr->sin6_addr);
 	DPLOG_IF(ERROR, ret < 0) << "::inet_pton failed";
 }
