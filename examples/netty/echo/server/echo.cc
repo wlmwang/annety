@@ -25,6 +25,11 @@ void EchoServer::start()
 	server_->start();
 }
 
+void EchoServer::set_thread_num(int num)
+{
+	server_->set_thread_num(num);
+}
+
 void EchoServer::on_connect(const annety::TcpConnectionPtr& conn)
 {
 	LOG(INFO) << "EchoServer - " << conn->local_addr().to_ip_port() << " <- "

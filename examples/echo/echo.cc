@@ -20,7 +20,6 @@ EchoServer::EchoServer(annety::EventLoop* loop, const annety::EndPoint& addr)
 
 void EchoServer::start()
 {
-	server_->set_thread_num(2);
 	server_->start();
 }
 

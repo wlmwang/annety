@@ -16,11 +16,7 @@ public:
 
 	void start();
 	
-	// for main() to set_thread_num 
-	annety::TcpServerPtr server() 
-	{
-		return server_;
-	}
+	void set_thread_num(int num);
 
 private:
 	void on_connect(const annety::TcpConnectionPtr& conn);
