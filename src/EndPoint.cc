@@ -129,21 +129,6 @@ sa_family_t EndPoint::family() const
 	return addr_.sin_family;
 }
 
-uint16_t EndPoint::port_net_endian() const
-{
-	static_assert(offsetof(sockaddr_in, sin_port) == offsetof(sockaddr_in6, sin6_port), 
-		"sin[6]_port offset illegal");
-
-	return addr_.sin_port;
-}
-
-uint32_t EndPoint::ip_net_endian() const
-{
-	// The offset of `sockaddr_in.sin_addr` and `sockaddr_in6.sin6_addr` is different.
-	DCHECK(family() == AF_INET);
-	return addr_.sin_addr.s_addr;
-}
-
 #if defined(OS_LINUX)
 static thread_local char tls_resolve_buffer[64 * 1024];
 bool EndPoint::resolve(const StringPiece& hostname, EndPoint* dst)

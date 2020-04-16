@@ -41,11 +41,8 @@ public:
 	void set_sockaddr_in(const struct sockaddr_in6& addr6) { addr6_ = addr6;}
 
 	// for bind/connect/recvfrom/sendto etc.
-	const struct sockaddr* get_sockaddr() const;
-
 	sa_family_t family() const;
-	uint16_t port_net_endian() const;
-	uint32_t ip_net_endian() const;	// Only IPv4.
+	const struct sockaddr* get_sockaddr() const;
 
 	std::string to_ip() const;
 	uint16_t to_port() const;
