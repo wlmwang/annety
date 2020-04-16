@@ -13,16 +13,14 @@ namespace annety
 // function in the system from being override.
 namespace sockets
 {
-bool set_non_blocking(int fd);
-bool set_close_on_exec(int fd);
-
-// static_cast
+// static convert between sockaddr and sockaddr_in/sockaddr6_in.
 const struct sockaddr_in* sockaddr_in_cast(const struct sockaddr* addr);
 const struct sockaddr_in6* sockaddr_in6_cast(const struct sockaddr* addr);
 const struct sockaddr* sockaddr_cast(const struct sockaddr_in* addr);
 const struct sockaddr* sockaddr_cast(const struct sockaddr_in6* addr);
 struct sockaddr* sockaddr_cast(struct sockaddr_in6* addr);
 
+// Compatible with IPv4 and IPv6.
 int socket(sa_family_t family, bool nonblock = true, bool cloexec = true);
 int accept(int servfd, struct sockaddr_in6* addr, bool nonblock = true, bool cloexec = true);
 int bind(int fd, const struct sockaddr* addr);
@@ -30,27 +28,33 @@ int connect(int servfd, const struct sockaddr* addr);
 int listen(int servfd);
 int shutdown(int fd, int how = SHUT_WR);
 
+// Compatible with IPv4 and IPv6.
+struct sockaddr_in6 get_local_addr(int fd);
+struct sockaddr_in6 get_peer_addr(int fd);
+
+// Compatible with IPv4 and IPv6.
+void to_ip_port(const struct sockaddr* addr, char* dst, size_t size);
+void to_ip(const struct sockaddr* addr, char* dst, size_t size);
+void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* dst);
+void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* dst);
+
+int get_sock_error(int fd);
 int set_reuse_addr(int servfd, bool on);
 int set_reuse_port(int servfd, bool on);
 int set_keep_alive(int fd, bool on);
 int set_tcp_nodelay(int fd, bool on);
 
-struct sockaddr_in6 get_local_addr(int fd);
-struct sockaddr_in6 get_peer_addr(int fd);
-
-int get_sock_error(int fd);
+// This can happen if the target server is local and has not been started.
 bool is_self_connect(int fd);
-
-void to_ip_port(char* buf, size_t size, const struct sockaddr* addr);
-void to_ip(char* buf, size_t size, const struct sockaddr* addr);
-void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* addr);
-void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* addr);
 
 int close(int sockfd);
 ssize_t read(int sockfd, void *buf, size_t len);
 ssize_t readv(int sockfd, const struct iovec *iov, int iovcnt);
 ssize_t write(int sockfd, const void *buf, size_t len);
 ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt);
+
+bool set_non_blocking(int fd);
+bool set_close_on_exec(int fd);
 
 }	// namespace sockets
 }	// namespace annety

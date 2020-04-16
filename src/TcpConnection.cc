@@ -488,7 +488,7 @@ void TcpConnection::handle_error()
 
 const char* TcpConnection::state_to_string() const
 {
-	switch (state_) {
+	switch (state_.load()) {
 	case kDisconnected:
 		return "kDisconnected";
 	case kConnecting:

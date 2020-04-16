@@ -19,39 +19,11 @@
 namespace annety
 {
 namespace sockets {
-bool set_non_blocking(int fd) 
-{
-	const int flags = ::fcntl(fd, F_GETFL);
-	if (flags == -1) {
-		DPLOG(ERROR) << "Unable to fcntl file F_GETFL " << fd;
-		return false;
-	}
-	if (flags & O_NONBLOCK) {
-		return true;
-	}
-	if (HANDLE_EINTR(::fcntl(fd, F_SETFL, flags | O_NONBLOCK)) == -1) {
-		DPLOG(ERROR) << "Unable to fcntl file O_NONBLOCK";
-		return false;
-	}
-	return true;
-}
-
-bool set_close_on_exec(int fd) 
-{
-	const int flags = ::fcntl(fd, F_GETFD);
-	if (flags == -1) {
-		DPLOG(ERROR) << "Unable to fcntl file F_GETFD " << fd;
-		return false;
-	}
-	if (flags & FD_CLOEXEC) {
-		return true;
-	}
-	if (HANDLE_EINTR(::fcntl(fd, F_SETFD, flags | FD_CLOEXEC)) == -1) {
-		DPLOG(ERROR) << "Unable to fcntl file FD_CLOEXEC " << fd;
-		return false;
-	}
-	return true;
-}
+// sin_family offset may not be 0, such as on MACOSX equal 1.
+static_assert(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr, sa_family), 
+	"sin_family offset illegal");
+static_assert(offsetof(sockaddr_in6, sin6_family) == offsetof(sockaddr, sa_family), 
+	"sin6_family offset illegal");
 
 const struct sockaddr* sockaddr_cast(const struct sockaddr_in6* addr) 
 {
@@ -106,8 +78,11 @@ int socket(sa_family_t family, bool nonblock, bool cloexec)
 // non-block, close-on-exec
 int accept(int servfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec)
 {
-	socklen_t addrlen = static_cast<socklen_t>(sizeof *addr);
+	// Always assume that the actual type of the `addr` is sockaddr_in6.
+	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
+
 #if defined(OS_MACOSX)
+	// The kernel will judge according to `addr->sa_family`.
 	int connfd = ::accept(servfd, sockaddr_cast(addr), &addrlen);
 	if (nonblock) {
 		DCHECK(set_non_blocking(servfd));
@@ -123,6 +98,7 @@ int accept(int servfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec)
 	if (cloexec) {
 		flags |= SOCK_CLOEXEC;
 	}
+	// The kernel will judge according to `addr->sa_family`.
 	int connfd = ::accept4(servfd, sockaddr_cast(addr), &addrlen, flags);
 #else
 #error Do not support your os platform in SocketsUtil.h
@@ -166,12 +142,17 @@ int accept(int servfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec)
 
 int bind(int fd, const struct sockaddr* addr)
 {
+	// Always assume that the actual type of the `addr` is sockaddr_in6.
 	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
+
 #if defined(OS_MACOSX)
+	// On MacOSX platform, `addrlen` should be the actual size of the address.
 	if (addr->sa_family == AF_INET) {
 		addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in));
 	}
 #endif	// defined(OS_MACOSX)
+
+	// The kernel will judge according to `addr->sa_family`.
 	int ret = ::bind(fd, addr, addrlen);
 	DPCHECK(ret >= 0);
 	return ret;
@@ -179,12 +160,17 @@ int bind(int fd, const struct sockaddr* addr)
 
 int connect(int servfd, const struct sockaddr* addr)
 {
+	// Always assume that the actual type of the `addr` is sockaddr_in6.
 	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
+
 #if defined(OS_MACOSX)
+	// On MacOSX platform, `addrlen` should be the actual size of the address.
 	if (addr->sa_family == AF_INET) {
 		addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in));
 	}
 #endif	// defined(OS_MACOSX)
+
+	// The kernel will judge according to `addr->sa_family`.
 	int ret = ::connect(servfd, addr, addrlen);
 	DPLOG_IF(ERROR, ret < 0 && errno != EINPROGRESS) << "::connect failed";
 	return ret;
@@ -192,7 +178,7 @@ int connect(int servfd, const struct sockaddr* addr)
 
 int listen(int servfd)
 {
-	// #define SOMAXCONN 128
+	// #define SOMAXCONN 4096
 	int ret = ::listen(servfd, SOMAXCONN);
 	DPCHECK(ret >= 0);
 	return ret;
@@ -203,6 +189,32 @@ int shutdown(int fd, int how)
 	int ret = ::shutdown(fd, how);
 	DPLOG_IF(ERROR, ret < 0) << "::shutdown failed";
 	return ret;
+}
+
+struct sockaddr_in6 get_local_addr(int fd)
+{
+	struct sockaddr_in6 addr;
+	socklen_t addrlen = static_cast<socklen_t>(sizeof addr);
+	::memset(&addr, 0, sizeof addr);
+
+	// The kernel will fill in the value of `addrlen` and `addr`.
+	int ret = ::getsockname(fd, sockaddr_cast(&addr), &addrlen);
+
+	DPLOG_IF(ERROR, ret < 0) << "::getsockname failed";
+	return addr;
+}
+
+struct sockaddr_in6 get_peer_addr(int fd)
+{
+	struct sockaddr_in6 addr;
+	socklen_t addrlen = static_cast<socklen_t>(sizeof addr);
+	::memset(&addr, 0, sizeof addr);
+
+	// The kernel will fill in the value of `addrlen` and `addr`.
+	int ret = ::getpeername(fd, sockaddr_cast(&addr), &addrlen);
+	
+	DPLOG_IF(ERROR, ret < 0) << "::getpeername failed";
+	return addr;
 }
 
 int set_reuse_addr(int servfd, bool on)
@@ -248,30 +260,6 @@ int set_tcp_nodelay(int fd, bool on)
 	return ret;
 }
 
-struct sockaddr_in6 get_local_addr(int fd)
-{
-	struct sockaddr_in6 localaddr;
-	::memset(&localaddr, 0, sizeof localaddr);
-	
-	socklen_t addrlen = static_cast<socklen_t>(sizeof localaddr);
-	int ret = ::getsockname(fd, sockaddr_cast(&localaddr), &addrlen);
-
-	DPLOG_IF(ERROR, ret < 0) << "::getsockname failed";
-	return localaddr;
-}
-
-struct sockaddr_in6 get_peer_addr(int fd)
-{
-	struct sockaddr_in6 peeraddr;
-	::memset(&peeraddr, 0, sizeof peeraddr);
-
-	socklen_t addrlen = static_cast<socklen_t>(sizeof peeraddr);
-	int ret = ::getpeername(fd, sockaddr_cast(&peeraddr), &addrlen);
-	DPLOG_IF(ERROR, ret < 0) << "::getpeername failed";
-
-	return peeraddr;
-}
-
 int get_sock_error(int fd)
 {
 	int err;
@@ -289,6 +277,7 @@ int get_sock_error(int fd)
 	return err;
 }
 
+// This can happen if the target server is local and has not been started.
 bool is_self_connect(int fd)
 {
 	struct sockaddr_in6 localaddr = get_local_addr(fd);
@@ -303,72 +292,88 @@ bool is_self_connect(int fd)
 		return localaddr.sin6_port == peeraddr.sin6_port
 				&& ::memcmp(&localaddr.sin6_addr, &peeraddr.sin6_addr, 
 							sizeof localaddr.sin6_addr) == 0;
+	} else {
+		NOTREACHED();
 	}
+	// For Compile warning.
 	return false;
 }
 
 // Convert struct sockaddr into "IPv4/IPv6 + port" address
-void to_ip_port(char* buf, size_t size, const struct sockaddr* addr)
+void to_ip_port(const struct sockaddr* addr, char* dst, size_t size)
 {
-	DCHECK(buf);
+	to_ip(addr, dst, size);
 
-	to_ip(buf, size, addr);
+	uint16_t port = 0;
+	if (addr->sa_family == AF_INET) {
+		// Recover actual type.
+		const struct sockaddr_in* addr4 = sockaddr_in_cast(addr);
 
-	const struct sockaddr_in* addr4 = sockaddr_in_cast(addr);
-	uint16_t port = net_to_host16(addr4->sin_port);	// ::ntohs()
+		port = net_to_host16(addr4->sin_port);	// ::ntohs()
+	} else if (addr->sa_family == AF_INET6) {
+		const struct sockaddr_in6* addr6 = sockaddr_in6_cast(addr);
+
+		port = net_to_host16(addr6->sin6_port);	// ::ntohs()
+	} else {
+		NOTREACHED();
+	}
 	
 	// c-style string
-	size_t end = ::strlen(buf);
+	size_t end = ::strlen(dst);
 	DCHECK(size > end);
 
-	::snprintf(buf+end, size-end, ":%u", port);
+	::snprintf(dst+end, size-end, ":%u", port);
 }
 
-// Convert struct sockaddr into "IPv4/IPv6" address
-void to_ip(char* buf, size_t size, const struct sockaddr* addr)
+// Convert struct sockaddr into "IPv4/IPv6" address.
+void to_ip(const struct sockaddr* addr, char* dst, size_t size)
 {
-	DCHECK(buf);
+	DCHECK(dst);
 
 	if (addr->sa_family == AF_INET) {
 		DCHECK(size >= INET_ADDRSTRLEN);
 
+		// Recover actual type.
 		const struct sockaddr_in* addr4 = sockaddr_in_cast(addr);
 		
-		// Convert numeric format to dotted decimal IP address format.
+		// Convert numeric format to dotted decimal IPv4 address format.
 		// inet_ntoa() is *Not thread safe*.
-		const char *ptr = ::inet_ntop(AF_INET, &addr4->sin_addr, buf, static_cast<socklen_t>(size));
+		const char *ptr = ::inet_ntop(AF_INET, &addr4->sin_addr, dst, static_cast<socklen_t>(size));
 		DPCHECK(ptr);
 	} else if (addr->sa_family == AF_INET6) {
 		DCHECK(size >= INET6_ADDRSTRLEN);
 
+		// Recover actual type.
 		const struct sockaddr_in6* addr6 = sockaddr_in6_cast(addr);
 		
-		// Convert number(network byte-order) to IP address.
+		// Convert number(network byte-order) to IPv6 address.
 		// inet_ntoa() is *Not thread safe*.
-		const char *ptr = ::inet_ntop(AF_INET6, &addr6->sin6_addr, buf, static_cast<socklen_t>(size));
+		const char *ptr = ::inet_ntop(AF_INET6, &addr6->sin6_addr, dst, static_cast<socklen_t>(size));
 		DPCHECK(ptr);
+	} else {
+		NOTREACHED();
 	}
 }
 
 // Convert "IPv4 + port" address into struct sockaddr_in
-void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* addr)
+void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* dst)
 {
-	addr->sin_family = AF_INET;
-	addr->sin_port = host_to_net16(port);	// ::htons()
+	dst->sin_family = AF_INET;
+	dst->sin_port = host_to_net16(port);	// ::htons()
 
 	// Convert IP address to number(network byte-order).
-	int ret = ::inet_pton(AF_INET, ip, &addr->sin_addr);
+	int ret = ::inet_pton(AF_INET, ip, &dst->sin_addr);
 	PLOG_IF(ERROR, ret < 0) << "::inet_pton failed";
 }
 
 // Convert "IPv6 + port" address into struct sockaddr_in6
-void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* addr)
+void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* dst)
 {
-	addr->sin6_family = AF_INET6;
-	addr->sin6_port = host_to_net16(port);	// ::htons()
+	dst->sin6_family = AF_INET6;
+	dst->sin6_port = host_to_net16(port);	// ::htons()
 
 	// Convert IP address to number(network byte-order).
-	int ret = ::inet_pton(AF_INET6, ip, &addr->sin6_addr);
+	int ret = ::inet_pton(AF_INET6, ip, &dst->sin6_addr);
 	DPLOG_IF(ERROR, ret < 0) << "::inet_pton failed";
 }
 
@@ -403,6 +408,40 @@ ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt)
 	ssize_t ret = ::writev(sockfd, iov, iovcnt);
 	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::writev failed";
 	return ret;
+}
+
+bool set_non_blocking(int fd) 
+{
+	const int flags = ::fcntl(fd, F_GETFL);
+	if (flags == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file F_GETFL " << fd;
+		return false;
+	}
+	if (flags & O_NONBLOCK) {
+		return true;
+	}
+	if (HANDLE_EINTR(::fcntl(fd, F_SETFL, flags | O_NONBLOCK)) == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file O_NONBLOCK";
+		return false;
+	}
+	return true;
+}
+
+bool set_close_on_exec(int fd) 
+{
+	const int flags = ::fcntl(fd, F_GETFD);
+	if (flags == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file F_GETFD " << fd;
+		return false;
+	}
+	if (flags & FD_CLOEXEC) {
+		return true;
+	}
+	if (HANDLE_EINTR(::fcntl(fd, F_SETFD, flags | FD_CLOEXEC)) == -1) {
+		DPLOG(ERROR) << "Unable to fcntl file FD_CLOEXEC " << fd;
+		return false;
+	}
+	return true;
 }
 
 }	// namespace sockets

@@ -20,14 +20,6 @@ namespace annety
 // It is value sematics, which means that it can be copied or assigned.
 class EndPoint
 {
-#if defined(OS_LINUX)
-	static_assert(offsetof(sockaddr_in, sin_family) == 0, "sin_family offset 0");
-	static_assert(offsetof(sockaddr_in6, sin6_family) == 0, "sin6_family offset 0");
-#else
-	static_assert(offsetof(sockaddr_in, sin_family) == 1, "sin_family offset 1");
-	static_assert(offsetof(sockaddr_in6, sin6_family) == 1, "sin6_family offset 1");
-#endif
-
 public:
 	// |port| to EndPoint, ip default "0.0.0.0"
 	explicit EndPoint(uint16_t port = 0, bool loopback_only = false, bool ipv6 = false);
@@ -51,19 +43,19 @@ public:
 	// for bind/connect/recvfrom/sendto etc.
 	const struct sockaddr* get_sockaddr() const;
 
-	sa_family_t family() const  { return addr_.sin_family;}
-	uint16_t port_net_endian() const { return addr_.sin_port;}
-	uint32_t ip_net_endian() const;
+	sa_family_t family() const;
+	uint16_t port_net_endian() const;
+	uint32_t ip_net_endian() const;	// Only IPv4.
 
 	std::string to_ip() const;
 	uint16_t to_port() const;
 	std::string to_ip_port() const;
 
 #if defined(OS_LINUX)
-	// resolve hostname to IP address, not changing port or sin_family
-	// return true on success.
-	// thread safe
-	static bool resolve(const StringPiece& hostname, EndPoint* result);
+	// Resolve hostname to IP address, change port or sin_family if return 
+	// true.  --- For IPv4.
+	// *Thread safe*
+	static bool resolve(const StringPiece& hostname, EndPoint* dst);
 #endif	// defined(OS_LINUX)
 
 private:

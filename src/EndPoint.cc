@@ -51,13 +51,17 @@ namespace annety
 static const in_addr_t kInaddrAny = INADDR_ANY;
 static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;
 
+static_assert(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr_in6, sin6_family), 
+	"sin[6]_family offset illegal");
+static_assert(offsetof(sockaddr_in, sin_port) == offsetof(sockaddr_in6, sin6_port), 
+	"sin[6]_port offset illegal");
 static_assert(sizeof(EndPoint) == sizeof(struct sockaddr_in6),
-			"EndPoint is same size as sockaddr_in6");
+	"EndPoint is same size as sockaddr_in6");
 
 EndPoint::EndPoint(uint16_t port, bool loopback_only, bool ipv6)
 {
-	static_assert(offsetof(EndPoint, addr6_) == 0, "addr6_ offset 0");
 	static_assert(offsetof(EndPoint, addr_) == 0, "addr_ offset 0");
+	static_assert(offsetof(EndPoint, addr6_) == 0, "addr6_ offset 0");
 
 	if (ipv6) {
 		::memset(&addr6_, 0, sizeof addr6_);
@@ -87,39 +91,66 @@ EndPoint::EndPoint(const StringPiece& ip, uint16_t port, bool ipv6)
 
 const struct sockaddr* EndPoint::get_sockaddr() const
 {
+	static_assert(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr, sa_family), 
+		"sin_family offset illegal");
+	static_assert(offsetof(sockaddr_in6, sin6_family) == offsetof(sockaddr, sa_family), 
+		"sin6_family offset illegal");
+
 	return sockets::sockaddr_cast(&addr6_);
 }
 
 std::string EndPoint::to_ip_port() const
 {
-	char buf[64] = "";
-	sockets::to_ip_port(buf, sizeof buf, get_sockaddr());
-	return buf;
+	char buffer[64] = "";
+	sockets::to_ip_port(get_sockaddr(), buffer, sizeof buffer);
+	return buffer;
 }
 
 std::string EndPoint::to_ip() const
 {
-	char buf[64] = "";
-	sockets::to_ip(buf, sizeof buf, get_sockaddr());
-	return buf;
+	char buffer[64] = "";
+	sockets::to_ip(get_sockaddr(), buffer, sizeof buffer);
+	return buffer;
 }
 
 uint16_t EndPoint::to_port() const
 {
+	static_assert(offsetof(sockaddr_in, sin_port) == offsetof(sockaddr_in6, sin6_port), 
+		"sin[6]_port offset illegal");
+
 	return net_to_host16(addr_.sin_port);	// ::ntohs()
+}
+
+sa_family_t EndPoint::family() const
+{
+	static_assert(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr_in6, sin6_family), 
+		"sin[6]_family offset illegal");
+
+	return addr_.sin_family;
+}
+
+uint16_t EndPoint::port_net_endian() const
+{
+	static_assert(offsetof(sockaddr_in, sin_port) == offsetof(sockaddr_in6, sin6_port), 
+		"sin[6]_port offset illegal");
+
+	return addr_.sin_port;
 }
 
 uint32_t EndPoint::ip_net_endian() const
 {
+	// The offset of `sockaddr_in.sin_addr` and `sockaddr_in6.sin6_addr` is different.
 	DCHECK(family() == AF_INET);
 	return addr_.sin_addr.s_addr;
 }
 
 #if defined(OS_LINUX)
 static thread_local char tls_resolve_buffer[64 * 1024];
-bool EndPoint::resolve(const StringPiece& hostname, EndPoint* out)
+bool EndPoint::resolve(const StringPiece& hostname, EndPoint* dst)
 {
-	DCHECK(out != nullptr);
+	// FIXME: getaddrinfo().
+
+	DCHECK(dst);
 
 	struct hostent hent;
 	struct hostent* he = nullptr;
@@ -134,10 +165,11 @@ bool EndPoint::resolve(const StringPiece& hostname, EndPoint* out)
 	if (ret == 0 && he != nullptr) {
 		DCHECK(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
 
-		out->addr_.sin_family = AF_INET;
-		out->addr_.sin_addr = *reinterpret_cast<struct in_addr*>(he->h_addr);
+		dst->addr_.sin_family = AF_INET;
+		dst->addr_.sin_addr = *reinterpret_cast<struct in_addr*>(he->h_addr);
 		return true;
 	}
+
 	return false;
 }
 #endif	// defined(OS_LINUX)
