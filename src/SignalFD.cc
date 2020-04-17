@@ -56,6 +56,7 @@ int signalfd(const sigset_t* mask, bool nonblock, bool cloexec, int fd = -1)
 namespace {
 static_assert(sizeof(int64_t) >= sizeof(int), "loss of precision");
 
+// On non-Linux platforms, pipe will be used to simulate `signalfd`.
 // No need to care about thread-safe, because only one SignalFD instance 
 // in main thread.
 SignalFD* g_signal_fd{nullptr};

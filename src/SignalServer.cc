@@ -17,11 +17,11 @@
 namespace annety
 {
 namespace {
-// similar to SIG_IGN macro, ignoring signal processing
+// Similar to SIG_IGN macro, ignoring signal processing
 // #define SIG_IGN ((__sighandler_t) 1)
 void signal_ignore()
 {
-	LOG(TRACE) << "annety::signal_ignore is calling";
+	DLOG(TRACE) << "annety::signal_ignore is calling";
 }
 
 }	// namespace anonymous
@@ -31,14 +31,13 @@ SignalServer::SignalServer(EventLoop* loop)
 	, signal_socket_(new SignalFD(true, true))
 	, signal_channel_(new Channel(owner_loop_, signal_socket_.get()))
 {
-	CHECK(threads::is_main_thread());
+	DCHECK(threads::is_main_thread());
 
-	LOG(TRACE) << "SignalServer::SignalServer" << " fd=" << 
+	DLOG(TRACE) << "SignalServer::SignalServer" << " fd=" << 
 		signal_socket_->internal_fd() << " is constructing";
 
 	signal_channel_->set_read_callback(
 		std::bind(&SignalServer::handle_read, this));
-
 	signal_channel_->enable_read_event();
 }
 
@@ -46,10 +45,10 @@ SignalServer::~SignalServer()
 {
 	owner_loop_->check_in_own_loop();
 
-	LOG(TRACE) << "SignalServer::~SignalServer" << " fd=" << 
+	DLOG(TRACE) << "SignalServer::~SignalServer" << " fd=" << 
 		signal_socket_->internal_fd() << " is destructing";
 
-	// revert signal processor to default system handler
+	// Revert signal processor to default system handler
 	revert_signal_in_own_loop();
 
 	signal_channel_->disable_all_event();
@@ -93,7 +92,8 @@ void SignalServer::add_signal_in_own_loop(int signo, SignalCallback cb)
 {
 	owner_loop_->check_in_own_loop();
 
-	// do not use insert (), because we may change the SignalCallback that has been added
+	// Do not use insert(), because we may change the SignalCallback that 
+	// has been added.
 	signals_[signo] = std::move(cb);
 	
 	{
@@ -101,7 +101,7 @@ void SignalServer::add_signal_in_own_loop(int signo, SignalCallback cb)
 		sf->signal_add(signo);
 	}
 
-	LOG(TRACE) << "SignalServer::add_signal_in_own_loop signal " 
+	DLOG(TRACE) << "SignalServer::add_signal_in_own_loop signal " 
 		<< signo << " success";
 }
 
@@ -120,7 +120,7 @@ void SignalServer::delete_signal_in_own_loop(int signo)
 		sf->signal_delete(signo);
 	}
 
-	LOG(TRACE) << "SignalServer::delete_signal_in_own_loop signal " 
+	DLOG(TRACE) << "SignalServer::delete_signal_in_own_loop signal " 
 		<< signo << " success";
 }
 
@@ -137,7 +137,7 @@ void SignalServer::revert_signal_in_own_loop()
 		sf->signal_revert();
 	}
 
-	LOG(TRACE) << "SignalServer::revert_signal_in_own_loop signal success";
+	DLOG(TRACE) << "SignalServer::revert_signal_in_own_loop signal success";
 }
 
 void SignalServer::handle_read()
@@ -146,30 +146,36 @@ void SignalServer::handle_read()
 
 	int signo = -1;
 	TimeStamp curr = TimeStamp::now();
+
 #if defined(OS_LINUX)
 	{
 		struct signalfd_siginfo siginfo;
 		ssize_t n = signal_socket_->read(&siginfo, sizeof siginfo);
 		if (n != sizeof siginfo) {
-			PLOG(ERROR) << "SignalServer::handle_read reads " << n << " bytes instead of " << sizeof(siginfo);
+			PLOG(ERROR) << "SignalServer::handle_read reads " << n 
+				<< " bytes instead of " << sizeof(siginfo);
 			return;
 		}
 		signo = siginfo.ssi_signo;
-		LOG(TRACE) << "SignalServer::handle_read " << n << " at " << curr;
+
+		DLOG(TRACE) << "SignalServer::handle_read " << n << " at " << curr;
 	}
 #else
 	{
 		int64_t so;
 		ssize_t n = signal_socket_->read(&so, sizeof so);
 		if (n != sizeof so) {
-			PLOG(ERROR) << "SignalServer::handle_read reads " << n << " bytes instead of " << sizeof(so);
+			PLOG(ERROR) << "SignalServer::handle_read reads " << n 
+				<< " bytes instead of " << sizeof(so);
 			return;
 		}
 		signo = static_cast<int>(so);
-		LOG(TRACE) << "SignalServer::handle_read " << n << " at " << curr;
-	}
-#endif
 
+		DLOG(TRACE) << "SignalServer::handle_read " << n << " at " << curr;
+	}
+#endif	// defined(OS_LINUX)
+
+	// Callback the signal handler.
 	if (signo != -1) {
 		calling_signal_functor_ = true;
 		auto it = signals_.find(signo);

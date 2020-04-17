@@ -16,8 +16,9 @@ namespace annety
 {
 // Wrapper for sockaddr_in[6], it expose sockaddr* interface to users.
 //
-// EndPoint is standard layout class, but it is neither a trivial class nor a pod.
 // It is value sematics, which means that it can be copied or assigned.
+// EndPoint is standard layout class, but it is neither a trivial class 
+// nor a pod.
 class EndPoint
 {
 public:
@@ -36,24 +37,24 @@ public:
 	EndPoint& operator=(const EndPoint&) = default;
 	~EndPoint() = default;
 	
-	// set sockaddr to EndPoint
+	// Set sockaddr to EndPoint
 	void set_sockaddr_in(const struct sockaddr_in& addr) { addr_ = addr;}
 	void set_sockaddr_in(const struct sockaddr_in6& addr6) { addr6_ = addr6;}
-
-	// for bind/connect/recvfrom/sendto etc.
-	sa_family_t family() const;
-	const struct sockaddr* get_sockaddr() const;
 
 	std::string to_ip() const;
 	uint16_t to_port() const;
 	std::string to_ip_port() const;
+	
+	// For bind/connect/recvfrom/sendto...
+	sa_family_t family() const;
+	const struct sockaddr* get_sockaddr() const;
 
-	// Resolve node+service to IPv4/IPv6 addr.
+	// Resolve node+service to IPv4/IPv6 address (`dst`).
+	// For bind/connect/recvfrom/sendto...
 	// *Thread safe*
 	static bool resolve(const StringPiece& node, const StringPiece& service, EndPoint* dst);
 
 private:
-	// must sin[6]_family offset is 0
 	union
 	{
 		struct sockaddr_in addr_;
