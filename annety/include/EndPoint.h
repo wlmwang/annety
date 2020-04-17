@@ -48,12 +48,9 @@ public:
 	uint16_t to_port() const;
 	std::string to_ip_port() const;
 
-#if defined(OS_LINUX)
-	// Resolve hostname to IP address, change port or sin_family if return 
-	// true.  --- For IPv4.
+	// Resolve node+service to IPv4/IPv6 addr.
 	// *Thread safe*
-	static bool resolve(const StringPiece& hostname, EndPoint* dst);
-#endif	// defined(OS_LINUX)
+	static bool resolve(const StringPiece& node, const StringPiece& service, EndPoint* dst);
 
 private:
 	// must sin[6]_family offset is 0

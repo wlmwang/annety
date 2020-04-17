@@ -76,14 +76,13 @@ int socket(sa_family_t family, bool nonblock, bool cloexec)
 }
 
 // non-block, close-on-exec
-int accept(int servfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec)
+int accept(int servfd, struct sockaddr_in6* dst, bool nonblock, bool cloexec)
 {
-	// Always assume that the actual type of the `addr` is sockaddr_in6.
+	// Always assume that the actual type of the `dst` is sockaddr_in6.
 	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
-
 #if defined(OS_MACOSX)
-	// The kernel will judge according to `addr->sa_family`.
-	int connfd = ::accept(servfd, sockaddr_cast(addr), &addrlen);
+	// The kernel will fill in the value of `addrlen` and `dst`.
+	int connfd = ::accept(servfd, sockaddr_cast(dst), &addrlen);
 	if (nonblock) {
 		DCHECK(set_non_blocking(servfd));
 	}
@@ -98,8 +97,8 @@ int accept(int servfd, struct sockaddr_in6* addr, bool nonblock, bool cloexec)
 	if (cloexec) {
 		flags |= SOCK_CLOEXEC;
 	}
-	// The kernel will judge according to `addr->sa_family`.
-	int connfd = ::accept4(servfd, sockaddr_cast(addr), &addrlen, flags);
+	// The kernel will fill in the value of `addrlen` and `dst`.
+	int connfd = ::accept4(servfd, sockaddr_cast(dst), &addrlen, flags);
 #else
 #error Do not support your os platform in SocketsUtil.h
 #endif	// defined(OS_LINUX) || defined(OS_BSD) || ...
@@ -176,10 +175,26 @@ int connect(int servfd, const struct sockaddr* addr)
 	return ret;
 }
 
-int listen(int servfd)
+int listen(int servfd, int backlog)
 {
-	// #define SOMAXCONN 4096
-	int ret = ::listen(servfd, SOMAXCONN);
+	// If a connection request arrives when the queue of pending connections is full, 
+	// the client may receive an error with an indication of ECONNREFUSED or, if the 
+	// underlying protocol supports retransmission, the request may be ignored so that 
+	// a later reattempt at connection succeeds.
+
+	// The behavior of the backlog argument on TCP sockets changed with Linux 2.2.
+	// Now it specifies the queue length for completely established sockets waiting
+	// to be accepted, instead of the number of incomplete connection requests.
+	//
+	// If the backlog argument is greater than the value in /proc/sys/net/core/somaxconn, 
+	// then it is silently truncated to that value; the default value in this file is 128.
+	// In kernels before 2.4.25, this limit was a hard coded value, SOMAXCONN, with the 
+	// value 128.
+
+	// OS_BSD: If the backlog greater than kern.ipc.soacceptqueue or less than zero is 
+	// specified, backlog is silently forced to kern.ipc.soacceptqueue.
+
+	int ret = ::listen(servfd, backlog);
 	DPCHECK(ret >= 0);
 	return ret;
 }

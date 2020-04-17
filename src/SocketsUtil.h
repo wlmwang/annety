@@ -22,10 +22,10 @@ struct sockaddr* sockaddr_cast(struct sockaddr_in6* addr);
 
 // Compatible with IPv4 and IPv6.
 int socket(sa_family_t family, bool nonblock = true, bool cloexec = true);
-int accept(int servfd, struct sockaddr_in6* addr, bool nonblock = true, bool cloexec = true);
+int accept(int servfd, struct sockaddr_in6* dst, bool nonblock = true, bool cloexec = true);
 int bind(int fd, const struct sockaddr* addr);
 int connect(int servfd, const struct sockaddr* addr);
-int listen(int servfd);
+int listen(int servfd, int backlog = -1);
 int shutdown(int fd, int how = SHUT_WR);
 
 // Compatible with IPv4 and IPv6.

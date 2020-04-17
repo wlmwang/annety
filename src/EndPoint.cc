@@ -6,7 +6,8 @@
 #include "SocketsUtil.h"
 #include "Logging.h"
 
-#include <netdb.h>	// struct hostent
+#include <netdb.h>	// getaddrinfo,freeaddrinfo,struct addrinfo
+#include <string.h>	// memset
 
 namespace annety
 {
@@ -129,34 +130,36 @@ sa_family_t EndPoint::family() const
 	return addr_.sin_family;
 }
 
-#if defined(OS_LINUX)
-static thread_local char tls_resolve_buffer[64 * 1024];
-bool EndPoint::resolve(const StringPiece& hostname, EndPoint* dst)
+bool EndPoint::resolve(const StringPiece& node, const StringPiece& service, EndPoint* dst)
 {
-	// FIXME: getaddrinfo().
+	struct addrinfo *res = nullptr;
+	struct addrinfo hints;
+	::memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;		// any address family. AF_INET/AF_INET6/...
+	hints.ai_socktype = SOCK_STREAM;	// 0: any type. SOCK_STREAM/SOCK_DGRAM
+	hints.ai_protocol = IPPROTO_IP;		// 0: any protocol. IPPROTO_IP = IPv4/IPv6
 
-	DCHECK(dst);
+	// Returns one or more addrinfo structures, each of which contains an Internet 
+	// address that can be specified in a call to bind(2) or connect(2).
+	int rt = ::getaddrinfo(node.as_string().c_str(), 
+							service.as_string().c_str(), 
+							&hints, &res);
 
-	struct hostent hent;
-	struct hostent* he = nullptr;
-	int herrno = 0;
-	::memset(&hent, 0, sizeof(hent));
+	PLOG_IF(ERROR, rt != 0) << "::getaddrinfo failed";
 
-	int ret = ::gethostbyname_r(hostname.as_string().c_str(), &hent, 
-								tls_resolve_buffer, sizeof tls_resolve_buffer, 
-								&he, &herrno);
-	PLOG_IF(ERROR, ret < 0) << "::gethostbyname_r failed";
-
-	if (ret == 0 && he != nullptr) {
-		DCHECK(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
-
-		dst->addr_.sin_family = AF_INET;
-		dst->addr_.sin_addr = *reinterpret_cast<struct in_addr*>(he->h_addr);
-		return true;
+	// Only get the first one, `res->ai_next` is ignored.
+	if (rt == 0 && res != nullptr) {
+		if (res->ai_family == AF_INET) {
+			::memcpy(&dst->addr_, res->ai_addr, res->ai_addrlen);
+		} else if (res->ai_family == AF_INET6) {
+			::memcpy(&dst->addr6_, res->ai_addr, res->ai_addrlen);
+		} else {
+			NOTREACHED();
+		}
 	}
+	::freeaddrinfo(res);
 
-	return false;
+	return rt == 0;
 }
-#endif	// defined(OS_LINUX)
 
 }	// namespace annety
