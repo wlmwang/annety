@@ -24,16 +24,11 @@ class Timer;
 class TimerId;
 
 // Timer pool, all timers share a `timerfd`.
-// On the Linux platform, the kernel will write an unsigned 8-byte integer 
-// (uint64_t) that contains the number of expirations that have occurred 
-// into `timerfd`(file descriptor).  On non-Linux platforms, pipe will be 
-// used to simulate `timerfd`.
-//
-// We only use the one-shot wakeup of `timerfd`, and the repeat timer will be 
-// reset when the timer timeout.
-//
 // Cannot be sure that the timer callback will be called on time, because 
-// the `timerfd` event may be blocked by other file descriptors.
+// the `timerfd` event may be blocked by other events.
+//
+// We only use the one-shot wakeup of `timerfd`, and the repeat timer will 
+// be reset when the timer timeout.
 //
 // This class owns the SelectableFD and Channel lifetime.
 class TimerPool

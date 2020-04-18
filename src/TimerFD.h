@@ -18,6 +18,11 @@ namespace annety
 // with the advantage that the file descriptor may be monitored by select(2), 
 // poll(2), and epoll(7).
 //
+// On the Linux platform, the kernel will write an unsigned 8-byte integer 
+// (uint64_t) that contains the number of expirations that have occurred 
+// into `timerfd`(file descriptor).  On non-Linux platforms, pipe will be 
+// used to simulate `timerfd` (expiration triggered by `poll` timeout).
+//
 // Linux:
 // The fds_ attribute is a file descriptor created by ::timerfd_create() - Linux 2.6.27.
 // fds_ is output, it will be monitored by the channel for readable events.

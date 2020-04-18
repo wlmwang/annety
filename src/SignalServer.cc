@@ -31,6 +31,7 @@ SignalServer::SignalServer(EventLoop* loop)
 	, signal_socket_(new SignalFD(true, true))
 	, signal_channel_(new Channel(owner_loop_, signal_socket_.get()))
 {
+	// Only be called in the main thread.
 	DCHECK(threads::is_main_thread());
 
 	DLOG(TRACE) << "SignalServer::SignalServer" << " fd=" << 
@@ -65,6 +66,17 @@ bool SignalServer::ismember_signal(int signo)
 	return signals_.find(signo) != signals_.end();
 }
 
+void SignalServer::ignore_signal(int signo)
+{
+	add_signal(signo, std::bind(&signal_ignore));
+}
+
+void SignalServer::revert_signal()
+{
+	owner_loop_->run_in_own_loop(
+		std::bind(&SignalServer::revert_signal_in_own_loop, this));
+}
+
 void SignalServer::add_signal(int signo, SignalCallback cb)
 {
 	owner_loop_->run_in_own_loop(
@@ -75,17 +87,6 @@ void SignalServer::delete_signal(int signo)
 {
 	owner_loop_->run_in_own_loop(
 		std::bind(&SignalServer::delete_signal_in_own_loop, this, signo));
-}
-
-void SignalServer::revert_signal()
-{
-	owner_loop_->run_in_own_loop(
-		std::bind(&SignalServer::revert_signal_in_own_loop, this));
-}
-
-void SignalServer::ignore_signal(int signo)
-{
-	add_signal(signo, std::bind(&signal_ignore));
 }
 
 void SignalServer::add_signal_in_own_loop(int signo, SignalCallback cb) 
