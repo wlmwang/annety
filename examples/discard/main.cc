@@ -7,8 +7,9 @@
 int main(int argc, char* argv[])
 {
 	annety::EventLoop loop;
-	DiscardServer server(&loop, annety::EndPoint(1669));
 	
+	DiscardServer server(&loop, annety::EndPoint(1669));	
 	server.start();
+
 	loop.loop();
 }

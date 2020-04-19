@@ -7,8 +7,9 @@
 int main(int argc, char* argv[])
 {
 	annety::EventLoop loop;
-	DaytimeServer server(&loop, annety::EndPoint(1669));
 	
+	DaytimeServer server(&loop, annety::EndPoint(1669));
 	server.start();
+
 	loop.loop();
 }

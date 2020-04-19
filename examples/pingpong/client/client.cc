@@ -202,6 +202,8 @@ void Session::on_connect(const TcpConnectionPtr& conn)
 
 int main(int argc, char* argv[])
 {
+	set_min_log_severity(LOG_DEBUG);
+
 	if (argc < 5) {
 		fprintf(stderr, "Usage: client <threads> <sessions>");
 		fprintf(stderr, " <blocksize> <time>\n");
@@ -222,13 +224,11 @@ int main(int argc, char* argv[])
 
 		// control timeout callback(main EventLoop)
 		EventLoop loop;
-		EndPoint saddr(1669);
 
-		set_min_log_severity(LOG_DEBUG);
-
-		Client client(&loop, saddr, block_size, session_count, timeout, threads);
+		Client client(&loop, EndPoint(1669), block_size, session_count, timeout, threads);
+		
 		loop.loop();
 
-		LOG(WARNING) << "PingPong client finish";
+		LOG(INFO) << "PingPong client finish";
 	}
 }

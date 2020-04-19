@@ -53,6 +53,8 @@ void TcpServer::initialize()
 	// of smart pointer (`acceptor_` storages this shared_ptr).
 	// 1. but the server instance usually do not need to be destroyed.
 	// 2. make_weak_bind() is not good for right-value yet.
+	using std::placeholders::_1;
+	using std::placeholders::_2;
 	acceptor_->set_new_connect_callback(
 		std::bind(&TcpServer::new_connection, shared_from_this(), _1, _2));
 }
@@ -114,11 +116,11 @@ void TcpServer::new_connection(SelectableFDPtr&& peerfd, const EndPoint& peeradd
 		<< "] from " << peeraddr.to_ip_port();
 
 	TcpConnectionPtr conn = make_tcp_connection(
-								worker, 
-								name,
-								std::move(peerfd),
-								localaddr,
-								peeraddr);
+							worker, 
+							name,
+							std::move(peerfd),
+							localaddr,
+							peeraddr);
 	// Copy user callbacks into TcpConnection.
 	conn->set_connect_callback(connect_cb_);
 	conn->set_message_callback(message_cb_);
@@ -177,7 +179,10 @@ void TcpServer::remove_connection_in_loop(const TcpConnectionPtr& conn)
 }
 
 // Constructs an object of type TcpServerPtr and wraps it.
-TcpServerPtr make_tcp_server(EventLoop* loop, const EndPoint& addr, const std::string& name, bool reuse_port)
+TcpServerPtr make_tcp_server(EventLoop* loop, 
+	const EndPoint& addr, 
+	const std::string& name, 
+	bool reuse_port)
 {
 	DCHECK(loop);
 	

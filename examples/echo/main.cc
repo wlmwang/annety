@@ -7,8 +7,9 @@
 int main(int argc, char* argv[])
 {
 	annety::EventLoop loop;
+
 	EchoServer server(&loop, annety::EndPoint(1669));
-	
 	server.start();
+	
 	loop.loop();
 }

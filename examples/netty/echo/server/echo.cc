@@ -54,12 +54,13 @@ void EchoServer::on_message(const annety::TcpConnectionPtr& conn,
 void EchoServer::print_throughput()
 {
 	annety::TimeStamp curr = annety::TimeStamp::now();
+
 	int64_t newcounter = transferred_;
 	int64_t bytes = newcounter - counter_;
-	int64_t msgs = received_messages_.fetch_and(0);
+	int64_t msgs = received_messages_.exchange(0);
 	double time = (curr - start_time_).in_seconds_f();
 
-	LOG(WARNING) << static_cast<double>(bytes)/(time*1024*1024) << " MiB/s "
+	LOG(INFO) << static_cast<double>(bytes)/(time*1024*1024) << " MiB/s "
 		<< static_cast<double>(msgs)/(time*1024) << " Ki Msgs/s "
 		<< static_cast<double>(bytes)/msgs << " bytes per msg";
 

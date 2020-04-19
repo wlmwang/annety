@@ -8,6 +8,7 @@
 #include "EventLoop.h"
 #include "TimeStamp.h"
 
+#include <atomic>
 #include <string>
 
 // RFC 864
@@ -30,9 +31,9 @@ private:
 private:
 	annety::TcpServerPtr server_;
 
-	annety::TimeStamp start_time_{annety::TimeStamp::now()};
-	int64_t transferred_{0};
 	std::string message_;
+	std::atomic<int64_t> transferred_{0};
+	annety::TimeStamp start_time_{annety::TimeStamp::now()};
 };
 
 #endif  // EXAMPLES_CHARGEN_SERVER_CHARGEN_H

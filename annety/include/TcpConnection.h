@@ -31,14 +31,6 @@ class NetBuffer;
 class TcpConnection : public std::enable_shared_from_this<TcpConnection>
 {
 public:
-	TcpConnection(EventLoop* loop,
-				const std::string& name,
-				SelectableFDPtr sockfd,
-				const EndPoint& localaddr,
-				const EndPoint& peeraddr);
-	
-	void initialize();
-
 	~TcpConnection();
 
 	const std::string& name() const { return name_; }
@@ -113,12 +105,20 @@ public:
 		high_water_mark_cb_ = std::move(cb);
 		high_water_mark_ = high_water_mark;
 	}
+
+	// Internal use only.
+	// called when TcpServer destory a connection.
 	void set_close_callback(CloseCallback cb)
 	{
 		close_cb_ = std::move(cb);
 	}
 	
+	// Internal use only.
+	// called when TcpServer accepts a new connection.
 	void connect_established();
+
+	// Internal use only.
+	// called when TcpServer has removed me from its map.
 	void connect_destroyed();
 
 	NetBuffer* input_buffer();
@@ -145,6 +145,20 @@ private:
 
 	void set_state(StateE s) { state_ = s; }
 	const char* state_to_string() const;
+
+	TcpConnection(EventLoop* loop,
+				const std::string& name,
+				SelectableFDPtr sockfd,
+				const EndPoint& localaddr,
+				const EndPoint& peeraddr);
+	
+	void initialize();
+
+	friend TcpConnectionPtr make_tcp_connection(EventLoop* loop,
+		const std::string& name,
+		SelectableFDPtr&& sockfd,
+		const EndPoint& localaddr,
+		const EndPoint& peeraddr);
 
 private:
 	EventLoop* owner_loop_;

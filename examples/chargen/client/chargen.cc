@@ -40,5 +40,6 @@ void ChargenClient::on_message(const annety::TcpConnectionPtr& conn,
 		annety::NetBuffer* buf, annety::TimeStamp time)
 
 {
+	// Discard message.
 	buf->has_read_all();
 }

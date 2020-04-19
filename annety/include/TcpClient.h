@@ -22,7 +22,6 @@ class SocketFD;
 class EndPoint;
 class EventLoop;
 class Connector;
-using ConnectorPtr = std::shared_ptr<Connector>;
 
 // Client wrapper of TCP protocol.
 //
@@ -31,12 +30,8 @@ using ConnectorPtr = std::shared_ptr<Connector>;
 class TcpClient : public std::enable_shared_from_this<TcpClient>
 {
 public:
-	TcpClient(EventLoop* loop,
-			const EndPoint& addr,
-			const std::string& name = "a-crv");
+	using ConnectorPtr = std::shared_ptr<Connector>;
 	
-	void initialize();
-
 	~TcpClient();
 
 	const std::string& name() const { return name_;}
@@ -65,11 +60,6 @@ public:
 		connect_cb_ = std::move(cb);
 	}
 	// *Not thread safe*, but usually be called before connect().
-	void set_error_callback(ErrorCallback cb)
-	{
-		error_cb_ = std::move(cb);
-	}
-	// *Not thread safe*, but usually be called before connect().
 	void set_message_callback(MessageCallback cb)
 	{
 		message_cb_ = std::move(cb);
@@ -78,6 +68,11 @@ public:
 	void set_write_complete_callback(WriteCompleteCallback cb)
 	{
 		write_complete_cb_ = std::move(cb);
+	}
+	// *Not thread safe*, but usually be called before connect().
+	void set_error_callback(ErrorCallback cb)
+	{
+		error_cb_ = std::move(cb);
 	}
 
 private:
@@ -92,6 +87,16 @@ private:
 
 	// *Not thread safe*, but run in own loop thread.
 	void handle_retry();
+
+	TcpClient(EventLoop* loop,
+		const EndPoint& addr,
+		const std::string& name = "a-crv");
+	
+	void initialize();
+
+	friend TcpClientPtr make_tcp_client(EventLoop* loop, 
+		const EndPoint& addr,
+		const std::string& name);
 
 private:
 	EventLoop* owner_loop_;

@@ -24,12 +24,14 @@ ChargenServer::ChargenServer(annety::EventLoop* loop, const annety::EndPoint& ad
 	}
 
 	std::string line;
-	for (int i = 33; i < 127; ++i) {	// 可打印字符
+	for (int i = 33; i < 127; ++i) {
+		// Printable characters
 		line.push_back(char(i));
 	}
 	line += line;
 
-	// see RFC 864. 94行，每行72个字符. 94*72=6768 ～ 6.6k
+	// see RFC 864.
+	// 94 lines, 72 characters. 94*72=6768 ～ 6.6k
 	for (size_t i = 0; i < 127-33; ++i) {
 		message_ += line.substr(i, 72) + '\n';
 	}
@@ -73,8 +75,7 @@ void ChargenServer::print_throughput()
 	annety::TimeStamp end_time = annety::TimeStamp::now();
 	
 	double seconds = (end_time - start_time_).in_seconds_f();
-	printf("%4.3f MiB/s\n", static_cast<double>(transferred_)/seconds/1024/1024);
+	printf("%4.3f MiB/s\n", static_cast<double>(transferred_.exchange(0))/seconds/1024/1024);
 
-	transferred_ = 0;
 	start_time_ = end_time;
 }

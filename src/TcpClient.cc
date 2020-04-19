@@ -48,6 +48,8 @@ void TcpClient::initialize()
 	// of smart pointer (`connector_` storages this shared_ptr).
 	// 1. but the client instance usually do not need to be destroyed.
 	// 2. make_weak_bind() is not good for right-value yet.
+	using std::placeholders::_1;
+	using std::placeholders::_2;
 	connector_->set_new_connect_callback(
 		std::bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
 	connector_->set_error_connect_callback(
@@ -227,6 +229,7 @@ void TcpClient::close_connection()
 		DCHECK(owner_loop_ == conn->get_owner_loop());
 
 		// FIXME: *Not 100% safe*, if we are in different thread.
+		using std::placeholders::_1;
 		CloseCallback cb = std::bind([](EventLoop* loop, const TcpConnectionPtr& conn) {
 			// remove conn.
 			loop->queue_in_own_loop(std::bind(&TcpConnection::connect_destroyed, conn));
@@ -243,7 +246,9 @@ void TcpClient::close_connection()
 }
 
 // Constructs an object of type TcpClientPtr and wraps it.
-TcpClientPtr make_tcp_client(EventLoop* loop, const EndPoint& addr, const std::string& name)
+TcpClientPtr make_tcp_client(EventLoop* loop, 
+	const EndPoint& addr, 
+	const std::string& name)
 {
 	DCHECK(loop);
 

@@ -504,14 +504,18 @@ const char* TcpConnection::state_to_string() const
 
 // Constructs an object of type TcpConnectionPtr and wraps it.
 TcpConnectionPtr make_tcp_connection(EventLoop* loop,
-				const std::string& name,
-				SelectableFDPtr&& sockfd,
-				const EndPoint& localaddr,
-				const EndPoint& peeraddr)
+	const std::string& name,
+	SelectableFDPtr&& sockfd,
+	const EndPoint& localaddr,
+	const EndPoint& peeraddr)
 {
 	DCHECK(loop && sockfd);
 
-	TcpConnectionPtr conn(new TcpConnection(loop, name, std::move(sockfd), localaddr, peeraddr));
+	TcpConnectionPtr conn(new TcpConnection(loop, 
+						name, 
+						std::move(sockfd), 
+						localaddr, 
+						peeraddr));
 	conn->initialize();
 	return conn;
 }

@@ -29,10 +29,10 @@ private:
 private:
 	annety::TcpServerPtr server_;
 
-	annety::TimeStamp start_time_{annety::TimeStamp::now()};
 	std::atomic<int64_t> received_messages_{0};
 	std::atomic<int64_t> transferred_{0};
 	std::atomic<int64_t> counter_{0};
+	annety::TimeStamp start_time_{annety::TimeStamp::now()};
 };
 
 #endif  // EXAMPLES_NETTY_ECHO_SERVER_ECHO_H
