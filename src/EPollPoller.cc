@@ -45,7 +45,8 @@ TimeStamp EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 {
 	Poller::check_in_own_loop();
 
-	DLOG(TRACE) << "EPollPoller::poll is watching " << (long long)channels_.size() << " fd";
+	DLOG(TRACE) << "EPollPoller::poll is watching " 
+		<< static_cast<uint64_t>(channels_.size()) << " fd";
 	
 	ScopedClearLastError last_error;
 

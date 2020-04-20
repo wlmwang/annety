@@ -39,14 +39,10 @@ public:
 	EventLoop* get_owner_loop() const { return owner_loop_; }
 
 	// *Thread safe*
-	bool connected() const { return state_ == kConnected; }
-	bool disconnected() const { return state_ == kDisconnected; }
-	bool is_reading() const { return reading_; };
-
-	// *Thread safe*
 	// Enable/Disable the read event. Is enabled by default.
 	void start_read();
 	void stop_read();
+	bool is_reading() const { return reading_; };
 
 	// *Thread safe*
 	void send(NetBuffer*);	// this one will swap data
@@ -92,6 +88,10 @@ public:
 	{
 		connect_cb_ = std::move(cb);
 	}
+	void set_close_callback(CloseCallback cb)
+	{
+		close_cb_ = std::move(cb);
+	}
 	void set_message_callback(MessageCallback cb)
 	{
 		message_cb_ = std::move(cb);
@@ -108,11 +108,11 @@ public:
 
 	// Internal use only.
 	// called when TcpServer destory a connection.
-	void set_close_callback(CloseCallback cb)
+	void set_finish_callback(FinishCallback cb)
 	{
-		close_cb_ = std::move(cb);
+		finish_cb_ = std::move(cb);
 	}
-	
+
 	// Internal use only.
 	// called when TcpServer accepts a new connection.
 	void connect_established();
@@ -183,8 +183,9 @@ private:
 	containers::Any context_;
 
 	// User callback function.
-	CloseCallback close_cb_;
+	FinishCallback finish_cb_;
 	ConnectCallback connect_cb_;
+	CloseCallback close_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;
 	HighWaterMarkCallback high_water_mark_cb_;

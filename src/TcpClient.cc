@@ -32,6 +32,7 @@ TcpClient::TcpClient(EventLoop* loop, const EndPoint& addr, const std::string& n
 	, ip_port_(addr.to_ip_port())
 	, connector_(new Connector(owner_loop_, addr))
 	, connect_cb_(default_connect_callback)
+	, close_cb_(default_close_callback)
 	, message_cb_(default_message_callback)
 {
 	LOG(DEBUG) << "TcpClient::TcpClient [" << name_ 
@@ -69,7 +70,9 @@ TcpClient::~TcpClient()
 		conn = connection_;
 	}
 
-	if (!conn) {
+	if (conn) {
+		connect_destroyed();
+	} else {
 		connector_->stop();
 
 		// FIXME: *HACK* FOR `connection` close FINISH.
@@ -138,6 +141,7 @@ void TcpClient::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 								peeraddr);
 	// Copy user callbacks into TcpConnection.
 	conn->set_connect_callback(connect_cb_);
+	conn->set_close_callback(close_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
 	
@@ -146,7 +150,7 @@ void TcpClient::new_connection(SelectableFDPtr&& sockfd, const EndPoint& peeradd
 	// of smart pointer (`connection_` storages conn).
 	using containers::_1;
 	using containers::make_weak_bind;
-	conn->set_close_callback(
+	conn->set_finish_callback(
 			make_weak_bind(&TcpClient::remove_connection, shared_from_this(), _1));
 	
 	{
@@ -189,10 +193,7 @@ void TcpClient::handle_retry()
 {
 	DCHECK(initilize_);
 
-	if (error_cb_) {
-		error_cb_();
-	}
-	close_connection();
+	connect_destroyed();
 
 	// retry server.
 	if (retry_ && connect_) {
@@ -210,7 +211,7 @@ void TcpClient::handle_retry()
 	}
 }
 
-void TcpClient::close_connection()
+void TcpClient::connect_destroyed()
 {
 	DCHECK(initilize_);
 	
@@ -222,7 +223,7 @@ void TcpClient::close_connection()
 		conn = connection_;
 	}
 	
-	LOG(DEBUG) << "TcpClient::close_connection the conn address is " 
+	LOG(DEBUG) << "TcpClient::connect_destroyed the conn address is " 
 		<< conn.get() << ", unique is " << unique;
 
 	if (conn) {

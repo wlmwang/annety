@@ -37,6 +37,7 @@ TcpServer::TcpServer(EventLoop* loop,
 	, acceptor_(new Acceptor(loop, addr, reuse_port))
 	, workers_(new EventLoopPool(loop, name))
 	, connect_cb_(default_connect_callback)
+	, close_cb_(default_close_callback)
 	, message_cb_(default_message_callback)
 {
 	LOG(DEBUG) << "TcpServer::TcpServer [" << name_ 
@@ -123,6 +124,7 @@ void TcpServer::new_connection(SelectableFDPtr&& peerfd, const EndPoint& peeradd
 							peeraddr);
 	// Copy user callbacks into TcpConnection.
 	conn->set_connect_callback(connect_cb_);
+	conn->set_close_callback(close_cb_);
 	conn->set_message_callback(message_cb_);
 	conn->set_write_complete_callback(write_complete_cb_);
 
@@ -131,7 +133,7 @@ void TcpServer::new_connection(SelectableFDPtr&& peerfd, const EndPoint& peeradd
 	// of smart pointer (`connections_` storages all connections).
 	using containers::_1;
 	using containers::make_weak_bind;
-	conn->set_close_callback(
+	conn->set_finish_callback(
 			make_weak_bind(&TcpServer::remove_connection, shared_from_this(), _1));
 
 	// Storages all client connections.

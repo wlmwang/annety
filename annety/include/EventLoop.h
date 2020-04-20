@@ -8,6 +8,7 @@
 #include "TimeStamp.h"
 #include "TimerId.h"
 #include "CallbackForward.h"
+#include "threading/ThreadForward.h"
 #include "synchronization/MutexLock.h"
 
 #include <vector>
@@ -18,7 +19,6 @@
 
 namespace annety
 {
-class ThreadRef;
 class Channel;
 class Poller;
 class TimerPool;

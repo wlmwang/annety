@@ -63,7 +63,7 @@ thread_local char tls_format_ymdhis[32]{'\0'};
 
 void set_min_log_severity(LogSeverity severity)
 {
-	g_min_log_severity = std::min(LOG_FATAL, (int)severity);
+	g_min_log_severity = std::min(LOG_FATAL, static_cast<int>(severity));
 }
 LogSeverity get_min_log_severity()
 {

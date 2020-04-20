@@ -60,6 +60,11 @@ public:
 		connect_cb_ = std::move(cb);
 	}
 	// *Not thread safe*, but usually be called before connect().
+	void set_close_callback(CloseCallback cb)
+	{
+		close_cb_ = std::move(cb);
+	}
+	// *Not thread safe*, but usually be called before connect().
 	void set_message_callback(MessageCallback cb)
 	{
 		message_cb_ = std::move(cb);
@@ -68,11 +73,6 @@ public:
 	void set_write_complete_callback(WriteCompleteCallback cb)
 	{
 		write_complete_cb_ = std::move(cb);
-	}
-	// *Not thread safe*, but usually be called before connect().
-	void set_error_callback(ErrorCallback cb)
-	{
-		error_cb_ = std::move(cb);
 	}
 
 private:
@@ -83,7 +83,7 @@ private:
 	void remove_connection(const TcpConnectionPtr&);
 
 	// *Not thread safe*, but run in own loop thread.
-	void close_connection();
+	void connect_destroyed();
 
 	// *Not thread safe*, but run in own loop thread.
 	void handle_retry();
@@ -116,8 +116,8 @@ private:
 	TcpConnectionPtr connection_;
 
 	// User registered callback functions.
-	ErrorCallback error_cb_;
 	ConnectCallback connect_cb_;
+	CloseCallback close_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;
 

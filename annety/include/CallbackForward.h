@@ -19,6 +19,7 @@ class TcpConnection;
 using TcpConnectionPtr = std::shared_ptr<TcpConnection>;
 using ConnectCallback = std::function<void(const TcpConnectionPtr&)>;
 using CloseCallback = std::function<void(const TcpConnectionPtr&)>;
+using FinishCallback = std::function<void(const TcpConnectionPtr&)>;
 using WriteCompleteCallback = std::function<void(const TcpConnectionPtr&)>;
 using HighWaterMarkCallback = std::function<void(const TcpConnectionPtr&, size_t)>;
 using MessageCallback = std::function<void(const TcpConnectionPtr&, NetBuffer*, TimeStamp)>;
@@ -36,13 +37,14 @@ using TcpClientPtr = std::shared_ptr<TcpClient>;
 using TcpServerPtr = std::shared_ptr<TcpServer>;
 using SelectableFDPtr = std::unique_ptr<SelectableFD>;
 
-TcpServerPtr make_tcp_server(EventLoop*, const EndPoint&, const std::string&, bool reuse_port = false);
 TcpClientPtr make_tcp_client(EventLoop*, const EndPoint&, const std::string&);
+TcpServerPtr make_tcp_server(EventLoop*, const EndPoint&, const std::string&, bool reuse_port = false);
 TcpConnectionPtr make_tcp_connection(EventLoop*, const std::string&, SelectableFDPtr&&, const EndPoint&, const EndPoint&);
 
 // internal ------------------------------------------------------------------
 // Default callback handler
 void default_connect_callback(const TcpConnectionPtr&);
+void default_close_callback(const TcpConnectionPtr&);
 void default_message_callback(const TcpConnectionPtr&, NetBuffer*, TimeStamp);
 
 }	// namespace annety

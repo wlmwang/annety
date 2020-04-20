@@ -36,7 +36,13 @@ void default_connect_callback(const TcpConnectionPtr& conn)
 {
 	DLOG(TRACE) << conn->local_addr().to_ip_port() << " -> "
 			   << conn->peer_addr().to_ip_port() << " is "
-			   << (conn->connected() ? "UP" : "DOWN");
+			   << "UP";
+}
+void default_close_callback(const TcpConnectionPtr& conn)
+{
+	DLOG(TRACE) << conn->local_addr().to_ip_port() << " -> "
+			   << conn->peer_addr().to_ip_port() << " is "
+			   << "DOWN";
 	// Do not call conn->force_close(), because some users want 
 	// to register message callback only.
 }
@@ -390,8 +396,8 @@ void TcpConnection::connect_destroyed()
 		state_ = kDisconnected;
 		connect_channel_->disable_all_event();
 
-		// Call the user connect callback.
-		connect_cb_(shared_from_this());
+		// Call the user close callback.
+		close_cb_(shared_from_this());
 	}
 	connect_channel_->remove();
 
@@ -413,13 +419,14 @@ void TcpConnection::handle_close()
 	
 	DCHECK(state_ == kConnected || state_ == kDisconnecting);
 	state_ = kDisconnected;
+	
 	connect_channel_->disable_all_event();
 
-	// Call the user connect callback.
-	connect_cb_(shared_from_this());
-
-	// Call the Server close callback.
+	// Call the user close callback.
 	close_cb_(shared_from_this());
+
+	// Call the Server finish callback.
+	finish_cb_(shared_from_this());
 }
 
 void TcpConnection::handle_read(TimeStamp received_ms)

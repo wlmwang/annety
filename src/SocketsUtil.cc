@@ -214,8 +214,8 @@ struct sockaddr_in6 get_local_addr(int fd)
 
 	// The kernel will fill in the value of `addrlen` and `addr`.
 	int ret = ::getsockname(fd, sockaddr_cast(&addr), &addrlen);
+	DCHECK(!ret);
 
-	DPLOG_IF(ERROR, ret < 0) << "::getsockname failed";
 	return addr;
 }
 
@@ -227,8 +227,8 @@ struct sockaddr_in6 get_peer_addr(int fd)
 
 	// The kernel will fill in the value of `addrlen` and `addr`.
 	int ret = ::getpeername(fd, sockaddr_cast(&addr), &addrlen);
-	
-	DPLOG_IF(ERROR, ret < 0) << "::getpeername failed";
+	DCHECK(!ret);
+
 	return addr;
 }
 
@@ -389,7 +389,7 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* dst)
 
 	// Convert IP address to number(network byte-order).
 	int ret = ::inet_pton(AF_INET6, ip, &dst->sin6_addr);
-	DPLOG_IF(ERROR, ret < 0) << "::inet_pton failed";
+	DCHECK(ret >= 0);
 }
 
 int close(int fd)

@@ -38,18 +38,18 @@ public:
 	// Starts the server if it's not listenning.
 	void start();
 
-	const std::string& ip_port() const { return ip_port_; }
 	const std::string& name() const { return name_; }
+	const std::string& ip_port() const { return ip_port_; }
 
 	// Turn on the server to become a multi-threaded model.
 	// `num_threads` is the number of threads for handling input.
 	// - 0 means all I/O in owner_loop_'s thread, no thread will 
-	// 	 created, this is the default value.
+	// 	 be created, this is the default value.
 	// - 1 means all I/O in another thread.
 	// - N means a thread pool with N threads, new connections
 	//   are assigned on a round-robin basis.
 	//
-	// NOTICE: Always accepts new connection in owner_loop_'s thread.
+	// NOTICE: Accepts new connection always in owner_loop_'s thread.
 	//
 	// *Not thread safe*, but usually be called before start().
 	void set_thread_num(int num_threads);
@@ -65,6 +65,10 @@ public:
 	void set_connect_callback(ConnectCallback cb)
 	{
 		connect_cb_ = std::move(cb);
+	}
+	void set_close_callback(CloseCallback cb)
+	{
+		close_cb_ = std::move(cb);
 	}
 	// *Not thread safe*, but usually be called before start().
 	void set_message_callback(MessageCallback cb)
@@ -121,6 +125,7 @@ private:
 
 	// User registered callback functions.
 	ConnectCallback connect_cb_;
+	CloseCallback close_cb_;
 	MessageCallback message_cb_;
 	WriteCompleteCallback write_complete_cb_;
 	ThreadInitCallback thread_init_cb_;
