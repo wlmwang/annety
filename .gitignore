@@ -1,4 +1,5 @@
 # for Compile
+build
 src/ar/*.o
 src/ld/*.o
 *.so
