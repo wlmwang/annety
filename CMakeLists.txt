@@ -5,11 +5,6 @@ PROJECT(annety C CXX)
 # Build the testing codes.
 # ENABLE_TESTING()
 
-# Only build examples if this is the main project.
-# IF (CMAKE_PROJECT_NAME STREQUAL "annety")
-#	option(ANNETY_BUILD_EXAMPLES "Build Annety examples" ON)
-# ENDIF()
-
 # Generate compile flags.
 SET(CXX_FLAGS
 	-g
@@ -62,3 +57,13 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} annety/include)
 
 # Set recursive subdirectories.
 ADD_SUBDIRECTORY(src)
+
+
+# Only build examples if this is the main project.
+IF (CMAKE_PROJECT_NAME STREQUAL "annety")
+	OPTION(ANNETY_BUILD_EXAMPLES "Build Annety examples" ON)
+ENDIF()
+
+IF (ANNETY_BUILD_EXAMPLES)
+	ADD_SUBDIRECTORY(examples)
+ENDIF()
