@@ -1,7 +1,6 @@
 # for Compile
 build
-src/ar/*.o
-src/ld/*.o
+*.o
 *.so
 *.a
 

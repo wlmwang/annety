@@ -36,7 +36,7 @@ TcpClient::TcpClient(EventLoop* loop, const EndPoint& addr, const std::string& n
 	, message_cb_(default_message_callback)
 {
 	LOG(DEBUG) << "TcpClient::TcpClient [" << name_ 
-		<< "] client is constructing which connecting to " << ip_port_;
+		<< "] client which connecting to " << ip_port_ << " is constructing";
 }
 
 void TcpClient::initialize()
@@ -88,9 +88,10 @@ TcpClient::~TcpClient()
 void TcpClient::connect()
 {
 	DCHECK(initilize_);
-
-	if (!connect_) {
-		connect_ = true;
+	
+	bool expected = false;
+	if (connect_.compare_exchange_strong(expected, true, 
+				std::memory_order_release, std::memory_order_relaxed)) {
 		connector_->start();
 	}
 }
@@ -99,14 +100,15 @@ void TcpClient::disconnect()
 {
 	DCHECK(initilize_);
 
-	if (connect_) {
+	bool expected = true;
+	if (connect_.compare_exchange_strong(expected, false, 
+			std::memory_order_release, std::memory_order_relaxed)) {
 		{
 			AutoLock locked(lock_);
 			if (connection_) {
 				connection_->shutdown();
 			}
 		}
-		connect_ = false;
 	}
 }
 
@@ -114,9 +116,10 @@ void TcpClient::stop()
 {
 	DCHECK(initilize_);
 
-	if (connect_) {
+	bool expected = true;
+	if (connect_.compare_exchange_strong(expected, false,
+			std::memory_order_release, std::memory_order_relaxed)) {
 		connector_->stop();
-		connect_ = false;
 	}
 }
 

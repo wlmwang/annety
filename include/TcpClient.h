@@ -44,6 +44,7 @@ public:
 	// for connect
 	void connect();
 	void disconnect();
+	
 	void stop();
 
 	TcpConnectionPtr connection() const
@@ -104,7 +105,7 @@ private:
 	const std::string ip_port_;
 	bool initilize_{false};
 	
-	std::atomic<bool> connect_{true};
+	std::atomic<bool> connect_{false};
 	std::atomic<bool> retry_{false};
 
 	// Connect the processor.

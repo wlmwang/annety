@@ -2,26 +2,26 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(annety C CXX)
 
-# Build the testing codes.
+# Build the testing cases.
 # ENABLE_TESTING()
 
 # Generate compile flags.
 SET(CXX_FLAGS
 	-g
 	-std=c++11
-	-fpic
 	-Wall
 	-Wextra
 	-Werror
 	-Wno-unused-parameter
-	-Wold-style-cast
-	-Woverloaded-virtual
-	-Wpointer-arith
 	-Wwrite-strings
+	-Wold-style-cast
+	-Wpointer-arith
+	-Woverloaded-virtual
 	#-Wconversion
 	#-Wshadow
 	-rdynamic
 	-march=native
+	-fpic	# Convenient for dynamic library to link this static library
 	-DCHECK_PTHREAD_RETURN_VALUE
 	-D_FILE_OFFSET_BITS=64
 	-MMD
@@ -43,21 +43,23 @@ IF (NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE "Release")
 ENDIF()
 
+# Print the cc compile flags.
 SET(CMAKE_CXX_FLAGS_DEBUG "-O0")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
 STRING(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 MESSAGE(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS} " " ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})
 
 # Set the object direcrory.
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-# Set headers file path.
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} annety/include)
+# Set headers/library file path.
+# LINK_DIRECTORIES(${PROJECT_BINARY_DIR}/lib)
+INCLUDE_DIRECTORIES(src include)
 
 # Set recursive subdirectories.
 ADD_SUBDIRECTORY(src)
-
+ADD_SUBDIRECTORY(include)
 
 # Only build examples if this is the main project.
 IF (CMAKE_PROJECT_NAME STREQUAL "annety")
