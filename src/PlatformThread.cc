@@ -48,7 +48,7 @@ public:
 // |params| -> ThreadParams
 void* thread_func(void* params)
 {
-	DCHECK(params);
+	CHECK(params);
 
 	std::unique_ptr<ThreadParams> thread_params(static_cast<ThreadParams*>(params));
 
@@ -60,7 +60,7 @@ void* thread_func(void* params)
 
 bool create_thread(bool joinable, TaskCallback cb, ThreadRef* thread_ref)
 {
-	DCHECK(thread_ref);
+	CHECK(thread_ref);
 
 	pthread_attr_t attributes;
 	::pthread_attr_init(&attributes);
@@ -126,13 +126,13 @@ bool PlatformThread::create_non_joinable(TaskCallback cb)
 // static
 void PlatformThread::join(ThreadRef thread_ref)
 {
-	DCHECK_EQ(0, pthread_join(thread_ref.ref(), nullptr));
+	CHECK_EQ(0, ::pthread_join(thread_ref.ref(), nullptr));
 }
 
 // static
 void PlatformThread::detach(ThreadRef thread_ref)
 {
-	DCHECK_EQ(0, pthread_detach(thread_ref.ref()));
+	CHECK_EQ(0, ::pthread_detach(thread_ref.ref()));
 }
 
 // static

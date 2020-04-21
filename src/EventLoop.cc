@@ -92,7 +92,7 @@ void EventLoop::loop()
 {
 	check_in_own_loop();
 
-	CHECK(!looping_);
+	DCHECK(!looping_);
 	looping_ = true;
 
 	while (!quit_) {

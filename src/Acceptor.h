@@ -29,16 +29,17 @@ public:
 	Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport);
 	~Acceptor();
 	
-	void set_new_connect_callback(const NewConnectCallback& cb)
-	{
-		new_connect_cb_ = cb;
-	}
+	void listen();
+	
 	bool is_listen() const
 	{
 		return listen_;
 	}
-	
-	void listen();
+
+	void set_new_connect_callback(const NewConnectCallback& cb)
+	{
+		new_connect_cb_ = cb;
+	}
 
 private:
 	void handle_read();
@@ -51,7 +52,7 @@ private:
 	SelectableFDPtr listen_socket_;
 	std::unique_ptr<Channel> listen_channel_;
 	
-	// New connection callback
+	// New connection callback.
 	NewConnectCallback new_connect_cb_;
 
 	// A special file descriptor is used to solve the situation that the file 

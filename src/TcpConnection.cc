@@ -34,13 +34,13 @@ int shutdown(const SelectableFD& sfd, int how = SHUT_WR)
 
 void default_connect_callback(const TcpConnectionPtr& conn)
 {
-	DLOG(TRACE) << conn->local_addr().to_ip_port() << " -> "
+	LOG(DEBUG) << conn->local_addr().to_ip_port() << " -> "
 			   << conn->peer_addr().to_ip_port() << " is "
 			   << "UP";
 }
 void default_close_callback(const TcpConnectionPtr& conn)
 {
-	DLOG(TRACE) << conn->local_addr().to_ip_port() << " -> "
+	LOG(DEBUG) << conn->local_addr().to_ip_port() << " -> "
 			   << conn->peer_addr().to_ip_port() << " is "
 			   << "DOWN";
 	// Do not call conn->force_close(), because some users want 
@@ -92,7 +92,7 @@ TcpConnection::~TcpConnection()
 	DCHECK(initilize_);
 	DCHECK(state_ == kDisconnected);
 	
-	DLOG(TRACE) << "TcpConnection::~TcpConnection the [" <<  name_ << "] connecting of "
+	LOG(DEBUG) << "TcpConnection::~TcpConnection the [" <<  name_ << "] connecting of "
 		<< " fd=" << connect_socket_->internal_fd()
 		<< " state=" << state_to_string() << " is destructing";
 }
@@ -441,9 +441,10 @@ void TcpConnection::handle_read(TimeStamp received_ms)
 		// Call the user message callback.
 		message_cb_(shared_from_this(), input_buffer_.get(), received_ms);
 	} else if (n == 0) {
-		DLOG(TRACE) << "TcpConnection::handle_read the conntion fd=" 
+		LOG(DEBUG) << "TcpConnection::handle_read the conntion fd=" 
 			<< connect_socket_->internal_fd() 
 			<< " is going to closing";
+
 		handle_close();
 	} else {
 		PLOG(ERROR) << "TcpConnection::handle_read the conntion fd=" 

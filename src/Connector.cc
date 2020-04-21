@@ -45,13 +45,13 @@ Connector::Connector(EventLoop* loop, const EndPoint& addr)
 	, server_addr_(addr)
 	, retry_delay_ms_(kInitRetryDelayMs)
 {
-	LOG(DEBUG) << "Connector::Connector [" << server_addr_.to_ip_port() 
+	DLOG(TRACE) << "Connector::Connector [" << server_addr_.to_ip_port() 
 		<< "] Connector is constructing and the retry is " << retry_delay_ms_;
 }
 
 Connector::~Connector()
 {
-	LOG(DEBUG) << "Connector::~Connector [" << server_addr_.to_ip_port() 
+	DLOG(TRACE) << "Connector::~Connector [" << server_addr_.to_ip_port() 
 		<< "] Connector is destructing and the retry is " << retry_delay_ms_;
 
 	DCHECK(!connect_socket_) << "Please stop() the Connector before destruct";
@@ -114,7 +114,7 @@ void Connector::start_in_own_loop()
 	if (connect_) {
 		do_connect();
 	} else {
-		LOG(DEBUG) << "Connector::start_in_own_loop do not connect, maybe has connected";
+		DLOG(TRACE) << "Connector::start_in_own_loop do not connect, maybe has connected";
 	}
 }
 
@@ -136,7 +136,7 @@ void Connector::retry_in_own_loop()
 	connect_socket_.reset();
 
 	if (connect_) {
-		LOG(DEBUG) << "Connector::retry connecting to " << server_addr_.to_ip_port()
+		DLOG(TRACE) << "Connector::retry connecting to " << server_addr_.to_ip_port()
 			<< " in " << retry_delay_ms_ << " milliseconds";
 
 		// FIXME: Please use weak_from_this() since C++17.

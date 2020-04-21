@@ -71,7 +71,7 @@ int socket(sa_family_t family, bool nonblock, bool cloexec)
 #error Do not support your os platform in SocketsUtil.h
 #endif
 
-	DPLOG_IF(ERROR, fd < 0) << "::socket failed";
+	PLOG_IF(ERROR, fd < 0) << "::socket failed";
 	return fd;
 }
 
@@ -103,7 +103,7 @@ int accept(int servfd, struct sockaddr_in6* dst, bool nonblock, bool cloexec)
 #error Do not support your os platform in SocketsUtil.h
 #endif	// defined(OS_LINUX) || defined(OS_BSD) || ...
 
-	DPLOG_IF(ERROR, connfd < 0) << "::accept failed";
+	PLOG_IF(ERROR, connfd < 0) << "::accept failed";
 
 	if (connfd < 0) {
 		int err = errno;
@@ -127,11 +127,11 @@ int accept(int servfd, struct sockaddr_in6* dst, bool nonblock, bool cloexec)
 			case ENOTSOCK:
 			case EOPNOTSUPP:
 				// unexpected errors
-				DPLOG(FATAL) << "unexpected error of ::accept4";
+				PLOG(FATAL) << "unexpected error of ::accept4";
 				break;
 
 			default:
-				DPLOG(FATAL) << "unknown error of ::accept4";
+				PLOG(FATAL) << "unknown error of ::accept4";
 				break;
 		}
 	}
@@ -153,7 +153,8 @@ int bind(int fd, const struct sockaddr* addr)
 
 	// The kernel will judge according to `addr->sa_family`.
 	int ret = ::bind(fd, addr, addrlen);
-	DPCHECK(ret >= 0);
+	PCHECK(!ret);
+
 	return ret;
 }
 
@@ -171,7 +172,8 @@ int connect(int servfd, const struct sockaddr* addr)
 
 	// The kernel will judge according to `addr->sa_family`.
 	int ret = ::connect(servfd, addr, addrlen);
-	DPLOG_IF(ERROR, ret < 0 && errno != EINPROGRESS) << "::connect failed";
+	PLOG_IF(ERROR, ret < 0 && errno != EINPROGRESS) << "::connect failed";
+	
 	return ret;
 }
 
@@ -195,14 +197,16 @@ int listen(int servfd, int backlog)
 	// specified, backlog is silently forced to kern.ipc.soacceptqueue.
 
 	int ret = ::listen(servfd, backlog);
-	DPCHECK(ret >= 0);
+	PCHECK(!ret);
+	
 	return ret;
 }
 
 int shutdown(int fd, int how)
 {
 	int ret = ::shutdown(fd, how);
-	DPLOG_IF(ERROR, ret < 0) << "::shutdown failed";
+	PCHECK(!ret);
+
 	return ret;
 }
 
@@ -214,7 +218,7 @@ struct sockaddr_in6 get_local_addr(int fd)
 
 	// The kernel will fill in the value of `addrlen` and `addr`.
 	int ret = ::getsockname(fd, sockaddr_cast(&addr), &addrlen);
-	DCHECK(!ret);
+	PCHECK(!ret);
 
 	return addr;
 }
@@ -227,7 +231,7 @@ struct sockaddr_in6 get_peer_addr(int fd)
 
 	// The kernel will fill in the value of `addrlen` and `addr`.
 	int ret = ::getpeername(fd, sockaddr_cast(&addr), &addrlen);
-	DCHECK(!ret);
+	PCHECK(!ret);
 
 	return addr;
 }
@@ -237,7 +241,8 @@ int set_reuse_addr(int servfd, bool on)
 	int opt = on ? 1 : 0;
 	int ret = ::setsockopt(servfd, SOL_SOCKET, SO_REUSEADDR,
 					&opt, static_cast<socklen_t>(sizeof opt));
-	DPLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEADDR failed";
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEADDR failed";
+
 	return ret;
 }
 
@@ -247,11 +252,11 @@ int set_reuse_port(int servfd, bool on)
 	int opt = on ? 1 : 0;
 	int ret = ::setsockopt(servfd, SOL_SOCKET, SO_REUSEPORT,
 					&opt, static_cast<socklen_t>(sizeof opt));
-	DPLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEPORT failed";
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEPORT failed";
 	return ret;
 #else
 	if (on) {
-		DLOG(ERROR) << "SO_REUSEPORT is not supported.";
+		LOG(ERROR) << "SO_REUSEPORT is not supported.";
 	}
 	return -1;
 #endif
@@ -262,7 +267,8 @@ int set_keep_alive(int fd, bool on)
 	int optval = on ? 1 : 0;
 	int ret = ::setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE,
 					&optval, static_cast<socklen_t>(sizeof optval));
-	DPLOG_IF(ERROR, ret < 0) << "::setsockopt SO_KEEPALIVE failed";
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_KEEPALIVE failed";
+	
 	return ret;
 }
 
@@ -271,7 +277,8 @@ int set_tcp_nodelay(int fd, bool on)
 	int opt = on ? 1 : 0;
 	int ret = ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
 					&opt, static_cast<socklen_t>(sizeof opt));
-	DPLOG_IF(ERROR, ret < 0) << "::setsockopt TCP_NODELAY failed";
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt TCP_NODELAY failed";
+	
 	return ret;
 }
 
@@ -335,7 +342,7 @@ void to_ip_port(const struct sockaddr* addr, char* dst, size_t size)
 	
 	// c-style string
 	size_t end = ::strlen(dst);
-	DCHECK(size > end);
+	CHECK(size > end);
 
 	::snprintf(dst+end, size-end, ":%u", port);
 }
@@ -343,10 +350,10 @@ void to_ip_port(const struct sockaddr* addr, char* dst, size_t size)
 // Convert struct sockaddr into "IPv4/IPv6" address.
 void to_ip(const struct sockaddr* addr, char* dst, size_t size)
 {
-	DCHECK(dst);
+	CHECK(dst);
 
 	if (addr->sa_family == AF_INET) {
-		DCHECK(size >= INET_ADDRSTRLEN);
+		CHECK(size >= INET_ADDRSTRLEN);
 
 		// Recover actual type.
 		const struct sockaddr_in* addr4 = sockaddr_in_cast(addr);
@@ -354,9 +361,9 @@ void to_ip(const struct sockaddr* addr, char* dst, size_t size)
 		// Convert numeric format to dotted decimal IPv4 address format.
 		// inet_ntoa() is *Not thread safe*.
 		const char *ptr = ::inet_ntop(AF_INET, &addr4->sin_addr, dst, static_cast<socklen_t>(size));
-		DPCHECK(ptr);
+		PCHECK(ptr);
 	} else if (addr->sa_family == AF_INET6) {
-		DCHECK(size >= INET6_ADDRSTRLEN);
+		CHECK(size >= INET6_ADDRSTRLEN);
 
 		// Recover actual type.
 		const struct sockaddr_in6* addr6 = sockaddr_in6_cast(addr);
@@ -364,7 +371,7 @@ void to_ip(const struct sockaddr* addr, char* dst, size_t size)
 		// Convert number(network byte-order) to IPv6 address.
 		// inet_ntoa() is *Not thread safe*.
 		const char *ptr = ::inet_ntop(AF_INET6, &addr6->sin6_addr, dst, static_cast<socklen_t>(size));
-		DPCHECK(ptr);
+		PCHECK(ptr);
 	} else {
 		NOTREACHED();
 	}
@@ -378,7 +385,7 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* dst)
 
 	// Convert IP address to number(network byte-order).
 	int ret = ::inet_pton(AF_INET, ip, &dst->sin_addr);
-	PLOG_IF(ERROR, ret < 0) << "::inet_pton failed";
+	CHECK(ret >= 0);
 }
 
 // Convert "IPv6 + port" address into struct sockaddr_in6
@@ -389,39 +396,44 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* dst)
 
 	// Convert IP address to number(network byte-order).
 	int ret = ::inet_pton(AF_INET6, ip, &dst->sin6_addr);
-	DCHECK(ret >= 0);
+	CHECK(ret >= 0);
 }
 
 int close(int fd)
 {
 	int ret = ::close(fd);
-	DPLOG_IF(ERROR, ret < 0) << "::close failed fd=" << fd;
+	PLOG_IF(ERROR, ret < 0) << "::close failed fd=" << fd;
+	
 	return ret;
 }
 
 ssize_t read(int sockfd, void *buf, size_t len)
 {
 	ssize_t ret = ::read(sockfd, buf, len);
-	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::read failed";
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::read failed";
+	
 	return ret;
 }
 ssize_t readv(int sockfd, const struct iovec *iov, int iovcnt)
 {
 	ssize_t ret = ::readv(sockfd, iov, iovcnt);
-	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::readv failed";
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::readv failed";
+	
 	return ret;
 }
 
 ssize_t write(int sockfd, const void *buf, size_t len)
 {
 	int ret = ::write(sockfd, buf, len);
-	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::write failed";
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::write failed";
+	
 	return ret;
 }
 ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt)
 {
 	ssize_t ret = ::writev(sockfd, iov, iovcnt);
-	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::writev failed";
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::writev failed";
+	
 	return ret;
 }
 
@@ -429,14 +441,14 @@ bool set_non_blocking(int fd)
 {
 	const int flags = ::fcntl(fd, F_GETFL);
 	if (flags == -1) {
-		DPLOG(ERROR) << "Unable to fcntl file F_GETFL " << fd;
+		PLOG(ERROR) << "Unable to fcntl file F_GETFL " << fd;
 		return false;
 	}
 	if (flags & O_NONBLOCK) {
 		return true;
 	}
 	if (HANDLE_EINTR(::fcntl(fd, F_SETFL, flags | O_NONBLOCK)) == -1) {
-		DPLOG(ERROR) << "Unable to fcntl file O_NONBLOCK";
+		PLOG(ERROR) << "Unable to fcntl file O_NONBLOCK";
 		return false;
 	}
 	return true;
@@ -446,14 +458,14 @@ bool set_close_on_exec(int fd)
 {
 	const int flags = ::fcntl(fd, F_GETFD);
 	if (flags == -1) {
-		DPLOG(ERROR) << "Unable to fcntl file F_GETFD " << fd;
+		PLOG(ERROR) << "Unable to fcntl file F_GETFD " << fd;
 		return false;
 	}
 	if (flags & FD_CLOEXEC) {
 		return true;
 	}
 	if (HANDLE_EINTR(::fcntl(fd, F_SETFD, flags | FD_CLOEXEC)) == -1) {
-		DPLOG(ERROR) << "Unable to fcntl file FD_CLOEXEC " << fd;
+		PLOG(ERROR) << "Unable to fcntl file FD_CLOEXEC " << fd;
 		return false;
 	}
 	return true;

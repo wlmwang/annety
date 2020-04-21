@@ -67,6 +67,7 @@ EventFD::EventFD(bool nonblock, bool cloexec)
 	fd_ = fds_[0];
 #endif
 	PCHECK(fd_ >= 0);
+	
 	DLOG(TRACE) << "EventFD::EventFD" << " fd=" << fd_ << " is constructing";
 }
 

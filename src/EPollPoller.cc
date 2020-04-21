@@ -130,7 +130,7 @@ void EPollPoller::remove_channel(Channel* channel)
 	DCHECK(status == kChannelPollAdded || status == kChannelPollDeleted);
 	
 	size_t n = channels_.erase(fd);
-	DCHECK(n == 1);
+	CHECK(n == 1);
 
 	if (status == kChannelPollAdded) {
 		update_poll_events(kPollCtlDel, channel);
@@ -144,7 +144,7 @@ void EPollPoller::fill_active_channels(int num, ChannelList* active_channels) co
 
 	DLOG(TRACE) << "EPollPoller::fill_active_channels is having " << num << " events happened";
 
-	DCHECK(static_cast<size_t>(num) <= active_events_.size());
+	CHECK(static_cast<size_t>(num) <= active_events_.size());
 	for (int i = 0; i < num; ++i) {
 		Channel* channel = static_cast<Channel*>(active_events_[i].data.ptr);
 

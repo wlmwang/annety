@@ -27,6 +27,9 @@ Channel::Channel(EventLoop* loop, SelectableFD* sfd)
 	, status_(kChannelPollInit)
 {
 	CHECK(loop && sfd);
+
+	DLOG(TRACE) << "Channel::Channel the channel fd=" 
+		<< select_fd_->internal_fd() << " is constructing";
 }
 
 Channel::~Channel()
@@ -54,7 +57,8 @@ void Channel::handle_event(TimeStamp received_ms)
 {
 	owner_loop_->check_in_own_loop();
 	
-	DLOG(TRACE) << "Channel::handle_event is handling event begin " << revents_to_string();
+	DLOG(TRACE) << "Channel::handle_event is handling event begin " 
+		<< revents_to_string();
 	handling_event_ = true;
 
 	// POLLHUP: Hang up (output only).
@@ -99,7 +103,7 @@ void Channel::remove()
 {
 	owner_loop_->check_in_own_loop();
 
-	// channel must has disable_all_event
+	// Channel must has disable_all_event
 	DCHECK(is_none_event());
 	
 	added_to_loop_ = false;

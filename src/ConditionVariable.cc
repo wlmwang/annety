@@ -29,15 +29,16 @@ ConditionVariable::ConditionVariable(MutexLock& user_lock)
 #if !defined(OS_MACOSX)
 	pthread_condattr_t attrs;
 	rv = ::pthread_condattr_init(&attrs);
-	DCHECK_EQ(0, rv);
+	CHECK_EQ(0, rv);
 	
 	::pthread_condattr_setclock(&attrs, CLOCK_MONOTONIC);
 	rv = ::pthread_cond_init(&condition_, &attrs);
 	::pthread_condattr_destroy(&attrs);
 #else
 	rv = ::pthread_cond_init(&condition_, NULL);
-#endif
-	DCHECK_EQ(0, rv);
+#endif	// !defined(OS_MACOSX)
+	
+	CHECK_EQ(0, rv);
 }
 
 ConditionVariable::~ConditionVariable()
@@ -57,7 +58,8 @@ ConditionVariable::~ConditionVariable()
 	}
 #endif
 	int rv = ::pthread_cond_destroy(&condition_);
-	DCHECK_EQ(0, rv);
+	
+	CHECK_EQ(0, rv);
 }
 
 void ConditionVariable::wait()
@@ -65,8 +67,10 @@ void ConditionVariable::wait()
 #if DCHECK_IS_ON()
 	user_lock_.check_held_and_unmark();
 #endif
+	
 	int rv = ::pthread_cond_wait(&condition_, user_mutex_);
-	DCHECK_EQ(0, rv);
+	CHECK_EQ(0, rv);
+
 #if DCHECK_IS_ON()
 	user_lock_.check_unheld_and_mark();
 #endif

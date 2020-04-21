@@ -105,7 +105,7 @@ void PollPoller::remove_channel(Channel* channel)
 	DCHECK(status == kChannelPollAdded || status == kChannelPollDeleted);
 	
 	size_t n = channels_.erase(fd);
-	DCHECK(n == 1);
+	CHECK(n == 1);
 
 	if (status == kChannelPollAdded) {
 		update_poll_events(kPollCtlDel, channel);

@@ -51,43 +51,44 @@ LockImpl::LockImpl()
 {
 	pthread_mutexattr_t mta;
 	int rv = ::pthread_mutexattr_init(&mta);
-	DCHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
+	CHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
 	
 #ifndef NDEBUG
 	// In debug, setup attributes for lock error checking.
 	rv = ::pthread_mutexattr_settype(&mta, PTHREAD_MUTEX_ERRORCHECK);
-	DCHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
+	CHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
 #endif
 
 	rv = ::pthread_mutex_init(&native_handle_, &mta);
-	DCHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
+	CHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
+	
 	rv = ::pthread_mutexattr_destroy(&mta);
-	DCHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
+	CHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
 }
 
 LockImpl::~LockImpl()
 {
 	int rv = ::pthread_mutex_destroy(&native_handle_);
-	DCHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
+	CHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
 }
 
 bool LockImpl::try_lock()
 {
 	int rv = ::pthread_mutex_trylock(&native_handle_);
-	DCHECK(rv == 0 || rv == EBUSY) << ". " << system_error_code_to_string(rv);
+	CHECK(rv == 0 || rv == EBUSY) << ". " << system_error_code_to_string(rv);
 	return rv == 0;
 }
 
 void LockImpl::lock()
 {
 	int rv = ::pthread_mutex_lock(&native_handle_);
-	DCHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
+	CHECK_EQ(rv, 0) << ". " << system_error_code_to_string(rv);
 }
 
 void LockImpl::unlock()
 {
 	int rv = ::pthread_mutex_unlock(&native_handle_);
-	DCHECK_EQ(rv, 0) << ". " << safe_strerror(rv);
+	CHECK_EQ(rv, 0) << ". " << safe_strerror(rv);
 }
 
 }  // namespace internal

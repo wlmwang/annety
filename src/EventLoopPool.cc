@@ -30,8 +30,8 @@ EventLoopPool::~EventLoopPool()
 void EventLoopPool::start(const ThreadInitCallback& cb)
 {
 	owner_loop_->check_in_own_loop();
+	
 	DCHECK(!started_);
-
 	started_ = true;
 
 	for (int i = 0; i < num_threads_; ++i) {

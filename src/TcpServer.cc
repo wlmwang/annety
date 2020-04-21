@@ -41,7 +41,7 @@ TcpServer::TcpServer(EventLoop* loop,
 	, message_cb_(default_message_callback)
 {
 	LOG(DEBUG) << "TcpServer::TcpServer [" << name_ 
-		<< "] server is constructing which listening on " << ip_port_;
+		<< "] server which listening on " << ip_port_ << " is constructing";
 }
 
 void TcpServer::initialize()
@@ -66,9 +66,6 @@ TcpServer::~TcpServer()
 
 	owner_loop_->check_in_own_loop();
 
-	LOG(DEBUG) << "TcpServer::~TcpServer [" << name_ 
-		<< "] server is destructing which listening on" << ip_port_;
-
 	// Destroy all client connections.
 	for (auto& item : connections_) {
 		TcpConnectionPtr conn(item.second);
@@ -76,11 +73,14 @@ TcpServer::~TcpServer()
 		conn->get_owner_loop()->run_in_own_loop(
 			std::bind(&TcpConnection::connect_destroyed, conn));
 	}
+
+	LOG(DEBUG) << "TcpServer::~TcpServer [" << name_ 
+		<< "] server which listening on" << ip_port_ << " is destructing";
 }
 
 void TcpServer::set_thread_num(int num_threads)
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 
 	CHECK(0 <= num_threads);
 	workers_->set_thread_num(num_threads);
@@ -88,7 +88,7 @@ void TcpServer::set_thread_num(int num_threads)
 
 void TcpServer::start()
 {
-	CHECK(initilize_);
+	DCHECK(initilize_);
 	
 	if (!started_.test_and_set()) {
 		// Starting all event loop thread pool.

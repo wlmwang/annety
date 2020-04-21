@@ -94,7 +94,7 @@ SignalFD::SignalFD(bool nonblock, bool cloexec)
 #else
 	{
 		// Only be called in the main thread.
-		CHECK(!g_signal_fd) << "SignalFD::SignalFD has been created at " 
+		DCHECK(!g_signal_fd) << "SignalFD::SignalFD has been created at " 
 			<< g_signal_fd;
 		
 		g_signal_fd = this;

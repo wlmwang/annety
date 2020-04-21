@@ -14,7 +14,7 @@
 namespace annety
 {
 // IO Multiplexing wrapper of poll(4).
-// Just for develop/debug.
+// Just for develop/debug/testing only.
 //
 // This class does not owns the EventLoop and Channels lifetime.
 // *Not thread safe*, but they are all called in the own loop.
