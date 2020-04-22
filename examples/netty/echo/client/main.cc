@@ -6,8 +6,6 @@
 
 int main(int argc, char* argv[])
 {
-	annety::set_min_log_severity(annety::LOG_DEBUG);
-
 	if (argc < 1) {
 		printf("Usage: %s [msg_size]\n", argv[0]);
 	} else {

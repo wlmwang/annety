@@ -14,6 +14,8 @@ EchoServer::EchoServer(annety::EventLoop* loop, const annety::EndPoint& addr)
 
 	server_->set_connect_callback(
 		std::bind(&EchoServer::on_connect, this, _1));
+	server_->set_close_callback(
+		std::bind(&EchoServer::on_close, this, _1));
 	server_->set_message_callback(
 		std::bind(&EchoServer::on_message, this, _1, _2, _3));
 
@@ -34,11 +36,16 @@ void EchoServer::on_connect(const annety::TcpConnectionPtr& conn)
 {
 	LOG(INFO) << "EchoServer - " << conn->local_addr().to_ip_port() << " <- "
 			<< conn->peer_addr().to_ip_port() << " s is "
-			<< (conn->connected() ? "UP" : "DOWN");
+			<< "UP";
 	
-	if (conn->connected()) {
-		conn->set_tcp_nodelay(true);
-	}
+	conn->set_tcp_nodelay(true);
+}
+
+void EchoServer::on_close(const annety::TcpConnectionPtr& conn)
+{
+	LOG(INFO) << "EchoServer - " << conn->local_addr().to_ip_port() << " <- "
+			<< conn->peer_addr().to_ip_port() << " s is "
+			<< "DOWN";
 }
 
 void EchoServer::on_message(const annety::TcpConnectionPtr& conn,

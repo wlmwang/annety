@@ -16,7 +16,7 @@ public:
 
 private:
 	void on_connect(const annety::TcpConnectionPtr& conn);
-
+	void on_close(const annety::TcpConnectionPtr& conn);
 	void on_message(const annety::TcpConnectionPtr& conn,
 			annety::NetBuffer* buf, annety::TimeStamp time);
 

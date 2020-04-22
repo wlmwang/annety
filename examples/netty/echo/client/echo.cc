@@ -16,9 +16,12 @@ EchoClient::EchoClient(annety::EventLoop* loop, const annety::EndPoint& addr, in
 
 	client_->set_connect_callback(
 		std::bind(&EchoClient::on_connect, this, _1));
+	client_->set_close_callback(
+		std::bind(&EchoClient::on_close, this, _1));
 	client_->set_message_callback(
 		std::bind(&EchoClient::on_message, this, _1, _2, _3));
-	// client_->enable_retry();
+	
+	client_->enable_retry();
 }
 
 void EchoClient::connect()
@@ -30,14 +33,19 @@ void EchoClient::on_connect(const annety::TcpConnectionPtr& conn)
 {
 	LOG(INFO) << "EchoClient - " << conn->local_addr().to_ip_port() << " -> "
 			<< conn->peer_addr().to_ip_port() << " s is "
-			<< (conn->connected() ? "UP" : "DOWN");
+			<< "UP";
 
-	if (conn->connected()) {
-		conn->set_tcp_nodelay(true);
-		conn->send(message_);
-	} else {
-		loop_->quit();
-	}
+	conn->set_tcp_nodelay(true);
+	conn->send(message_);
+}
+
+void EchoClient::on_close(const annety::TcpConnectionPtr& conn)
+{
+	LOG(INFO) << "EchoClient - " << conn->local_addr().to_ip_port() << " -> "
+			<< conn->peer_addr().to_ip_port() << " s is "
+			<< "DOWN";
+
+	// loop_->quit();
 }
 
 void EchoClient::on_message(const annety::TcpConnectionPtr& conn,
