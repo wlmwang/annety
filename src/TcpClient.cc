@@ -102,8 +102,10 @@ void TcpClient::disconnect()
 
 	bool expected = true;
 	if (connect_.compare_exchange_strong(expected, false, 
-			std::memory_order_release, std::memory_order_relaxed)) {
+			std::memory_order_release, std::memory_order_relaxed))
+	{
 		{
+			// Call the user close callback.
 			AutoLock locked(lock_);
 			if (connection_) {
 				connection_->shutdown();
@@ -117,6 +119,13 @@ void TcpClient::stop()
 	DCHECK(initilize_);
 
 	if (connect_.exchange(false, std::memory_order_relaxed)) {
+		{
+			// Call the user close callback.
+			AutoLock locked(lock_);
+			if (connection_) {
+				connection_->shutdown();
+			}
+		}
 		connector_->stop();
 	}
 }

@@ -74,7 +74,8 @@ void Connector::stop()
 {
 	bool expected = true;
 	if (connect_.compare_exchange_strong(expected, false,
-			std::memory_order_release, std::memory_order_relaxed)) {
+			std::memory_order_release, std::memory_order_relaxed))
+	{
 		// FIXME: Please use weak_from_this() since C++17.
 		using containers::make_weak_bind;
 		owner_loop_->run_in_own_loop(
@@ -128,6 +129,7 @@ void Connector::stop_in_own_loop()
 
 	state_.store(kDisconnected, std::memory_order_relaxed);
 
+	// Will cannot call the any callbacks.
 	remove_and_reset_channel();
 	connect_socket_.reset();
 }
