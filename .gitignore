@@ -1,6 +1,5 @@
 # for Compile
 *.o
-*.so
 *.a
 
 # for debug

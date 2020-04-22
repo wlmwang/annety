@@ -12,7 +12,7 @@
 CC		:= g++
 AR		:= ar
 LD		:= g++
-ARFLAGS := -pipe -fpic #-fpic 便于其他*.so库可以“静态”链接 *.a 库
+ARFLAGS := -pipe -fpic # Convenient for dynamic library to link this static library
 LDFLAGS := -pipe -fpic
 CCFLAGS	:= -g -Wall -std=c++11 #-DNDEBUG -O3
 
@@ -26,7 +26,7 @@ DIR_LIB		:= -L./
 LIBFLAGS	:= ${DIR_LIB} -lpthread
 
 # 源文件主目录
-SRC_INC		:= ./annety/include
+SRC_INC		:= ./include
 DIR_SRC		:= ./src
 
 # 头文件 -I flags
