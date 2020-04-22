@@ -28,19 +28,21 @@ public:
 	virtual ~Codec() = default;
 
 	// Decode payload from |buff| to |payload|
-	// NOTE: You must be remove the read bytes from |buff| when decode success
+	// NOTE: You must be remove the read bytes from |buff| when decode success.
 	// Returns:
 	//   -1  decode error, going to close connection
 	//    1  decode success, going to call message callback
 	//    0  decode incomplete, continues to read more data
+	// *Not thread safe*, but run in the own loop.
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) = 0;
 
 	// Encode stream bytes from |payload| to |buff|
-	// NOTE: You must be remove the sent bytes from |payload| when encode success
+	// NOTE: Do not remove the sent bytes from |payload| even if encode success.
 	// Returns:
 	//   -1  encode error, going to close connection
 	//    1  encode success, going to send data to peer
 	//    0  encode incomplete, continues to send more data
+	// *Thread safe*, pure function.
 	virtual int encode(NetBuffer* payload, NetBuffer* buff) = 0;
 	
 	// *Not thread safe*
@@ -49,22 +51,22 @@ public:
 		message_cb_ = std::move(cb);
 	}
 
-	// *Not thread safe*
-	// But run in own loop
-	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
+	// *Not thread safe*, but run in the own loop.
+	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive_ms)
 	{
-		CHECK(!!buff);
-		
 		owner_loop_->check_in_own_loop();
+
+		CHECK(!!buff);
 
 		int rt = 0;
 		do {
 			NetBuffer payload;
+			// NOTE: You must be remove the read bytes from |buff| when decode success.
 			rt = decode(buff, &payload);
 
 			if (rt == 1) {
 				if (message_cb_) {
-					message_cb_(conn, &payload, receive);
+					message_cb_(conn, &payload, receive_ms);
 				} else {
 					LOG(WARNING) << "LengthHeaderCodec::message_callback no message callback";
 				}
@@ -75,7 +77,7 @@ public:
 		} while (rt == 1);
 	}
 
-	// *Thread safe*
+	// *Thread safe*, pure function.
 	void send(const TcpConnectionPtr& conn, NetBuffer* payload)
 	{
 		CHECK(!!payload);
@@ -83,6 +85,7 @@ public:
 		int rt = 0;
 		do {
 			NetBuffer buff;
+			// NOTE: Do not remove the sent bytes from |payload| when encode success.
 			rt = encode(payload, &buff);
 
 			if (rt == 1) {

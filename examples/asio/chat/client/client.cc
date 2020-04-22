@@ -31,6 +31,8 @@ public:
 
 		client_->set_connect_callback(
 			std::bind(&ChatClient::on_connect, this, _1));
+		client_->set_close_callback(
+			std::bind(&ChatClient::on_close, this, _1));
 		client_->set_message_callback(
 			std::bind(&LengthHeaderCodec::recv, codec_.get(), _1, _2, _3));
 
@@ -68,12 +70,11 @@ public:
 
 private:
 	void on_connect(const TcpConnectionPtr& conn);
-
+	void on_close(const TcpConnectionPtr& conn);
 	void on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp);
 
 private:
 	TcpClientPtr client_;
-
 	CodecPtr codec_;
 	
 	MutexLock lock_;
@@ -84,14 +85,20 @@ void ChatClient::on_connect(const TcpConnectionPtr& conn)
 {
 	LOG(INFO) << "ChatClient - " << conn->local_addr().to_ip_port() << " <- "
 			<< conn->peer_addr().to_ip_port() << " s is "
-			<< (conn->connected() ? "UP" : "DOWN");
+			<< "UP";
 
 	AutoLock locked(lock_);
-	if (conn->connected()) {
-		connection_ = conn;
-	} else {
-		connection_.reset();
-	}
+	connection_ = conn;
+}
+
+void ChatClient::on_close(const TcpConnectionPtr& conn)
+{
+	LOG(INFO) << "ChatClient - " << conn->local_addr().to_ip_port() << " <- "
+			<< conn->peer_addr().to_ip_port() << " s is "
+			<< "DOWN";
+
+	AutoLock locked(lock_);
+	connection_.reset();
 }
 
 void ChatClient::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp)
@@ -101,8 +108,6 @@ void ChatClient::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeS
 
 int main(int argc, char* argv[])
 {
-	set_min_log_severity(annety::LOG_DEBUG);
-
 	EventLoopThread ioloop;
 	ChatClient client(ioloop.start_loop(), EndPoint(1669));
 	
@@ -112,6 +117,6 @@ int main(int argc, char* argv[])
 	while (std::getline(std::cin, line)) {
 		client.write(line);
 	}
-	client.disconnect();
+	
 	client.stop();
 }

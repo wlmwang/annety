@@ -322,7 +322,7 @@ void TcpConnection::force_close_in_loop()
 {
 	owner_loop_->check_in_own_loop();
 
-	bool state = state_.load(std::memory_order_relaxed);
+	StateE state = state_.load(std::memory_order_relaxed);
 	if (state == kConnected || state == kDisconnecting) {
 		// As if we received 0 bytes in handle_read();
 		handle_close();

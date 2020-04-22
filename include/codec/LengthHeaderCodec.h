@@ -62,11 +62,12 @@ public:
 	}
 
 	// Decode payload from |buff| to |payload|
-	// NOTE: You must be remove the read bytes from |buff|
+	// NOTE: Has moved the read bytes from |buff| when decode success.
 	// Returns:
 	//   -1  decode error, going to close connection
 	//    1  decode success, going to call message callback when decode success
 	//    0  decode incomplete, continues to read more data
+	// *Not thread safe*, but run in the own loop.
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) override
 	{
 		CHECK(!!buff && !!payload);
@@ -105,7 +106,7 @@ public:
 			} else if (buff->readable_bytes() >= static_cast<size_t>(length + length_type())) {
 				uint32_t expectsum = 0, checksum = 0;
 
-				// turn on/off crc32 checksum
+				// Turn on/off crc32 checksum.
 				if (LIKELY(checksum_length() > 0)) {
 					checksum = peek_uint32(buff->begin_read() + length_type() + length - checksum_length());
 
@@ -120,7 +121,7 @@ public:
 				}
 
 				if (LIKELY(expectsum == checksum)) {
-					// FIXME: move bytes from |buff| to |payload|. (not copy)
+					// FIXME: Move bytes from |buff| to |payload|. (should be no-copy)
 					payload->append(buff->begin_read() + length_type(), length - checksum_length());
 					buff->has_read(length_type() + length);
 					rt = 1;
@@ -136,11 +137,12 @@ public:
 	}
 	
 	// Encode stream bytes from |payload| to |buff|
-	// NOTE: You must be remove the sent bytes from |payload|
+	// NOTE: Do not remove the sent bytes from |payload| even if encode success.
 	// Returns:
 	//   -1  encode error, going to close connection
 	//    1  encode success, going to send data to peer
 	//    0  encode incomplete, continues to send more data
+	// *Thread safe*, pure function.
 	virtual int encode(NetBuffer* payload, NetBuffer* buff) override
 	{
 		CHECK(!!buff && !!payload);
@@ -175,11 +177,13 @@ public:
 			return -1;
 		}
 
-		// FIXME: move bytes from |payload| to |buff|. (not copy)
+		// FIXME: Copy bytes from |payload| to |buff|. (should be no-copy)
 		set_buff_length(length + checksum_length(), buff);
 		buff->append(payload->begin_read(), length);
-		
-		// turn on/off crc32 checksum
+		// Do not remove the sent bytes.
+		// payload->has_read(length);
+
+		// Turn on/off crc32 checksum.
 		if (LIKELY(checksum_length() > 0)) {
 			using crc32_func_t = uint32_t(*)(const char*, size_t);
 			crc32_func_t crc32_func = nullptr;

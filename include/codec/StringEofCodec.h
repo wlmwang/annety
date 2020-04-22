@@ -39,11 +39,12 @@ public:
 	}
 
 	// Decode payload from |buff| to |payload|
-	// NOTE: You must be remove the read bytes from |buff|
+	// NOTE: Has moved the read bytes from |buff| when decode success.
 	// Returns:
 	//   -1  decode error, going to close connection
 	//    1  decode success, going to call message callback
 	//    0  decode incomplete, continues to read more data
+	// *Not thread safe*, but run in the own loop.
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) override
 	{
 		CHECK(!!buff && !!payload);
@@ -53,7 +54,7 @@ public:
 		if (buff->readable_bytes() >= string_eof().size()) {
 			StringPiece::size_type n = StringPiece::npos;
 			if (string_eof().size() == 1) {
-				// high performance
+				// High performance (for single character).
 				n = buff->to_string_piece().find(*string_eof().data(), curr_offset_);
 			} else {
 				n = buff->to_string_piece().find(string_eof(), curr_offset_);
@@ -66,7 +67,7 @@ public:
 					<< ", max_payload=" << max_payload();
 				rt = -1;
 			} else if (n != StringPiece::npos) {
-				// FIXME: move bytes from |buff| to |payload|. (not copy)
+				// FIXME: Move bytes from |buff| to |payload|. (should be no-copy)
 				payload->append(buff->begin_read(), n);
 				buff->has_read(n + string_eof().size());
 				curr_offset_ = 0;
@@ -78,11 +79,12 @@ public:
 	}
 	
 	// Encode stream bytes from |payload| to |buff|
-	// NOTE: You must be remove the sent bytes from |payload|
+	// NOTE: Do not remove the sent bytes from |payload| even if encode success.
 	// Returns:
 	//   -1  encode error, going to close connection
 	//    1  encode success, going to send data to peer
 	//    0  encode incomplete, continues to send more data
+	// *Thread safe*, pure function.
 	virtual int encode(NetBuffer* payload, NetBuffer* buff) override
 	{
 		CHECK(!!buff && !!payload);
@@ -97,10 +99,12 @@ public:
 			return -1;
 		}
 
-		// FIXME: move bytes from |payload| to |buff|. (not copy)
+		// FIXME: Copy bytes from |payload| to |buff|. (should be no-copy)
 		buff->append(payload->begin_read(), length);
 		buff->append(string_eof().data(), string_eof().size());
-		
+		// Do not remove the sent bytes.
+		// payload->has_read(length);
+
 		return 1;
 	}
 

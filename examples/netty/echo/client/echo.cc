@@ -45,7 +45,7 @@ void EchoClient::on_close(const annety::TcpConnectionPtr& conn)
 			<< conn->peer_addr().to_ip_port() << " s is "
 			<< "DOWN";
 
-	// loop_->quit();
+	loop_->quit();
 }
 
 void EchoClient::on_message(const annety::TcpConnectionPtr& conn,

@@ -31,6 +31,8 @@ public:
 
 		server_->set_connect_callback(
 			std::bind(&ChatServer::on_connect, this, _1));
+		server_->set_close_callback(
+			std::bind(&ChatServer::on_close, this, _1));
 		server_->set_message_callback(
 			std::bind(&Codec::recv, codec_.get(), _1, _2, _3));
 		
@@ -45,11 +47,11 @@ public:
 
 private:
 	void on_connect(const TcpConnectionPtr& conn);
+	void on_close(const TcpConnectionPtr& conn);
 	void on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp);
 
 private:
 	TcpServerPtr server_;
-
 	CodecPtr codec_;
 
 	ConnectionList connections_;
@@ -59,13 +61,18 @@ void ChatServer::on_connect(const annety::TcpConnectionPtr& conn)
 {
 	LOG(INFO) << "ChatServer - " << conn->local_addr().to_ip_port() << " <- "
 			<< conn->peer_addr().to_ip_port() << " s is "
-			<< (conn->connected() ? "UP" : "DOWN");
+			<< "UP";
 
-	if (conn->connected()) {
-		connections_.insert(conn);
-	} else {
-		connections_.erase(conn);
-	}
+	connections_.insert(conn);
+}
+
+void ChatServer::on_close(const annety::TcpConnectionPtr& conn)
+{
+	LOG(INFO) << "ChatServer - " << conn->local_addr().to_ip_port() << " <- "
+			<< conn->peer_addr().to_ip_port() << " s is "
+			<< "DOWN";
+
+	connections_.erase(conn);
 }
 
 void ChatServer::on_message(const TcpConnectionPtr& conn, NetBuffer* mesg, TimeStamp)
@@ -82,8 +89,9 @@ int main(int argc, char* argv[])
 	set_min_log_severity(LOG_DEBUG);
 	
 	EventLoop loop;
+	
 	ChatServer server(&loop, EndPoint(1669));
-
 	server.start();
+
 	loop.loop();
 }

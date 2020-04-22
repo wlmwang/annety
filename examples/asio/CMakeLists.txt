@@ -1,0 +1,5 @@
+ADD_EXECUTABLE(asio_chatserver chat/server/server.cc)
+TARGET_LINK_LIBRARIES(asio_chatserver annety)
+
+ADD_EXECUTABLE(asio_chatclient chat/client/client.cc)
+TARGET_LINK_LIBRARIES(asio_chatclient annety)
