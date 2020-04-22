@@ -1,5 +1,4 @@
 # for Compile
-build
 *.o
 *.so
 *.a
