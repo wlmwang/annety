@@ -37,10 +37,10 @@ public:
 	void stop();
 	
 	// *Thread safe*
-	void retry();
-
-	// *Thread safe*
 	void restart();
+	
+	// *Thread safe*
+	void retry();
 
 	// *Not thread safe*, but usually be called before start().
 	void set_new_connect_callback(NewConnectCallback cb)
@@ -86,7 +86,7 @@ private:
 	std::atomic<States> state_{kDisconnected};
 
 	// For retry()
-	int retry_delay_ms_;
+	std::atomic<int64_t> retry_delay_ms_;
 	TimerId time_id_;
 
 	// connect socket/channel

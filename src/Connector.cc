@@ -37,8 +37,8 @@ bool is_self_connect(const SelectableFD& conn_sfd)
 }	// namespace internal
 
 // Every retry() is doubles delay.
-static const int kInitRetryDelayMs = 500;
-static const int kMaxRetryDelayMs = 30*1000;
+static const int64_t kInitRetryDelayMs = 500;
+static const int64_t kMaxRetryDelayMs = 30*1000;
 
 Connector::Connector(EventLoop* loop, const EndPoint& addr)
 	: owner_loop_(loop)
@@ -60,33 +60,37 @@ Connector::~Connector()
 
 void Connector::start()
 {
-	connect_ = true;
-
-	// FIXME: Please use weak_from_this() since C++17.
-	using containers::make_weak_bind;
-	owner_loop_->run_in_own_loop(
-		make_weak_bind(&Connector::start_in_own_loop, shared_from_this()));
+	bool expected = false;
+	if (connect_.compare_exchange_strong(expected, true,
+			std::memory_order_release, std::memory_order_relaxed)) {
+		// FIXME: Please use weak_from_this() since C++17.
+		using containers::make_weak_bind;
+		owner_loop_->run_in_own_loop(
+			make_weak_bind(&Connector::start_in_own_loop, shared_from_this()));
+	}
 }
 
 void Connector::stop()
 {
-	connect_ = false;
-
-	// FIXME: Please use weak_from_this() since C++17.
-	using containers::make_weak_bind;
-	owner_loop_->run_in_own_loop(
-		make_weak_bind(&Connector::stop_in_own_loop, shared_from_this()));
-	
-	// Cancel the timer of retry.
-	if (time_id_.is_valid()) {
-		owner_loop_->cancel(time_id_);
+	bool expected = true;
+	if (connect_.compare_exchange_strong(expected, false,
+			std::memory_order_release, std::memory_order_relaxed)) {
+		// FIXME: Please use weak_from_this() since C++17.
+		using containers::make_weak_bind;
+		owner_loop_->run_in_own_loop(
+			make_weak_bind(&Connector::stop_in_own_loop, shared_from_this()));
+		
+		// Cancel the timer of retry.
+		if (time_id_.is_valid()) {
+			owner_loop_->cancel(time_id_);
+		}
 	}
 }
 
 void Connector::retry()
 {
-	connect_ = true;
-
+	connect_.store(true, std::memory_order_release);
+	
 	// FIXME: Please use weak_from_this() since C++17.
 	using containers::make_weak_bind;
 	owner_loop_->run_in_own_loop(
@@ -95,10 +99,9 @@ void Connector::retry()
 
 void Connector::restart()
 {
-	retry_delay_ms_ = kInitRetryDelayMs;
-
-	state_ = kDisconnected;
-	connect_ = true;
+	retry_delay_ms_.store(kInitRetryDelayMs, std::memory_order_relaxed);
+	state_.store(kDisconnected, std::memory_order_relaxed);
+	connect_.store(true, std::memory_order_release);
 
 	// FIXME: Please use weak_from_this() since C++17.
 	using containers::make_weak_bind;
@@ -110,8 +113,9 @@ void Connector::start_in_own_loop()
 {
 	owner_loop_->check_in_own_loop();
 	DCHECK(state_ == kDisconnected);
-  
-	if (connect_) {
+
+	// May be called repeatedly.
+	if (connect_.load(std::memory_order_acquire)) {
 		do_connect();
 	} else {
 		DLOG(TRACE) << "Connector::start_in_own_loop do not connect, maybe has connected";
@@ -122,8 +126,8 @@ void Connector::stop_in_own_loop()
 {
 	owner_loop_->check_in_own_loop();
 
-	state_ = kDisconnected;
-	
+	state_.store(kDisconnected, std::memory_order_relaxed);
+
 	remove_and_reset_channel();
 	connect_socket_.reset();
 }
@@ -132,24 +136,25 @@ void Connector::retry_in_own_loop()
 {
 	owner_loop_->check_in_own_loop();
 
-	state_ = kDisconnected;
+	state_.store(kDisconnected, std::memory_order_relaxed);
 	connect_socket_.reset();
 
-	if (connect_) {
-		DLOG(TRACE) << "Connector::retry connecting to " << server_addr_.to_ip_port()
+	if (connect_.load(std::memory_order_acquire)) {
+		DLOG(TRACE) << "Connector::retry_in_own_loop connecting to " << server_addr_.to_ip_port()
 			<< " in " << retry_delay_ms_ << " milliseconds";
 
 		// FIXME: Please use weak_from_this() since C++17.
 		// retry after.
 		using containers::make_weak_bind;
 		time_id_ = owner_loop_->run_after(
-			TimeDelta::from_milliseconds(retry_delay_ms_),
+			TimeDelta::from_milliseconds(retry_delay_ms_.load(std::memory_order_relaxed)),
 			make_weak_bind(&Connector::start_in_own_loop, shared_from_this()));
 
 		// double delay.
-		retry_delay_ms_ = std::min(retry_delay_ms_ * 2, kMaxRetryDelayMs);
+		retry_delay_ms_.store(std::min(retry_delay_ms_.load(std::memory_order_relaxed) * 2, 
+			kMaxRetryDelayMs), std::memory_order_relaxed);
 	} else {
-		DLOG(TRACE) << "Connector::retry do not connect";
+		DLOG(TRACE) << "Connector::retry_in_own_loop do not connect, maybe has connected";
 	}
 }
 
@@ -213,7 +218,7 @@ void Connector::in_connect()
 	DCHECK(connect_socket_);
 	DCHECK(!connect_channel_);
 
-	state_ = kConnecting;
+	state_.store(kConnecting, std::memory_order_relaxed);
 	connect_channel_.reset(new Channel(owner_loop_, connect_socket_.get()));
 
 	// IO Multiplexing Event: 
@@ -251,34 +256,37 @@ void Connector::handle_write()
 
 	LOG(DEBUG) << "Connector::handle_write the state=" << state_;
 
-	if (state_ == kConnecting) {
+	if (state_.load(std::memory_order_relaxed) == kConnecting) {
 		DCHECK(connect_socket_);
 		remove_and_reset_channel();
 
 		ScopedClearLastError last_error;
 		int err = internal::get_sock_error(*connect_socket_);
 		if (err) {
+			// connect fail.
 			errno = err;
 			PLOG(WARNING) << "Connector::handle_write connect has failed";
 
 			connect_socket_.reset();
-			state_ = kDisconnected;
+			state_.store(kDisconnected, std::memory_order_relaxed);
 
-			// connect fail. --- retry()
+			// to retry()
 			if (error_connect_cb_) {
 				error_connect_cb_();
 			}
 		} else {
-			state_ = kConnected;
-			if (connect_) {
+			// connect success.
+			state_.store(kConnected, std::memory_order_relaxed);
+
+			if (connect_.load(std::memory_order_acquire)) {
 				if (new_connect_cb_) {
 					new_connect_cb_(std::move(connect_socket_), server_addr_);
 				} else {
-					// discard connection.
+					// Discard this connection.
 					connect_socket_.reset();
 				}
 			} else {
-				// discard connection.
+				// Discard this connection.
 				connect_socket_.reset();
 			}
 		}
@@ -293,7 +301,8 @@ void Connector::handle_error()
 
 	LOG(WARNING) << "Connector::handle_error the state=" << state_;
 	
-	if (state_ == kConnecting) {
+	if (state_.load(std::memory_order_relaxed) == kConnecting) {
+		// connect fail.
 		DCHECK(connect_socket_);
 		remove_and_reset_channel();
 
@@ -305,9 +314,9 @@ void Connector::handle_error()
 		}
 		
 		connect_socket_.reset();
-		state_ = kDisconnected;
+		state_.store(kDisconnected, std::memory_order_relaxed);
 
-		// connect fail. --- retry()
+		// to retry()
 		if (err) {
 			if (error_connect_cb_) {
 				error_connect_cb_();

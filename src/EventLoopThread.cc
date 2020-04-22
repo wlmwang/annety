@@ -83,8 +83,8 @@ void EventLoopThread::thread_func()
 	}
 
 	loop.loop();
+	
 	DCHECK(!exiting_);
-
 	{
 		AutoLock locked(lock_);
 		owning_loop_ = nullptr;	

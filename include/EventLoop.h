@@ -115,11 +115,12 @@ private:
 
 private:
 	std::atomic<bool> quit_{false};
-	std::atomic<bool> looping_{false};
 	std::atomic<bool> handling_event_{false};
 	std::atomic<bool> calling_wakeup_functors_{false};
-	std::atomic<int64_t> looping_times_{0};
-	std::atomic<int64_t> poll_timeout_ms_{kPollTimeoutMs};
+
+	bool looping_{false};
+	int64_t looping_times_{0};
+	int64_t poll_timeout_ms_{kPollTimeoutMs};
 
 	// The creation thread of EventLoop
 	std::unique_ptr<ThreadId> owning_thread_id_;

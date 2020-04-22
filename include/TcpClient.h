@@ -37,14 +37,24 @@ public:
 	const std::string& name() const { return name_;}
 	EventLoop* get_own_loop() const { return owner_loop_;}
 
-	bool retry() const { return retry_;}
-	void enable_retry() { retry_ = true;}
-	void disable_retry() { retry_ = false;}
+	void enable_retry()
+	{
+		retry_.store(true, std::memory_order_relaxed);
+	}
+	void disable_retry()
+	{
+		retry_.store(false, std::memory_order_relaxed);
+	}
+	bool retry() const
+	{
+		return retry_.load(std::memory_order_relaxed);
+	}
 
-	// for connect
+	// For connect/disconnect, it will retry connect if enable.
 	void connect();
 	void disconnect();
 	
+	// Disconnect and stop retry.
 	void stop();
 
 	TcpConnectionPtr connection() const

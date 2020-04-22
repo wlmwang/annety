@@ -15,7 +15,7 @@ ChargenClient::ChargenClient(annety::EventLoop* loop, const annety::EndPoint& ad
 
 	client_->set_connect_callback(
 		std::bind(&ChargenClient::on_connect, this, _1));
-	client_->set_connect_callback(
+	client_->set_close_callback(
 		std::bind(&ChargenClient::on_close, this, _1));
 	client_->set_message_callback(
 		std::bind(&ChargenClient::on_message, this, _1, _2, _3));

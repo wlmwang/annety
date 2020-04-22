@@ -171,7 +171,7 @@ void TcpConnection::send(const StringPiece& buffer)
 	constexpr void(TcpConnection::*const snd)(const StringPiece&) 
 		= &TcpConnection::send_in_loop;
 
-	if (state_ == kConnected) {
+	if (state_.load(std::memory_order_relaxed) == kConnected) {
 		// FIXME: Please use weak_from_this() since C++17.
 		// FIXME: as_string() is too bad.
 		using containers::make_weak_bind;
@@ -188,7 +188,7 @@ void TcpConnection::send(NetBuffer* buffer)
 	constexpr void(TcpConnection::*const snd)(const StringPiece&) 
 		= &TcpConnection::send_in_loop;
 
-	if (state_ == kConnected) {
+	if (state_.load(std::memory_order_relaxed) == kConnected) {
 		// taken_as_string() function will swap the data.
 		//
 		// FIXME: Please use weak_from_this() since C++17.
@@ -211,7 +211,7 @@ void TcpConnection::send_in_loop(const void* data, size_t len)
 	ssize_t nwrote = 0;
 	size_t remaining = len;
 	bool fault_error = false;
-	if (state_ == kDisconnected) {
+	if (state_.load(std::memory_order_relaxed) == kDisconnected) {
 		LOG(WARNING) << "TcpConnection::send_in_loop was disconnected, give up writing";
 		return;
 	}
@@ -262,10 +262,10 @@ void TcpConnection::shutdown()
 {
 	DCHECK(initilize_);
 
-	if (state_ == kConnected) {
-		// Set connection is closing.
-		state_ = kDisconnecting;
-		
+	StateE expected = kConnected;
+	if (state_.compare_exchange_strong(expected, kDisconnecting, 
+			std::memory_order_release, std::memory_order_relaxed))
+	{	
 		// Run in the `conn` own loop, because call `shutdown` and own loop of 
 		// `conn` may not be the same thread. --- the users thread call this.
 		using containers::make_weak_bind;
@@ -289,10 +289,11 @@ void TcpConnection::force_close()
 {
 	DCHECK(initilize_);
 
-	if (state_ == kConnected || state_ == kDisconnecting) {
-		// Set connection is closing.
-		state_ = kDisconnecting;
-
+	StateE expected = kConnected;
+	if (state_.compare_exchange_strong(expected, kDisconnecting, 
+			std::memory_order_release, std::memory_order_relaxed) || 
+		expected == kDisconnecting)
+	{
 		using containers::make_weak_bind;
 		owner_loop_->queue_in_own_loop(
 			make_weak_bind(&TcpConnection::force_close_in_loop, shared_from_this()));
@@ -303,10 +304,11 @@ void TcpConnection::force_close_with_delay(double delay_s)
 {
 	DCHECK(initilize_);
 
-	if (state_ == kConnected || state_ == kDisconnecting) {
-		// Set connection is closing.
-		state_ = kDisconnecting;
-
+	StateE expected = kConnected;
+	if (state_.compare_exchange_strong(expected, kDisconnecting, 
+			std::memory_order_release, std::memory_order_relaxed) || 
+		expected == kDisconnecting)
+	{
 		// Must use weak bind. Otherwise, the `conn` instance is always destroyed 
 		// at the end of the delay. (`timer` storages this shared_ptr).
 		using containers::make_weak_bind;
@@ -320,7 +322,8 @@ void TcpConnection::force_close_in_loop()
 {
 	owner_loop_->check_in_own_loop();
 
-	if (state_ == kConnected || state_ == kDisconnecting) {
+	bool state = state_.load(std::memory_order_relaxed);
+	if (state == kConnected || state == kDisconnecting) {
 		// As if we received 0 bytes in handle_read();
 		handle_close();
 	}
@@ -348,9 +351,12 @@ void TcpConnection::start_read_in_loop()
 {
 	owner_loop_->check_in_own_loop();
 
-	if (!reading_ || !connect_channel_->is_read_event()) {
+	bool expected = false;
+	if (reading_.compare_exchange_strong(expected, true, 
+			std::memory_order_release, std::memory_order_relaxed) && 
+		!connect_channel_->is_read_event())
+	{
 		connect_channel_->enable_read_event();
-		reading_ = true;
 	}
 }
 
@@ -358,9 +364,12 @@ void TcpConnection::stop_read_in_loop()
 {
 	owner_loop_->check_in_own_loop();
 
-	if (reading_ || connect_channel_->is_read_event()) {
+	bool expected = true;
+	if (reading_.compare_exchange_strong(expected, false, 
+			std::memory_order_release, std::memory_order_relaxed) && 
+		connect_channel_->is_read_event())
+	{
 		connect_channel_->disable_read_event();
-		reading_ = false;
 	}
 }
 
@@ -374,8 +383,9 @@ void TcpConnection::connect_established()
 
 	// Change the Connection state.
 	DCHECK(state_ == kConnecting);
-	state_ = kConnected;
+	state_.store(kConnected, std::memory_order_relaxed);
 
+	// Enable the readable event.
 	connect_channel_->enable_read_event();
 
 	// Call the user connect callback.
@@ -392,8 +402,9 @@ void TcpConnection::connect_destroyed()
 
 	owner_loop_->check_in_own_loop();
 
-	if (state_ == kConnected) {
-		state_ = kDisconnected;
+	StateE expected = kConnected;
+	if (state_.compare_exchange_strong(expected, kDisconnected,
+			std::memory_order_release, std::memory_order_relaxed)) {
 		connect_channel_->disable_all_event();
 
 		// Call the user close callback.
@@ -418,8 +429,8 @@ void TcpConnection::handle_close()
 		<< " state = " << state_to_string() << " is closing";
 	
 	DCHECK(state_ == kConnected || state_ == kDisconnecting);
-	state_ = kDisconnected;
-	
+	state_.store(kDisconnected, std::memory_order_relaxed);
+
 	connect_channel_->disable_all_event();
 
 	// Call the user close callback.
@@ -473,7 +484,7 @@ void TcpConnection::handle_write()
 					owner_loop_->queue_in_own_loop(
 						std::bind(write_complete_cb_, shared_from_this()));
 				}
-				if (state_ == kDisconnecting) {
+				if (state_.load(std::memory_order_relaxed) == kDisconnecting) {
 					// After the output buffer is sent, then handling shutdown.
 					shutdown_in_loop();
 				}
@@ -496,7 +507,7 @@ void TcpConnection::handle_error()
 
 const char* TcpConnection::state_to_string() const
 {
-	switch (state_.load()) {
+	switch (state_.load(std::memory_order_relaxed)) {
 	case kDisconnected:
 		return "kDisconnected";
 	case kConnecting:

@@ -10,7 +10,7 @@
 #include "TimerPool.h"
 #include "PlatformThread.h"
 
-#include <signal.h>	// signal
+#include <signal.h>		// signal
 
 namespace annety
 {
@@ -82,7 +82,7 @@ EventLoop::~EventLoop()
 
 void EventLoop::quit()
 {
-	quit_ = true;
+	quit_.store(true, std::memory_order_relaxed);
 	if (!is_in_own_loop()) {
 		wakeup();
 	}
@@ -95,7 +95,7 @@ void EventLoop::loop()
 	DCHECK(!looping_);
 	looping_ = true;
 
-	while (!quit_) {
+	while (!quit_.load(std::memory_order_relaxed)) {
 		DLOG(TRACE) << "EventLoop::loop timeout " << poll_timeout_ms_ << "ms";
 
 		active_channels_.clear();
@@ -108,11 +108,11 @@ void EventLoop::loop()
 		looping_times_++;
 
 		// Handling active event channels.
-		handling_event_ = true;
+		handling_event_.store(true, std::memory_order_relaxed);
 		for (Channel* channel : active_channels_) {
 			channel->handle_event(poll_active_ms_);
 		}
-		handling_event_ = false;
+		handling_event_.store(false, std::memory_order_relaxed);
 
 #if !defined(OS_LINUX)
 		// On non-Linux platforms, Use the traditional poller timeout to implement 
@@ -207,7 +207,7 @@ void EventLoop::queue_in_own_loop(Functor cb)
 	// wakeup the own loop thread:
 	// 1. current thread is not the own loop thread.
 	// 2. the poller has returned (Executing wakeup function).
-	if (!is_in_own_loop() || calling_wakeup_functors_) {
+	if (!is_in_own_loop() || calling_wakeup_functors_.load(std::memory_order_relaxed)) {
 		wakeup();
 	}
 }
@@ -227,7 +227,7 @@ bool EventLoop::is_in_own_loop() const
 
 void EventLoop::do_calling_wakeup_functors()
 {
-	calling_wakeup_functors_ = true;
+	calling_wakeup_functors_.store(true, std::memory_order_relaxed);
 	
 	std::vector<Functor> functors;
 	{
@@ -238,7 +238,7 @@ void EventLoop::do_calling_wakeup_functors()
 		func();
 	}
 
-	calling_wakeup_functors_ = false;
+	calling_wakeup_functors_.store(false, std::memory_order_relaxed);
 }
 
 void EventLoop::wakeup()

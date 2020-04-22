@@ -8,7 +8,6 @@
 #include "TimeStamp.h"
 
 #include <string>
-#include <atomic>
 #include <memory>
 #include <utility>
 #include <functional>
@@ -117,9 +116,9 @@ private:
 	int	events_{0};
 	int revents_{0};
 
-	std::atomic<bool> added_to_loop_{false};
-	std::atomic<bool> handling_event_{false};
-	std::atomic<bool> logging_hup_{true};
+	bool added_to_loop_{false};
+	bool handling_event_{false};
+	bool logging_hup_{true};
 
 	ReadEventCallback read_cb_;
 	EventCallback write_cb_;

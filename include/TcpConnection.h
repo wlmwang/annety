@@ -42,7 +42,10 @@ public:
 	// Enable/Disable the read event. Is enabled by default.
 	void start_read();
 	void stop_read();
-	bool is_reading() const { return reading_; };
+	bool is_reading() const
+	{
+		return reading_.load(std::memory_order_relaxed);
+	}
 
 	// *Thread safe*
 	void send(NetBuffer*);	// this one will swap data

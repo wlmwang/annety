@@ -32,8 +32,7 @@ ChargenServer::ChargenServer(annety::EventLoop* loop, const annety::EndPoint& ad
 	}
 	line += line;
 
-	// see RFC 864.
-	// 94 lines, 72 characters. 94*72=6768 ～ 6.6k
+	// See RFC 864. --- 94 lines, 72 characters. --- 94*72=6768 ~ 6.6k
 	for (size_t i = 0; i < 127-33; ++i) {
 		message_ += line.substr(i, 72) + '\n';
 	}

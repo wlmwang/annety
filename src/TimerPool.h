@@ -13,6 +13,7 @@
 #include <vector>
 #include <utility>
 #include <string>
+#include <atomic>
 #include <memory>
 #include <functional>
 
@@ -88,7 +89,7 @@ private:
 
 private:
 	EventLoop* owner_loop_{nullptr};
-	bool calling_expired_timers_{false};
+	std::atomic<bool> calling_expired_timers_{false};
 
 	SelectableFDPtr timer_socket_;
 	std::unique_ptr<Channel> timer_channel_;

@@ -91,7 +91,7 @@ void TcpClient::connect()
 	
 	bool expected = false;
 	if (connect_.compare_exchange_strong(expected, true, 
-				std::memory_order_release, std::memory_order_relaxed)) {
+			std::memory_order_release, std::memory_order_relaxed)) {
 		connector_->start();
 	}
 }
@@ -116,9 +116,7 @@ void TcpClient::stop()
 {
 	DCHECK(initilize_);
 
-	bool expected = true;
-	if (connect_.compare_exchange_strong(expected, false,
-			std::memory_order_release, std::memory_order_relaxed)) {
+	if (connect_.exchange(false, std::memory_order_relaxed)) {
 		connector_->stop();
 	}
 }
@@ -181,7 +179,9 @@ void TcpClient::remove_connection(const TcpConnectionPtr& conn)
 	owner_loop_->queue_in_own_loop(
 		std::bind(&TcpConnection::connect_destroyed, conn));
 	
-	if (retry_ && connect_) {
+	bool retry = retry_.load(std::memory_order_relaxed);
+	bool connect = connect_.load(std::memory_order_acquire);
+	if (retry && connect) {
 		LOG(DEBUG) << "TcpClient::remove_connection the [" << name_ 
 			<< "] client on " << ip_port_ << ", wait for reconnect now";
 		
@@ -199,7 +199,9 @@ void TcpClient::handle_retry()
 	connect_destroyed();
 
 	// retry server.
-	if (retry_ && connect_) {
+	bool retry = retry_.load(std::memory_order_relaxed);
+	bool connect = connect_.load(std::memory_order_acquire);
+	if (retry && connect) {
 		LOG(DEBUG) << "TcpClient::handle_retry the [" << name_ 
 			<< "] client on " << ip_port_ << ", wait for reconnect now";
 
@@ -208,9 +210,6 @@ void TcpClient::handle_retry()
 			owner_loop_->queue_in_own_loop(
 				std::bind(&Connector::retry, connector_));
 		}
-	} else {
-		// FIXME: exit program when connect fail??
-		// exit(0);
 	}
 }
 
