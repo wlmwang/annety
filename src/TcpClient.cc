@@ -35,6 +35,8 @@ TcpClient::TcpClient(EventLoop* loop, const EndPoint& addr, const std::string& n
 	, close_cb_(default_close_callback)
 	, message_cb_(default_message_callback)
 {
+	CHECK(loop);
+
 	LOG(DEBUG) << "TcpClient::TcpClient [" << name_ 
 		<< "] client which connecting to " << ip_port_ << " is constructing";
 }
@@ -262,7 +264,7 @@ TcpClientPtr make_tcp_client(EventLoop* loop,
 	const EndPoint& addr, 
 	const std::string& name)
 {
-	DCHECK(loop);
+	CHECK(loop);
 
 	TcpClientPtr crv(new TcpClient(loop, addr, name));
 	crv->initialize();

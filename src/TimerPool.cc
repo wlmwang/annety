@@ -17,6 +17,8 @@ TimerPool::TimerPool(EventLoop* loop)
 	, timer_socket_(new TimerFD(true, true))
 	, timer_channel_(new Channel(owner_loop_, timer_socket_.get()))
 {
+	CHECK(loop);
+	
 	DLOG(TRACE) << "TimerPool::TimerPool" << " fd=" << 
 		timer_socket_->internal_fd() << " is constructing";
 

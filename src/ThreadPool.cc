@@ -46,7 +46,7 @@ ThreadPool& ThreadPool::start()
 void ThreadPool::stop()
 {
 	// tell all threads to quit their tasker loop.
-	CHECK(running_) 
+	DCHECK(running_) 
 		<< "ThreadPool::stop is calling with no outstanding threads";
 	{
 		AutoLock locked(lock_);
@@ -64,7 +64,7 @@ void ThreadPool::stop()
 
 void ThreadPool::joinall()
 {
-	CHECK(running_) 
+	DCHECK(running_) 
 		<< "ThreadPool::join_all is calling with no outstanding threads.";
 
 	// Tell all our threads to quit their worker loop.

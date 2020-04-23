@@ -20,24 +20,26 @@
 
 namespace annety
 {
-namespace
+BEFORE_MAIN_EXECUTOR()
 {
+	GOOGLE_PROTOBUF_VERIFY_VERSION;
+}
+
+namespace {
 inline uint32_t peek_uint32(const char* buff)
 {
 	uint32_t be32 = 0;
 	::memcpy(&be32, buff, sizeof be32);
 	return net_to_host32(be32);
 }
-BEFORE_MAIN_EXECUTOR() { GOOGLE_PROTOBUF_VERIFY_VERSION;}
 }	// namespace anonymous
 
-namespace
-{
-const std::string kNoErrorStr = "NoError";
-const std::string kInvalidNameLenStr = "InvalidNameLen";
-const std::string kUnknownMessageTypeStr = "UnknownMessageType";
-const std::string kParseErrorStr = "ParseError";
-const std::string kUnknownErrorStr = "UnknownError";
+namespace {
+const char* kNoErrorStr = "NoError";
+const char* kInvalidNameLenStr = "InvalidNameLen";
+const char* kUnknownMessageTypeStr = "UnknownMessageType";
+const char* kParseErrorStr = "ParseError";
+const char* kUnknownErrorStr = "UnknownError";
 }	// namespace anonymous
 
 using MessagePtr = std::shared_ptr<google::protobuf::Message>;
@@ -83,17 +85,22 @@ public:
 	ProtobufCodec(EventLoop* loop, ProtobufMessageCallback pmcb, ErrorCallback ecb) 
 		: Codec(loop), dispatch_cb_(std::move(pmcb)), error_cb_(std::move(ecb))
 	{
+		CHECK(loop);
+
 		using std::placeholders::_1;
 		using std::placeholders::_2;
 		using std::placeholders::_3;
 
-		set_message_callback(std::bind(&ProtobufCodec::parse, this, _1, _2, _3));
+		// Set Codec message callback.
+		set_message_callback(
+			std::bind(&ProtobufCodec::parse, this, _1, _2, _3));
 	}
-	
+
+	// *Not thread safe*, but run in the own loop.
 	// using Codec::recv;
-	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
+	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive_ms)
 	{
-		Codec::recv(conn, buff, receive);
+		Codec::recv(conn, buff, receive_ms);
 	}
 
 	void send(const TcpConnectionPtr& conn, const google::protobuf::Message& mesg)
@@ -105,14 +112,15 @@ public:
 	}
 
 	// Decode payload from |buff| to |payload|
-	// NOTE: You must be remove the read bytes from |buff|
+	// NOTE: Has moved the read bytes from |buff| when decode success.
 	// Returns:
 	//   -1  decode error, going to close connection
 	//    1  decode success, going to call message callback when decode success
 	//    0  decode incomplete, continues to read more data
+	// *Not thread safe*, but run in the own loop.
 	virtual int decode(NetBuffer* buff, NetBuffer* payload) override
 	{
-		DCHECK(!!buff && !!payload);
+		CHECK(!!buff && !!payload);
 
 		auto get_payload_length = [this] (const NetBuffer* buff) {
 			int64_t length = -1;
@@ -148,7 +156,7 @@ public:
 			} else if (buff->readable_bytes() >= static_cast<size_t>(length + length_type())) {
 				uint32_t expectsum = 0, checksum = 0;
 
-				// turn on/off crc32 checksum
+				// Turn on/off crc32 checksum.
 				if (LIKELY(checksum_length() > 0)) {
 					checksum = peek_uint32(buff->begin_read() + length_type() + length - checksum_length());
 
@@ -163,7 +171,7 @@ public:
 				}
 
 				if (LIKELY(expectsum == checksum)) {
-					// FIXME: move bytes from |buff| to |payload|. (not copy)
+					// FIXME: Move bytes from |buff| to |payload|. (should be no-copy)
 					payload->append(buff->begin_read() + length_type(), length - checksum_length());
 					buff->has_read(length_type() + length);
 					rt = 1;
@@ -179,14 +187,15 @@ public:
 	}
 
 	// Encode stream bytes from |payload| to |buff|
-	// NOTE: You must be remove the sent bytes from |payload|
+	// NOTE: Do not remove the sent bytes from |payload| even if encode success.
 	// Returns:
 	//   -1  encode error, going to close connection
 	//    1  encode success, going to send data to peer
 	//    0  encode incomplete, continues to send more data
+	// *Thread safe*, pure function.
 	virtual int encode(NetBuffer* payload, NetBuffer* buff) override
 	{
-		DCHECK(!!buff && !!payload);
+		CHECK(!!buff && !!payload);
 		
 		auto set_buff_length = [this] (ssize_t length, NetBuffer* buff) {
 			switch (length_type()) {
@@ -218,11 +227,13 @@ public:
 			return -1;
 		}
 
-		// FIXME: move bytes from |payload| to |buff|. (not copy)
+		// FIXME: Copy bytes from |payload| to |buff|. (should be no-copy)
 		set_buff_length(length + checksum_length(), buff);
 		buff->append(payload->begin_read(), length);
-		
-		// turn on/off crc32 checksum
+		// Do not remove the sent bytes.
+		// payload->has_read(length);
+
+		// Turn on/off crc32 checksum.
 		if (LIKELY(checksum_length() > 0)) {
 			using crc32_func_t = uint32_t(*)(const char*, size_t);
 			crc32_func_t crc32_func = nullptr;
@@ -273,7 +284,7 @@ private:
 	}
 
 	// return sizeof(uint32_t)
-	// turn on/off crc32 checksum
+	// Turn on/off crc32 checksum
 	static constexpr ssize_t checksum_length()
 	{
 		return sizeof(uint32_t);
@@ -289,7 +300,7 @@ private:
 bool ProtobufCodec::serialize(const google::protobuf::Message& mesg, NetBuffer* payload)
 {
 	DCHECK(mesg.IsInitialized());
-	DCHECK(!payload->readable_bytes());
+	DCHECK(payload && !payload->readable_bytes());
 
 	// append typenamelen + typename
 	const std::string& type_name = mesg.GetTypeName();
@@ -310,11 +321,13 @@ bool ProtobufCodec::serialize(const google::protobuf::Message& mesg, NetBuffer* 
 
 void ProtobufCodec::parse(const TcpConnectionPtr& conn, NetBuffer* payload, TimeStamp receive)
 {
-	MessagePtr mesg; // RAII
-	ERROR_CODE err = parse_mesg(payload, mesg);
+	// RAII
+	MessagePtr mesg;
 
+	ERROR_CODE err = parse_mesg(payload, mesg);
 	if (err == kNoError && mesg) {
 		if (dispatch_cb_) {
+			// Dispatch protobuf message callbacks.
 			dispatch_cb_(conn, mesg, receive);
 		} else {
 			LOG(WARNING) << "ProtobufCodec::parse no dispatch callback";
@@ -326,19 +339,19 @@ void ProtobufCodec::parse(const TcpConnectionPtr& conn, NetBuffer* payload, Time
 
 ProtobufCodec::ERROR_CODE ProtobufCodec::parse_mesg(NetBuffer* payload, MessagePtr& mesg)
 {
-	DCHECK(payload->readable_bytes() > 0);
+	CHECK(payload && payload->readable_bytes() > 0);
 
 	ERROR_CODE err = kNoError;
 
 	const size_t nameLen = payload->read_int32();
 	if (nameLen >= 2 && nameLen <= payload->readable_bytes()) {
-		// type name (-1 because of the index is 0 offset)
+		// type name (-1 because of the index is 0 offset).
 		std::string name(payload->begin_read(), payload->begin_read() + nameLen - 1);
 
-		// create (prototype) message object from typename
+		// Create (prototype) message object from typename.
 		mesg.reset(generate_mesg(name)); // RAII
 		if (mesg) {
-			// parse protobuf from payload
+			// Parse protobuf from payload.
 			const char* data = payload->begin_read() + nameLen;
 			int32_t dataLen = payload->readable_bytes() - nameLen;
 			if (mesg->ParseFromArray(data, dataLen)) {

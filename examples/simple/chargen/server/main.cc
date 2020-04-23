@@ -1,7 +1,7 @@
 // By: wlmwang
 // Date: Aug 04 2019
 
-#include "chargen.h"
+#include "server.h"
 #include "Logging.h"
 
 int main(int argc, char* argv[])

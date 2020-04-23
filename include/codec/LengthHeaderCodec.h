@@ -46,7 +46,7 @@ public:
 	};
 
 	explicit LengthHeaderCodec(EventLoop* loop, 
-							   LENGTH_TYPE length_type, 
+							   LENGTH_TYPE length_type = kLengthType32, 
 							   bool enable_checksum = true,
 							   ssize_t max_payload = 64*1024*1024) 
 		: Codec(loop)

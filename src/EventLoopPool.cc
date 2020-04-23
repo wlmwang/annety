@@ -14,6 +14,8 @@ EventLoopPool::EventLoopPool(EventLoop* loop, const std::string& name)
 	: owner_loop_(loop)
 	, name_(name)
 {
+	CHECK(loop);
+	
 	LOG(DEBUG) << "EventLoopPool::EventLoopPool is called by thread " 
 		<< PlatformThread::current_ref().ref()
 		<< ", name is " << name_

@@ -45,6 +45,8 @@ Connector::Connector(EventLoop* loop, const EndPoint& addr)
 	, server_addr_(addr)
 	, retry_delay_ms_(kInitRetryDelayMs)
 {
+	CHECK(loop);
+
 	DLOG(TRACE) << "Connector::Connector [" << server_addr_.to_ip_port() 
 		<< "] Connector is constructing and the retry is " << retry_delay_ms_;
 }
@@ -217,8 +219,8 @@ void Connector::in_connect()
 {
 	owner_loop_->check_in_own_loop();
 
-	DCHECK(connect_socket_);
-	DCHECK(!connect_channel_);
+	CHECK(connect_socket_);
+	CHECK(!connect_channel_);
 
 	state_.store(kConnecting, std::memory_order_relaxed);
 	connect_channel_.reset(new Channel(owner_loop_, connect_socket_.get()));
@@ -259,7 +261,7 @@ void Connector::handle_write()
 	LOG(DEBUG) << "Connector::handle_write the state=" << state_;
 
 	if (state_.load(std::memory_order_relaxed) == kConnecting) {
-		DCHECK(connect_socket_);
+		CHECK(connect_socket_);
 		remove_and_reset_channel();
 
 		ScopedClearLastError last_error;
@@ -305,7 +307,7 @@ void Connector::handle_error()
 	
 	if (state_.load(std::memory_order_relaxed) == kConnecting) {
 		// connect fail.
-		DCHECK(connect_socket_);
+		CHECK(connect_socket_);
 		remove_and_reset_channel();
 
 		ScopedClearLastError last_error;

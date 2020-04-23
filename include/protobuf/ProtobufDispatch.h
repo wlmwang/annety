@@ -63,6 +63,7 @@ public:
 	ProtobufDispatch(ProtobufMessageCallback cb = ProtobufDispatch::unknown) 
 		: default_cb_(std::move(cb)) {}
 
+	// Register protobuf message callbacks.
 	template <typename T>
 	void listen(const typename CallbackT<T>::ProtobufMessageTCallback& cb)
 	{
@@ -70,7 +71,7 @@ public:
 		cbs_[T::descriptor()] = pd;
 	}
 
-	void dispatch(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const;
+	void dispatch(const TcpConnectionPtr&, const MessagePtr&, TimeStamp) const;
 
 private:
 	static void unknown(const TcpConnectionPtr&, const MessagePtr&, TimeStamp);

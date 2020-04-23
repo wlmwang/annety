@@ -40,6 +40,8 @@ TcpServer::TcpServer(EventLoop* loop,
 	, close_cb_(default_close_callback)
 	, message_cb_(default_message_callback)
 {
+	CHECK(loop);
+
 	LOG(DEBUG) << "TcpServer::TcpServer [" << name_ 
 		<< "] server which listening on " << ip_port_ << " is constructing";
 }
@@ -186,7 +188,7 @@ TcpServerPtr make_tcp_server(EventLoop* loop,
 	const std::string& name, 
 	bool reuse_port)
 {
-	DCHECK(loop);
+	CHECK(loop);
 	
 	TcpServerPtr srv(new TcpServer(loop, addr, name, reuse_port));
 	srv->initialize();

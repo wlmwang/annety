@@ -54,6 +54,8 @@ Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport)
 	, listen_channel_(new Channel(owner_loop_, listen_socket_.get()))
 	, idle_fd_(::open("/dev/null", O_RDONLY | O_CLOEXEC))
 {
+	CHECK(loop);
+	
 	DLOG(TRACE) << "Acceptor::Acceptor the [" <<  addr.to_ip_port() << "] of"
 		<< " fd=" << listen_socket_->internal_fd() << " is constructing";
 

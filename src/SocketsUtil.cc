@@ -78,6 +78,8 @@ int socket(sa_family_t family, bool nonblock, bool cloexec)
 // non-block, close-on-exec
 int accept(int servfd, struct sockaddr_in6* dst, bool nonblock, bool cloexec)
 {
+	CHECK(servfd >= 0 && dst);
+
 	// Always assume that the actual type of the `dst` is sockaddr_in6.
 	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
 #if defined(OS_MACOSX)
@@ -141,6 +143,8 @@ int accept(int servfd, struct sockaddr_in6* dst, bool nonblock, bool cloexec)
 
 int bind(int fd, const struct sockaddr* addr)
 {
+	CHECK(fd >= 0 && addr);
+
 	// Always assume that the actual type of the `addr` is sockaddr_in6.
 	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
 
@@ -160,6 +164,8 @@ int bind(int fd, const struct sockaddr* addr)
 
 int connect(int servfd, const struct sockaddr* addr)
 {
+	CHECK(servfd >= 0 && addr);
+
 	// Always assume that the actual type of the `addr` is sockaddr_in6.
 	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
 
@@ -179,6 +185,8 @@ int connect(int servfd, const struct sockaddr* addr)
 
 int listen(int servfd, int backlog)
 {
+	CHECK(servfd >= 0);
+
 	// If a connection request arrives when the queue of pending connections is full, 
 	// the client may receive an error with an indication of ECONNREFUSED or, if the 
 	// underlying protocol supports retransmission, the request may be ignored so that 
@@ -204,6 +212,8 @@ int listen(int servfd, int backlog)
 
 int shutdown(int fd, int how)
 {
+	CHECK(fd >= 0);
+
 	int ret = ::shutdown(fd, how);
 	PCHECK(!ret);
 
@@ -324,6 +334,8 @@ bool is_self_connect(int fd)
 // Convert struct sockaddr into "IPv4/IPv6 + port" address
 void to_ip_port(const struct sockaddr* addr, char* dst, size_t size)
 {
+	CHECK(addr && dst);
+
 	to_ip(addr, dst, size);
 
 	uint16_t port = 0;
@@ -350,7 +362,7 @@ void to_ip_port(const struct sockaddr* addr, char* dst, size_t size)
 // Convert struct sockaddr into "IPv4/IPv6" address.
 void to_ip(const struct sockaddr* addr, char* dst, size_t size)
 {
-	CHECK(dst);
+	CHECK(addr && dst);
 
 	if (addr->sa_family == AF_INET) {
 		CHECK(size >= INET_ADDRSTRLEN);
@@ -380,6 +392,8 @@ void to_ip(const struct sockaddr* addr, char* dst, size_t size)
 // Convert "IPv4 + port" address into struct sockaddr_in
 void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* dst)
 {
+	CHECK(ip && dst);
+
 	dst->sin_family = AF_INET;
 	dst->sin_port = host_to_net16(port);	// ::htons()
 
@@ -391,6 +405,8 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in* dst)
 // Convert "IPv6 + port" address into struct sockaddr_in6
 void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* dst)
 {
+	CHECK(ip && dst);
+
 	dst->sin6_family = AF_INET6;
 	dst->sin6_port = host_to_net16(port);	// ::htons()
 
@@ -409,30 +425,46 @@ int close(int fd)
 
 ssize_t read(int sockfd, void *buf, size_t len)
 {
+	CHECK(buf);
+
 	ssize_t ret = ::read(sockfd, buf, len);
-	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::read failed";
+	
+	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
+		<< "::read failed";
 	
 	return ret;
 }
 ssize_t readv(int sockfd, const struct iovec *iov, int iovcnt)
 {
+	CHECK(iov);
+
 	ssize_t ret = ::readv(sockfd, iov, iovcnt);
-	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::readv failed";
+	
+	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
+		<< "::readv failed";
 	
 	return ret;
 }
 
 ssize_t write(int sockfd, const void *buf, size_t len)
 {
+	CHECK(buf);
+
 	int ret = ::write(sockfd, buf, len);
-	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::write failed";
+	
+	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
+		<< "::write failed";
 	
 	return ret;
 }
 ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt)
 {
+	CHECK(iov);
+
 	ssize_t ret = ::writev(sockfd, iov, iovcnt);
-	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) << "::writev failed";
+	
+	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
+		<< "::writev failed";
 	
 	return ret;
 }

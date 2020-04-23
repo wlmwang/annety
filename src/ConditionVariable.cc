@@ -121,13 +121,13 @@ void ConditionVariable::timed_wait(const TimeDelta& max_time)
 void ConditionVariable::broadcast()
 {
 	int rv = ::pthread_cond_broadcast(&condition_);
-	DCHECK_EQ(0, rv);
+	CHECK_EQ(0, rv);
 }
 
 void ConditionVariable::signal()
 {
 	int rv = ::pthread_cond_signal(&condition_);
-	DCHECK_EQ(0, rv);
+	CHECK_EQ(0, rv);
 }
 
 }	// namespace annety

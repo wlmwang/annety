@@ -66,6 +66,8 @@ TcpConnection::TcpConnection(EventLoop* loop,
 	, input_buffer_(new NetBuffer())
 	, output_buffer_(new NetBuffer())
 {
+	CHECK(loop);
+
 	LOG(DEBUG) << "TcpConnection::TcpConnection the [" <<  name_ << "] connection of"
 		<< " fd=" << connect_socket_->internal_fd() << " is constructing";
 
@@ -129,7 +131,8 @@ void TcpConnection::set_tcp_nodelay(bool on)
 void TcpConnection::send(const void* data, int len)
 {
 	DCHECK(initilize_);
-
+	
+	CHECK(data);
 	send(StringPiece(static_cast<const char*>(data), len));
 }
 
@@ -144,6 +147,7 @@ void TcpConnection::send(const NetBuffer* message)
 {
 	DCHECK(initilize_);
 
+	CHECK(message);
 	send(message->to_string_piece());
 }
 
@@ -184,6 +188,8 @@ void TcpConnection::send(NetBuffer* buffer)
 {
 	DCHECK(initilize_);
 
+	CHECK(buffer);
+
 	// Compile-time assignment
 	constexpr void(TcpConnection::*const snd)(const StringPiece&) 
 		= &TcpConnection::send_in_loop;
@@ -207,6 +213,8 @@ void TcpConnection::send_in_loop(const StringPiece& buffer)
 void TcpConnection::send_in_loop(const void* data, size_t len)
 {
 	owner_loop_->check_in_own_loop();
+	
+	CHECK(data);
 
 	ssize_t nwrote = 0;
 	size_t remaining = len;
@@ -528,7 +536,7 @@ TcpConnectionPtr make_tcp_connection(EventLoop* loop,
 	const EndPoint& localaddr,
 	const EndPoint& peeraddr)
 {
-	DCHECK(loop && sockfd);
+	CHECK(loop && sockfd);
 
 	TcpConnectionPtr conn(new TcpConnection(loop, 
 						name, 

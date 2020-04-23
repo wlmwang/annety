@@ -26,7 +26,7 @@ class StringEofCodec : public Codec
 {
 public:
 	StringEofCodec(EventLoop* loop, 
-				   const std::string& string_eof, 
+				   const std::string& string_eof = "\r\n", 
 				   ssize_t max_payload = 64*1024*1024) 
 		: Codec(loop)
 		, inner_string_eof_(string_eof)

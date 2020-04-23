@@ -28,7 +28,7 @@ AtExitManager::AtExitManager() : next_manager_(g_top_manager)
 {
 	// If multiple modules instantiate AtExitManagers they'll end up living 
 	// in this module... they have to co-exist().
-	DCHECK(!g_top_manager);
+	CHECK(!g_top_manager);
 	g_top_manager = this;
 }
 
@@ -87,7 +87,7 @@ void AtExitManager::process_callbacks()
 // in testing.
 AtExitManager::AtExitManager(bool shadow) : next_manager_(g_top_manager)
 {
-	DCHECK(shadow || !g_top_manager);
+	CHECK(shadow || !g_top_manager);
 	g_top_manager = this;
 }
 

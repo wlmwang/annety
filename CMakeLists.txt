@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.5)
 
 PROJECT(annety C CXX)
 
@@ -63,9 +63,6 @@ ADD_SUBDIRECTORY(include)
 
 # Only build examples if this is the main project.
 IF (CMAKE_PROJECT_NAME STREQUAL "annety")
-	OPTION(ANNETY_BUILD_EXAMPLES "Build Annety examples" ON)
-ENDIF()
-
-IF (ANNETY_BUILD_EXAMPLES)
+	MESSAGE(STATUS "Build Annety examples...")
 	ADD_SUBDIRECTORY(examples)
 ENDIF()

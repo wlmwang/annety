@@ -202,7 +202,7 @@ void PlatformThread::set_name(const std::string& name)
 
 	// We expect EPERM failures in sandboxed processes, just ignore those.
 	if (err < 0 && errno != EPERM) {
-		DPLOG(ERROR) << "prctl(PR_SET_NAME)";
+		PLOG(ERROR) << "prctl(PR_SET_NAME)";
 	}
 #else
 	// FIXME: TODO
