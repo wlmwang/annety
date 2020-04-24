@@ -59,7 +59,7 @@ void TcpServer::initialize()
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 	acceptor_->set_new_connect_callback(
-		std::bind(&TcpServer::new_connection, shared_from_this(), _1, _2));
+		std::bind(&TcpServer::new_connection, this, _1, _2)); // not safe
 }
 
 TcpServer::~TcpServer()

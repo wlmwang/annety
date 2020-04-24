@@ -9,6 +9,7 @@ PROJECT(annety C CXX)
 SET(CXX_FLAGS
 	-g
 	-std=c++11
+	-fpic	# Convenient for dynamic library to link this static library
 	-Wall
 	-Wextra
 	-Werror
@@ -21,12 +22,11 @@ SET(CXX_FLAGS
 	#-Wshadow
 	-rdynamic
 	-march=native
-	-fpic	# Convenient for dynamic library to link this static library
 	-DCHECK_PTHREAD_RETURN_VALUE
 	-D_FILE_OFFSET_BITS=64
 	-MMD
 )
-# For MACOSX platform.
+# For Clang compiler. for example: MACOSX
 IF (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	LIST(APPEND CXX_FLAGS "-Wno-null-dereference")
 	LIST(APPEND CXX_FLAGS "-Wno-sign-conversion")
@@ -38,7 +38,7 @@ ENDIF()
 # Set the cc compile flags.
 STRING(REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 
-# Set the cc compile debug/release.
+# Set default the object to `release`.
 IF (NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE "Release")
 ENDIF()
@@ -49,15 +49,14 @@ SET(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
 STRING(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 MESSAGE(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS} " " ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})
 
-# Set the object direcrory.
+# Set the object output path.
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-# Set headers/library file path.
-# LINK_DIRECTORIES(${PROJECT_BINARY_DIR}/lib)
+# Add headers/library file path.
 INCLUDE_DIRECTORIES(src include)
 
-# Set recursive subdirectories.
+# Add recursive subdirectories.
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(include)
 

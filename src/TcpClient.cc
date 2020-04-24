@@ -54,9 +54,9 @@ void TcpClient::initialize()
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 	connector_->set_new_connect_callback(
-		std::bind(&TcpClient::new_connection, shared_from_this(), _1, _2));
+		std::bind(&TcpClient::new_connection, this, _1, _2)); // not safe
 	connector_->set_error_connect_callback(
-			std::bind(&TcpClient::handle_retry, shared_from_this()));
+			std::bind(&TcpClient::handle_retry, this)); // not safe
 }
 
 TcpClient::~TcpClient()
