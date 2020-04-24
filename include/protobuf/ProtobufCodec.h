@@ -35,11 +35,11 @@ inline uint32_t peek_uint32(const char* buff)
 }	// namespace anonymous
 
 namespace {
-const char* kNoErrorStr = "NoError";
-const char* kInvalidNameLenStr = "InvalidNameLen";
-const char* kUnknownMessageTypeStr = "UnknownMessageType";
-const char* kParseErrorStr = "ParseError";
-const char* kUnknownErrorStr = "UnknownError";
+const std::string kNoErrorStr = "NoError";
+const std::string kInvalidNameLenStr = "InvalidNameLen";
+const std::string kUnknownMessageTypeStr = "UnknownMessageType";
+const std::string kParseErrorStr = "ParseError";
+const std::string kUnknownErrorStr = "UnknownError";
 }	// namespace anonymous
 
 using MessagePtr = std::shared_ptr<google::protobuf::Message>;
@@ -122,7 +122,7 @@ public:
 	{
 		CHECK(!!buff && !!payload);
 
-		auto get_payload_length = [this] (const NetBuffer* buff) {
+		auto get_payload_length = [] (const NetBuffer* buff) {
 			int64_t length = -1;
 			switch (length_type()) {
 			case kLengthType8:
@@ -197,7 +197,7 @@ public:
 	{
 		CHECK(!!buff && !!payload);
 		
-		auto set_buff_length = [this] (ssize_t length, NetBuffer* buff) {
+		auto set_buff_length = [] (ssize_t length, NetBuffer* buff) {
 			switch (length_type()) {
 			case kLengthType8:
 				buff->append_int8(length);
@@ -300,7 +300,8 @@ private:
 bool ProtobufCodec::serialize(const google::protobuf::Message& mesg, NetBuffer* payload)
 {
 	DCHECK(mesg.IsInitialized());
-	DCHECK(payload && !payload->readable_bytes());
+	
+	CHECK(payload && !payload->readable_bytes());
 
 	// append typenamelen + typename
 	const std::string& type_name = mesg.GetTypeName();
@@ -309,7 +310,7 @@ bool ProtobufCodec::serialize(const google::protobuf::Message& mesg, NetBuffer* 
 	payload->append(type_name.data(), nameLen);
 
 	// append message
-	int size = mesg.ByteSize();
+	int size = mesg.ByteSizeLong(); // `ByteSize` is deprecated.
 	payload->ensure_writable_bytes(size);
 	mesg.SerializeToArray(payload->begin_write(), size);
 	payload->has_written(size);
@@ -321,6 +322,8 @@ bool ProtobufCodec::serialize(const google::protobuf::Message& mesg, NetBuffer* 
 
 void ProtobufCodec::parse(const TcpConnectionPtr& conn, NetBuffer* payload, TimeStamp receive)
 {
+	CHECK(payload && payload->readable_bytes() > 0);
+
 	// RAII
 	MessagePtr mesg;
 
@@ -374,7 +377,6 @@ google::protobuf::Message* ProtobufCodec::generate_mesg(const std::string& name)
 	using namespace google::protobuf;
 	
 	Message* mesg = nullptr;
-
 	const Descriptor* desc = DescriptorPool::generated_pool()->FindMessageTypeByName(name);
 	if (desc) {
 		const Message* prototype = MessageFactory::generated_factory()->GetPrototype(desc);
@@ -389,7 +391,7 @@ google::protobuf::Message* ProtobufCodec::generate_mesg(const std::string& name)
 void ProtobufCodec::error_callback(const TcpConnectionPtr& conn, NetBuffer*, TimeStamp, ERROR_CODE err)
 {
 	LOG(ERROR) << "ProtobufCodec::error_callback - " << to_errstr(err);
-	if (conn && conn->connected()) {
+	if (conn) {
 		conn->shutdown();
 	}
 }

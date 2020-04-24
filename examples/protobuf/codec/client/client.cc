@@ -34,9 +34,12 @@ public:
 
 		client_->set_connect_callback(
 			std::bind(&QueryClient::on_connect, this, _1));
+		client_->set_close_callback(
+			std::bind(&QueryClient::on_close, this, _1));
 		client_->set_message_callback(
 			std::bind(&ProtobufCodec::recv, &codec_, _1, _2, _3));
 
+		// Register protobuf message callbacks.
 		dispatch_.listen<Answer>(
 			std::bind(&QueryClient::on_answer, this, _1, _2, _3));
 		dispatch_.listen<Empty>(
@@ -52,8 +55,8 @@ public:
 
 private:
 	void on_connect(const TcpConnectionPtr&);
+	void on_close(const TcpConnectionPtr&);
 
-	void on_unknown_message(const TcpConnectionPtr&, const MessagePtr&, TimeStamp);
 	void on_empty(const TcpConnectionPtr&, const EmptyPtr&, TimeStamp);
 	void on_answer(const TcpConnectionPtr&, const AnswerPtr&, TimeStamp);
 
@@ -70,16 +73,23 @@ void QueryClient::on_connect(const TcpConnectionPtr& conn)
 {
 	LOG(INFO) << "QueryClient - " << conn->local_addr().to_ip_port() << " <- "
 			<< conn->peer_addr().to_ip_port() << " s is "
-			<< (conn->connected() ? "UP" : "DOWN");
+			<< "UP";
 
-	if (conn->connected()) {
-		Query query;
-		query.set_id(1);
-		query.set_questioner("Anny Wang");
-		query.add_question("Hello?");
+	Query query;
+	query.set_id(1);
+	query.set_questioner("Anny Wang");
+	query.add_question("Hello?");
 		
-		codec_.send(conn, query);
-	}
+	codec_.send(conn, query);
+}
+
+void QueryClient::on_close(const TcpConnectionPtr& conn)
+{
+	LOG(INFO) << "QueryClient - " << conn->local_addr().to_ip_port() << " <- "
+			<< conn->peer_addr().to_ip_port() << " s is "
+			<< "DOWN";
+
+	loop_->quit();
 }
 
 void QueryClient::on_answer(const TcpConnectionPtr& conn, const AnswerPtr& mesg, TimeStamp)
@@ -95,13 +105,12 @@ void QueryClient::on_empty(const TcpConnectionPtr& conn, const EmptyPtr& mesg, T
 }
 
 int main(int argc, char* argv[])
-{
-	set_min_log_severity(annety::LOG_DEBUG);
-	
+{	
 	EventLoop loop;
-	QueryClient client(&loop, EndPoint(1669));
-	
+
+	QueryClient client(&loop, EndPoint(1669));	
 	client.connect();
+
 	loop.loop();
 
 	google::protobuf::ShutdownProtobufLibrary();

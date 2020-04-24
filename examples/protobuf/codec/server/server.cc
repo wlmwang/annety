@@ -52,6 +52,7 @@ public:
 private:
 	void on_connect(const TcpConnectionPtr& conn);
 	void on_close(const TcpConnectionPtr& conn);
+
 	void on_query(const TcpConnectionPtr& conn, const QueryPtr& mesg, TimeStamp);
 	void on_answer(const TcpConnectionPtr& conn, const AnswerPtr& mesg, TimeStamp);
 
