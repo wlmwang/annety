@@ -15,18 +15,24 @@
 
 namespace annety
 {
-// Wrapper server with protobuf rpc
+// Server wrapper of protobuf rpc.
 class ProtorpcServer
 {
 public:
 	ProtorpcServer(EventLoop* loop, const EndPoint& addr)
 		: loop_(loop)
-		, chan_(new ProtorpcChannel(loop))
+		, channel_(new ProtorpcChannel(loop))
 	{
+		CHECK(loop);
+
 		server_ = make_tcp_server(loop, addr, "ProtorpcServer");
+		
+		using std::placeholders::_1;
 
 		server_->set_connect_callback(
 			std::bind(&ProtorpcServer::new_connection, this, _1));
+		server_->set_close_callback(
+			std::bind(&ProtorpcServer::remove_connection, this, _1));
 	}
 
 	void set_thread_num(int num_threads)
@@ -39,18 +45,20 @@ public:
 		server_->start();
 	}
 
+	// Add service impl instance.
 	void listen(::google::protobuf::Service* service)
 	{
-		chan_->listen(service);
+		channel_->listen(service);
 	}
 
 private:
 	void new_connection(const TcpConnectionPtr& conn);
+	void remove_connection(const TcpConnectionPtr&);
 
 private:
 	EventLoop* loop_;
 	TcpServerPtr server_;
-	ProtorpcChannelPtr chan_;
+	ProtorpcChannelPtr channel_;
 
 	DISALLOW_COPY_AND_ASSIGN(ProtorpcServer);
 };
@@ -59,16 +67,18 @@ void ProtorpcServer::new_connection(const TcpConnectionPtr& conn)
 {
 	LOG(INFO) << "ProtorpcServer - " << conn->local_addr().to_ip_port() << " <- "
 		<< conn->peer_addr().to_ip_port() << " s is "
-		<< (conn->connected() ? "UP" : "DOWN");
+		<< "UP";
+	
+	channel_->attach_connection(conn);
+}
 
-	if (conn->connected()) {
-		chan_->attach_connection(conn);
+void ProtorpcServer::remove_connection(const TcpConnectionPtr& conn)
+{
+	LOG(INFO) << "ProtorpcServer - " << conn->local_addr().to_ip_port() << " <- "
+		<< conn->peer_addr().to_ip_port() << " s is "
+		<< "DOWN";
 
-		conn->set_message_callback(
-			std::bind(&ProtorpcChannel::recv, chan_.get(), _1, _2, _3));
-	} else {
-		chan_->detach_connection();
-	}
+	channel_->detach_connection();
 }
 
 }	// namespace annety

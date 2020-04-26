@@ -40,12 +40,9 @@ public:
 
 int main(int argc, char* argv[])
 {
-	set_min_log_severity(LOG_DEBUG);
-	
-	QueryServiceImpl impl;
-
 	EventLoop loop;
 	
+	QueryServiceImpl impl;
 	ProtorpcServer server(&loop, EndPoint(1669));
 	server.listen(&impl);
 	server.start();

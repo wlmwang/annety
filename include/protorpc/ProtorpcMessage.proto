@@ -26,12 +26,11 @@ message ProtorpcMessage
 	}
 
 	MESG_TYPE type = 1;
-	int64 id = 2;
 
+	int64 id = 2;
 	string service = 3;
 	string method = 4;
 	bytes request = 5;
-
 	bytes response = 6;
 	
 	ERROR_CODE error = 7;

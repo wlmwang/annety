@@ -47,7 +47,7 @@ public:
 	void operator()(const TcpConnectionPtr& conn, const MessagePtr& mesg, TimeStamp receive) const override
 	{
 		std::shared_ptr<T> concrete = std::dynamic_pointer_cast<T>(mesg);
-		CHECK(concrete != NULL);
+		CHECK(concrete);
 		
 		cb_(conn, concrete, receive);
 	}
@@ -80,7 +80,12 @@ private:
 	using CallbackMap = 
 			std::map<const google::protobuf::Descriptor*, std::shared_ptr<Callback>>;
 
+	// Protobuf callback lists.
+	// [
+	//		T::descriptor() => callback,
+	// ]
 	CallbackMap cbs_;
+
 	ProtobufMessageCallback default_cb_;
 
 	DISALLOW_COPY_AND_ASSIGN(ProtobufDispatch);
@@ -92,6 +97,7 @@ void ProtobufDispatch::dispatch(const TcpConnectionPtr& conn, const MessagePtr& 
 	if (it != cbs_.end()) {
 		(*it->second)(conn, mesg, receive);
 	} else {
+		// Unknown protobuf message.
 		if (default_cb_) {
 			default_cb_(conn, mesg, receive);
 		} else {
