@@ -78,7 +78,7 @@ void QueryClient::on_connect(const TcpConnectionPtr& conn)
 	Query query;
 	query.set_id(1);
 	query.set_questioner("Anny Wang");
-	query.add_question("Hello?");
+	query.add_question("Hello???");
 		
 	codec_.send(conn, query);
 }

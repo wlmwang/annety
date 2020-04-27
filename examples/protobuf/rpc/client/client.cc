@@ -7,9 +7,8 @@
 
 #include "Query.pb.h"
 
-using std::placeholders::_1;
-using std::placeholders::_2;
-using std::placeholders::_3;
+using namespace annety;
+using namespace examples::protobuf::rpc;
 
 class QueryClient
 {
@@ -19,6 +18,10 @@ public:
 		, channel_(new ProtorpcChannel(loop))
 		, stub_(channel_.get())
 	{
+		using std::placeholders::_1;
+		using std::placeholders::_2;
+		using std::placeholders::_3;
+
 		client_ = make_tcp_client(loop, addr, "QueryClient");
 
 		client_->set_connect_callback(
@@ -27,16 +30,18 @@ public:
 			std::bind(&QueryClient::remove_connection, this, _1));
 		client_->set_message_callback(
 			std::bind(&ProtorpcChannel::recv, channel_.get(), _1, _2, _3));
+
+		client_->enable_retry();
 	}
 
 	void connect()
 	{
-		client_.connect();
+		client_->connect();
 	}
 
-	void finish(Answer* resp);
-
 private:
+	void done(Answer* resp);
+
 	void new_connection(const TcpConnectionPtr&);
 	void remove_connection(const TcpConnectionPtr&);
 
@@ -50,25 +55,26 @@ private:
 
 void QueryClient::new_connection(const TcpConnectionPtr& conn)
 {
-	DLOG(TRACE) << "QueryClient - " << conn->local_addr().to_ip_port() << " -> "
+	DLOG(TRACE) << "QueryClient::new_connection - " << conn->local_addr().to_ip_port() << " -> "
 			<< conn->peer_addr().to_ip_port() << " s is "
 			<< "UP";
 
 	channel_->attach_connection(conn);
 
+	// Delete in ProtorpcChannel::response().
 	Answer* res = new Answer();
 	Query req;
-	req->set_id(1);
-	req->set_questioner("Anny Wang");
-	req->add_question("Hello??");
+	req.set_id(1);
+	req.set_questioner("Anny Wang");
+	req.add_question("Hello???");
 
-	stub->Solve(nullptr, &req, res, NewCallback(this, &QueryClient::finish, res));
+	stub_.Solve(nullptr, &req, res, NewCallback(this, &QueryClient::done, res));
 	// Will call ProtorpcChannel::CallMethod() callback.
 }
 
 void QueryClient::remove_connection(const TcpConnectionPtr& conn)
 {
-	DLOG(TRACE) << "QueryClient - " << conn->local_addr().to_ip_port() << " -> "
+	DLOG(TRACE) << "QueryClient::remove_connection - " << conn->local_addr().to_ip_port() << " -> "
 			<< conn->peer_addr().to_ip_port() << " s is "
 			<< "DOWN";
 
@@ -76,9 +82,9 @@ void QueryClient::remove_connection(const TcpConnectionPtr& conn)
 	loop_->quit();
 }
 
-void QueryClient::finish(Answer* res)
+void QueryClient::done(Answer* res)
 {
-	LOG(INFO) << "QueryClient:result - " << res->DebugString();
+	LOG(TRACE) << "QueryClient:done - " << res->DebugString();
 
 	client_->disconnect();
 }

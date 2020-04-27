@@ -25,10 +25,12 @@ public:
 	{
 		LOG(INFO) << "QueryServiceImpl::Solve";
 		
+		CHECK(request && response && done);
+
 		response->set_id(1);
 		response->set_questioner(request->questioner());
 		response->set_answerer("Anny Wang");
-		response->add_solution("World!!");
+		response->add_solution("World!!!");
 
 		// Call ProtorpcChannel::finish() callback.
 		done->Run();

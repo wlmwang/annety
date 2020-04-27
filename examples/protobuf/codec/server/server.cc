@@ -93,8 +93,8 @@ void QueryServer::on_query(const TcpConnectionPtr& conn, const QueryPtr& mesg, T
 	Answer answer;
 	answer.set_id(1);
 	answer.set_questioner("Anny Wang");
-	answer.set_answerer("~~~");
-	answer.add_solution("World!");
+	answer.set_answerer("Anny Wang");
+	answer.add_solution("World!!!");
 	
 	codec_.send(conn, answer);
 

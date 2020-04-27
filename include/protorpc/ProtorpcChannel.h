@@ -68,6 +68,8 @@ public:
 	// *Not thread safe*, but usually be called before server start().
 	void listen(::google::protobuf::Service* service)
 	{
+		CHECK(service);
+
 		const google::protobuf::ServiceDescriptor* desc = service->GetDescriptor();
 		services_[desc->full_name()] = service;
 	}
@@ -87,6 +89,7 @@ public:
 	void detach_connection()
 	{
 		CHECK(conn_);
+
 		conn_.reset();
 	}
 
@@ -94,6 +97,7 @@ public:
 	void attach_connection(const TcpConnectionPtr& conn)
 	{
 		CHECK(conn);
+
 		conn_ = conn;
 	}
 	
@@ -103,7 +107,7 @@ public:
 		CHECK(conn == conn_);
 		codec_.recv(conn_, buff, receive);
 
-		// The `ProtorpcChannel::dispatch` will be called.
+		// Then the `ProtorpcChannel::dispatch` will be called.
 	}
 
 private:
@@ -180,12 +184,12 @@ void ProtorpcChannel::response(const ProtorpcMessage& mesg)
 	}
 
 	if (out.resp) {
-		// RAII for release the res (New in ProtorpcClient::new_connection).
+		// RAII for release the out.resp* (New in RpcClient::new_connection).
 		std::unique_ptr<google::protobuf::Message> l(out.resp);
 
 		out.resp->ParseFromString(mesg.response());
 		if (out.done) {
-			// Will call ProtorpcClient::finish().
+			// RpcClient::done() will be called.
 			out.done->Run();
 		}
 	}
@@ -233,14 +237,14 @@ void ProtorpcChannel::request(const ProtorpcMessage& mesg)
 	// RAII for release the req (New in protobuf internal).
 	std::unique_ptr<google::protobuf::Message> req(impl->GetRequestPrototype(method).New());
 	
-	// Parse request.
+	// Parse request bytes.
 	if (!req->ParseFromString(mesg.request())) {
 		err = ProtorpcMessage::INVALID_REQUEST;
 		failed(err, mesg);
 		return;
 	}
 
-	// res will be deleted in ProtorpcChannel::finish().
+	// res will be release in ProtorpcChannel::finish().
 	google::protobuf::Message* res = impl->GetResponsePrototype(method).New();
 
 	// After here, the `Service::CallMethod` will be called, and then finish().
@@ -251,11 +255,11 @@ void ProtorpcChannel::request(const ProtorpcMessage& mesg)
 
 void ProtorpcChannel::finish(::google::protobuf::Message* res, int64_t id)
 {
-	// FOR SERVER RPC RESPONSE
+	// FOR SERVER RPC RESPONSE.
 
 	DLOG(TRACE) << "ProtorpcChannel::finish res - " << res->DebugString();
 
-	CHECK(conn_);
+	CHECK(conn_ && res);
 
 	// RAII for release the res* (New in ProtorpcChannel::request).
 	std::unique_ptr<google::protobuf::Message> l(res);
@@ -274,11 +278,11 @@ void ProtorpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor* met
 							::google::protobuf::Message* response,
 							::google::protobuf::Closure* done)
 {
-	// FOR CLIENT RPC REQURST
+	// FOR CLIENT RPC REQURST.
 
 	DLOG(TRACE) << "ProtorpcChannel::CallMethod req - " << request->DebugString();
 
-	CHECK(conn_);
+	CHECK(conn_ && request && response);
 	
 	int64_t id = ++id_;
 
