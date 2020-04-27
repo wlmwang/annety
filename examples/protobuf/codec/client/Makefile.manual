@@ -6,7 +6,7 @@ CC		:= g++
 CCFLAGS	:= -g -Wall -std=c++11 -rdynamic
 
 # 第三方库
-LIB_INC		:= -I../../../../annety/include -I/usr/local/proto3/include
+LIB_INC		:= -I../../../../include -I/usr/local/proto3/include
 DIR_LIB		:= -L../../../../ -L/usr/local/proto3/lib
 LIBFLAGS	:= ${DIR_LIB} -lannety -lprotobuf -lpthread
 

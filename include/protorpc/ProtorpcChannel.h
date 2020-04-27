@@ -197,7 +197,7 @@ void ProtorpcChannel::request(const ProtorpcMessage& mesg)
 
 	CHECK(conn_);
 
-	auto failed = [] (ProtorpcMessage::ERROR_CODE err, const ProtorpcMessage& mesg) {
+	auto failed = [this] (ProtorpcMessage::ERROR_CODE err, const ProtorpcMessage& mesg) {
 		ProtorpcMessage resp;
 		resp.set_id(mesg.id());
 		resp.set_error(err);
