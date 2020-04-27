@@ -85,8 +85,6 @@ public:
 	ProtobufCodec(EventLoop* loop, ProtobufMessageCallback pmcb, ErrorCallback ecb) 
 		: Codec(loop), dispatch_cb_(std::move(pmcb)), error_cb_(std::move(ecb))
 	{
-		CHECK(loop);
-
 		using std::placeholders::_1;
 		using std::placeholders::_2;
 		using std::placeholders::_3;
@@ -98,11 +96,12 @@ public:
 
 	// *Not thread safe*, but run in the own loop.
 	// using Codec::recv;
-	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive_ms)
+	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
 	{
-		Codec::recv(conn, buff, receive_ms);
+		Codec::recv(conn, buff, receive);
 	}
 
+	// *Thread safe*, pure function.
 	void send(const TcpConnectionPtr& conn, const google::protobuf::Message& mesg)
 	{
 		NetBuffer payload;
@@ -315,7 +314,7 @@ bool ProtobufCodec::serialize(const google::protobuf::Message& mesg, NetBuffer* 
 	mesg.SerializeToArray(payload->begin_write(), size);
 	payload->has_written(size);
 
-	DCHECK(payload->readable_bytes() == sizeof(nameLen) + nameLen + size);
+	CHECK(payload->readable_bytes() == sizeof(nameLen) + nameLen + size);
 
 	return true;
 }

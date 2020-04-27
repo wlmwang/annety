@@ -34,9 +34,7 @@ class ProtorpcChannel : public ::google::protobuf::RpcChannel
 {
 public:
 	explicit ProtorpcChannel(EventLoop* loop)
-		: loop_(loop)
-		, codec_(loop, 
-			std::bind(
+		: codec_(loop, std::bind(
 				&ProtobufDispatch::dispatch, 
 				&dispatch_, 
 				std::placeholders::_1, 
@@ -45,22 +43,20 @@ public:
 			)
 		)
 	{
-		CHECK(loop);
-
-		LOG(DEBUG) << "ProtorpcChannel::ProtorpcChannel - " << this;
+		LOG(TRACE) << "ProtorpcChannel::ProtorpcChannel - " << this;
 
 		using std::placeholders::_1;
 		using std::placeholders::_2;
 		using std::placeholders::_3;
 
-		// Register protorpc protocol callbacks.
+		// Register protobuf bytes dispatcher - for protobuf rpc protocol.
 		dispatch_.listen<ProtorpcMessage>(
 			std::bind(&ProtorpcChannel::dispatch, this, _1, _2, _3));
 	}
 
 	virtual ~ProtorpcChannel() override
 	{
-		LOG(DEBUG) << "ProtorpcChannel::~ProtorpcChannel - " << this;
+		LOG(TRACE) << "ProtorpcChannel::~ProtorpcChannel - " << this;
 		
 		for (const auto& outstanding : outstandings_) {
 			OutstandingCall out = outstanding.second;
@@ -69,80 +65,56 @@ public:
 	}
 
 	// Register protorpc service impl.
+	// *Not thread safe*, but usually be called before server start().
 	void listen(::google::protobuf::Service* service)
 	{
 		const google::protobuf::ServiceDescriptor* desc = service->GetDescriptor();
 		services_[desc->full_name()] = service;
 	}
 
-	void attach_connection(const TcpConnectionPtr& conn)
-	{
-		CHECK(conn);
-		conn_ = conn;
-
-		using std::placeholders::_1;
-		using std::placeholders::_2;
-		using std::placeholders::_3;
-
-		conn_->set_message_callback(
-			std::bind(&ProtorpcChannel::recv, this, _1, _2, _3));
-	}
+	// Call the given method of the remote service.
+	// The signature of this procedure looks the same as Service::CallMethod(), 
+	// but the requirements are less strict in one important way:  the request 
+	// and response objects need not be of any specific class as long as their 
+	// descriptors are method->input_type() and method->output_type().
+	virtual void CallMethod(const ::google::protobuf::MethodDescriptor* method,
+							::google::protobuf::RpcController* controller,
+							const ::google::protobuf::Message* request,
+							::google::protobuf::Message* response,
+							::google::protobuf::Closure* done) override;
 	
+	// *Not thread safe*, but run in own loop thread.
 	void detach_connection()
 	{
 		CHECK(conn_);
 		conn_.reset();
 	}
+
+	// *Not thread safe*, but run in own loop thread.
+	void attach_connection(const TcpConnectionPtr& conn)
+	{
+		CHECK(conn);
+		conn_ = conn;
+	}
 	
+	// *Not thread safe*, but run in the own loop.
 	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
 	{
 		CHECK(conn == conn_);
 		codec_.recv(conn_, buff, receive);
-	}
 
-	// Call the given method of the remote service.  The signature of this
-	// procedure looks the same as Service::CallMethod(), but the requirements
-	// are less strict in one important way:  the request and response objects
-	// need not be of any specific class as long as their descriptors are
-	// method->input_type() and method->output_type().
-	virtual void CallMethod(const ::google::protobuf::MethodDescriptor* method,
-							::google::protobuf::RpcController* controller,
-							const ::google::protobuf::Message* request,
-							::google::protobuf::Message* response,
-							::google::protobuf::Closure* done) override
-	{
-		CHECK(conn_);
-
-		LOG(DEBUG) << "ProtorpcChannel::CallMethod req - " << request->DebugString();
-		
-		int64_t id = ++id_;
-
-		ProtorpcMessage mesg;
-		mesg.set_id(id);
-		mesg.set_service(method->service()->full_name());
-		mesg.set_method(method->name());
-		mesg.set_request(request->SerializeAsString());	// FIXME: error check
-		mesg.set_type(ProtorpcMessage::REQUEST);
-
-		// Save request context.
-		OutstandingCall out = { response, done};
-		{
-			AutoLock locked(lock_);
-			outstandings_[id] = out;
-		}
-
-		codec_.send(conn_, mesg);
+		// The `ProtorpcChannel::dispatch` will be called.
 	}
 
 private:
+	// *Not thread safe*, but run in the own loop.
 	void dispatch(const TcpConnectionPtr&, const ProtorpcMessagePtr&, TimeStamp);
 	void request(const ProtorpcMessage&);
 	void response(const ProtorpcMessage&);
-	void error();
 
 	void finish(::google::protobuf::Message*, int64_t);
 
-	// for protorpc request.
+	// protobuf rpc request of client.
 	struct OutstandingCall
 	{
 		::google::protobuf::Message* resp;
@@ -150,7 +122,6 @@ private:
 	};
 
 private:
-	EventLoop* loop_{nullptr};
 	TcpConnectionPtr conn_;
 
 	// Protobuf bytes codec.
@@ -159,22 +130,22 @@ private:
 
 	std::atomic<int64_t> id_{0};
 
-	// Protorpc client lists.
+	// protobuf rpc request of client.
 	MutexLock lock_;
 	std::map<int64_t, OutstandingCall> outstandings_;
 
 	// Protorpc service lists.
 	// [
-	//		'service name' => service*,
+	//		"service-name" => service-impl*,
 	// ]
 	std::map<std::string, ::google::protobuf::Service*> services_;
 };
 
 void ProtorpcChannel::dispatch(const TcpConnectionPtr& conn, const ProtorpcMessagePtr& mesg, TimeStamp)
 {
-	CHECK(conn == conn_);
+	DLOG(TRACE) << "ProtorpcChannel::dispatch - " << mesg->DebugString();
 
-	LOG(INFO) << "ProtorpcChannel::dispatch - " << mesg->DebugString();
+	CHECK(conn == conn_);
 
 	switch (static_cast<int>(mesg->type())) {
 		case ProtorpcMessage::REQUEST:
@@ -186,16 +157,17 @@ void ProtorpcChannel::dispatch(const TcpConnectionPtr& conn, const ProtorpcMessa
 			break;
 
 		case ProtorpcMessage::ERROR:
-			// TODO
+			// TODO.
+			LOG(ERROR) << "ProtorpcChannel::dispatch to be added - " << mesg->DebugString();
 			break;
 	}
 }
 
 void ProtorpcChannel::response(const ProtorpcMessage& mesg)
 {
-	CHECK(conn_);
+	DLOG(TRACE) << "ProtorpcChannel::response res - " << mesg.DebugString();
 
-	LOG(DEBUG) << "ProtorpcChannel::response res - " << mesg.DebugString();
+	CHECK(conn_);
 
 	OutstandingCall out = { nullptr, nullptr};
 	{
@@ -208,11 +180,12 @@ void ProtorpcChannel::response(const ProtorpcMessage& mesg)
 	}
 
 	if (out.resp) {
-		// RAII
+		// RAII for release the res (New in ProtorpcClient::new_connection).
 		std::unique_ptr<google::protobuf::Message> l(out.resp);
 
 		out.resp->ParseFromString(mesg.response());
 		if (out.done) {
+			// Will call ProtorpcClient::finish().
 			out.done->Run();
 		}
 	}
@@ -220,9 +193,9 @@ void ProtorpcChannel::response(const ProtorpcMessage& mesg)
 
 void ProtorpcChannel::request(const ProtorpcMessage& mesg)
 {
-	CHECK(conn_);
+	DLOG(TRACE) << "ProtorpcChannel::request req - " << mesg.DebugString();
 
-	LOG(DEBUG) << "ProtorpcChannel::request req - " << mesg.DebugString();
+	CHECK(conn_);
 
 	auto failed = [] (ProtorpcMessage::ERROR_CODE err, const ProtorpcMessage& mesg) {
 		ProtorpcMessage resp;
@@ -257,7 +230,7 @@ void ProtorpcChannel::request(const ProtorpcMessage& mesg)
 		return;
 	}
 
-	// RAII
+	// RAII for release the req (New in protobuf internal).
 	std::unique_ptr<google::protobuf::Message> req(impl->GetRequestPrototype(method).New());
 	
 	// Parse request.
@@ -267,28 +240,61 @@ void ProtorpcChannel::request(const ProtorpcMessage& mesg)
 		return;
 	}
 
-	// res is deleted in finish().
+	// res will be deleted in ProtorpcChannel::finish().
 	google::protobuf::Message* res = impl->GetResponsePrototype(method).New();
 
-	// Tips:
-	// Service::CallMethod is not Channel::CallMethod
+	// After here, the `Service::CallMethod` will be called, and then finish().
+	// NOTE: Service::CallMethod is not Channel::CallMethod.
 	impl->CallMethod(method, nullptr, req.get(), res, 
 				NewCallback(this, &ProtorpcChannel::finish, res, mesg.id()));
 }
 
 void ProtorpcChannel::finish(::google::protobuf::Message* res, int64_t id)
 {
+	// FOR SERVER RPC RESPONSE
+
+	DLOG(TRACE) << "ProtorpcChannel::finish res - " << res->DebugString();
+
 	CHECK(conn_);
 
-	LOG(DEBUG) << "ProtorpcChannel::finish res - " << res->DebugString();
-
-	// RAII to release the res*.
+	// RAII for release the res* (New in ProtorpcChannel::request).
 	std::unique_ptr<google::protobuf::Message> l(res);
 
 	ProtorpcMessage mesg;
 	mesg.set_id(id);
 	mesg.set_response(res->SerializeAsString()); // FIXME: error check
 	mesg.set_type(ProtorpcMessage::RESPONSE);
+
+	codec_.send(conn_, mesg);
+}
+
+void ProtorpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor* method,
+							::google::protobuf::RpcController* controller,
+							const ::google::protobuf::Message* request,
+							::google::protobuf::Message* response,
+							::google::protobuf::Closure* done)
+{
+	// FOR CLIENT RPC REQURST
+
+	DLOG(TRACE) << "ProtorpcChannel::CallMethod req - " << request->DebugString();
+
+	CHECK(conn_);
+	
+	int64_t id = ++id_;
+
+	ProtorpcMessage mesg;
+	mesg.set_id(id);
+	mesg.set_service(method->service()->full_name());
+	mesg.set_method(method->name());
+	mesg.set_request(request->SerializeAsString());	// FIXME: error check
+	mesg.set_type(ProtorpcMessage::REQUEST);
+
+	// Save request context of client.
+	OutstandingCall out = { response, done};
+	{
+		AutoLock locked(lock_);
+		outstandings_[id] = out;
+	}
 
 	codec_.send(conn_, mesg);
 }

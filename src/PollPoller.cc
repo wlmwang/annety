@@ -13,10 +13,7 @@
 
 namespace annety
 {
-PollPoller::PollPoller(EventLoop* loop) : Poller(loop)
-{
-	CHECK(loop);
-}
+PollPoller::PollPoller(EventLoop* loop) : Poller(loop) {}
 
 PollPoller::~PollPoller() = default;
 

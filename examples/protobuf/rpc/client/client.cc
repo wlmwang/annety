@@ -16,6 +16,7 @@ void solve(QueryService::Stub* stub, Query* req, Answer* res, Closure* done)
 	req->set_questioner("Anny Wang");
 	req->add_question("Hello??");
 
+	// Will call ProtorpcChannel::CallMethod() callback.
 	stub->Solve(nullptr, req, res, done);
 }
 
@@ -26,8 +27,6 @@ void solved(Answer* res)
 
 int main(int argc, char* argv[])
 {
-	set_min_log_severity(annety::LOG_DEBUG);
-	
 	{
 		EventLoop loop;
 		ProtorpcClient<Query, Answer, QueryService> client(&loop, EndPoint(1669));

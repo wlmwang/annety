@@ -25,34 +25,42 @@ public:
 	{
 		CHECK(loop);
 
+		using std::placeholders::_1;
+		using std::placeholders::_2;
+		using std::placeholders::_3;
+
 		server_ = make_tcp_server(loop, addr, "ProtorpcServer");
 		
-		using std::placeholders::_1;
-
 		server_->set_connect_callback(
 			std::bind(&ProtorpcServer::new_connection, this, _1));
 		server_->set_close_callback(
 			std::bind(&ProtorpcServer::remove_connection, this, _1));
+		server_->set_message_callback(
+			std::bind(&ProtorpcChannel::recv, channel_.get(), _1, _2, _3));
 	}
 
-	void set_thread_num(int num_threads)
-	{
-		server_->set_thread_num(num_threads);
-	}
-
+	// Starts the server if it's not listenning.
 	void start()
 	{
 		server_->start();
 	}
 
+	// Turn on the server to become a multi-threaded model.
+	// *Not thread safe*, but usually be called before start().
+	void set_thread_num(int num_threads)
+	{
+		server_->set_thread_num(num_threads);
+	}
+
 	// Add service impl instance.
+	// *Not thread safe*, but usually be called before start().
 	void listen(::google::protobuf::Service* service)
 	{
 		channel_->listen(service);
 	}
 
 private:
-	void new_connection(const TcpConnectionPtr& conn);
+	void new_connection(const TcpConnectionPtr&);
 	void remove_connection(const TcpConnectionPtr&);
 
 private:
@@ -65,7 +73,9 @@ private:
 
 void ProtorpcServer::new_connection(const TcpConnectionPtr& conn)
 {
-	LOG(INFO) << "ProtorpcServer - " << conn->local_addr().to_ip_port() << " <- "
+	loop_->check_in_own_loop();
+
+	DLOG(TRACE) << "ProtorpcServer - " << conn->local_addr().to_ip_port() << " <- "
 		<< conn->peer_addr().to_ip_port() << " s is "
 		<< "UP";
 	
@@ -74,7 +84,9 @@ void ProtorpcServer::new_connection(const TcpConnectionPtr& conn)
 
 void ProtorpcServer::remove_connection(const TcpConnectionPtr& conn)
 {
-	LOG(INFO) << "ProtorpcServer - " << conn->local_addr().to_ip_port() << " <- "
+	loop_->check_in_own_loop();
+
+	DLOG(TRACE) << "ProtorpcServer - " << conn->local_addr().to_ip_port() << " <- "
 		<< conn->peer_addr().to_ip_port() << " s is "
 		<< "DOWN";
 

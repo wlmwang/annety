@@ -13,7 +13,7 @@
 
 namespace annety
 {
-// Wrapper server with protobuf rpc
+// Wrapper client with protobuf rpc.
 template <typename REQ, typename RES, typename SRV>
 class ProtorpcClient
 {
@@ -24,16 +24,25 @@ using DoingCallback = std::function<void(Stub*, REQ*, RES*, ::google::protobuf::
 public:
 	ProtorpcClient(EventLoop* loop, const EndPoint& addr)
 		: loop_(loop)
-		, chan_(new ProtorpcChannel(loop))
+		, channel_(new ProtorpcChannel(loop))
 	{
+		CHECK(loop);
+
+		using std::placeholders::_1;
+		using std::placeholders::_2;
+		using std::placeholders::_3;
+
 		client_ = make_tcp_client(loop, addr, "ProtorpcClient");
 
 		client_->set_connect_callback(
 			std::bind(&ProtorpcClient::new_connection, this, _1));
+		client_->set_close_callback(
+			std::bind(&ProtorpcClient::remove_connection, this, _1));
 		client_->set_message_callback(
-			std::bind(&ProtorpcChannel::recv, chan_.get(), _1, _2, _3));
+			std::bind(&ProtorpcChannel::recv, channel_.get(), _1, _2, _3));
 	}
 
+	// *Not thread safe*
 	void call(DoingCallback doing, DoneCallback done)
 	{
 		doing_cb_ = doing;
@@ -42,58 +51,65 @@ public:
 		client_->connect();
 	}
 
+	// *Not thread safe*, but run in the own loop.
 	void finish(RES* resp);
 
 private:
-	void new_connection(const TcpConnectionPtr& conn);
+	// *Not thread safe*, but run in the own loop.
+	void new_connection(const TcpConnectionPtr&);
+	void remove_connection(const TcpConnectionPtr&);
 
 private:
 	EventLoop* loop_;
 	TcpClientPtr client_;
-	ProtorpcChannelPtr chan_;
+	ProtorpcChannelPtr channel_;
 
 	DoneCallback done_cb_;
 	DoingCallback doing_cb_;
 };
 
 template <typename REQ, typename RES, typename SRV>
-void ProtorpcClient<REQ, RES, SRV>::finish(RES* res)
+void ProtorpcClient<REQ, RES, SRV>::new_connection(const TcpConnectionPtr& conn)
 {
-	{
-		if (done_cb_) {
-			done_cb_(res);
-		} else {
-			LOG(ERROR) << "ProtorpcClient::finish was not bind callback";
-		}
-		done_cb_ = DoneCallback();
+	DLOG(TRACE) << "ProtorpcClient - " << conn->local_addr().to_ip_port() << " -> "
+			<< conn->peer_addr().to_ip_port() << " s is "
+			<< "UP";
+
+	channel_->attach_connection(conn);
+
+	if (doing_cb_) {
+		Stub stub{channel_.get()};
+		REQ req;
+		RES* res = new RES();
+		doing_cb_(&stub, &req, res, NewCallback(this, &ProtorpcClient::finish, res));
+	} else {
+		LOG(ERROR) << "ProtorpcClient::new_connection was not bind callback";
 	}
-	client_->disconnect();
+	doing_cb_ = DoingCallback();
 }
 
 template <typename REQ, typename RES, typename SRV>
-void ProtorpcClient<REQ, RES, SRV>::new_connection(const TcpConnectionPtr& conn)
+void ProtorpcClient<REQ, RES, SRV>::remove_connection(const TcpConnectionPtr& conn)
 {
-	LOG(INFO) << "ProtorpcClient - " << conn->local_addr().to_ip_port() << " -> "
+	DLOG(TRACE) << "ProtorpcClient - " << conn->local_addr().to_ip_port() << " -> "
 			<< conn->peer_addr().to_ip_port() << " s is "
-			<< (conn->connected() ? "UP" : "DOWN");
+			<< "DOWN";
 
-	if (conn->connected()) {
-		chan_->attach_connection(conn);
-		{
-			if (doing_cb_) {
-				Stub stub{chan_.get()};
-				REQ req;
-				RES* res = new RES();
-				doing_cb_(&stub, &req, res, NewCallback(this, &ProtorpcClient::finish, res));
-			} else {
-				LOG(ERROR) << "ProtorpcClient::new_connection was not bind callback";
-			}
-			doing_cb_ = DoingCallback();
-		}
+	channel_->detach_connection();
+	loop_->quit();
+}
+
+template <typename REQ, typename RES, typename SRV>
+void ProtorpcClient<REQ, RES, SRV>::finish(RES* res)
+{
+	if (done_cb_) {
+		done_cb_(res);
 	} else {
-		chan_->detach_connection();
-		loop_->quit();
+		LOG(ERROR) << "ProtorpcClient::finish was not bind callback";
 	}
+	done_cb_ = DoneCallback();
+
+	client_->disconnect();
 }
 
 }	// namespace annety

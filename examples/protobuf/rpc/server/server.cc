@@ -30,6 +30,7 @@ public:
 		response->set_answerer("Anny Wang");
 		response->add_solution("World!!");
 
+		// Call ProtorpcChannel::finish() callback.
 		done->Run();
 	}
 };
