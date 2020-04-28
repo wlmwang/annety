@@ -26,16 +26,21 @@ ssize_t NetBuffer::read_fd(int fd, int* err)
 	// Use vec[0] first, and then vec[1]
 	const ssize_t n = sockets::readv(fd, vec, iovcnt);
 	if (n < 0) {
-		if (err != nullptr) *err = errno;
+		if (err != nullptr) {
+			*err = errno;
+		}
 	} else if (static_cast<size_t>(n) <= writable) {
 		has_written(n);
 	} else {
 		has_written(writable);
 		append(extrabuf, n - writable);
 	}
+
+	// FIXME: readv again.
 	// if (n == writable + sizeof extrabuf) {
 	// 	goto line_12;
 	// }
+	
 	return n;
 }
 

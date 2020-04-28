@@ -14,13 +14,6 @@
 
 namespace annety
 {
-namespace
-{
-const int kNew = -1;
-const int kAdded = 1;
-const int kDeleted = 2;
-}
-
 // the constants of poll(2) and epoll(4) are expected to be the same.
 static_assert(EPOLLIN == POLLIN,        "epoll uses same flag values as poll");
 static_assert(EPOLLPRI == POLLPRI,      "epoll uses same flag values as poll");
@@ -29,104 +22,94 @@ static_assert(EPOLLRDHUP == POLLRDHUP,  "epoll uses same flag values as poll");
 static_assert(EPOLLERR == POLLERR,      "epoll uses same flag values as poll");
 static_assert(EPOLLHUP == POLLHUP,      "epoll uses same flag values as poll");
 
+static_assert(EPOLL_CTL_ADD == kPollCtlAdd, "epoll uses same flag values as const");
+static_assert(EPOLL_CTL_DEL == kPollCtlDel, "epoll uses same flag values as const");
+static_assert(EPOLL_CTL_MOD == kPollCtlMod, "epoll uses same flag values as const");
+
+// epoll_create1() was added to the kernel in version 2.6.27. Library support 
+// is provided in glibc starting with version 2.9.
 EPollPoller::EPollPoller(EventLoop* loop)
 	: Poller(loop)
 	, epollfd_(::epoll_create1(EPOLL_CLOEXEC))
-	, events_(kInitEventListSize)
+	, active_events_(kInitEventListSize)
 {
-	CHECK(epollfd_ >= 0) << "epoll_create1 failed";
+	PCHECK(epollfd_ >= 0) << "epoll_create1 failed";
 }
 
 EPollPoller::~EPollPoller()
 {
-	CHECK(::close(epollfd_) == 0);
+	PCHECK(::close(epollfd_) == 0);
 }
 
 TimeStamp EPollPoller::poll(int timeout_ms, ChannelList* active_channels)
 {
 	Poller::check_in_own_loop();
 
-	LOG(TRACE) << "EPollPoller::poll is watching " << (long long)channels_.size() << " fd";
+	DLOG(TRACE) << "EPollPoller::poll is watching " 
+		<< static_cast<uint64_t>(channels_.size()) << " fd";
 	
 	ScopedClearLastError last_error;
 
-	int num = ::epoll_wait(epollfd_, events_.data(), events_.size(), timeout_ms);
-
+	// Get a list of all triggered IO events
+	int num = ::epoll_wait(epollfd_, active_events_.data(), active_events_.size(), timeout_ms);
 	TimeStamp curr(TimeStamp::now());
+	
 	if (num > 0) {
-		LOG(TRACE) << "EPollPoller::poll is having " << num << " events happened";
-
 		fill_active_channels(num, active_channels);
 
-		if (static_cast<size_t>(num) == events_.size()) {
-			events_.resize(events_.size()*2);
+		// Increase event queue length
+		if (static_cast<size_t>(num) == active_events_.size()) {
+			active_events_.resize(active_events_.size()*2);
 		}
 	} else if (num == 0) {
-		LOG(TRACE) << "EPollPoller::poll nothing was happened";
+		DLOG(TRACE) << "EPollPoller::poll nothing was happened";
 	} else {
 		// error happens
 		if (errno != EINTR) {
 			PLOG(ERROR) << "EPollPoller::poll a error was happened";
 		}
 	}
+
 	return curr;
-}
-
-void EPollPoller::fill_active_channels(int num, ChannelList* active_channels) const
-{
-	Poller::check_in_own_loop();
-
-	DCHECK(static_cast<size_t>(num) <= events_.size());
-	
-	for (int i = 0; i < num; ++i) {
-		Channel* channel = static_cast<Channel*>(events_[i].data.ptr);
-
-#if DCHECK_IS_ON()
-		int fd = channel->fd();
-		ChannelMap::const_iterator it = channels_.find(fd);
-		DCHECK(it != channels_.end());
-		DCHECK(it->second == channel);
-#endif	// DCHECK_IS_ON()
-		
-		channel->set_revents(events_[i].events);
-		active_channels->push_back(channel);
-	}
 }
 
 void EPollPoller::update_channel(Channel* channel)
 {
 	Poller::check_in_own_loop();
 
-	const int index = channel->index();
-	LOG(TRACE) << "EPollPoller::update_channel fd = " << channel->fd() 
-		<< " events = " << channel->events() << " index = " << index;
+	const int status = channel->status();
+	DLOG(TRACE) << "EPollPoller::update_channel fd = " << channel->fd() 
+		<< " events = " << channel->events() << " status = " << status;
 	
-	if (index == kNew || index == kDeleted) {
-		// a new one, add with EPOLL_CTL_ADD
-		int fd = channel->fd();
-		if (index == kNew) {
-			DCHECK(channels_.find(fd) == channels_.end());
-			channels_[fd] = channel;
+	if (status == kChannelPollInit || status == kChannelPollDeleted) {
+		// Add a new or re-add a deleted(Disabled event) channel,
+		if (status == kChannelPollInit) {
+			// Ensure the new one
+			DCHECK(channels_.find(channel->fd()) == channels_.end());
+			channels_[channel->fd()] = channel;
 		} else {
-			// index == kDeleted
-			DCHECK(channels_.find(fd) != channels_.end());
-			DCHECK(channels_[fd] == channel);
+			// Ensure the existing one
+			DCHECK(channels_.find(channel->fd()) != channels_.end());
+			DCHECK(channels_[channel->fd()] == channel);
 		}
 
-		channel->set_index(kAdded);
-		update(EPOLL_CTL_ADD, channel);
+		channel->set_status(kChannelPollAdded);
+		update_poll_events(kPollCtlAdd, channel);
 	} else {
-		// update existing one with EPOLL_CTL_MOD/DEL
-		int fd = channel->fd();
-		DCHECK(channels_.find(fd) != channels_.end());
-		DCHECK(channels_[fd] == channel);
-		DCHECK(index == kAdded);
+		// Update existing one
+		DCHECK(status == kChannelPollAdded);
+
+		// Ensure the existing one
+		DCHECK(channels_.find(channel->fd()) != channels_.end());
+		DCHECK(channels_[channel->fd()] == channel);
 
 		if (channel->is_none_event()) {
-			update(EPOLL_CTL_DEL, channel);
-			channel->set_index(kDeleted);
+			// Disabled event
+			update_poll_events(kPollCtlDel, channel);
+			channel->set_status(kChannelPollDeleted);
 		} else {
-			update(EPOLL_CTL_MOD, channel);
+			// Modify event
+			update_poll_events(kPollCtlMod, channel);
 		}
 	}
 }
@@ -136,58 +119,67 @@ void EPollPoller::remove_channel(Channel* channel)
 	Poller::check_in_own_loop();
 
 	int fd = channel->fd();
-	LOG(TRACE) << "PollPoller::remove_channel fd = " << fd;
+	DLOG(TRACE) << "EPollPoller::remove_channel fd = " << fd;
 
+	// Ensure the existing one
 	DCHECK(channels_.find(fd) != channels_.end());
 	DCHECK(channels_[fd] == channel);
 	DCHECK(channel->is_none_event());
 
-	int index = channel->index();
-	DCHECK(index == kAdded || index == kDeleted);
+	int status = channel->status();
+	DCHECK(status == kChannelPollAdded || status == kChannelPollDeleted);
 	
 	size_t n = channels_.erase(fd);
-	DCHECK(n == 1);
+	CHECK(n == 1);
 
-	if (index == kAdded) {
-		update(EPOLL_CTL_DEL, channel);
+	if (status == kChannelPollAdded) {
+		update_poll_events(kPollCtlDel, channel);
 	}
-	channel->set_index(kNew);
+	channel->set_status(kChannelPollInit);
 }
 
-void EPollPoller::update(int operation, Channel* channel)
+void EPollPoller::fill_active_channels(int num, ChannelList* active_channels) const
 {
+	Poller::check_in_own_loop();
+
+	DLOG(TRACE) << "EPollPoller::fill_active_channels is having " << num << " events happened";
+
+	CHECK(static_cast<size_t>(num) <= active_events_.size());
+	for (int i = 0; i < num; ++i) {
+		Channel* channel = static_cast<Channel*>(active_events_[i].data.ptr);
+
+#if DCHECK_IS_ON()
+		ChannelMap::const_iterator it = channels_.find(channel->fd());
+		DCHECK(it != channels_.end());
+		DCHECK(it->second == channel);
+#endif	// DCHECK_IS_ON()
+		
+		channel->set_revents(active_events_[i].events);
+		active_channels->push_back(channel);
+	}
+}
+
+void EPollPoller::update_poll_events(int operation, Channel* channel)
+{
+	Poller::check_in_own_loop();
+
 	struct epoll_event event;
 	::memset(&event, 0, sizeof event);
 	event.events = channel->events();
 	event.data.ptr = channel;
-	int fd = channel->fd();
 
-	LOG(TRACE) << "EPollPoller::update epoll_ctl op = " << operation_to_string(operation)
-		<< " fd = " << fd << " event = { " << channel->events_to_string() << " }";
+	DLOG(TRACE) << "EPollPoller::update_poll_events epoll_ctl op = " 
+		<< operation_to_string(operation) << " fd = " << channel->fd() 
+		<< " event = { " << channel->events_to_string() << " }";
 	
-	if (::epoll_ctl(epollfd_, operation, fd, &event) < 0) {
-		if (operation == EPOLL_CTL_DEL) {
-			LOG(ERROR) << "EPollPoller::update epoll_ctl op =" << operation_to_string(operation) 
-					<< " fd =" << fd;
+	if (::epoll_ctl(epollfd_, operation, channel->fd(), &event) < 0) {
+		if (operation == kPollCtlDel) {
+			LOG(ERROR) << "EPollPoller::update_poll_events epoll_ctl op =" 
+				<< operation_to_string(operation) << " fd =" << channel->fd();
 		} else {
-			LOG(FATAL) << "EPollPoller::update epoll_ctl op =" << operation_to_string(operation) 
-					<< " fd =" << fd;
+			LOG(FATAL) << "EPollPoller::update_poll_events epoll_ctl op =" 
+				<< operation_to_string(operation) << " fd =" << channel->fd();
 		}
-	}
-}
-
-const char* EPollPoller::operation_to_string(int op)
-{
-	switch (op) {
-	case EPOLL_CTL_ADD:
-		return "ADD";
-	case EPOLL_CTL_DEL:
-		return "DEL";
-	case EPOLL_CTL_MOD:
-		return "MOD";
-	default:
-		NOTREACHED();
-		return "Unknown Operation";
 	}
 }
 
@@ -197,7 +189,6 @@ const char* EPollPoller::operation_to_string(int op)
 namespace annety
 {
 // FIXME: suppression may cause "has no symbols" warnings for some compilers.
-// For example, MacOS
 void ALLOW_UNUSED_TYPE suppress_no_symbols_warning()
 {
 	NOTREACHED();

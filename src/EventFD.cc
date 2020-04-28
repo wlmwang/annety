@@ -14,8 +14,7 @@
 
 namespace annety
 {
-namespace internal
-{
+namespace internal {
 #if defined(OS_LINUX)
 int eventfd(bool nonblock, bool cloexec)
 {
@@ -64,15 +63,18 @@ EventFD::EventFD(bool nonblock, bool cloexec)
 	fd_ = internal::eventfd(nonblock, cloexec);
 #else
 	PCHECK(internal::pipe(fds_, nonblock, cloexec));
-	fd_ = fds_[0];	// for channel register readable event
+	// for channel, can register readable event.
+	fd_ = fds_[0];
 #endif
 	PCHECK(fd_ >= 0);
-	LOG(TRACE) << "EventFD::EventFD" << " fd=" << fd_ << " is constructing";
+	
+	DLOG(TRACE) << "EventFD::EventFD" << " fd=" << fd_ << " is constructing";
 }
 
 EventFD::~EventFD()
 {
 #if !defined(OS_LINUX)
+	// SelectableFD will close fds_[0] in destruct.
 	sockets::close(fds_[1]);
 #endif
 }

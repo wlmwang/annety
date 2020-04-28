@@ -6,7 +6,7 @@
 // Date: May 28 2019
 
 #include "PlatformThread.h"
-#include "build/CompilerSpecific.h"
+#include "Macros.h"
 #include "Logging.h"
 
 #include <unistd.h>		// getpid
@@ -21,16 +21,19 @@
 #include <sys/prctl.h>		// prctl
 #endif
 
+#include <string>
 #include <utility>	// std::move
 #include <memory>	// std::unique_ptr
-#include <string>
 
 namespace annety
 {
-namespace
+namespace {
+// It may not work before running the main() function.
+thread_local bool tls_is_main_thread{false};
+BEFORE_MAIN_EXECUTOR()
 {
-// default is the main thread
-thread_local bool tls_is_main_thread{true};
+	tls_is_main_thread = true;
+}
 
 struct ThreadParams
 {
@@ -45,21 +48,19 @@ public:
 // |params| -> ThreadParams
 void* thread_func(void* params)
 {
-	tls_is_main_thread = false;
+	CHECK(params);
 
-	DCHECK(params);
 	std::unique_ptr<ThreadParams> thread_params(static_cast<ThreadParams*>(params));
 
 	// start enter thread function
 	thread_params->thread_main_cb_();
 
-	::pthread_exit(0);
 	return nullptr;
 }
 
 bool create_thread(bool joinable, TaskCallback cb, ThreadRef* thread_ref)
 {
-	DCHECK(thread_ref);
+	CHECK(thread_ref);
 
 	pthread_attr_t attributes;
 	::pthread_attr_init(&attributes);
@@ -77,12 +78,12 @@ bool create_thread(bool joinable, TaskCallback cb, ThreadRef* thread_ref)
 	bool success = !err;
 	if (success) {
 		// ThreadParams should be deleted on the created thread after used.
-		IGNORE_UNUSED_RESULT(params.release());
+		ALLOW_UNUSED_RESULT(params.release());
 	} else {
 		// Value of |ref| is undefined if pthread_create fails.
 		ref = 0;
 		errno = err;
-		PLOG(ERROR) << "pthread_create";
+		DPLOG(ERROR) << "pthread_create";
 	}
 	*thread_ref = ThreadRef(ref);
 
@@ -91,40 +92,6 @@ bool create_thread(bool joinable, TaskCallback cb, ThreadRef* thread_ref)
 }
 
 }  // namespace anonymous
-
-// static
-ThreadId PlatformThread::current_id()
-{
-	// Pthreads doesn't have the concept of a thread ID, so we have to reach down
-	// into the kernel.
-#if defined(OS_MACOSX)
-	return pthread_mach_thread_np(::pthread_self());
-#elif defined(OS_LINUX)
-	return ::syscall(__NR_gettid);
-#elif defined(OS_SOLARIS)
-	return ::pthread_self();
-#elif defined(OS_POSIX)
-	return reinterpret_cast<int64_t>(::pthread_self());
-#endif
-}
-
-// static
-ThreadRef PlatformThread::current_ref()
-{
-	return ThreadRef(::pthread_self());
-}
-
-// static
-bool PlatformThread::is_main_thread()
-{
-	return tls_is_main_thread;
-}
-
-// static
-void PlatformThread::yield_current_thread()
-{
-	::sched_yield();
-}
 
 // static
 void PlatformThread::sleep(TimeDelta duration)
@@ -159,31 +126,69 @@ bool PlatformThread::create_non_joinable(TaskCallback cb)
 // static
 void PlatformThread::join(ThreadRef thread_ref)
 {
-	CHECK_EQ(0, pthread_join(thread_ref.ref(), nullptr));
+	CHECK_EQ(0, ::pthread_join(thread_ref.ref(), nullptr));
 }
 
 // static
 void PlatformThread::detach(ThreadRef thread_ref)
 {
-	CHECK_EQ(0, pthread_detach(thread_ref.ref()));
+	CHECK_EQ(0, ::pthread_detach(thread_ref.ref()));
 }
 
-#if defined(OS_MACOSX)
+// static
+void PlatformThread::yield_current_thread()
+{
+	::sched_yield();
+}
+
+// static
+bool PlatformThread::is_main_thread()
+{
+	return tls_is_main_thread;
+}
+
+// static
+ThreadRef PlatformThread::current_ref()
+{
+	return ThreadRef(::pthread_self());
+}
+
+// static
+ThreadId PlatformThread::current_id()
+{
+#if defined(OS_LINUX)
+	// Pthreads doesn't have the concept of a thread ID, so we have to 
+	// reach down into the kernel.
+	return ::syscall(__NR_gettid);
+#elif defined(OS_MACOSX)
+	// To type mach_port_t.
+	return pthread_mach_thread_np(::pthread_self());
+#elif defined(OS_SOLARIS)
+	// Type pthread_t is a unsigned int on Solaris(same as Linux).
+	// such as: typedef unsigned long int pthread_t; // Linux
+	return ::pthread_self();
+#elif defined(OS_POSIX)
+	// Type pthread_t is a pointer to the pthread struct.
+	// such as: typedef struct pthread* pthread_t; // OpenBSD
+	return reinterpret_cast<int64_t>(::pthread_self());
+#else
+#error Do not support your os platform in PlatformThread.h
+#endif
+}
+
 // static
 void PlatformThread::set_name(const std::string& name)
 {
+#if defined(OS_MACOSX)
 	// Mac OS X does not expose the length limit of the name, so
 	// hardcode it.
 	const int kMaxNameLength = 63;
 	std::string shortened_name = name.substr(0, kMaxNameLength);
 	// pthread_setname() fails (harmlessly) in the sandbox, ignore when it does.
-	// See http://crbug.com/47058
+	// see http://crbug.com/47058
 	::pthread_setname_np(shortened_name.c_str());
-}
-#else
-// static
-void PlatformThread::set_name(const std::string& name)
-{
+#elif defined(OS_LINUX)
+	// main thread.
 	if (PlatformThread::current_id() == ::getpid() || name.empty()) {
 		return;
 	}
@@ -197,9 +202,11 @@ void PlatformThread::set_name(const std::string& name)
 
 	// We expect EPERM failures in sandboxed processes, just ignore those.
 	if (err < 0 && errno != EPERM) {
-		DPLOG(ERROR) << "prctl(PR_SET_NAME)";
+		PLOG(ERROR) << "prctl(PR_SET_NAME)";
 	}
+#else
+	// FIXME: TODO
+#endif	// defined(OS_POSIX)
 }
-#endif
 
 }	// namespace annety

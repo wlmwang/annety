@@ -46,7 +46,7 @@ ThreadPool& ThreadPool::start()
 void ThreadPool::stop()
 {
 	// tell all threads to quit their tasker loop.
-	CHECK(running_ == true) 
+	DCHECK(running_) 
 		<< "ThreadPool::stop is calling with no outstanding threads";
 	{
 		AutoLock locked(lock_);
@@ -64,7 +64,7 @@ void ThreadPool::stop()
 
 void ThreadPool::joinall()
 {
-	CHECK(running_ == true) 
+	DCHECK(running_) 
 		<< "ThreadPool::join_all is calling with no outstanding threads.";
 
 	// Tell all our threads to quit their worker loop.
@@ -94,8 +94,8 @@ bool ThreadPool::full() const
 
 void ThreadPool::run_task(const TaskCallback& cb, int repeat_count)
 {
-	DCHECK(running_ == true) << 
-		"ThreadPool::run_task is calling with no outstanding threads";
+	DCHECK(running_) 
+		<< "ThreadPool::run_task is calling with no outstanding threads";
 
 	if (threads_.empty()) {
 		while (repeat_count-- > 0) {

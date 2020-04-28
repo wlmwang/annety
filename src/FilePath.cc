@@ -11,10 +11,10 @@
 #include "strings/StringPiece.h"
 #include "strings/StringUtil.h"
 
-#include <string.h>		// strcasecmp
 #include <string>
 #include <vector>
 #include <ostream>
+#include <string.h>	// strcasecmp
 
 namespace annety
 {

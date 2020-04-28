@@ -16,6 +16,26 @@
 
 namespace annety
 {
+// A file descriptor that can be used to accept signals targeted at the caller.
+//
+// This provides an alternative to the use of a signal handler or sigwaitinfo(2),
+// and has the advantage that the file descriptor may be monitored by select(2), 
+// poll(2), and epoll(7).
+//
+// On the Linux platform, If one or more of the signals specified in mask is 
+// pending for the process, then the buffer supplied to read(2) is used to 
+// return one or more signalfd_siginfo structures that describe the signals 
+// into `signalfd`(file descriptor).  On non-Linux platforms, pipe will be 
+// used to simulate `signalfd` (signal triggered by `sigaction`).
+//
+// Linux:
+// The fds_ attribute is a file descriptor created by ::signalfd() - Linux 2.6.26.
+// fds_ is output, it will be monitored by the channel for readable events.
+// fds_ is input, it will be sync written by external when the event is triggered.
+//
+// Others:
+// Use EventFD to simulate signalfd. Provide the same accept signals notification 
+// that can pass the file descriptor.
 class SignalFD : public SelectableFD
 {
 public:
@@ -29,14 +49,10 @@ public:
 	virtual ssize_t read(void *buf, size_t len) override;
 	virtual ssize_t write(const void *buf, size_t len) override;
 
+	void signal_revert();
 	void signal_add(int signo);
 	void signal_delete(int signo);
-	void signal_revert();
-
 	int signal_ismember(int signo);
-	
-	// ::sigisemptyset() is GNU platform's interface
-	// int signal_isemptyset();
 
 private:
 	sigset_t sigset_;
@@ -49,7 +65,7 @@ private:
 
 	SignalSet signo_;
 	std::unique_ptr<SelectableFD> ev_;
-#endif
+#endif	// !defined(OS_LINUX)
 
 	DISALLOW_COPY_AND_ASSIGN(SignalFD);
 };

@@ -1,4 +1,10 @@
-src/ar/*.o
-src/ld/*.o
-libannety*
+# for Compile
+*.o
+*.a
+
+# for debug
 core
+
+# for CodeBlocks
+bin/
+obj/

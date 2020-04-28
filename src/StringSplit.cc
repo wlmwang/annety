@@ -109,7 +109,7 @@ bool append_string_key_value(StringPiece input,
 	// Find the delimiter.
 	size_t end_key_pos = input.find_first_of(delimiter);
 	if (end_key_pos == std::string::npos) {
-		DLOG(WARNING) << "cannot find delimiter in: " << input;
+		LOG(WARNING) << "cannot find delimiter in: " << input;
 		return false;    // No delimiter.
 	}
 	input.substr(0, end_key_pos).copy_to_string(&result_pair.first);
@@ -118,7 +118,7 @@ bool append_string_key_value(StringPiece input,
 	StringPiece remains = input.substr(end_key_pos, input.size() - end_key_pos);
 	size_t begin_value_pos = remains.find_first_not_of(delimiter);
 	if (begin_value_pos == StringPiece::npos) {
-		DLOG(WARNING) << "cannot parse value from input: " << input;
+		LOG(WARNING) << "cannot parse value from input: " << input;
 		return false;   // No value.
 	}
 	remains.substr(begin_value_pos, remains.size() - begin_value_pos)

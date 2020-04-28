@@ -117,7 +117,7 @@ std::string safe_strerror(int err)
 
 namespace
 {
-const size_t ERROR_BUFSIZE = 64;
+const size_t ERROR_BUFSIZE = 256;
 thread_local char tls_error_buf[ERROR_BUFSIZE];
 }	// namespace anonymous
 

@@ -3,11 +3,14 @@
 
 #include "synchronization/CountDownLatch.h"
 #include "TimeStamp.h"
+#include "Logging.h"
 
 namespace annety
 {
-CountDownLatch::CountDownLatch(int count) 
-	: count_(count) {}
+CountDownLatch::CountDownLatch(int count) : count_(count)
+{
+	CHECK_GT(count, 0);
+}
 
 int CountDownLatch::get_count() const
 {

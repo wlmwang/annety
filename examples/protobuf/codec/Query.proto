@@ -1,0 +1,28 @@
+// By: wlmwang
+// Date: Oct 12 2019
+
+syntax ="proto3";
+
+package examples.protobuf.codec;
+
+message Query
+{
+	int64 id = 1;
+	string questioner = 2;
+
+	repeated string question = 3;
+}
+
+message Answer
+{
+	int64 id = 1;
+	string questioner = 2;
+	string answerer = 3;
+
+	repeated string solution = 4;
+}
+
+message Empty
+{
+	int32 id = 1;
+}

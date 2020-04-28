@@ -6,7 +6,8 @@
 #include "SocketsUtil.h"
 #include "Logging.h"
 
-#include <netdb.h>	// struct hostent
+#include <netdb.h>	// getaddrinfo,freeaddrinfo,struct addrinfo
+#include <string.h>	// memset
 
 namespace annety
 {
@@ -51,26 +52,30 @@ namespace annety
 static const in_addr_t kInaddrAny = INADDR_ANY;
 static const in_addr_t kInaddrLoopback = INADDR_LOOPBACK;
 
+static_assert(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr_in6, sin6_family), 
+	"sin[6]_family offset illegal");
+static_assert(offsetof(sockaddr_in, sin_port) == offsetof(sockaddr_in6, sin6_port), 
+	"sin[6]_port offset illegal");
 static_assert(sizeof(EndPoint) == sizeof(struct sockaddr_in6),
-			"EndPoint is same size as sockaddr_in6");
+	"EndPoint is same size as sockaddr_in6");
 
 EndPoint::EndPoint(uint16_t port, bool loopback_only, bool ipv6)
 {
-	static_assert(offsetof(EndPoint, addr6_) == 0, "addr6_ offset 0");
 	static_assert(offsetof(EndPoint, addr_) == 0, "addr_ offset 0");
+	static_assert(offsetof(EndPoint, addr6_) == 0, "addr6_ offset 0");
 
 	if (ipv6) {
 		::memset(&addr6_, 0, sizeof addr6_);
 		addr6_.sin6_family = AF_INET6;
 		in6_addr ip = loopback_only ? in6addr_loopback : in6addr_any;
 		addr6_.sin6_addr = ip;
-		addr6_.sin6_port = host_to_net16(port);
+		addr6_.sin6_port = host_to_net16(port);		// ::htons()
 	} else {
 		::memset(&addr_, 0, sizeof addr_);
 		addr_.sin_family = AF_INET;
 		in_addr_t ip = loopback_only ? kInaddrLoopback : kInaddrAny;
-		addr_.sin_addr.s_addr = host_to_net32(ip);
-		addr_.sin_port = host_to_net16(port);
+		addr_.sin_addr.s_addr = host_to_net32(ip);	// ::htonl()
+		addr_.sin_port = host_to_net16(port);		// ::htons()
 	}
 }
 
@@ -87,59 +92,74 @@ EndPoint::EndPoint(const StringPiece& ip, uint16_t port, bool ipv6)
 
 const struct sockaddr* EndPoint::get_sockaddr() const
 {
+	static_assert(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr, sa_family), 
+		"sin_family offset illegal");
+	static_assert(offsetof(sockaddr_in6, sin6_family) == offsetof(sockaddr, sa_family), 
+		"sin6_family offset illegal");
+
 	return sockets::sockaddr_cast(&addr6_);
 }
 
 std::string EndPoint::to_ip_port() const
 {
-	char buf[64] = "";
-	sockets::to_ip_port(buf, sizeof buf, get_sockaddr());
-	return buf;
+	char buffer[64] = "";
+	sockets::to_ip_port(get_sockaddr(), buffer, sizeof buffer);
+	return buffer;
 }
 
 std::string EndPoint::to_ip() const
 {
-	char buf[64] = "";
-	sockets::to_ip(buf, sizeof buf, get_sockaddr());
-	return buf;
+	char buffer[64] = "";
+	sockets::to_ip(get_sockaddr(), buffer, sizeof buffer);
+	return buffer;
 }
 
 uint16_t EndPoint::to_port() const
 {
-	return net_to_host16(addr_.sin_port);
+	static_assert(offsetof(sockaddr_in, sin_port) == offsetof(sockaddr_in6, sin6_port), 
+		"sin[6]_port offset illegal");
+
+	return net_to_host16(addr_.sin_port);	// ::ntohs()
 }
 
-uint32_t EndPoint::ip_net_endian() const
+sa_family_t EndPoint::family() const
 {
-	DCHECK(family() == AF_INET);
-	return addr_.sin_addr.s_addr;
+	static_assert(offsetof(sockaddr_in, sin_family) == offsetof(sockaddr_in6, sin6_family), 
+		"sin[6]_family offset illegal");
+
+	return addr_.sin_family;
 }
 
-#if defined(OS_LINUX)
-static thread_local char tls_resolve_buffer[64 * 1024];
-bool EndPoint::resolve(const StringPiece& hostname, EndPoint* out)
+bool EndPoint::resolve(const StringPiece& node, const StringPiece& service, EndPoint* dst)
 {
-	CHECK(out != nullptr);
+	struct addrinfo *res = nullptr;
+	struct addrinfo hints;
+	::memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;		// any address family. AF_INET/AF_INET6/...
+	hints.ai_socktype = SOCK_STREAM;	// 0: any type. SOCK_STREAM/SOCK_DGRAM
+	hints.ai_protocol = IPPROTO_IP;		// 0: any protocol. IPPROTO_IP = IPv4/IPv6
 
-	struct hostent hent;
-	struct hostent* he = nullptr;
-	int herrno = 0;
-	::memset(&hent, 0, sizeof(hent));
+	// Returns one or more addrinfo structures, each of which contains an Internet 
+	// address that can be specified in a call to bind(2) or connect(2).
+	int rt = ::getaddrinfo(node.as_string().c_str(), 
+							service.as_string().c_str(), 
+							&hints, &res);
 
-	int ret = ::gethostbyname_r(hostname.as_string().c_str(), &hent, 
-								tls_resolve_buffer, sizeof tls_resolve_buffer, 
-								&he, &herrno);
-	PLOG_IF(ERROR, ret < 0) << "::gethostbyname_r failed";
+	PLOG_IF(ERROR, rt != 0) << "::getaddrinfo failed";
 
-	if (ret == 0 && he != nullptr) {
-		CHECK(he->h_addrtype == AF_INET && he->h_length == sizeof(uint32_t));
-
-		out->addr_.sin_family = AF_INET;
-		out->addr_.sin_addr = *reinterpret_cast<struct in_addr*>(he->h_addr);
-		return true;
+	// Only get the first one, `res->ai_next` is ignored.
+	if (rt == 0 && res != nullptr) {
+		if (res->ai_family == AF_INET) {
+			::memcpy(&dst->addr_, res->ai_addr, res->ai_addrlen);
+		} else if (res->ai_family == AF_INET6) {
+			::memcpy(&dst->addr6_, res->ai_addr, res->ai_addrlen);
+		} else {
+			NOTREACHED();
+		}
 	}
-	return false;
+	::freeaddrinfo(res);
+
+	return rt == 0;
 }
-#endif	// defined(OS_LINUX)
 
 }	// namespace annety

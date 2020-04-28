@@ -14,6 +14,8 @@ EventLoopPool::EventLoopPool(EventLoop* loop, const std::string& name)
 	: owner_loop_(loop)
 	, name_(name)
 {
+	CHECK(loop);
+	
 	LOG(DEBUG) << "EventLoopPool::EventLoopPool is called by thread " 
 		<< PlatformThread::current_ref().ref()
 		<< ", name is " << name_
@@ -30,8 +32,8 @@ EventLoopPool::~EventLoopPool()
 void EventLoopPool::start(const ThreadInitCallback& cb)
 {
 	owner_loop_->check_in_own_loop();
+	
 	DCHECK(!started_);
-
 	started_ = true;
 
 	for (int i = 0; i < num_threads_; ++i) {

@@ -54,19 +54,22 @@ Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport)
 	, listen_channel_(new Channel(owner_loop_, listen_socket_.get()))
 	, idle_fd_(::open("/dev/null", O_RDONLY | O_CLOEXEC))
 {
-	LOG(TRACE) << "Acceptor::Acceptor the [" <<  addr.to_ip_port() << "] of"
+	CHECK(loop);
+	
+	DLOG(TRACE) << "Acceptor::Acceptor the [" <<  addr.to_ip_port() << "] of"
 		<< " fd=" << listen_socket_->internal_fd() << " is constructing";
 
+	// socket bind().
 	internal::set_reuse_addr(*listen_socket_, true);
 	internal::set_reuse_port(*listen_socket_, reuseport);
 	internal::bind(*listen_socket_, addr);
-	
+
 	listen_channel_->set_read_callback(std::bind(&Acceptor::handle_read, this));
 }
 
 Acceptor::~Acceptor()
 {
-	LOG(TRACE) << "Acceptor::~Acceptor" << " fd=" 
+	DLOG(TRACE) << "Acceptor::~Acceptor" << " fd=" 
 		<< listen_socket_->internal_fd() << " is destructing";
 	
 	listen_channel_->disable_all_event();
@@ -77,6 +80,7 @@ void Acceptor::listen()
 {
 	owner_loop_->check_in_own_loop();
 	
+	// socket listen().
 	listen_ = true;
 	internal::listen(*listen_socket_);
 	listen_channel_->enable_read_event();
@@ -86,25 +90,28 @@ void Acceptor::handle_read()
 {
 	owner_loop_->check_in_own_loop();
 
-	EndPoint peeraddr;
+	EndPoint peeraddr;	// client's EndPoint
 	int connfd = internal::accept(*listen_socket_, peeraddr);
 	if (connfd >= 0) {
-		LOG(TRACE) << "Acceptor::handle_read the peer " << peeraddr.to_ip_port() 
-				<< " fd " << connfd << " is accepting";
+		DLOG(TRACE) << "Acceptor::handle_read the peer " << peeraddr.to_ip_port() 
+				<< ", fd " << connfd << " is accepting";
 
-		// make a new connection sock of socketFD
+		// Make a new connection sock of socketFD.  `sockfd` is a smart point 
+		// of std::unique_ptr.
 		SelectableFDPtr sockfd(new SocketFD(connfd));
 		if (new_connect_cb_) {
 			new_connect_cb_(std::move(sockfd), peeraddr);
+		} else {
+			// `sockfd` is std::unique_ptr, so no need to delete or close(fd) here.
 		}
-		// sockfd is unique_ptr, so no need to delete or close(fd) here
 	} else {
-		PLOG(ERROR) << "Acceptor::handle_read has failed";
+		PLOG(ERROR) << "Acceptor::handle_read was failed";
 
-		// Read the section named "The special problem of
-		// accept()ing when you can't" in libev's doc.
+		// Read the section named "The special problem of accept()ing when you 
+		// can't" in libev's doc.
 		// By Marc Lehmann, author of libev.
 		if (errno == EMFILE) {
+			// the file descriptor is exhausted.
 			DPCHECK(::close(idle_fd_) == 0);
 			DPCHECK(::close(::accept(listen_socket_->internal_fd(), NULL, NULL)) == 0);
 			idle_fd_ = ::open("/dev/null", O_RDONLY | O_CLOEXEC);

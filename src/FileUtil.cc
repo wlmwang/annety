@@ -18,10 +18,10 @@
 
 #include <algorithm>	// std::min
 #include <fstream>		// ifstream
-#include <fcntl.h>		// fcntl,O_NONBLOCK
 #include <limits>		// numeric_limits<size_t>
 #include <string>		// std::string,std::getline
 #include <string.h>		// memcmp
+#include <fcntl.h>		// fcntl,O_NONBLOCK
 #include <stdio.h>		// fread,feof,ferror,ftell,fileno
 #include <stddef.h>
 

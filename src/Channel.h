@@ -17,10 +17,13 @@ namespace annety
 class EventLoop;
 class SelectableFD;
 
-// a selectable I/O channel
+// A selectable IO channel.
+// It acts as a combination of EventLoop and file descriptor.  It saves the events 
+// that the file descriptor is monitored and the events it is being triggered.
 //
-// this class does not owns any life-time of file descriptor.
-// the wrapped file descriptor may be a socket, eventfd, timerfd or signalfd
+// This class does not owns the EventLoop and SelectableFD lifetime.
+// File descriptor was wrapped which could be a socket, eventfd, timerfd or signalfd.
+// *Not thread safe*, but they are all called in the own loop.
 class Channel
 {
 public:
@@ -43,18 +46,14 @@ public:
 	{
 		error_cb_ = std::move(cb);
 	}
-
-	// internal interface---------------------------------
 	
 	Channel(EventLoop* loop, SelectableFD* sfd);
 	~Channel();
 
 	int fd() const;
-
-	int events() const { return events_;}
-
 	void set_revents(int revt) { revents_ = revt;}
 	int revents() const { return revents_;}
+	int events() const { return events_;}
 
 	bool is_none_event() const { return events_ == kNoneEvent;}
 	bool is_write_event() const { return events_ & kWriteEvent;}
@@ -86,22 +85,23 @@ public:
 		update();
 	}
 
-	// for Poller
-	int index() { return index_;}
-	void set_index(int idx) { index_ = idx;}
+	// For Poller to update_channel/remove_channel.
+	int status() { return status_;}
+	void set_status(int status) { status_ = status;}
 
-	// for EventLoop
-	void handle_event(TimeStamp receive_tm);
+	// For EventLoop to handle the actived channels.
+	void handle_event(TimeStamp received_ms);
 	EventLoop* owner_loop() { return owner_loop_;}
-	
-	// for debug
+
+	// For EventLoop to update the IO events (events_) of this channel.
+	void remove();
+	void update();
+
+	// For debug
 	std::string revents_to_string() const;
 	std::string events_to_string() const;
 
-	void remove();
-
 private:
-	void update();
 	static std::string events_to_string(int fd, int ev);
 
 	static const int kNoneEvent;
@@ -112,15 +112,13 @@ private:
 	EventLoop* owner_loop_{nullptr};
 	SelectableFD* select_fd_{nullptr};
 	
+	int status_{0};
 	int	events_{0};
 	int revents_{0};
 
-	bool logging_hup_{true};
-	bool event_handling_{false};
 	bool added_to_loop_{false};
-
-	// update() event type
-	int index_{-1};
+	bool handling_event_{false};
+	bool logging_hup_{true};
 
 	ReadEventCallback read_cb_;
 	EventCallback write_cb_;

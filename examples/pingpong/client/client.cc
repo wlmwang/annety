@@ -12,6 +12,9 @@
 #include <stdio.h>
 
 using namespace annety;
+using std::placeholders::_1;
+using std::placeholders::_2;
+using std::placeholders::_3;
 
 class Client;
 
@@ -28,20 +31,19 @@ public:
 
 		client_->set_connect_callback(
 			std::bind(&Session::on_connect, this, _1));
+		client_->set_close_callback(
+			std::bind(&Session::on_close, this, _1));
 		client_->set_message_callback(
 			std::bind(&Session::on_message, this, _1, _2, _3));
-		client_->set_error_callback(
-			std::bind(&Session::on_error, this));
 	}
 
-	void start()
+	void connect()
 	{
 		client_->connect();
 	}
-
-	void stop()
+	void disconnect()
 	{
-		client_->stop();
+		client_->disconnect();
 	}
 
 	int64_t bytes_read() const
@@ -57,7 +59,7 @@ public:
 private:
 	void on_connect(const TcpConnectionPtr& conn);
 	
-	void on_error();
+	void on_close(const TcpConnectionPtr& conn);
 
 	void on_message(const TcpConnectionPtr& conn, NetBuffer* buf, TimeStamp)
 	{
@@ -110,7 +112,8 @@ public:
 		for (int i = 0; i < session_count; ++i) {
 			std::string name = string_printf("SESSION-%05d", i);
 			Session* session = new Session(thread_pool_.get_next_loop(), addr, name, this);
-			session->start();
+			session->connect();
+
 			sessions_.emplace_back(session);
 		}
 	}
@@ -120,17 +123,18 @@ public:
 		return message_;
 	}
 
-	void on_connect()
+	void do_connect()
 	{
 		if (++num_connected_ == session_count_) {
-			LOG(WARNING) << "all connected";
+			LOG(INFO) << "all connected";
 		}
 	}
 
-	void on_disconnect(const TcpConnectionPtr& conn)
+	void do_disconnect(const TcpConnectionPtr& conn)
 	{
+		// Called in the `conn` loop thread.
 		if (--num_connected_ == 0) {
-			LOG(WARNING) << "all disconnected";
+			LOG(INFO) << "all disconnected";
 
 			int64_t total_bytes_read = 0;
 			int64_t total_messages_read = 0;
@@ -138,34 +142,27 @@ public:
 				total_bytes_read += session->bytes_read();
 				total_messages_read += session->messages_read();
 			}
-			LOG(WARNING) << total_bytes_read << " total bytes read";
-			LOG(WARNING) << total_messages_read << " total messages read";
+			LOG(INFO) << total_bytes_read << " total bytes read";
+			LOG(INFO) << total_messages_read << " total messages read";
 			
 			// statistics
-			LOG(WARNING) << static_cast<double>(total_bytes_read) / total_messages_read
+			LOG(INFO) << static_cast<double>(total_bytes_read) / total_messages_read
 				<< " average message size";
-			LOG(WARNING) << static_cast<double>(total_bytes_read) / (timeout_ * 1024 * 1024)
+			LOG(INFO) << static_cast<double>(total_bytes_read) / (timeout_ * 1024 * 1024)
 				<< " MiB/s throughput";
 			
+			// Quit the main event loop.
 			loop_->quit();
-		}
-	}
-
-	void quit()
-	{
-		if (--num_connected_ <= 0) {
-			// FIXME
-			// loop_->quit();
 		}
 	}
 
 private:
 	void handle_timeout()
 	{
-		// called in main thread(main EventLoop timer)
-		LOG(WARNING) << "stop all sessions";
+		// Called in main thread(main EventLoop timer)
+		LOG(INFO) << "stop all sessions";
 		for (auto& session : sessions_) {
-			session->stop();
+			session->disconnect();
 		}
 	}
 
@@ -180,28 +177,27 @@ private:
 	std::vector<std::unique_ptr<Session>> sessions_;
 };
 
-void Session::on_error()
+void Session::on_close(const TcpConnectionPtr& conn)
 {
-	owner_->quit();
+	LOG(INFO) << conn->name() << " has disconnected";	
+	
+	owner_->do_disconnect(conn);
 }
 
 void Session::on_connect(const TcpConnectionPtr& conn)
 {
-	if (conn->connected()) {
-		LOG(WARNING) << conn->name() << " has connected";
+	LOG(INFO) << conn->name() << " has connected";
 
-		conn->set_tcp_nodelay(true);
-		conn->send(owner_->message());
-		owner_->on_connect();
-	} else {
-		LOG(WARNING) << conn->name() << " has disconnected";
-		
-		owner_->on_disconnect(conn);
-	}
+	conn->set_tcp_nodelay(true);
+	conn->send(owner_->message());
+
+	owner_->do_connect();
 }
 
 int main(int argc, char* argv[])
 {
+	//set_min_log_severity(LOG_DEBUG);
+
 	if (argc < 5) {
 		fprintf(stderr, "Usage: client <threads> <sessions>");
 		fprintf(stderr, " <blocksize> <time>\n");
@@ -222,13 +218,11 @@ int main(int argc, char* argv[])
 
 		// control timeout callback(main EventLoop)
 		EventLoop loop;
-		EndPoint saddr(1669);
 
-		set_min_log_severity(LOG_DEBUG);
-
-		Client client(&loop, saddr, block_size, session_count, timeout, threads);
+		Client client(&loop, EndPoint(1669), block_size, session_count, timeout, threads);
+		
 		loop.loop();
 
-		LOG(WARNING) << "PingPong client finish";
+		LOG(INFO) << "PingPong client finish";
 	}
 }

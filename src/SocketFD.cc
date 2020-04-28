@@ -10,7 +10,7 @@ namespace annety
 SocketFD::SocketFD(sa_family_t family, bool nonblock, bool cloexec)
 {
 	fd_ = sockets::socket(family, nonblock, cloexec);
-	DCHECK(fd_ >= 0);
+	CHECK(fd_ >= 0);
 }
 
 }	// namespace annety

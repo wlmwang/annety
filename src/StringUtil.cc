@@ -343,16 +343,17 @@ StringPiece trim_whitespace(StringPiece input, TrimPositions positions) {
 	return trim_string_piece_T(input, StringPiece(kWhitespace), positions);
 }
 
-namespace
-{
+namespace {
 inline typename std::string::value_type* write_into_T(std::string* str,
 													  size_t length_with_null) {
-	DCHECK_GT(length_with_null, 1u);
+	CHECK_GT(length_with_null, 1u);
+
 	str->reserve(length_with_null);
 	str->resize(length_with_null - 1);
+	
+	// FIXME: str.data();
 	return &((*str)[0]);
 }
-
 }	// namespace anonymous
 
 char* write_into(std::string* str, size_t length_with_null)
