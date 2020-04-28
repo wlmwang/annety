@@ -17,7 +17,7 @@ class ChargenServer
 public:
 	ChargenServer(annety::EventLoop* loop, const annety::EndPoint& addr, bool print = true);
 
-	void start();
+	void listen();
 
 private:
 	void on_connect(const annety::TcpConnectionPtr& conn);

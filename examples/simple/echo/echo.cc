@@ -20,9 +20,9 @@ EchoServer::EchoServer(annety::EventLoop* loop, const annety::EndPoint& addr)
 		std::bind(&EchoServer::on_message, this, _1, _2, _3));
 }
 
-void EchoServer::start()
+void EchoServer::listen()
 {
-	server_->start();
+	server_->listen();
 }
 
 void EchoServer::on_connect(const annety::TcpConnectionPtr& conn)
@@ -40,13 +40,13 @@ void EchoServer::on_close(const annety::TcpConnectionPtr& conn)
 }
 
 void EchoServer::on_message(const annety::TcpConnectionPtr& conn,
-		annety::NetBuffer* buf, annety::TimeStamp time)
+		annety::NetBuffer* buf, annety::TimeStamp receive)
 
 {
 	std::string message(buf->taken_as_string());
 	
 	LOG(INFO) << conn->name() << " echo " << static_cast<int>(message.size()) << " bytes, "
-		<< "data received at " << time;
+		<< "data received at " << receive;
 
 	conn->send(message);
 }

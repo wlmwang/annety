@@ -43,20 +43,20 @@ public:
 			)
 		)
 	{
-		LOG(TRACE) << "ProtorpcChannel::ProtorpcChannel - " << this;
+		DLOG(TRACE) << "ProtorpcChannel::ProtorpcChannel - " << this;
 
 		using std::placeholders::_1;
 		using std::placeholders::_2;
 		using std::placeholders::_3;
 
 		// Register protobuf bytes dispatcher - for protobuf rpc protocol.
-		dispatch_.listen<ProtorpcMessage>(
+		dispatch_.add<ProtorpcMessage>(
 			std::bind(&ProtorpcChannel::dispatch, this, _1, _2, _3));
 	}
 
 	virtual ~ProtorpcChannel() override
 	{
-		LOG(TRACE) << "ProtorpcChannel::~ProtorpcChannel - " << this;
+		DLOG(TRACE) << "ProtorpcChannel::~ProtorpcChannel - " << this;
 		
 		for (const auto& outstanding : outstandings_) {
 			OutstandingCall out = outstanding.second;
@@ -66,7 +66,7 @@ public:
 
 	// Register protorpc service impl.
 	// *Not thread safe*, but usually be called before server start().
-	void listen(::google::protobuf::Service* service)
+	void add(::google::protobuf::Service* service)
 	{
 		CHECK(service);
 
@@ -105,8 +105,8 @@ public:
 	void recv(const TcpConnectionPtr& conn, NetBuffer* buff, TimeStamp receive)
 	{
 		CHECK(conn == conn_);
-		codec_.recv(conn_, buff, receive);
 
+		codec_.recv(conn_, buff, receive);
 		// Then the `ProtorpcChannel::dispatch` will be called.
 	}
 

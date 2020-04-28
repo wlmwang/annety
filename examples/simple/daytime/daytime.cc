@@ -21,9 +21,9 @@ DaytimeServer::DaytimeServer(annety::EventLoop* loop, const annety::EndPoint& ad
 		std::bind(&DaytimeServer::on_message, this, _1, _2, _3));
 }
 
-void DaytimeServer::start()
+void DaytimeServer::listen()
 {
-	server_->start();
+	server_->listen();
 }
 
 void DaytimeServer::on_connect(const annety::TcpConnectionPtr& conn)
@@ -48,11 +48,11 @@ void DaytimeServer::on_close(const annety::TcpConnectionPtr& conn)
 }
 
 void DaytimeServer::on_message(const annety::TcpConnectionPtr& conn,
-		annety::NetBuffer* buf, annety::TimeStamp time)
+		annety::NetBuffer* buf, annety::TimeStamp receive)
 
 {
 	std::string message(buf->taken_as_string());
 	
 	LOG(INFO) << conn->name() << " daytime " << static_cast<int>(message.size()) << " bytes, "
-		<< "data received at " << time;
+		<< "data received at " << receive;
 }

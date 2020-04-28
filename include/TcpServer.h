@@ -35,8 +35,8 @@ public:
 	
 	~TcpServer();
 
-	// Starts the server if it's not listenning.
-	void start();
+	// The server starts listening, only the first call has effect.
+	void listen();
 
 	const std::string& name() const { return name_; }
 	const std::string& ip_port() const { return ip_port_; }
@@ -51,9 +51,9 @@ public:
 	//
 	// NOTICE: Accepts new connection always in owner_loop_'s thread.
 	//
-	// *Not thread safe*, but usually be called before start().
+	// *Not thread safe*, but usually be called before listen().
 	void set_thread_num(int num_threads);
-	// *Not thread safe*, but usually be called before start().
+	// *Not thread safe*, but usually be called before listen().
 	void set_thread_init_callback(ThreadInitCallback cb)
 	{
 		thread_init_cb_ = std::move(cb);
@@ -61,7 +61,7 @@ public:
 
 	// User registered callback functions.
 
-	// *Not thread safe*, but usually be called before start().
+	// *Not thread safe*, but usually be called before listen().
 	void set_connect_callback(ConnectCallback cb)
 	{
 		connect_cb_ = std::move(cb);
@@ -70,12 +70,12 @@ public:
 	{
 		close_cb_ = std::move(cb);
 	}
-	// *Not thread safe*, but usually be called before start().
+	// *Not thread safe*, but usually be called before listen().
 	void set_message_callback(MessageCallback cb)
 	{
 		message_cb_ = std::move(cb);
 	}
-	// *Not thread safe*, but usually be called before start().
+	// *Not thread safe*, but usually be called before listen().
 	void set_write_complete_callback(WriteCompleteCallback cb)
 	{
 		write_complete_cb_ = std::move(cb);

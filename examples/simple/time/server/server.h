@@ -13,7 +13,7 @@ class TimeServer
 public:
 	TimeServer(annety::EventLoop* loop, const annety::EndPoint& addr);
 
-	void start();
+	void listen();
 
 private:
 	void on_connect(const annety::TcpConnectionPtr& conn);

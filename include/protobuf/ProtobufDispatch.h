@@ -65,7 +65,7 @@ public:
 
 	// Register protobuf message callbacks.
 	template <typename T>
-	void listen(const typename CallbackT<T>::ProtobufMessageTCallback& cb)
+	void add(const typename CallbackT<T>::ProtobufMessageTCallback& cb)
 	{
 		std::shared_ptr<CallbackT<T>> pd(new CallbackT<T>(cb));
 		cbs_[T::descriptor()] = pd;

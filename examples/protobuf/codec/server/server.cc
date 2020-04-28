@@ -15,13 +15,13 @@
 using namespace annety;
 using namespace examples::protobuf::codec;
 
-using std::placeholders::_1;
-using std::placeholders::_2;
-using std::placeholders::_3;
-
 using QueryPtr = std::shared_ptr<Query>;
 using AnswerPtr = std::shared_ptr<Answer>;
 
+using std::placeholders::_1;
+using std::placeholders::_2;
+using std::placeholders::_3;
+		
 class QueryServer
 {
 public:
@@ -38,15 +38,15 @@ public:
 			std::bind(&ProtobufCodec::recv, &codec_, _1, _2, _3));
 
 		// Register protobuf message callbacks.
-		dispatch_.listen<Query>(
+		dispatch_.add<Query>(
 			std::bind(&QueryServer::on_query, this, _1, _2, _3));
-		dispatch_.listen<Answer>(
+		dispatch_.add<Answer>(
 			std::bind(&QueryServer::on_answer, this, _1, _2, _3));
 	}
 
-	void start()
+	void listen()
 	{
-		server_->start();
+		server_->listen();
 	}
 
 private:
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 	EventLoop loop;
 	
 	QueryServer server(&loop, EndPoint(1669));
-	server.start();
+	server.listen();
 
 	loop.loop();
 

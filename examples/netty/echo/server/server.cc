@@ -22,9 +22,9 @@ EchoServer::EchoServer(annety::EventLoop* loop, const annety::EndPoint& addr)
 	loop->run_every(5.0, std::bind(&EchoServer::print_throughput, this));
 }
 
-void EchoServer::start()
+void EchoServer::listen()
 {
-	server_->start();
+	server_->listen();
 }
 
 void EchoServer::set_thread_num(int num)
@@ -49,7 +49,7 @@ void EchoServer::on_close(const annety::TcpConnectionPtr& conn)
 }
 
 void EchoServer::on_message(const annety::TcpConnectionPtr& conn,
-		annety::NetBuffer* buf, annety::TimeStamp time)
+		annety::NetBuffer* buf, annety::TimeStamp)
 
 {
 	received_messages_++;

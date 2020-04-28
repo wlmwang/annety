@@ -16,12 +16,12 @@
 using namespace annety;
 using namespace examples::protobuf::codec;
 
+using EmptyPtr = std::shared_ptr<Empty>;
+using AnswerPtr = std::shared_ptr<Answer>;
+
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
-
-using EmptyPtr = std::shared_ptr<Empty>;
-using AnswerPtr = std::shared_ptr<Answer>;
 
 class QueryClient
 {
@@ -40,9 +40,9 @@ public:
 			std::bind(&ProtobufCodec::recv, &codec_, _1, _2, _3));
 
 		// Register protobuf message callbacks.
-		dispatch_.listen<Answer>(
+		dispatch_.add<Answer>(
 			std::bind(&QueryClient::on_answer, this, _1, _2, _3));
-		dispatch_.listen<Empty>(
+		dispatch_.add<Empty>(
 			std::bind(&QueryClient::on_empty, this, _1, _2, _3));
 
 		client_->enable_retry();

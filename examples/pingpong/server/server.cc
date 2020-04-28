@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 		if (threads > 1) {
 			server->set_thread_num(threads);
 		}
-		server->start();
+		server->listen();
 		
 		loop.loop();
 	}

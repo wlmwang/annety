@@ -50,11 +50,11 @@ public:
 		return retry_.load(std::memory_order_relaxed);
 	}
 
-	// For connect/disconnect, it will retry connect if enable.
+	// For connect/disconnect, it maybe connect retry if enable.
 	void connect();
 	void disconnect();
 	
-	// Disconnect and stop retry.
+	// Disconnect and stop connect retry.
 	void stop();
 
 	TcpConnectionPtr connection() const

@@ -88,7 +88,7 @@ void TcpServer::set_thread_num(int num_threads)
 	workers_->set_thread_num(num_threads);
 }
 
-void TcpServer::start()
+void TcpServer::listen()
 {
 	DCHECK(initilize_);
 	

@@ -20,9 +20,9 @@ DiscardServer::DiscardServer(annety::EventLoop* loop, const annety::EndPoint& ad
 		std::bind(&DiscardServer::on_message, this, _1, _2, _3));
 }
 
-void DiscardServer::start()
+void DiscardServer::listen()
 {
-	server_->start();
+	server_->listen();
 }
 
 void DiscardServer::on_connect(const annety::TcpConnectionPtr& conn)
@@ -40,11 +40,11 @@ void DiscardServer::on_close(const annety::TcpConnectionPtr& conn)
 }
 
 void DiscardServer::on_message(const annety::TcpConnectionPtr& conn,
-		annety::NetBuffer* buf, annety::TimeStamp time)
+		annety::NetBuffer* buf, annety::TimeStamp receive)
 
 {
 	std::string message(buf->taken_as_string());
 	
 	LOG(INFO) << conn->name() << " discards " << static_cast<int>(message.size()) << " bytes, "
-		<< "data received at " << time;
+		<< "data received at " << receive;
 }

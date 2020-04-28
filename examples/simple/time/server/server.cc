@@ -5,12 +5,12 @@
 #include "Logging.h"
 #include "ByteOrder.h"
 
-using std::placeholders::_1;
-using std::placeholders::_2;
-using std::placeholders::_3;
-
 TimeServer::TimeServer(annety::EventLoop* loop, const annety::EndPoint& addr)
 {
+	using std::placeholders::_1;
+	using std::placeholders::_2;
+	using std::placeholders::_3;
+
 	server_ = make_tcp_server(loop, addr, "TimeServer");
 
 	server_->set_connect_callback(
@@ -21,9 +21,9 @@ TimeServer::TimeServer(annety::EventLoop* loop, const annety::EndPoint& addr)
 		std::bind(&TimeServer::on_message, this, _1, _2, _3));
 }
 
-void TimeServer::start()
+void TimeServer::listen()
 {
-	server_->start();
+	server_->listen();
 }
 
 void TimeServer::on_connect(const annety::TcpConnectionPtr& conn)
@@ -46,11 +46,11 @@ void TimeServer::on_close(const annety::TcpConnectionPtr& conn)
 }
 
 void TimeServer::on_message(const annety::TcpConnectionPtr& conn,
-		annety::NetBuffer* buf, annety::TimeStamp time)
+		annety::NetBuffer* buf, annety::TimeStamp receive)
 
 {
 	std::string message(buf->taken_as_string());
 	
 	LOG(INFO) << conn->name() << " times " << static_cast<int>(message.size()) << " bytes, "
-		<< "data received at " << time;
+		<< "data received at " << receive;
 }

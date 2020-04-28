@@ -14,7 +14,7 @@ class EchoServer
 public:
 	EchoServer(annety::EventLoop* loop, const annety::EndPoint& addr);
 
-	void start();
+	void listen();
 	
 	void set_thread_num(int num);
 

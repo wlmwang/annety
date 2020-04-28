@@ -47,8 +47,8 @@ int main(int argc, char* argv[])
 	
 	QueryServiceImpl impl;
 	ProtorpcServer server(&loop, EndPoint(1669));
-	server.listen(&impl);
-	server.start();
+	server.add(&impl);
+	server.listen();
 
 	loop.loop();
 

@@ -40,9 +40,9 @@ public:
 			std::bind(&ChatServer::on_message, this, _1, _2, _3));
 	}
 
-	void start()
+	void listen()
 	{
-		server_->start();
+		server_->listen();
 	}
 
 private:
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 	EventLoop loop;
 	
 	ChatServer server(&loop, EndPoint(1669));
-	server.start();
+	server.listen();
 
 	loop.loop();
 }

@@ -40,23 +40,23 @@ public:
 	}
 
 	// Starts the server if it's not listenning.
-	void start()
+	void listen()
 	{
-		server_->start();
+		server_->listen();
 	}
 
 	// Turn on the server to become a multi-threaded model.
-	// *Not thread safe*, but usually be called before start().
+	// *Not thread safe*, but usually be called before listen().
 	void set_thread_num(int num_threads)
 	{
 		server_->set_thread_num(num_threads);
 	}
 
 	// Add service impl instance.
-	// *Not thread safe*, but usually be called before start().
-	void listen(::google::protobuf::Service* service)
+	// *Not thread safe*, but usually be called before listen().
+	void add(::google::protobuf::Service* service)
 	{
-		channel_->listen(service);
+		channel_->add(service);
 	}
 
 private:

@@ -4,13 +4,13 @@
 #include "client.h"
 #include "Logging.h"
 
-using std::placeholders::_1;
-using std::placeholders::_2;
-using std::placeholders::_3;
-
 TimeClient::TimeClient(annety::EventLoop* loop, const annety::EndPoint& addr)
 	: loop_(loop)
 {
+	using std::placeholders::_1;
+	using std::placeholders::_2;
+	using std::placeholders::_3;
+
 	client_ = make_tcp_client(loop, addr, "TimeClient");
 
 	client_->set_connect_callback(
@@ -51,14 +51,14 @@ void TimeClient::on_close(const annety::TcpConnectionPtr& conn)
 }
 
 void TimeClient::on_message(const annety::TcpConnectionPtr& conn,
-		annety::NetBuffer* buf, annety::TimeStamp time)
+		annety::NetBuffer* buf, annety::TimeStamp receive)
 
 {
 	if (buf->readable_bytes() >= sizeof(int32_t)) {
 		annety::TimeStamp ts = annety::TimeStamp::from_time_t(buf->read_int32());
-		LOG(INFO) << "Server time = " << time << ", " << ts;
+		LOG(INFO) << "Server time = " << receive << ", " << ts;
 	} else {
 		LOG(INFO) << conn->name() << " no enough data " << buf->readable_bytes()
-			<< " at " << time;
+			<< " at " << receive;
 	}
 }

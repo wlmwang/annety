@@ -38,9 +38,9 @@ ChargenServer::ChargenServer(annety::EventLoop* loop, const annety::EndPoint& ad
 	}
 }
 
-void ChargenServer::start()
+void ChargenServer::listen()
 {
-	server_->start();
+	server_->listen();
 }
 
 void ChargenServer::on_connect(const annety::TcpConnectionPtr& conn)
@@ -61,13 +61,13 @@ void ChargenServer::on_close(const annety::TcpConnectionPtr& conn)
 }
 
 void ChargenServer::on_message(const annety::TcpConnectionPtr& conn,
-		annety::NetBuffer* buf, annety::TimeStamp time)
+		annety::NetBuffer* buf, annety::TimeStamp receive)
 
 {
 	std::string message(buf->taken_as_string());
 	
 	LOG(INFO) << conn->name() << " chargen " << static_cast<int>(message.size()) << " bytes, "
-		<< "data received at " << time;
+		<< "data received at " << receive;
 }
 
 void ChargenServer::on_write_complete(const annety::TcpConnectionPtr& conn)

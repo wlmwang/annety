@@ -49,7 +49,7 @@ void EchoClient::on_close(const annety::TcpConnectionPtr& conn)
 }
 
 void EchoClient::on_message(const annety::TcpConnectionPtr& conn,
-		annety::NetBuffer* buf, annety::TimeStamp time)
+		annety::NetBuffer* buf, annety::TimeStamp)
 
 {
 	// echo back
