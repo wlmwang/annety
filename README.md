@@ -19,5 +19,5 @@
 	// todo.
 
 # Addition
-    Annety uses many modified open source code, including: chromium, muduo, nginx, leveldb, etc.
-    Thanks for open source.
+    Annety has a lot of underlying code that has been modified from open source projects, 
+    including: chromium, muduo, nginx, leveldb, etc.  Thanks for open sources.
