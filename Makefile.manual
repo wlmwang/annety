@@ -6,7 +6,7 @@
 # 环境要求:
 # GCC >= 4.8 or Clang >= 3.3
 # Linux >= 2.6.28 (for epoll/timerfd/eventfd)
-# POSIX(Darwin...) (for develop)
+# POSIX(Darwin/...) (for development)
 #
 
 CC		:= g++

@@ -4,12 +4,12 @@
 # Requires (POSIX && C++11)
     GCC >= 4.8 or Clang >= 3.3
     Linux >= 2.6.28 (for epoll/timerfd/eventfd)
-    POSIX(Darwin...) (for develop)
+    POSIX(Darwin/...) (for development)
     cmake >= 2.8.5
 
-# Tested && Develop
+# Tested
 	Unbuntu 14.04
-	Darwin 19.4.0
+	Darwin (development machine)
 
 # Build && Install
 	./build.sh
