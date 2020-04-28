@@ -7,8 +7,12 @@ Annety is a multi-threaded reactor pattern network library based on C++11.
     POSIX(as MACOSX...) (for develop)
     cmake >= 2.8.5
 
+# Build
+./build.sh
+
 # Document
 // see
 
 # Addition
-Annety uses a lot of modified open source code, including: chromium, leveldb, muduo, nginx and so on. Thanks for open source.
+    Annety uses a lot of modified open source code, including: chromium, leveldb, muduo, nginx and so on. 
+    Thanks for open source.
