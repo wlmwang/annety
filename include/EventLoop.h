@@ -23,7 +23,7 @@ class Channel;
 class Poller;
 class TimerPool;
 
-// Reactor mode, Event dispatcher.
+// Reactor pattern, Event dispatcher.
 // It mainly acts as a combination of IO multiplexing and channels, and 
 // controls the thread safety model. - One loop per thread: Each thread 
 // has at most one EventLoop instance.
