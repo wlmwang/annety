@@ -10,4 +10,14 @@ SET(HNET_SRCS
 # StringPiece
 ADD_EXECUTABLE(StringPiece_unittest StringPiece_unittest.cc ${HNET_SRCS})
 TARGET_LINK_LIBRARIES(StringPiece_unittest ${GTEST_BOTH_LIBRARIES} pthread)
-ADD_TEST(AnnetyTests ${PROJECT_BINARY_DIR}/bin/StringPiece_unittest)
+ADD_TEST(AnnetyUnitTests-strings ${PROJECT_BINARY_DIR}/bin/StringPiece_unittest)
+
+# StringSplit
+ADD_EXECUTABLE(StringSplit_unittest StringSplit_unittest.cc ${HNET_SRCS})
+TARGET_LINK_LIBRARIES(StringSplit_unittest ${GTEST_BOTH_LIBRARIES} pthread)
+ADD_TEST(AnnetyUnitTests-strings ${PROJECT_BINARY_DIR}/bin/StringSplit_unittest)
+
+# StringPrintf
+ADD_EXECUTABLE(StringPrintf_unittest StringPrintf_unittest.cc ${HNET_SRCS})
+TARGET_LINK_LIBRARIES(StringPrintf_unittest ${GTEST_BOTH_LIBRARIES} pthread)
+ADD_TEST(AnnetyUnitTests-strings ${PROJECT_BINARY_DIR}/bin/StringPrintf_unittest)
