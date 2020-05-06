@@ -1,0 +1,9 @@
+# https://cmake.org/cmake/help/v3.0/module/FindGTest.html
+FIND_PACKAGE(GTest)
+
+MESSAGE(STATUS "GTEST_FOUND = " ${GTEST_FOUND})
+
+IF (GTEST_FOUND)
+	INCLUDE_DIRECTORIES(${GTEST_INCLUDE_DIRS})
+	ADD_SUBDIRECTORY(strings)
+ENDIF()
