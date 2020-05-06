@@ -7,12 +7,13 @@
 #include <arpa/inet.h>	// for sockaddr*
 #include <sys/socket.h>	// for SHUT_WR
 
+struct tcp_info;
+
 namespace annety
 {
 // when someone directly using annety namespace, it can also protect the same name 
 // function in the system from being override.
-namespace sockets
-{
+namespace sockets {
 // static convert between sockaddr and sockaddr_in/sockaddr_in6.
 const struct sockaddr_in* sockaddr_in_cast(const struct sockaddr* addr);
 const struct sockaddr_in6* sockaddr_in6_cast(const struct sockaddr* addr);
@@ -55,6 +56,9 @@ ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt);
 
 bool set_non_blocking(int fd);
 bool set_close_on_exec(int fd);
+
+bool get_tcp_info(int fd, struct tcp_info* dst);
+bool get_tcp_info_string(int fd, char* dst, size_t size);
 
 }	// namespace sockets
 }	// namespace annety
