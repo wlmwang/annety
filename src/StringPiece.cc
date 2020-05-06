@@ -15,8 +15,7 @@
 
 namespace annety
 {
-namespace
-{
+namespace {
 // For each character in characters_wanted, sets the index corresponding
 // to the ASCII code of that character to 1 in table.  This is used by
 // the find_.*_of methods below to tell whether or not a character is in

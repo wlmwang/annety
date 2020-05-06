@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.5)
 PROJECT(annety C CXX)
 
 # Build the testing cases.
-# ENABLE_TESTING()
+ENABLE_TESTING()
 
 # Generate compile flags.
 SET(CXX_FLAGS
@@ -62,6 +62,7 @@ ADD_SUBDIRECTORY(include)
 
 # Only build examples if this is the main project.
 IF (CMAKE_PROJECT_NAME STREQUAL "annety")
-	MESSAGE(STATUS "Build Annety examples...")
+	MESSAGE(STATUS "Build Annety examples/tests...")
 	ADD_SUBDIRECTORY(examples)
+	ADD_SUBDIRECTORY(tests)
 ENDIF()
