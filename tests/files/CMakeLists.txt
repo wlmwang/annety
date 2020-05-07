@@ -11,4 +11,4 @@ SET(HNET_SRCS
 # FilePath
 ADD_EXECUTABLE(FilePath_unittest FilePath_unittest.cc ${HNET_SRCS})
 TARGET_LINK_LIBRARIES(FilePath_unittest ${GTEST_BOTH_LIBRARIES} pthread)
-ADD_TEST(AnnetyUnitTests-files ${PROJECT_BINARY_DIR}/bin/FilePath_unittest)
+ADD_TEST(FilePath ${PROJECT_BINARY_DIR}/bin/FilePath_unittest)

@@ -16,3 +16,6 @@ mkdir -p $COMPILE_DIR \
 		$SOURCE_DIR \
 && make $* \
 && make install
+
+# Run all the unit tests in the dir $COMPILE_DIR
+CTEST_OUTPUT_ON_FAILURE=TRUE make test
