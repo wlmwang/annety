@@ -115,10 +115,10 @@ private:
 
 private:
 	std::atomic<bool> quit_{false};
-	std::atomic<bool> handling_event_{false};
 	std::atomic<bool> calling_wakeup_functors_{false};
 
 	bool looping_{false};
+	bool handling_event_{false};
 	int64_t looping_times_{0};
 	int64_t poll_timeout_ms_{kPollTimeoutMs};
 

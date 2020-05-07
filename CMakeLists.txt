@@ -38,9 +38,9 @@ ENDIF()
 # Set the cc compile flags.
 STRING(REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 
-# Set default the object to `release`.
+# Set default the object to `debug`.
 IF (NOT CMAKE_BUILD_TYPE)
-	SET(CMAKE_BUILD_TYPE "Release")
+	SET(CMAKE_BUILD_TYPE "Debug")
 ENDIF()
 
 # Print the cc compile flags.

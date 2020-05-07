@@ -108,11 +108,11 @@ void EventLoop::loop()
 		looping_times_++;
 
 		// Handling active event channels.
-		handling_event_.store(true, std::memory_order_relaxed);
+		handling_event_ = true;
 		for (Channel* channel : active_channels_) {
 			channel->handle_event(poll_active_ms_);
 		}
-		handling_event_.store(false, std::memory_order_relaxed);
+		handling_event_ = false;
 
 #if !defined(OS_LINUX)
 		// On non-Linux platforms, Use the traditional poller timeout to implement 
@@ -227,6 +227,8 @@ bool EventLoop::is_in_own_loop() const
 
 void EventLoop::do_calling_wakeup_functors()
 {
+	check_in_own_loop();
+
 	calling_wakeup_functors_.store(true, std::memory_order_relaxed);
 	
 	std::vector<Functor> functors;
