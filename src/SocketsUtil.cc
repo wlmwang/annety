@@ -236,60 +236,14 @@ struct sockaddr_in6 get_local_addr(int fd)
 struct sockaddr_in6 get_peer_addr(int fd)
 {
 	struct sockaddr_in6 addr;
-	socklen_t addrlen = static_cast<socklen_t>(sizeof addr);
 	::memset(&addr, 0, sizeof addr);
+	socklen_t addrlen = static_cast<socklen_t>(sizeof addr);
 
 	// The kernel will fill in the value of `addrlen` and `addr`.
 	int ret = ::getpeername(fd, sockaddr_cast(&addr), &addrlen);
 	PCHECK(!ret);
 
 	return addr;
-}
-
-int set_reuse_addr(int servfd, bool on)
-{
-	int opt = on ? 1 : 0;
-	int ret = ::setsockopt(servfd, SOL_SOCKET, SO_REUSEADDR,
-					&opt, static_cast<socklen_t>(sizeof opt));
-	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEADDR failed";
-
-	return ret;
-}
-
-int set_reuse_port(int servfd, bool on)
-{
-#ifdef SO_REUSEPORT
-	int opt = on ? 1 : 0;
-	int ret = ::setsockopt(servfd, SOL_SOCKET, SO_REUSEPORT,
-					&opt, static_cast<socklen_t>(sizeof opt));
-	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEPORT failed";
-	return ret;
-#else
-	if (on) {
-		LOG(ERROR) << "SO_REUSEPORT is not supported.";
-	}
-	return -1;
-#endif
-}
-
-int set_keep_alive(int fd, bool on)
-{
-	int optval = on ? 1 : 0;
-	int ret = ::setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE,
-					&optval, static_cast<socklen_t>(sizeof optval));
-	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_KEEPALIVE failed";
-	
-	return ret;
-}
-
-int set_tcp_nodelay(int fd, bool on)
-{
-	int opt = on ? 1 : 0;
-	int ret = ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
-					&opt, static_cast<socklen_t>(sizeof opt));
-	PLOG_IF(ERROR, ret < 0) << "::setsockopt TCP_NODELAY failed";
-	
-	return ret;
 }
 
 int get_sock_error(int fd)
@@ -307,6 +261,98 @@ int get_sock_error(int fd)
 	}
 	
 	return err;
+}
+
+int set_reuse_addr(int servfd, bool on)
+{
+	int opt = on ? 1 : 0;
+	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
+	int ret = ::setsockopt(servfd, SOL_SOCKET, SO_REUSEADDR, &opt, optlen);
+
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEADDR failed";
+
+	return ret;
+}
+
+int set_reuse_port(int servfd, bool on)
+{
+#ifdef SO_REUSEPORT
+	int opt = on ? 1 : 0;
+	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
+	int ret = ::setsockopt(servfd, SOL_SOCKET, SO_REUSEPORT, &opt, optlen);
+
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEPORT failed";
+	return ret;
+#else
+	if (on) {
+		LOG(ERROR) << "SO_REUSEPORT is not supported.";
+	}
+	return -1;
+#endif
+}
+
+int set_keep_alive(int fd, bool on)
+{
+	int opt = on ? 1 : 0;
+	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
+	int ret = ::setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &opt, optlen);
+
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_KEEPALIVE failed";
+	
+	return ret;
+}
+
+int set_tcp_nodelay(int fd, bool on)
+{
+	int opt = on ? 1 : 0;
+	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
+	int ret = ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &opt, optlen);
+	
+	PLOG_IF(ERROR, ret < 0) << "::setsockopt TCP_NODELAY failed";
+	
+	return ret;
+}
+
+int get_tcp_info(int fd, struct tcp_info* dst)
+{
+	CHECK(dst);
+
+	::memset(dst, 0, sizeof(*dst));
+	socklen_t optlen = static_cast<socklen_t>(sizeof(*dst));
+	int ret = ::getsockopt(fd, SOL_TCP, TCP_INFO, dst, &optlen);
+	
+	PLOG_IF(ERROR, ret < 0) << "::getsockopt TCP_INFO failed";
+
+	return ret;
+}
+
+int get_tcp_info_string(int fd, char* dst, size_t size)
+{
+	CHECK(dst);
+
+	struct tcp_info tcpi;
+	int ret = get_tcp_info(fd, &tcpi);
+	
+	if (ret) {
+		::snprintf(dst, size, "unrecovered=%u "
+		"rto=%u ato=%u snd_mss=%u rcv_mss=%u "
+		"lost=%u retrans=%u rtt=%u rttvar=%u "
+		"sshthresh=%u cwnd=%u total_retrans=%u",
+		tcpi.tcpi_retransmits,  // Number of unrecovered [RTO] timeouts
+		tcpi.tcpi_rto,          // Retransmit timeout in usec
+		tcpi.tcpi_ato,          // Predicted tick of soft clock in usec
+		tcpi.tcpi_snd_mss,
+		tcpi.tcpi_rcv_mss,
+		tcpi.tcpi_lost,         // Lost packets
+		tcpi.tcpi_retrans,      // Retransmitted packets out
+		tcpi.tcpi_rtt,          // Smoothed round trip time in usec
+		tcpi.tcpi_rttvar,       // Medium deviation
+		tcpi.tcpi_snd_ssthresh,
+		tcpi.tcpi_snd_cwnd,
+		tcpi.tcpi_total_retrans);  // Total retransmits for entire connection
+	}
+
+	return ret;
 }
 
 // This can happen if the target server is local and has not been started.
@@ -501,44 +547,6 @@ bool set_close_on_exec(int fd)
 		return false;
 	}
 	return true;
-}
-
-bool get_tcp_info(int fd, struct tcp_info* dst)
-{
-	CHECK(dst);
-
-	socklen_t optlen = static_cast<socklen_t>(sizeof(*dst));
-	::memset(dst, 0, optlen);
-	return ::getsockopt(fd, SOL_TCP, TCP_INFO, dst, &optlen) == 0;
-}
-
-bool get_tcp_info_string(int fd, char* dst, size_t size)
-{
-	CHECK(dst);
-
-	struct tcp_info tcpi;
-	bool rt = get_tcp_info(fd, &tcpi);
-	
-	if (rt) {
-		::snprintf(dst, size, "unrecovered=%u "
-		"rto=%u ato=%u snd_mss=%u rcv_mss=%u "
-		"lost=%u retrans=%u rtt=%u rttvar=%u "
-		"sshthresh=%u cwnd=%u total_retrans=%u",
-		tcpi.tcpi_retransmits,  // Number of unrecovered [RTO] timeouts
-		tcpi.tcpi_rto,          // Retransmit timeout in usec
-		tcpi.tcpi_ato,          // Predicted tick of soft clock in usec
-		tcpi.tcpi_snd_mss,
-		tcpi.tcpi_rcv_mss,
-		tcpi.tcpi_lost,         // Lost packets
-		tcpi.tcpi_retrans,      // Retransmitted packets out
-		tcpi.tcpi_rtt,          // Smoothed round trip time in usec
-		tcpi.tcpi_rttvar,       // Medium deviation
-		tcpi.tcpi_snd_ssthresh,
-		tcpi.tcpi_snd_cwnd,
-		tcpi.tcpi_total_retrans);  // Total retransmits for entire connection
-	}
-
-	return rt;
 }
 
 }	// namespace sockets

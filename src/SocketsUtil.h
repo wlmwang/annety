@@ -7,6 +7,7 @@
 #include <arpa/inet.h>	// for sockaddr*
 #include <sys/socket.h>	// for SHUT_WR
 
+// see <netinet/tcp.h>
 struct tcp_info;
 
 namespace annety
@@ -44,6 +45,8 @@ int set_reuse_addr(int servfd, bool on);
 int set_reuse_port(int servfd, bool on);
 int set_keep_alive(int fd, bool on);
 int set_tcp_nodelay(int fd, bool on);
+int get_tcp_info(int fd, struct tcp_info* dst);
+int get_tcp_info_string(int fd, char* dst, size_t size);
 
 // This can happen if the target server is local and has not been started.
 bool is_self_connect(int fd);
@@ -56,9 +59,6 @@ ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt);
 
 bool set_non_blocking(int fd);
 bool set_close_on_exec(int fd);
-
-bool get_tcp_info(int fd, struct tcp_info* dst);
-bool get_tcp_info_string(int fd, char* dst, size_t size);
 
 }	// namespace sockets
 }	// namespace annety
