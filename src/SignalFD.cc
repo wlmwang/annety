@@ -144,6 +144,8 @@ void SignalFD::signal_add(int signo)
 	PCHECK(sigaddset(&sigset_, signo) == 0);
 
 #if defined(OS_LINUX)
+	// Block `signo` signal so that they are not processed by the default 
+	// signal's handler.
 	PCHECK(internal::sigprocmask(SIG_BLOCK, &sigset_, NULL) == 0);
 	PCHECK(internal::signalfd(&sigset_, nonblock_, cloexec_, fd_) >= 0);
 #else
@@ -176,6 +178,7 @@ void SignalFD::signal_delete(int signo)
 	PCHECK(sigdelset(&sigset_, signo) == 0);
 
 #if defined(OS_LINUX)
+	// Revert `signo` signal to the default signal's handler.
 	PCHECK(internal::sigprocmask(SIG_SETMASK, &sigset_, NULL) == 0);
 	PCHECK(internal::signalfd(&sigset_, nonblock_, cloexec_, fd_) >= 0);
 #else
