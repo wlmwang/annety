@@ -32,4 +32,4 @@
 
 # Document
 	Annety took a week alone, adding a lot of comments to the source code.
-* [detail](document/README.md)
+* [chinese detail](document/README.md)
