@@ -18,11 +18,7 @@
 # Build && Install
 	BUILD_TYPE=release ./build.sh
 
-# Document
-	Annety took a week alone, adding a lot of comments to the source code.
-	// todo.
-
-# Addition
+# About
 	Annety uses many codes modified from open source projects (chromium, muduo, 
 	nginx, leveldb, etc). Yes, At the beginning of creating this library, one of 
 	my hard requirements was to refer to some excellent open source projects. 
@@ -33,4 +29,7 @@
 	checksum algorithm reference nginx; although the wakeup mechanism is new(
 	pipe(2) call), but it refers to nginx and muduo (For this kind of "hybrid" 
 	utility, there are many in annety. such as threading, LOG/CHECK, etc).
-	Annety performance is very high, it can easily run full 1Gbps. // TPS
+
+# Document
+	Annety took a week alone, adding a lot of comments to the source code.
+	[doc](document/README.md)
