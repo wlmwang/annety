@@ -1,10 +1,11 @@
 ## 性能
 	Annety的跨平台性参考了chromium；网络模型参考了muduo；校验和算法参考了nginx；以及还有他们之
 	间的“混合体”，比如：Thread/LOG/CHECK参考了chromium与muduo、定时器参考了nginx与muduo、信号
-	处理器参考了leveldb与muduo，等等。由于annety核心的网络模型参考了muduo(one loop per thread)，库的性能是遵循陈硕老师在blog上发布的测试结果（我自己在云服务器测试吞吐结果：比boost1.40的
+	处理器参考了leveldb与muduo，等等。由于annety核心的网络模型参考了muduo(one loop per thread)，
+	库的性能是遵循陈硕老师在blog上发布的测试结果（我自己在云服务器测试吞吐结果：比boost1.40的
 	asio-1.4.3高、比libevent-2.0.6-rc高，与纯压测工具netperf-2.5.0相当）：
-[muduo 与 boost asio 吞吐量对比](https://blog.csdn.net/Solstice/article/details/5863411)
-[muduo 与 libevent2 吞吐量对比](https://blog.csdn.net/Solstice/article/details/5864889)
+* [muduo 与 boost asio 吞吐量对比](https://blog.csdn.net/Solstice/article/details/5863411)
+* [muduo 与 libevent2 吞吐量对比](https://blog.csdn.net/Solstice/article/details/5864889)
 	
 ## 关于
 	Annety是一个基于C++11的Reactor模式的多线程网络库。它使用了许多从开源项目修改而来的代码，其
