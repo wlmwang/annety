@@ -108,27 +108,31 @@ int accept(int servfd, struct sockaddr_in6* dst, bool nonblock, bool cloexec)
 	PLOG_IF(ERROR, connfd < 0) << "::accept failed";
 
 	if (connfd < 0) {
+		// errno may be a macro.
 		int err = errno;
 		switch (err) {
-			case EAGAIN:
-			case ECONNABORTED:
-			case EINTR:
-			case EPROTO: // ???
-			case EPERM:
-			case EMFILE: // per-process lmit of open file desctiptor ???
-				// expected errors
+			case EPERM:			// 1:	Operation not permitted.
+			case EINTR:			// 4:	Interrupted system call.
+			case EAGAIN:		// 11:	Resource temporarily unavailable.
+			case EMFILE:		// 24:	Too many open files.
+								//		- process limit of open file desctiptor ???
+			case EPROTO:		// 71:	Protocol error.
+								// 		- the client terminates the connection. SVR4 implementation.
+			case ECONNABORTED:	// 103:	Software caused connection abort
+								//		- the client terminates the connection. POSIX implementation.
+				// expected errors.
 				errno = err;
 				break;
 
-			case EBADF:
-			case EFAULT:
-			case EINVAL:
-			case ENFILE:
-			case ENOBUFS:
-			case ENOMEM:
-			case ENOTSOCK:
-			case EOPNOTSUPP:
-				// unexpected errors
+			case ENOMEM:		// 12:	Out of memory.
+			case EFAULT:		// 14:	Bad address.
+			case EINVAL:		// 22:	Invalid argument.
+			case ENFILE:		// 23:	File table overflow.
+			case EBADF:			// 77:	File descriptor in bad state.
+			case ENOTSOCK:		// 88:	Socket operation on non-socket.
+			case EOPNOTSUPP:	// 95:	Operation not supported on transport endpoint.
+			case ENOBUFS:		// 105:	No buffer space available.
+				// unexpected errors.
 				PLOG(FATAL) << "unexpected error of ::accept4";
 				break;
 
