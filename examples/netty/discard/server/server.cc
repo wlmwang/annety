@@ -8,57 +8,57 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
 
-EchoServer::EchoServer(annety::EventLoop* loop, const annety::EndPoint& addr)
+DiscardServer::DiscardServer(annety::EventLoop* loop, const annety::EndPoint& addr)
 {
-	server_ = make_tcp_server(loop, addr, "EchoServer");
+	server_ = make_tcp_server(loop, addr, "DiscardServer");
 
 	server_->set_connect_callback(
-		std::bind(&EchoServer::on_connect, this, _1));
+		std::bind(&DiscardServer::on_connect, this, _1));
 	server_->set_close_callback(
-		std::bind(&EchoServer::on_close, this, _1));
+		std::bind(&DiscardServer::on_close, this, _1));
 	server_->set_message_callback(
-		std::bind(&EchoServer::on_message, this, _1, _2, _3));
+		std::bind(&DiscardServer::on_message, this, _1, _2, _3));
 
-	loop->run_every(5.0, std::bind(&EchoServer::print_throughput, this));
+	loop->run_every(5.0, std::bind(&DiscardServer::print_throughput, this));
 }
 
-void EchoServer::listen()
+void DiscardServer::listen()
 {
 	server_->listen();
 }
 
-void EchoServer::set_thread_num(int num)
+void DiscardServer::set_thread_num(int num)
 {
 	server_->set_thread_num(num);
 }
 
-void EchoServer::on_connect(const annety::TcpConnectionPtr& conn)
+void DiscardServer::on_connect(const annety::TcpConnectionPtr& conn)
 {
-	LOG(INFO) << "EchoServer - " << conn->local_addr().to_ip_port() << " <- "
+	LOG(INFO) << "DiscardServer - " << conn->local_addr().to_ip_port() << " <- "
 			<< conn->peer_addr().to_ip_port() << " s is "
 			<< "UP";
 	
 	conn->set_tcp_nodelay(true);
 }
 
-void EchoServer::on_close(const annety::TcpConnectionPtr& conn)
+void DiscardServer::on_close(const annety::TcpConnectionPtr& conn)
 {
-	LOG(INFO) << "EchoServer - " << conn->local_addr().to_ip_port() << " <- "
+	LOG(INFO) << "DiscardServer - " << conn->local_addr().to_ip_port() << " <- "
 			<< conn->peer_addr().to_ip_port() << " s is "
 			<< "DOWN";
 }
 
-void EchoServer::on_message(const annety::TcpConnectionPtr& conn,
+void DiscardServer::on_message(const annety::TcpConnectionPtr& conn,
 		annety::NetBuffer* buf, annety::TimeStamp)
 
 {
 	received_messages_++;
 	transferred_ += buf->readable_bytes();
 	
-	conn->send(buf);
+	buf->has_read_all();
 }
 
-void EchoServer::print_throughput()
+void DiscardServer::print_throughput()
 {
 	annety::TimeStamp curr = annety::TimeStamp::now();
 
