@@ -179,14 +179,14 @@ private:
 
 void Session::on_close(const TcpConnectionPtr& conn)
 {
-	LOG(INFO) << conn->name() << " has disconnected";	
+	LOG(DEBUG) << conn->name() << " has disconnected";	
 	
 	owner_->do_disconnect(conn);
 }
 
 void Session::on_connect(const TcpConnectionPtr& conn)
 {
-	LOG(INFO) << conn->name() << " has connected";
+	LOG(DEBUG) << conn->name() << " has connected";
 
 	conn->set_tcp_nodelay(true);
 	conn->send(owner_->message());
@@ -196,7 +196,7 @@ void Session::on_connect(const TcpConnectionPtr& conn)
 
 int main(int argc, char* argv[])
 {
-	//set_min_log_severity(LOG_DEBUG);
+	set_min_log_severity(LOG_INFO);
 
 	if (argc < 5) {
 		fprintf(stderr, "Usage: client <threads> <sessions>");

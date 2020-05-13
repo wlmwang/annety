@@ -14,7 +14,6 @@
 #include <sys/socket.h>	// SOMAXCONN,struct sockaddr,sockaddr_in[6]
 						// getsockopt,setsockopt
 #include <sys/uio.h>	// struct iovec,readv,writev
-#include <netinet/tcp.h>// IPPROTO_TCP,TCP_NODELAY,tcp_info
 
 namespace annety
 {
@@ -317,6 +316,7 @@ int set_tcp_nodelay(int fd, bool on)
 	return ret;
 }
 
+#if defined(OS_LINUX)
 int get_tcp_info(int fd, struct tcp_info* dst)
 {
 	CHECK(dst);
@@ -358,6 +358,7 @@ int get_tcp_info_string(int fd, char* dst, size_t size)
 
 	return ret;
 }
+#endif	// OS_LINUX
 
 // This can happen if the target server is local and has not been started.
 bool is_self_connect(int fd)

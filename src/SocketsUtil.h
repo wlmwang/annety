@@ -4,11 +4,10 @@
 #ifndef ANT_SOCKETS_UTIL_H_
 #define ANT_SOCKETS_UTIL_H_
 
-#include <arpa/inet.h>	// for sockaddr*
-#include <sys/socket.h>	// for SHUT_WR
-
-// see <netinet/tcp.h>
-struct tcp_info;
+#include <sys/socket.h>		// SHUT_WR, ...
+#include <arpa/inet.h>		// sockaddr*, ...
+#include <netinet/tcp.h>	// TCP_NODELAY,IPPROTO_TCP, 
+							// tcp_info - linux 2.6.37
 
 namespace annety
 {
@@ -45,8 +44,11 @@ int set_reuse_addr(int servfd, bool on);
 int set_reuse_port(int servfd, bool on);
 int set_keep_alive(int fd, bool on);
 int set_tcp_nodelay(int fd, bool on);
+
+#if defined(OS_LINUX)
 int get_tcp_info(int fd, struct tcp_info* dst);
 int get_tcp_info_string(int fd, char* dst, size_t size);
+#endif	// OS_LINUX
 
 // This can happen if the target server is local and has not been started.
 bool is_self_connect(int fd);
