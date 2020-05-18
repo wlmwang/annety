@@ -71,7 +71,56 @@ int socket(sa_family_t family, bool nonblock, bool cloexec)
 #endif
 
 	PLOG_IF(ERROR, fd < 0) << "::socket failed";
+
 	return fd;
+}
+
+int bind(int fd, const struct sockaddr* addr)
+{
+	CHECK(fd >= 0 && addr);
+
+	// Always assume that the actual type of the `addr` is sockaddr_in6.
+	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
+
+#if defined(OS_MACOSX)
+	// On MacOSX platform, `addrlen` should be the actual size of the address.
+	if (addr->sa_family == AF_INET) {
+		addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in));
+	}
+#endif	// defined(OS_MACOSX)
+
+	// The kernel will judge according to `addr->sa_family`.
+	int ret = ::bind(fd, addr, addrlen);
+	PLOG_IF(ERROR, !ret) << "::bind failed";
+
+	return ret;
+}
+
+int listen(int servfd, int backlog)
+{
+	CHECK(servfd >= 0);
+
+	// If a connection request arrives when the queue of pending connections is full, 
+	// the client may receive an error with an indication of ECONNREFUSED or, if the 
+	// underlying protocol supports retransmission, the request may be ignored so that 
+	// a later reattempt at connection succeeds.
+
+	// The behavior of the backlog argument on TCP sockets changed with Linux 2.2.
+	// Now it specifies the queue length for completely established sockets waiting
+	// to be accepted, instead of the number of incomplete connection requests.
+	//
+	// If the backlog argument is greater than the value in /proc/sys/net/core/somaxconn, 
+	// then it is silently truncated to that value; the default value in this file is 128.
+	// In kernels before 2.4.25, this limit was a hard coded value, SOMAXCONN, with the 
+	// value 128.
+
+	// OS_BSD: If the backlog greater than kern.ipc.soacceptqueue or less than zero is 
+	// specified, backlog is silently forced to kern.ipc.soacceptqueue.
+
+	int ret = ::listen(servfd, backlog);
+	PLOG_IF(ERROR, !ret) << "::listen failed";
+	
+	return ret;
 }
 
 // non-block, close-on-exec
@@ -103,8 +152,6 @@ int accept(int servfd, struct sockaddr_in6* dst, bool nonblock, bool cloexec)
 #else
 #error Do not support your os platform in SocketsUtil.h
 #endif	// defined(OS_LINUX) || defined(OS_BSD) || ...
-
-	PLOG_IF(ERROR, connfd < 0) << "::accept failed";
 
 	if (connfd < 0) {
 		// errno may be a macro.
@@ -141,28 +188,9 @@ int accept(int servfd, struct sockaddr_in6* dst, bool nonblock, bool cloexec)
 		}
 	}
 	
+	PLOG_IF(ERROR, connfd < 0) << "::accept failed";
+
 	return connfd;
-}
-
-int bind(int fd, const struct sockaddr* addr)
-{
-	CHECK(fd >= 0 && addr);
-
-	// Always assume that the actual type of the `addr` is sockaddr_in6.
-	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
-
-#if defined(OS_MACOSX)
-	// On MacOSX platform, `addrlen` should be the actual size of the address.
-	if (addr->sa_family == AF_INET) {
-		addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in));
-	}
-#endif	// defined(OS_MACOSX)
-
-	// The kernel will judge according to `addr->sa_family`.
-	int ret = ::bind(fd, addr, addrlen);
-	PCHECK(!ret);
-
-	return ret;
 }
 
 int connect(int servfd, const struct sockaddr* addr)
@@ -186,39 +214,12 @@ int connect(int servfd, const struct sockaddr* addr)
 	return ret;
 }
 
-int listen(int servfd, int backlog)
-{
-	CHECK(servfd >= 0);
-
-	// If a connection request arrives when the queue of pending connections is full, 
-	// the client may receive an error with an indication of ECONNREFUSED or, if the 
-	// underlying protocol supports retransmission, the request may be ignored so that 
-	// a later reattempt at connection succeeds.
-
-	// The behavior of the backlog argument on TCP sockets changed with Linux 2.2.
-	// Now it specifies the queue length for completely established sockets waiting
-	// to be accepted, instead of the number of incomplete connection requests.
-	//
-	// If the backlog argument is greater than the value in /proc/sys/net/core/somaxconn, 
-	// then it is silently truncated to that value; the default value in this file is 128.
-	// In kernels before 2.4.25, this limit was a hard coded value, SOMAXCONN, with the 
-	// value 128.
-
-	// OS_BSD: If the backlog greater than kern.ipc.soacceptqueue or less than zero is 
-	// specified, backlog is silently forced to kern.ipc.soacceptqueue.
-
-	int ret = ::listen(servfd, backlog);
-	PCHECK(!ret);
-	
-	return ret;
-}
-
 int shutdown(int fd, int how)
 {
 	CHECK(fd >= 0);
 
 	int ret = ::shutdown(fd, how);
-	PCHECK(!ret);
+	PLOG_IF(ERROR, !ret) << "::shutdown failed";
 
 	return ret;
 }
@@ -231,7 +232,7 @@ struct sockaddr_in6 get_local_addr(int fd)
 
 	// The kernel will fill in the value of `addrlen` and `addr`.
 	int ret = ::getsockname(fd, sockaddr_cast(&addr), &addrlen);
-	PCHECK(!ret);
+	PLOG_IF(ERROR, !ret) << "::getsockname failed";
 
 	return addr;
 }
@@ -244,7 +245,7 @@ struct sockaddr_in6 get_peer_addr(int fd)
 
 	// The kernel will fill in the value of `addrlen` and `addr`.
 	int ret = ::getpeername(fd, sockaddr_cast(&addr), &addrlen);
-	PCHECK(!ret);
+	PLOG_IF(ERROR, !ret) << "::getpeername failed";
 
 	return addr;
 }
@@ -270,9 +271,9 @@ int set_reuse_addr(int servfd, bool on)
 {
 	int opt = on ? 1 : 0;
 	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
-	int ret = ::setsockopt(servfd, SOL_SOCKET, SO_REUSEADDR, &opt, optlen);
 
-	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEADDR failed";
+	int ret = ::setsockopt(servfd, SOL_SOCKET, SO_REUSEADDR, &opt, optlen);
+	PCHECK(!ret);
 
 	return ret;
 }
@@ -282,9 +283,10 @@ int set_reuse_port(int servfd, bool on)
 #ifdef SO_REUSEPORT
 	int opt = on ? 1 : 0;
 	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
-	int ret = ::setsockopt(servfd, SOL_SOCKET, SO_REUSEPORT, &opt, optlen);
 
-	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_REUSEPORT failed";
+	int ret = ::setsockopt(servfd, SOL_SOCKET, SO_REUSEPORT, &opt, optlen);
+	PCHECK(!ret);
+	
 	return ret;
 #else
 	if (on) {
@@ -294,14 +296,74 @@ int set_reuse_port(int servfd, bool on)
 #endif
 }
 
-int set_keep_alive(int fd, bool on)
+// After enabling SO_KEEPALIVE, if there is no data exchange on this socket within 2 hours, 
+// TCP will automatically send a keepalive probe to the peer. This is a TCP packet that the 
+// peer must respond to. (The specification recommends that it should not contain any data, 
+// but it can also contain 1 meaningless byte, such as 0x0. Its seq number is duplicated with 
+// the previous packet, so the probe keepalive packet is not within the window control range, 
+// that is, the server application is transparent).  May return as follows:
+// 1.	The peer is normal: respond with ACK. After 2 hours, TCP sends another probe packet.
+// 2.	The peer has crashed and restarted: respond with RST. The socket's pending error is 
+// 		set to ECONNRESET, and the socket itself is closed.
+// 3.	The peer has crashed: no response from the peer. TCP from berkeley will send another 
+// 		8 probe segments, once every 75 seconds, trying to get a response. That is to say, 
+// 		if there is no response after 675(75s * 9) seconds after the first probe segment is 
+// 		issued, it will be abandoned. The pending error of the socket is set to ETIMEOUT, and 
+// 		the socket itself is closed.
+// 4. 	The peer is not crashed, but the peer is unreachable: no response from the peer. This 
+// 		situation is similar to 3, all TCP can find is that it has not received a response to 
+// 		the probe. In this case, the pending error is set to EHOSTUNREACH, and the socket itself 
+// 		is closed.
+//
+// NOTE: When TCP detects that the peer socket is no longer available (cannot send a probe packet, 
+// or the probe packet does not receive an ACK response packet), `select` will return the socket 
+// readable, and return -1 in recv, and set errno to ETIMEDOUT.
+// In other words, `recv` on a socket that failed to detect will immediately return -1, and errno 
+// is set.  `write` to it will also cause an error immediately. (Usually the second write, an error 
+// occurs).
+//
+// NOTICE: The server does not need to worry about the shutdown of the client machine (normal shut 
+// down, not crash). When the operator shuts down the system normally, all client TCPs will send 
+// FIN packets.
+
+
+// NOTICE:  SO_KEEPALIVE has several defects:
+// 1.	keepalive can only detect whether the connection is alive, not whether the connection is 
+// 		available. For example, the server cannot respond to requests due to deadlocks or excessive 
+// 		load, but the connection still exists. At this time keepalive cannot determine whether the 
+// 		connection is available.
+// 2.	If one end of the TCP connection is suddenly disconnected due to a power failure, the other 
+// 		end does not know that the connection has been disconnected.   At this time, if the data 
+// 		transmission fails, it will be retransmitted. Because the priority of retransmitted packets 
+// 		is higher than keepalive data packets, keepalive's The packet cannot be sent.  Only after a 
+// 		long retransmission failure can we judge that this connection is broken.
+
+int set_keep_alive(int fd, bool on, int idle, int intvl, int count)
 {
 	int opt = on ? 1 : 0;
 	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
-	int ret = ::setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &opt, optlen);
 
-	PLOG_IF(ERROR, ret < 0) << "::setsockopt SO_KEEPALIVE failed";
+	int ret = ::setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &opt, optlen);
+	PCHECK(!ret);
 	
+	// Idle time. 7200 seconds default.
+	if (idle != -1) {
+		int ret = ::setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &idle, sizeof(idle));
+		PCHECK(!ret);
+	}
+
+	// Probe interval. 75 seconds default.
+	if (intvl != -1) {
+		int ret = ::setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &intvl, sizeof(intvl));
+		PCHECK(!ret);
+	}
+
+	// Probe times. 9 times default.
+	if (count != -1) {
+		int ret = ::setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
+		PCHECK(!ret);
+	}
+
 	return ret;
 }
 
@@ -309,9 +371,9 @@ int set_tcp_nodelay(int fd, bool on)
 {
 	int opt = on ? 1 : 0;
 	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
-	int ret = ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &opt, optlen);
 	
-	PLOG_IF(ERROR, ret < 0) << "::setsockopt TCP_NODELAY failed";
+	int ret = ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &opt, optlen);
+	PCHECK(!ret);
 	
 	return ret;
 }
@@ -323,9 +385,9 @@ int get_tcp_info(int fd, struct tcp_info* dst)
 
 	::memset(dst, 0, sizeof(*dst));
 	socklen_t optlen = static_cast<socklen_t>(sizeof(*dst));
-	int ret = ::getsockopt(fd, SOL_TCP, TCP_INFO, dst, &optlen);
 	
-	PLOG_IF(ERROR, ret < 0) << "::getsockopt TCP_INFO failed";
+	int ret = ::getsockopt(fd, SOL_TCP, TCP_INFO, dst, &optlen);
+	PCHECK(!ret);
 
 	return ret;
 }
@@ -469,8 +531,8 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* dst)
 int close(int fd)
 {
 	int ret = ::close(fd);
-	PLOG_IF(ERROR, ret < 0) << "::close failed fd=" << fd;
-	
+	PLOG_IF(ERROR, !ret) << "::close failed:" << fd;
+
 	return ret;
 }
 
@@ -479,8 +541,7 @@ ssize_t read(int sockfd, void *buf, size_t len)
 	CHECK(buf);
 
 	ssize_t ret = ::read(sockfd, buf, len);
-	
-	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
 		<< "::read failed";
 	
 	return ret;
@@ -490,8 +551,7 @@ ssize_t readv(int sockfd, const struct iovec *iov, int iovcnt)
 	CHECK(iov);
 
 	ssize_t ret = ::readv(sockfd, iov, iovcnt);
-	
-	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
 		<< "::readv failed";
 	
 	return ret;
@@ -502,8 +562,7 @@ ssize_t write(int sockfd, const void *buf, size_t len)
 	CHECK(buf);
 
 	int ret = ::write(sockfd, buf, len);
-	
-	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
 		<< "::write failed";
 	
 	return ret;
@@ -513,8 +572,7 @@ ssize_t writev(int sockfd, const struct iovec *iov, int iovcnt)
 	CHECK(iov);
 
 	ssize_t ret = ::writev(sockfd, iov, iovcnt);
-	
-	DPLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
+	PLOG_IF(ERROR, ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) 
 		<< "::writev failed";
 	
 	return ret;
