@@ -50,15 +50,7 @@ const struct sockaddr_in6* sockaddr_in6_cast(const struct sockaddr* addr)
 int socket(sa_family_t family, bool nonblock, bool cloexec) 
 {
 	int flags = SOCK_STREAM;
-#if defined(OS_MACOSX)
-	int fd = ::socket(family, flags, IPPROTO_TCP);
-	if (nonblock) {
-		DCHECK(set_non_blocking(fd));
-	}
-	if (cloexec) {
-		DCHECK(set_close_on_exec(fd));
-	}
-#elif defined(OS_POSIX)
+#if defined(OS_LINUX)
 	if (nonblock) {
 		flags |= SOCK_NONBLOCK;
 	}
@@ -67,7 +59,13 @@ int socket(sa_family_t family, bool nonblock, bool cloexec)
 	}
 	int fd = ::socket(family, flags, IPPROTO_TCP);
 #else
-#error Do not support your os platform in SocketsUtil.h
+	int fd = ::socket(family, flags, IPPROTO_TCP);
+	if (nonblock) {
+		DCHECK(set_non_blocking(fd));
+	}
+	if (cloexec) {
+		DCHECK(set_close_on_exec(fd));
+	}
 #endif
 
 	PLOG_IF(ERROR, fd < 0) << "::socket failed";
@@ -79,15 +77,10 @@ int bind(int fd, const struct sockaddr* addr)
 {
 	CHECK(fd >= 0 && addr);
 
-	// Always assume that the actual type of the `addr` is sockaddr_in6.
-	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
-
-#if defined(OS_MACOSX)
-	// On MacOSX platform, `addrlen` should be the actual size of the address.
-	if (addr->sa_family == AF_INET) {
-		addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in));
+	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in));
+	if (addr->sa_family == AF_INET6) {
+		addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
 	}
-#endif	// defined(OS_MACOSX)
 
 	// The kernel will judge according to `addr->sa_family`.
 	int ret = ::bind(fd, addr, addrlen);
@@ -130,16 +123,7 @@ int accept(int servfd, struct sockaddr_in6* dst, bool nonblock, bool cloexec)
 
 	// Always assume that the actual type of the `dst` is sockaddr_in6.
 	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
-#if defined(OS_MACOSX)
-	// The kernel will fill in the value of `addrlen` and `dst`.
-	int connfd = ::accept(servfd, sockaddr_cast(dst), &addrlen);
-	if (nonblock) {
-		DCHECK(set_non_blocking(servfd));
-	}
-	if (cloexec) {
-		DCHECK(set_close_on_exec(servfd));
-	}
-#elif defined(OS_POSIX)
+#if defined(OS_LINUX)
 	int flags = 0;
 	if (nonblock) {
 		flags |= SOCK_NONBLOCK;
@@ -150,8 +134,15 @@ int accept(int servfd, struct sockaddr_in6* dst, bool nonblock, bool cloexec)
 	// The kernel will fill in the value of `addrlen` and `dst`.
 	int connfd = ::accept4(servfd, sockaddr_cast(dst), &addrlen, flags);
 #else
-#error Do not support your os platform in SocketsUtil.h
-#endif	// defined(OS_LINUX) || defined(OS_BSD) || ...
+	// The kernel will fill in the value of `addrlen` and `dst`.
+	int connfd = ::accept(servfd, sockaddr_cast(dst), &addrlen);
+	if (nonblock) {
+		DCHECK(set_non_blocking(servfd));
+	}
+	if (cloexec) {
+		DCHECK(set_close_on_exec(servfd));
+	}
+#endif
 
 	if (connfd < 0) {
 		// errno may be a macro.
@@ -197,15 +188,10 @@ int connect(int servfd, const struct sockaddr* addr)
 {
 	CHECK(servfd >= 0 && addr);
 
-	// Always assume that the actual type of the `addr` is sockaddr_in6.
-	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
-
-#if defined(OS_MACOSX)
-	// On MacOSX platform, `addrlen` should be the actual size of the address.
-	if (addr->sa_family == AF_INET) {
-		addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in));
+	socklen_t addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in));
+	if (addr->sa_family == AF_INET6) {
+		addrlen = static_cast<socklen_t>(sizeof(struct sockaddr_in6));
 	}
-#endif	// defined(OS_MACOSX)
 
 	// The kernel will judge according to `addr->sa_family`.
 	int ret = ::connect(servfd, addr, addrlen);
@@ -227,8 +213,9 @@ int shutdown(int fd, int how)
 struct sockaddr_in6 get_local_addr(int fd)
 {
 	struct sockaddr_in6 addr;
-	socklen_t addrlen = static_cast<socklen_t>(sizeof addr);
 	::memset(&addr, 0, sizeof addr);
+
+	socklen_t addrlen = static_cast<socklen_t>(sizeof addr);
 
 	// The kernel will fill in the value of `addrlen` and `addr`.
 	int ret = ::getsockname(fd, sockaddr_cast(&addr), &addrlen);
@@ -241,6 +228,7 @@ struct sockaddr_in6 get_peer_addr(int fd)
 {
 	struct sockaddr_in6 addr;
 	::memset(&addr, 0, sizeof addr);
+
 	socklen_t addrlen = static_cast<socklen_t>(sizeof addr);
 
 	// The kernel will fill in the value of `addrlen` and `addr`.
@@ -345,7 +333,7 @@ int set_keep_alive(int fd, bool on, int idle, int intvl, int count)
 
 	int ret = ::setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &opt, optlen);
 	PCHECK(!ret);
-	
+#if defined(OS_LINUX)	
 	// Idle time. 7200 seconds default.
 	if (idle != -1) {
 		int ret = ::setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &idle, sizeof(idle));
@@ -363,6 +351,13 @@ int set_keep_alive(int fd, bool on, int idle, int intvl, int count)
 		int ret = ::setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
 		PCHECK(!ret);
 	}
+#else
+	// Idle time. 7200 seconds default.
+	if (idle != -1) {
+		int ret = ::setsockopt(fd, IPPROTO_TCP, TCP_KEEPALIVE, &idle, sizeof(idle));
+		PCHECK(!ret);
+	}
+#endif
 
 	return ret;
 }
