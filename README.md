@@ -28,6 +28,7 @@
 	my hard requirements was to refer to some excellent open source projects. 
 	For this hard requirement, the development of the library is slow, but it is 
 	worth it. Standing on the shoulders of giants, make the code is very reliable.
+	
 	Annety's cross-platform reference chromium; thread model reference muduo; 
 	checksum algorithm reference nginx; although the wakeup mechanism is new(pipe(2) 
 	call), but it refers to nginx and muduo (For this kind of "hybrid" utility, 
