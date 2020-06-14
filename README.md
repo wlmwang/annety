@@ -4,7 +4,7 @@
 	nginx, leveldb, etc).
 
 # Requires
-    GCC >= 4.8 or Clang >= 3.3
+    GCC >= 4.8 and Clang >= 3.3
     Linux >= 2.6.28 (for epoll/timerfd/eventfd)
     POSIX(Darwin/FreeBSD/...) (for development)
     cmake >= 2.8.5
@@ -20,6 +20,7 @@
 
 # Document
 	Annety took a week alone, adding a lot of comments to the source code.
+
 * [chinese detail](document/README.md)
 
 # Thanks
