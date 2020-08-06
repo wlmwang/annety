@@ -10,7 +10,7 @@ using std::placeholders::_3;
 
 ChargenServer::ChargenServer(annety::EventLoop* loop, const annety::EndPoint& addr, bool print)
 {
-	server_ = make_tcp_server(loop, addr, "ChargenServer");
+	server_ = make_tcp_server(loop, addr, "ChargenServer", false, true);
 
 	server_->set_connect_callback(
 		std::bind(&ChargenServer::on_connect, this, _1));
@@ -48,8 +48,7 @@ void ChargenServer::on_connect(const annety::TcpConnectionPtr& conn)
 	LOG(INFO) << "ChargenServer - " << conn->local_addr().to_ip_port() << " <- "
 			<< conn->peer_addr().to_ip_port() << " s is "
 			<< "UP";
-	
-	conn->set_tcp_nodelay(true);
+
 	conn->send(message_);
 }
 

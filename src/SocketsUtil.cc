@@ -326,38 +326,13 @@ int set_reuse_port(int servfd, bool on)
 // 		is higher than keepalive data packets, keepalive's The packet cannot be sent.  Only after a 
 // 		long retransmission failure can we judge that this connection is broken.
 
-int set_keep_alive(int fd, bool on, int idle, int intvl, int count)
+int set_keep_alive(int fd, bool on)
 {
 	int opt = on ? 1 : 0;
 	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
 
 	int ret = ::setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &opt, optlen);
 	PCHECK(!ret);
-#if defined(OS_LINUX)	
-	// Idle time. 7200 seconds default.
-	if (idle != -1) {
-		int ret = ::setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, &idle, sizeof(idle));
-		PCHECK(!ret);
-	}
-
-	// Probe interval. 75 seconds default.
-	if (intvl != -1) {
-		int ret = ::setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &intvl, sizeof(intvl));
-		PCHECK(!ret);
-	}
-
-	// Probe times. 9 times default.
-	if (count != -1) {
-		int ret = ::setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
-		PCHECK(!ret);
-	}
-#else
-	// Idle time. 7200 seconds default.
-	if (idle != -1) {
-		int ret = ::setsockopt(fd, IPPROTO_TCP, TCP_KEEPALIVE, &idle, sizeof(idle));
-		PCHECK(!ret);
-	}
-#endif
 
 	return ret;
 }

@@ -42,7 +42,7 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* dst);
 int get_sock_error(int fd);
 int set_reuse_addr(int servfd, bool on);
 int set_reuse_port(int servfd, bool on);
-int set_keep_alive(int fd, bool on, int idle = -1, int intvl = -1, int count = -1);
+int set_keep_alive(int servfd, bool on);
 
 int set_tcp_nodelay(int fd, bool on);
 

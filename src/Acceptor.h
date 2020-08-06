@@ -26,7 +26,7 @@ class Acceptor
 public:
 	using NewConnectCallback = std::function<void(SelectableFDPtr, const EndPoint&)>;
 
-	Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport);
+	Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport, bool nodelay);
 	~Acceptor();
 	
 	void listen();

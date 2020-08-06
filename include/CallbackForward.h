@@ -38,7 +38,7 @@ using TcpServerPtr = std::shared_ptr<TcpServer>;
 using SelectableFDPtr = std::unique_ptr<SelectableFD>;
 
 TcpClientPtr make_tcp_client(EventLoop*, const EndPoint&, const std::string&);
-TcpServerPtr make_tcp_server(EventLoop*, const EndPoint&, const std::string&, bool reuse_port = false);
+TcpServerPtr make_tcp_server(EventLoop*, const EndPoint&, const std::string&, bool reuseport = false, bool nodelay = false);
 TcpConnectionPtr make_tcp_connection(EventLoop*, const std::string&, SelectableFDPtr&&, const EndPoint&, const EndPoint&);
 
 // internal ------------------------------------------------------------------

@@ -37,6 +37,10 @@ int accept(const SelectableFD& sfd, EndPoint& peeraddr)
 	}
 	return connfd;
 }
+int set_keep_alive(const SelectableFD& sfd, bool on)
+{
+	return sockets::set_keep_alive(sfd.internal_fd(), on);
+}
 void set_reuse_addr(const SelectableFD& sfd, bool on)
 {
 	sockets::set_reuse_addr(sfd.internal_fd(), on);
@@ -45,10 +49,13 @@ void set_reuse_port(const SelectableFD& sfd, bool on)
 {
 	sockets::set_reuse_port(sfd.internal_fd(), on);
 }
-
+int set_tcp_nodelay(const SelectableFD& sfd, bool on)
+{
+	return sockets::set_tcp_nodelay(sfd.internal_fd(), on);
+}
 }	// namespace internal
 
-Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport)
+Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport, bool nodelay)
 	: owner_loop_(loop)
 	, listen_socket_(new SocketFD(addr.family(), true, true))
 	, listen_channel_(new Channel(owner_loop_, listen_socket_.get()))
@@ -59,9 +66,20 @@ Acceptor::Acceptor(EventLoop* loop, const EndPoint& addr, bool reuseport)
 	DLOG(TRACE) << "Acceptor::Acceptor the [" <<  addr.to_ip_port() << "] of"
 		<< " fd=" << listen_socket_->internal_fd() << " is constructing";
 
-	// socket bind().
 	internal::set_reuse_addr(*listen_socket_, true);
 	internal::set_reuse_port(*listen_socket_, reuseport);
+
+	// The following socket options are inherited by a connected TCP socket from the 
+	// listening socket (pp. 462–463 of TCPv2): SO_DEBUG, SO_DONTROUTE, SO_KEEPALIVE, 
+	// SO_LINGER, SO_OOBINLINE, SO_RCVBUF, SO_RCVLOWAT, SO_SNDBUF, SO_SNDLOWAT, TCP_MAXSEG, 
+	// and TCP_NODELAY. This is important with TCP because the connected socket is not 
+	// returned to a server by accept until the three-way handshake is completed by the 
+	// TCP layer. To ensure that one of these socket options is set for the connected 
+	// socket when the three-way handshake completes, we must set that option for the 
+	// listening socket.
+	internal::set_keep_alive(*listen_socket_, true);
+	internal::set_tcp_nodelay(*listen_socket_, nodelay);
+
 	internal::bind(*listen_socket_, addr);
 
 	listen_channel_->set_read_callback(std::bind(&Acceptor::handle_read, this));

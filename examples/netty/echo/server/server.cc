@@ -10,7 +10,7 @@ using std::placeholders::_3;
 
 EchoServer::EchoServer(annety::EventLoop* loop, const annety::EndPoint& addr)
 {
-	server_ = make_tcp_server(loop, addr, "EchoServer");
+	server_ = make_tcp_server(loop, addr, "EchoServer", false, true);
 
 	server_->set_connect_callback(
 		std::bind(&EchoServer::on_connect, this, _1));
@@ -37,8 +37,6 @@ void EchoServer::on_connect(const annety::TcpConnectionPtr& conn)
 	LOG(INFO) << "EchoServer - " << conn->local_addr().to_ip_port() << " <- "
 			<< conn->peer_addr().to_ip_port() << " s is "
 			<< "UP";
-	
-	conn->set_tcp_nodelay(true);
 }
 
 void EchoServer::on_close(const annety::TcpConnectionPtr& conn)

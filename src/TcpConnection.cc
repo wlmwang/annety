@@ -15,21 +15,14 @@
 
 namespace annety
 {
-namespace internal {
-// Specific connect socket related function interfaces
-int set_keep_alive(const SelectableFD& sfd, bool on)
+namespace internal
 {
-	return sockets::set_keep_alive(sfd.internal_fd(), on);
-}
-int set_tcp_nodelay(const SelectableFD& sfd, bool on)
-{
-	return sockets::set_tcp_nodelay(sfd.internal_fd(), on);
-}
 int shutdown(const SelectableFD& sfd, int how = SHUT_WR)
 {
 	return sockets::shutdown(sfd.internal_fd(), how);
 }
-
+int set_keep_alive(const SelectableFD& sfd, bool on);
+int set_tcp_nodelay(const SelectableFD& sfd, bool on);
 }	// namespace internal
 
 void default_connect_callback(const TcpConnectionPtr& conn)
@@ -70,12 +63,6 @@ TcpConnection::TcpConnection(EventLoop* loop,
 
 	LOG(DEBUG) << "TcpConnection::TcpConnection the [" <<  name_ << "] connection of"
 		<< " fd=" << connect_socket_->internal_fd() << " is constructing";
-
-	// setting keepalive sockopt
-	internal::set_keep_alive(*connect_socket_, true);
-
-	// When necessary, manually closed by the user.
-	// set_tcp_nodelay(true);
 }
 
 void TcpConnection::initialize()

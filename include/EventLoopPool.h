@@ -28,10 +28,10 @@ public:
 	void start(const ThreadInitCallback& cb = ThreadInitCallback());
 
 	// valid after calling start()
-	/// round-robin
+	// round-robin
 	EventLoop* get_next_loop();
 
-	/// with the same hash code, it will always return the same EventLoop
+	// with the same hash code, it will always return the same EventLoop
 	EventLoop* get_loop_with_hashcode(size_t hashcode);
 
 	std::vector<EventLoop*> get_all_loops();

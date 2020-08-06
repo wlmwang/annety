@@ -17,8 +17,6 @@ void on_connect(const TcpConnectionPtr& conn)
 	LOG(INFO) << "PingpongServer - " << conn->local_addr().to_ip_port() << " <- "
 			<< conn->peer_addr().to_ip_port() << " s is "
 			<< "UP";
-
-	conn->set_tcp_nodelay(true);
 }
 
 void on_close(const TcpConnectionPtr& conn)
@@ -44,7 +42,7 @@ int main(int argc, char* argv[])
 		LOG(INFO) << "PingPong server start. threads=" << threads;
 		
 		EventLoop loop;
-		TcpServerPtr server = make_tcp_server(&loop, EndPoint(1669), "PingPongServer");
+		TcpServerPtr server = make_tcp_server(&loop, EndPoint(1669), "PingPongServer", false, true);
 		server->set_connect_callback(on_connect);
 		server->set_close_callback(on_close);
 		server->set_message_callback(on_message);

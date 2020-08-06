@@ -93,14 +93,16 @@ private:
 	TcpServer(EventLoop* loop,
 		const EndPoint& addr,
 		const std::string& name = "a-srv",
-		bool reuse_port = false);
+		bool reuseport = false,
+		bool nodelay = false);
 
 	void initialize();
 
 	friend TcpServerPtr make_tcp_server(EventLoop* loop, 
 		const EndPoint& addr, 
 		const std::string& name, 
-		bool reuse_port);
+		bool reuseport,
+		bool nodelay);
 
 private:
 	using ConnectionMap = std::map<std::string, TcpConnectionPtr>;
