@@ -18,11 +18,6 @@
 # Build
 	BUILD_TYPE=release ./build.sh
 
-# Document
-	Annety took a week alone, adding a lot of comments to the source code.
-
-* [chinese detail](document/README.md)
-
 # Thanks
 	Annety uses many codes modified from open source projects (chromium, muduo, 
 	nginx, leveldb, etc). Yes, At the beginning of creating this library, one of 
@@ -35,3 +30,7 @@
 	call), but it refers to nginx and muduo (For this kind of "hybrid" utility, 
 	there are many in annety. such as threading, timer, LOG/CHECK, etc).
 	THANKS TO ALL OF THEM.
+
+# Document
+* Annety took a week alone, adding a lot of comments to the source code.
+* [chinese detail](document/README.md)

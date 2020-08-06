@@ -275,6 +275,7 @@ int set_reuse_addr(int servfd, bool on)
 
 int set_reuse_port(int servfd, bool on)
 {
+#ifndef OS_LINUX
 #ifdef SO_REUSEPORT
 	int opt = on ? 1 : 0;
 	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
@@ -288,6 +289,11 @@ int set_reuse_port(int servfd, bool on)
 		LOG(ERROR) << "SO_REUSEPORT is not supported.";
 	}
 	return -1;
+#endif
+
+#else
+	// FIXME: Supported since Linux kernel 3.9
+	return 0;
 #endif
 }
 
