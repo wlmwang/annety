@@ -84,7 +84,7 @@ int bind(int fd, const struct sockaddr* addr)
 
 	// The kernel will judge according to `addr->sa_family`.
 	int ret = ::bind(fd, addr, addrlen);
-	PLOG_IF(ERROR, !ret) << "::bind failed";
+	PLOG_IF(ERROR, ret) << "::bind failed";
 
 	return ret;
 }
@@ -111,7 +111,7 @@ int listen(int servfd, int backlog)
 	// specified, backlog is silently forced to kern.ipc.soacceptqueue.
 
 	int ret = ::listen(servfd, backlog);
-	PLOG_IF(ERROR, !ret) << "::listen failed";
+	PLOG_IF(ERROR, ret) << "::listen failed";
 	
 	return ret;
 }
@@ -205,7 +205,7 @@ int shutdown(int fd, int how)
 	CHECK(fd >= 0);
 
 	int ret = ::shutdown(fd, how);
-	PLOG_IF(ERROR, !ret) << "::shutdown failed";
+	PLOG_IF(ERROR, ret) << "::shutdown failed";
 
 	return ret;
 }
@@ -219,7 +219,7 @@ struct sockaddr_in6 get_local_addr(int fd)
 
 	// The kernel will fill in the value of `addrlen` and `addr`.
 	int ret = ::getsockname(fd, sockaddr_cast(&addr), &addrlen);
-	PLOG_IF(ERROR, !ret) << "::getsockname failed";
+	PLOG_IF(ERROR, ret) << "::getsockname failed";
 
 	return addr;
 }
@@ -233,7 +233,7 @@ struct sockaddr_in6 get_peer_addr(int fd)
 
 	// The kernel will fill in the value of `addrlen` and `addr`.
 	int ret = ::getpeername(fd, sockaddr_cast(&addr), &addrlen);
-	PLOG_IF(ERROR, !ret) << "::getpeername failed";
+	PLOG_IF(ERROR, ret) << "::getpeername failed";
 
 	return addr;
 }
@@ -257,6 +257,7 @@ int get_sock_error(int fd)
 
 int set_reuse_addr(int servfd, bool on)
 {
+#ifdef SO_REUSEADDR
 	int opt = on ? 1 : 0;
 	socklen_t optlen = static_cast<socklen_t>(sizeof opt);
 
@@ -264,6 +265,12 @@ int set_reuse_addr(int servfd, bool on)
 	PCHECK(!ret);
 
 	return ret;
+#else
+	if (on) {
+		LOG(ERROR) << "SO_REUSEADDR is not supported.";
+	}
+	return -1;
+#endif
 }
 
 int set_reuse_port(int servfd, bool on)
@@ -501,7 +508,7 @@ void from_ip_port(const char* ip, uint16_t port, struct sockaddr_in6* dst)
 int close(int fd)
 {
 	int ret = ::close(fd);
-	PLOG_IF(ERROR, !ret) << "::close failed:" << fd;
+	PLOG_IF(ERROR, ret) << "::close failed:" << fd;
 
 	return ret;
 }
