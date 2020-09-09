@@ -59,6 +59,9 @@ public:
 	static TimeDelta from_timespec(const struct timespec& ts);
 	struct timespec to_timespec() const;
 	
+	static TimeDelta from_timeval(const struct timeval& tv);
+	struct timeval to_timeval() const;
+
 	// static constexpr TimeDelta from_internal_value(int64_t delta) {
 	// 	return TimeDelta(delta);
 	// }
@@ -375,26 +378,24 @@ public:
 	static TimeStamp now();
 
 	// Converts to/from time_t in UTC and a TimeStamp class.
-	static TimeStamp from_time_t(time_t tt);
+	static TimeStamp from_time_t(const time_t& tt);
 	time_t to_time_t() const;
 
-	static TimeStamp from_timeval(struct timeval t);
+	static TimeStamp from_timeval(const struct timeval& tv);
 	struct timeval to_timeval() const;
-
-	// static TimeStamp from_timespec(struct timespec t);
-	// struct timespec to_timespec() const;
-
-	// Converts time to/from a double which is the number of seconds since epoch
-	// (Jan 1, 1970). used this format to represent time.
-	static TimeStamp from_double_t(double dt);
-	double to_double_t() const;
 
 	// Converts the timespec structure to time. MacOS X 10.8.3 (and tentatively,
 	// earlier versions) will have the |ts|'s tv_nsec component zeroed out,
 	// having a 1 second resolution, which agrees with
 	// https://developer.apple.com/legacy/library/#technotes/tn/tn1150.html#HFSPlusDates.
 	static TimeStamp from_timespec(const struct timespec& ts);
-
+	struct timespec to_timespec() const;
+	
+	// Converts time to/from a double which is the number of seconds since epoch
+	// (Jan 1, 1970). used this format to represent time.
+	static TimeStamp from_double_t(double dt);
+	double to_double_t() const;
+	
 	// Converts an exploded structure representing either the local time or UTC
 	// into a TimeStamp class. Returns false on a failure when, for example, a day of
 	// month is set to 31 on a 28-30 day month. Returns TimeStamp(0) on overflow.

@@ -85,6 +85,27 @@ struct timespec TimeDelta::to_timespec() const
 	return result;
 }
 
+// static
+TimeDelta TimeDelta::from_timeval(const struct timeval& tv)
+{
+	return TimeDelta(tv.tv_sec * TimeStamp::kMicrosecondsPerSecond + tv.tv_usec);
+}
+
+struct timeval TimeDelta::to_timeval() const
+{
+	int64_t microseconds = in_microseconds();
+	time_t seconds = 0;
+	if (microseconds >= TimeStamp::kMicrosecondsPerSecond) {
+		seconds = in_seconds();
+		microseconds -= seconds * TimeStamp::kMicrosecondsPerSecond;
+	}
+	struct timeval result = {
+		seconds,
+		microseconds
+	};
+	return result;
+}
+
 // TimeStamp --------------------------------------------------------------------
 
 // static
@@ -94,7 +115,7 @@ TimeStamp TimeStamp::now()
 }
 
 // static
-TimeStamp TimeStamp::from_time_t(time_t tt)
+TimeStamp TimeStamp::from_time_t(const time_t& tt)
 {
 	if (tt == 0) {
 		return TimeStamp();
@@ -120,17 +141,17 @@ time_t TimeStamp::to_time_t() const
 }
 
 // static
-TimeStamp TimeStamp::from_timeval(struct timeval t)
+TimeStamp TimeStamp::from_timeval(const struct timeval& tv)
 {
-	DCHECK_LT(t.tv_usec, static_cast<int>(TimeStamp::kMicrosecondsPerSecond));
-	DCHECK_GE(t.tv_usec, 0);
-	if (t.tv_usec == 0 && t.tv_sec == 0) {
+	DCHECK_LT(tv.tv_usec, static_cast<int64_t>(TimeStamp::kMicrosecondsPerSecond));
+	DCHECK_GE(tv.tv_usec, 0);
+	if (tv.tv_usec == 0 && tv.tv_sec == 0) {
 		return TimeStamp();
-	} else if (t.tv_usec == static_cast<suseconds_t>(kMicrosecondsPerSecond) - 1 
-							&& t.tv_sec == std::numeric_limits<time_t>::max()) {
+	} else if (tv.tv_usec == static_cast<suseconds_t>(kMicrosecondsPerSecond) - 1 
+							&& tv.tv_sec == std::numeric_limits<time_t>::max()) {
 		return max();
 	}
-	return TimeStamp((static_cast<int64_t>(t.tv_sec) * kMicrosecondsPerSecond) + t.tv_usec);
+	return TimeStamp((static_cast<int64_t>(tv.tv_sec) * kMicrosecondsPerSecond) + tv.tv_usec);
 }
 
 struct timeval TimeStamp::to_timeval() const
@@ -155,6 +176,23 @@ TimeStamp TimeStamp::from_timespec(const struct timespec& ts)
 {
 	return from_double_t(ts.tv_sec + 
 		static_cast<double>(ts.tv_nsec) / TimeStamp::kNanosecondsPerSecond);
+}
+
+struct timespec TimeStamp::to_timespec() const
+{
+	struct timespec result;
+	if (is_null()) {
+		result.tv_sec = 0;
+		result.tv_nsec = 0;
+		return result;
+	} else if (is_max()) {
+		result.tv_sec = std::numeric_limits<time_t>::max();
+		result.tv_nsec = static_cast<int64_t>(kNanosecondsPerSecond) - 1;
+		return result;
+	}
+	result.tv_sec = us_ / TimeStamp::kMicrosecondsPerSecond;
+	result.tv_nsec = (us_ % TimeStamp::kMicrosecondsPerSecond) * TimeStamp::kNanosecondsPerMicrosecond;
+	return result;
 }
 
 // static
