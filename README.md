@@ -16,7 +16,7 @@
 	Debian 7
 
 # Build
-	BUILD_TYPE=release ./build.sh
+	shell> BUILD_TYPE=release ./build.sh
 
 # Thanks
 	Annety uses many codes modified from open source projects (chromium, muduo, 
